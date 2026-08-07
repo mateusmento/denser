@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/lib/utils": ["../design-system/src/lib/utils.ts"],
+      "@/components/*": ["../design-system/src/components/*"],
+      "@/composables/*": ["../design-system/src/composables/*"]
+    },
+    "types": ["vite/client"],
+    "exactOptionalPropertyTypes": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src", ".storybook", "vite.config.ts", "env.d.ts"],
+  "exclude": ["src/**/*.stories.ts"]
+}

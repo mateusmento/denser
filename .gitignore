@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+.pnpm-store
+dist
+*.local
+storybook-static
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+
+# IDE
+.idea
+.vscode
+
+# Drizzle / generated
+packages/api/drizzle/meta
+
+# Coverage
+coverage
+
+# TS incremental
+*.tsbuildinfo

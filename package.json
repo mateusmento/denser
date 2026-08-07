@@ -1,0 +1,23 @@
+{
+  "name": "denser",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @denser/api --filter @denser/app run dev",
+    "dev:api": "pnpm --filter @denser/api dev",
+    "dev:app": "pnpm --filter @denser/app dev",
+    "build": "pnpm -r run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test:e2e": "pnpm --filter @denser/e2e test",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:generate": "pnpm --filter @denser/api db:generate",
+    "db:migrate": "pnpm --filter @denser/api db:migrate",
+    "seed": "pnpm --filter @denser/api seed",
+    "storybook:design-system": "pnpm --filter @denser/design-system storybook",
+    "storybook:app": "pnpm --filter @denser/app storybook",
+    "build-storybook:design-system": "pnpm --filter @denser/design-system build-storybook",
+    "build-storybook:app": "pnpm --filter @denser/app build-storybook"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

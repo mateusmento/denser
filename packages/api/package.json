@@ -1,0 +1,37 @@
+{
+  "name": "@denser/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "seed": "tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@auth/core": "^0.39.1",
+    "@denser/contracts": "workspace:*",
+    "@hono/auth-js": "^1.0.15",
+    "@hono/node-server": "^1.14.4",
+    "@hono/zod-validator": "^0.7.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.8.3",
+    "postgres": "^3.4.7",
+    "socket.io": "^4.8.1",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^24.0.10",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

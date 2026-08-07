@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["vite/client"],
+    "declaration": false,
+    "declarationMap": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src", ".storybook", "vite.config.ts"],
+  "exclude": ["src/**/*.stories.ts"]
+}
