@@ -67,10 +67,14 @@ export class ApiClient {
   }
 
   async session(): Promise<Session> {
-    const res = await this.request("/api/auth/session");
+    const res = await this.request("/api/auth/get-session");
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("session failed", res.status, body);
-    return Session.parse(body ?? {});
+    if (!body || typeof body !== "object") {
+      return Session.parse({});
+    }
+    const payload = body as { user?: Session["user"] };
+    return Session.parse(payload.user ? { user: payload.user } : {});
   }
 
   async me(): Promise<MeResponse> {
@@ -81,30 +85,16 @@ export class ApiClient {
   }
 
   async signIn(input: SignInInput): Promise<void> {
-    const csrfRes = await this.request("/api/auth/csrf");
-    if (!csrfRes.ok) {
-      throw new ApiError("csrf failed", csrfRes.status, await this.parseJson(csrfRes));
-    }
-    const csrf = (await this.parseJson(csrfRes)) as { csrfToken?: string };
-    if (!csrf.csrfToken) {
-      throw new Error("csrfToken missing from /api/auth/csrf");
-    }
-
-    const body = new URLSearchParams({
-      csrfToken: csrf.csrfToken,
-      username: input.username,
-      password: input.password,
-      json: "true",
-    });
-
-    const res = await this.request("/api/auth/callback/credentials", {
+    const res = await this.request("/api/auth/sign-in/username", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body,
-      redirect: "manual",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: input.username,
+        password: input.password,
+      }),
     });
 
-    if (res.status >= 400) {
+    if (!res.ok) {
       throw new ApiError("sign-in failed", res.status, await this.parseJson(res));
     }
   }

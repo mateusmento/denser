@@ -7,12 +7,11 @@ import { attachRealtime } from "./realtime/attach.js";
 
 config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../.env") });
 
-
 const port = Number(process.env.API_PORT ?? 3457);
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:5173";
-const authSecret = process.env.AUTH_SECRET;
+const authSecret = process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET;
 if (!authSecret) {
-  throw new Error("AUTH_SECRET is required");
+  throw new Error("BETTER_AUTH_SECRET (or AUTH_SECRET) is required");
 }
 
 const server = serve({ fetch: app.fetch, port }, (info) => {

@@ -1,37 +1,47 @@
 import { Hono } from "hono";
-import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
 import { cors } from "hono/cors";
-import { createAuthConfig } from "./auth/config.js";
-
-const authSecret = process.env.AUTH_SECRET;
-if (!authSecret) {
-  throw new Error("AUTH_SECRET is required");
-}
+import { auth } from "./auth/index.js";
 
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:5173";
 
-export const app = new Hono();
+type Variables = {
+  user: typeof auth.$Infer.Session.user;
+  session: typeof auth.$Infer.Session.session;
+};
+
+export const app = new Hono<{ Variables: Variables }>();
 
 app.use(
   "*",
   cors({
     origin: appOrigin,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["POST", "GET", "OPTIONS"],
     credentials: true,
   }),
 );
 
-app.use(
-  "*",
-  initAuthConfig(() => createAuthConfig(authSecret)),
-);
-
-app.use("/api/auth/*", authHandler());
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/api/health", (c) => c.json({ ok: true as const }));
 
-app.use("/api/*", verifyAuth());
+app.use("/api/*", async (c, next) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  c.set("user", session.user);
+  c.set("session", session.session);
+  await next();
+});
 
 app.get("/api/me", (c) => {
-  const authUser = c.get("authUser");
-  return c.json({ user: authUser.session.user });
+  const user = c.get("user");
+  return c.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+  });
 });

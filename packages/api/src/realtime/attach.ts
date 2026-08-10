@@ -12,7 +12,7 @@ type SessionPayload = {
   user?: {
     id?: string;
   } | null;
-};
+} | null;
 
 export function attachRealtime(httpServer: HttpServer, appOrigin: string): DenserServer {
   const io = new SocketServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
@@ -62,14 +62,14 @@ async function authenticateSocket(socket: DenserSocket): Promise<string> {
     throw new Error("unauthorized: missing cookie");
   }
 
-  const res = await app.request("http://localhost/api/auth/session", {
+  const res = await app.request("http://localhost/api/auth/get-session", {
     headers: {
       cookie: header,
       host: socket.request.headers.host ?? "127.0.0.1",
     },
   });
 
-  const body = (await res.json()) as SessionPayload | null;
+  const body = (await res.json()) as SessionPayload;
   const userId = body?.user?.id;
   if (!res.ok || !userId) {
     throw new Error(

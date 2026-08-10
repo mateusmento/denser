@@ -2,13 +2,12 @@ import { config } from "dotenv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "better-auth/crypto";
 import { faker } from "@faker-js/faker";
 import { db } from "./client.js";
-import { users } from "./schema.js";
+import { account, session, user } from "./schema.js";
 
 config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env") });
-
 
 type Hero = { username: string; displayName: string };
 
@@ -19,29 +18,53 @@ const heroes = JSON.parse(readFileSync(heroesPath, "utf8")) as Hero[];
 
 faker.seed(42);
 
-const passwordHash = await bcrypt.hash(password, 10);
+const passwordHash = await hashPassword(password);
 
-await db.delete(users);
+await db.delete(session);
+await db.delete(account);
+await db.delete(user);
 
-await db.insert(users).values(
-  heroes.map((hero) => ({
-    username: hero.username,
-    displayName: hero.displayName,
-    passwordHash,
-  })),
-);
+async function insertCredentialUser(input: {
+  username: string;
+  displayName: string;
+}): Promise<void> {
+  const [created] = await db
+    .insert(user)
+    .values({
+      name: input.displayName,
+      email: `${input.username}@local.dev`,
+      emailVerified: true,
+      username: input.username,
+      displayUsername: input.username,
+    })
+    .returning({ id: user.id });
+
+  if (!created) {
+    throw new Error(`Failed to create user ${input.username}`);
+  }
+
+  await db.insert(account).values({
+    accountId: created.id,
+    providerId: "credential",
+    userId: created.id,
+    password: passwordHash,
+  });
+}
+
+for (const hero of heroes) {
+  await insertCredentialUser(hero);
+}
 
 if (mode === "full") {
   const bulk = Array.from({ length: 8 }, () => ({
     username: faker.internet.username().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24),
     displayName: faker.person.fullName(),
-    passwordHash,
   }));
   const unique = [...new Map(bulk.map((u) => [u.username, u])).values()].filter(
-    (u) => !heroes.some((h) => h.username === u.username),
+    (u) => u.username.length >= 3 && !heroes.some((h) => h.username === u.username),
   );
-  if (unique.length > 0) {
-    await db.insert(users).values(unique);
+  for (const row of unique) {
+    await insertCredentialUser(row);
   }
 }
 

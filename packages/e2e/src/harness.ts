@@ -11,7 +11,7 @@ const repoRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../
 const apiPkg = path.join(repoRoot, "packages/api");
 
 const SEED_PASSWORD = "password";
-const AUTH_SECRET = "e2e-auth-secret-not-for-production";
+const AUTH_SECRET = "e2e-auth-secret-not-for-production-32b";
 
 export type E2eHarness = {
   baseUrl: string;
@@ -66,8 +66,8 @@ export async function startHarness(): Promise<E2eHarness> {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     DATABASE_URL: databaseUrl,
-    AUTH_SECRET,
-    AUTH_URL: `${baseUrl}/api/auth`,
+    BETTER_AUTH_SECRET: AUTH_SECRET,
+    BETTER_AUTH_URL: baseUrl,
     APP_ORIGIN: baseUrl,
     API_PORT: String(port),
     SEED_PASSWORD,
