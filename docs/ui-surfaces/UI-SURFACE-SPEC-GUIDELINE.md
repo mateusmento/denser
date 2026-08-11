@@ -13,7 +13,7 @@ Name every major UI surface. It might cover a view UI (backlog, board, calendar)
 - Conversation
 - Meeting Session
 - File/Directory like Explore view for Artifacts and Space
-- Tree-like Explore view for Artifacts and Space 
+- Tree-like Explore view for Artifacts and Space
 - Sidebars: Nav List + Category Groups + Collapsible Items + CTA buttons
 - Notifications
 - Settings Navigation Sidebar

@@ -102,7 +102,7 @@ export async function startHarness(): Promise<E2eHarness> {
     await waitForHealth(baseUrl, fetch);
   } catch (error) {
     apiProcess.kill("SIGTERM");
-    throw new Error(`${String(error)}\nAPI stderr:\n${apiStderr}`);
+    throw new Error(`${String(error)}\nAPI stderr:\n${apiStderr}`, { cause: error });
   }
 
   const createClient = (): ApiClient => {

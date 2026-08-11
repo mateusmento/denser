@@ -1,9 +1,4 @@
-import {
-  HealthResponse,
-  MeResponse,
-  Session,
-  type SignInInput,
-} from "@denser/contracts";
+import { HealthResponse, MeResponse, Session, type SignInInput } from "@denser/contracts";
 import { connectSocket, type DenserSocket } from "./socket.js";
 
 export type ApiClientOptions = {

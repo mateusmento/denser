@@ -5,8 +5,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
-config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"), quiet: true });
-
+config({
+  path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"),
+  quiet: true,
+});
 
 const url = process.env.DATABASE_URL;
 if (!url) {

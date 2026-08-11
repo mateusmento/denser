@@ -1,427 +1,696 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PROTOTYPE — Conversation surface</title>
-  <!--
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PROTOTYPE — Conversation surface</title>
+    <!--
     Throwaway UI prototype for docs/ui-surfaces/conversation.md
     Visual language: docs/VISUAL-LANGUAGE.md
     — §5.1 shared header/footer heights
     — §5.2 borderless channel canvas; thread as elevated rounded card
     Open in a browser: no build step.
   -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          fontFamily: { sans: ["Geist", "ui-sans-serif", "system-ui", "sans-serif"] },
-          colors: {
-            background: "var(--background)",
-            foreground: "var(--foreground)",
-            card: "var(--card)",
-            "card-foreground": "var(--card-foreground)",
-            popover: "var(--popover)",
-            "popover-foreground": "var(--popover-foreground)",
-            primary: "var(--primary)",
-            "primary-foreground": "var(--primary-foreground)",
-            secondary: "var(--secondary)",
-            "secondary-foreground": "var(--secondary-foreground)",
-            muted: "var(--muted)",
-            "muted-foreground": "var(--muted-foreground)",
-            accent: "var(--accent)",
-            "accent-foreground": "var(--accent-foreground)",
-            destructive: "var(--destructive)",
-            border: "var(--border)",
-            input: "var(--input)",
-            ring: "var(--ring)",
-            sidebar: "var(--sidebar)",
-            "sidebar-foreground": "var(--sidebar-foreground)",
-            "sidebar-border": "var(--sidebar-border)",
-          },
-          borderRadius: {
-            lg: "var(--radius)",
-            md: "calc(var(--radius) - 2px)",
-            sm: "calc(var(--radius) - 4px)",
-          },
-          transitionDuration: {
-            fast: "100ms",
-            normal: "200ms",
-            slow: "300ms",
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Geist", "ui-sans-serif", "system-ui", "sans-serif"] },
+            colors: {
+              background: "var(--background)",
+              foreground: "var(--foreground)",
+              card: "var(--card)",
+              "card-foreground": "var(--card-foreground)",
+              popover: "var(--popover)",
+              "popover-foreground": "var(--popover-foreground)",
+              primary: "var(--primary)",
+              "primary-foreground": "var(--primary-foreground)",
+              secondary: "var(--secondary)",
+              "secondary-foreground": "var(--secondary-foreground)",
+              muted: "var(--muted)",
+              "muted-foreground": "var(--muted-foreground)",
+              accent: "var(--accent)",
+              "accent-foreground": "var(--accent-foreground)",
+              destructive: "var(--destructive)",
+              border: "var(--border)",
+              input: "var(--input)",
+              ring: "var(--ring)",
+              sidebar: "var(--sidebar)",
+              "sidebar-foreground": "var(--sidebar-foreground)",
+              "sidebar-border": "var(--sidebar-border)",
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+            transitionDuration: {
+              fast: "100ms",
+              normal: "200ms",
+              slow: "300ms",
+            },
           },
         },
-      },
-    };
-  </script>
-  <script src="https://unpkg.com/lucide@0.468.0"></script>
-  <style>
-    :root {
-      color-scheme: light;
-      --background: #fafafa;
-      --foreground: #0a0a0a;
-      --card: #ffffff;
-      --card-foreground: #0a0a0a;
-      --popover: #ffffff;
-      --popover-foreground: #0a0a0a;
-      --primary: #5e6ad2;
-      --primary-foreground: #ffffff;
-      --secondary: #f4f4f5;
-      --secondary-foreground: #18181b;
-      --muted: #f4f4f5;
-      --muted-foreground: #71717a;
-      --accent: #eef0fb;
-      --accent-foreground: #0a0a0a;
-      --destructive: #ef4444;
-      --border: #e4e4e7;
-      --input: #e4e4e7;
-      --ring: #5e6ad2;
-      --radius: 0.5rem;
-      --sidebar: #ffffff;
-      --sidebar-foreground: #0a0a0a;
-      --sidebar-border: #e4e4e7;
-      /* Shared track sizes — fine coupling between sibling surfaces */
-      --surface-header-height: 3.75rem;
-      --surface-footer-height: 10.25rem;
-    }
-    .dark {
-      color-scheme: dark;
-      --background: #010102;
-      --foreground: #f7f8f8;
-      --card: #0f1011;
-      --card-foreground: #f7f8f8;
-      --popover: #141516;
-      --popover-foreground: #f7f8f8;
-      --primary: #5e6ad2;
-      --primary-foreground: #ffffff;
-      --secondary: #18191a;
-      --secondary-foreground: #d0d6e0;
-      --muted: #141516;
-      --muted-foreground: #8a8f98;
-      --accent: #191a1b;
-      --accent-foreground: #f7f8f8;
-      --destructive: #ef4444;
-      --border: #23252a;
-      --input: #23252a;
-      --ring: #5e6ad2;
-      --sidebar: #0f1011;
-      --sidebar-foreground: #f7f8f8;
-      --sidebar-border: #23252a;
-      --surface-header-height: 3.75rem;
-      --surface-footer-height: 10.25rem;
-    }
-    * { border-color: var(--border); }
-    body { font-family: Geist, ui-sans-serif, system-ui, sans-serif; }
-    [contenteditable]:empty:before {
-      content: attr(data-placeholder);
-      color: var(--muted-foreground);
-      pointer-events: none;
-    }
-    [contenteditable]:focus { outline: none; }
-    .msg-actions { opacity: 0; transition: opacity 100ms ease-out; }
-    .msg-row:hover .msg-actions,
-    .msg-row:focus-within .msg-actions { opacity: 1; }
-    #bubble-menu {
-      transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
-    }
-    #bubble-menu[data-open="false"] {
-      opacity: 0;
-      transform: scale(0.95);
-      pointer-events: none;
-    }
-    #bubble-menu[data-open="true"] {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .proto-banner {
-      font-size: 11px;
-      letter-spacing: 0.02em;
-    }
-  </style>
-</head>
-<body class="h-full bg-background text-foreground antialiased">
-  <div class="proto-banner fixed top-0 inset-x-0 z-[100] flex items-center justify-between gap-3 bg-muted/95 px-3 py-1.5 text-muted-foreground backdrop-blur">
-    <span><strong class="text-foreground">PROTOTYPE</strong> — Conversation UI · thread as elevated card · <span class="hidden sm:inline">docs/ui-surfaces/conversation.md</span></span>
-    <div class="flex items-center gap-2">
-      <button type="button" id="btn-theme" class="rounded-md px-2 py-0.5 text-xs hover:bg-accent transition-colors duration-fast" title="Toggle theme">Theme</button>
-      <button type="button" id="btn-narrow" class="rounded-md px-2 py-0.5 text-xs hover:bg-accent transition-colors duration-fast" title="Toggle narrow composer (overflow demo)">Narrow</button>
-      <button type="button" id="btn-nopost" class="rounded-md px-2 py-0.5 text-xs hover:bg-accent transition-colors duration-fast" title="Toggle post permission">No-post</button>
-    </div>
-  </div>
-
-  <div class="flex h-full gap-0 pt-8">
-    <!-- Shared shell: sectioned by surface color, not a hairline -->
-    <aside class="hidden w-56 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
-      <div class="px-4 py-4">
-        <div class="text-base font-semibold tracking-tight">Denser</div>
-        <div class="mt-0.5 text-xs text-muted-foreground">Prototype shell</div>
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@0.468.0"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #fafafa;
+        --foreground: #0a0a0a;
+        --card: #ffffff;
+        --card-foreground: #0a0a0a;
+        --popover: #ffffff;
+        --popover-foreground: #0a0a0a;
+        --primary: #5e6ad2;
+        --primary-foreground: #ffffff;
+        --secondary: #f4f4f5;
+        --secondary-foreground: #18181b;
+        --muted: #f4f4f5;
+        --muted-foreground: #71717a;
+        --accent: #eef0fb;
+        --accent-foreground: #0a0a0a;
+        --destructive: #ef4444;
+        --border: #e4e4e7;
+        --input: #e4e4e7;
+        --ring: #5e6ad2;
+        --radius: 0.5rem;
+        --sidebar: #ffffff;
+        --sidebar-foreground: #0a0a0a;
+        --sidebar-border: #e4e4e7;
+        /* Shared track sizes — fine coupling between sibling surfaces */
+        --surface-header-height: 3.75rem;
+        --surface-footer-height: 10.25rem;
+      }
+      .dark {
+        color-scheme: dark;
+        --background: #010102;
+        --foreground: #f7f8f8;
+        --card: #0f1011;
+        --card-foreground: #f7f8f8;
+        --popover: #141516;
+        --popover-foreground: #f7f8f8;
+        --primary: #5e6ad2;
+        --primary-foreground: #ffffff;
+        --secondary: #18191a;
+        --secondary-foreground: #d0d6e0;
+        --muted: #141516;
+        --muted-foreground: #8a8f98;
+        --accent: #191a1b;
+        --accent-foreground: #f7f8f8;
+        --destructive: #ef4444;
+        --border: #23252a;
+        --input: #23252a;
+        --ring: #5e6ad2;
+        --sidebar: #0f1011;
+        --sidebar-foreground: #f7f8f8;
+        --sidebar-border: #23252a;
+        --surface-header-height: 3.75rem;
+        --surface-footer-height: 10.25rem;
+      }
+      * {
+        border-color: var(--border);
+      }
+      body {
+        font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+      }
+      [contenteditable]:empty:before {
+        content: attr(data-placeholder);
+        color: var(--muted-foreground);
+        pointer-events: none;
+      }
+      [contenteditable]:focus {
+        outline: none;
+      }
+      .msg-actions {
+        opacity: 0;
+        transition: opacity 100ms ease-out;
+      }
+      .msg-row:hover .msg-actions,
+      .msg-row:focus-within .msg-actions {
+        opacity: 1;
+      }
+      #bubble-menu {
+        transition:
+          opacity 200ms ease-in-out,
+          transform 200ms ease-in-out;
+      }
+      #bubble-menu[data-open="false"] {
+        opacity: 0;
+        transform: scale(0.95);
+        pointer-events: none;
+      }
+      #bubble-menu[data-open="true"] {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .proto-banner {
+        font-size: 11px;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body class="h-full bg-background text-foreground antialiased">
+    <div
+      class="proto-banner fixed inset-x-0 top-0 z-[100] flex items-center justify-between gap-3 bg-muted/95 px-3 py-1.5 text-muted-foreground backdrop-blur"
+    >
+      <span
+        ><strong class="text-foreground">PROTOTYPE</strong> — Conversation UI · thread as elevated
+        card · <span class="hidden sm:inline">docs/ui-surfaces/conversation.md</span></span
+      >
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="btn-theme"
+          class="duration-fast rounded-md px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+          title="Toggle theme"
+        >
+          Theme
+        </button>
+        <button
+          type="button"
+          id="btn-narrow"
+          class="duration-fast rounded-md px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+          title="Toggle narrow composer (overflow demo)"
+        >
+          Narrow
+        </button>
+        <button
+          type="button"
+          id="btn-nopost"
+          class="duration-fast rounded-md px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+          title="Toggle post permission"
+        >
+          No-post
+        </button>
       </div>
-      <nav class="flex-1 space-y-1 px-2 text-sm">
-        <div class="px-2 pb-1 text-xs font-medium text-muted-foreground">Space · Launch</div>
-        <a class="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast" href="#">
-          <i data-lucide="file-text" class="h-4 w-4"></i> Documents
-        </a>
-        <a class="flex items-center gap-2 rounded-md bg-accent px-2 py-1.5 text-accent-foreground transition-colors duration-fast" href="#">
-          <i data-lucide="messages-square" class="h-4 w-4"></i> Conversation
-        </a>
-        <a class="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast" href="#">
-          <i data-lucide="kanban" class="h-4 w-4"></i> Board
-        </a>
-      </nav>
-    </aside>
+    </div>
 
-    <!-- Channel = primary calm surface; Thread = distinct elevated card -->
-    <div class="relative flex min-w-0 flex-1 gap-3 bg-background p-3">
-      <section class="flex min-w-0 flex-1 flex-col" id="conversation-column" aria-label="Conversation">
-        <header class="flex h-[var(--surface-header-height)] shrink-0 items-center gap-3 px-1 sm:px-2">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h1 class="truncate text-base font-semibold"># product-launch</h1>
-              <span class="hidden text-xs text-muted-foreground sm:inline">3 online</span>
-            </div>
-            <p class="truncate text-xs text-muted-foreground">Ship notes, decisions, and day-to-day chatter for the launch.</p>
-          </div>
-          <div class="flex items-center -space-x-1.5">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-medium ring-2 ring-background" title="Alice Chen">AC</span>
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-medium ring-2 ring-background" title="Bob Rivera">BR</span>
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-muted-foreground ring-2 ring-background">+4</span>
-          </div>
-          <div class="relative">
-            <button type="button" id="btn-channel-menu" class="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast" aria-label="Channel menu">
-              <i data-lucide="ellipsis" class="h-4 w-4"></i>
-            </button>
-            <div id="channel-menu" class="absolute right-0 top-full z-40 mt-1 hidden min-w-[11rem] rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-lg">
-              <button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent transition-colors duration-fast"><i data-lucide="bell" class="h-3.5 w-3.5"></i> Notifications</button>
-              <button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent transition-colors duration-fast"><i data-lucide="users" class="h-3.5 w-3.5"></i> Members</button>
-              <button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent transition-colors duration-fast"><i data-lucide="settings" class="h-3.5 w-3.5"></i> Settings</button>
-            </div>
-          </div>
-        </header>
-
-        <div class="relative min-h-0 flex-1 overflow-y-auto" id="message-scroller">
-          <div class="mx-auto max-w-3xl space-y-1 px-4 py-6" id="message-list"></div>
-          <button type="button" id="btn-jump-latest" class="absolute bottom-3 left-1/2 z-10 hidden -translate-x-1/2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-lg transition-opacity duration-normal hover:bg-accent">
-            Jump to latest
-          </button>
+    <div class="flex h-full gap-0 pt-8">
+      <!-- Shared shell: sectioned by surface color, not a hairline -->
+      <aside class="hidden w-56 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+        <div class="px-4 py-4">
+          <div class="text-base font-semibold tracking-tight">Denser</div>
+          <div class="mt-0.5 text-xs text-muted-foreground">Prototype shell</div>
         </div>
+        <nav class="flex-1 space-y-1 px-2 text-sm">
+          <div class="px-2 pb-1 text-xs font-medium text-muted-foreground">Space · Launch</div>
+          <a
+            class="duration-fast flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            href="#"
+          >
+            <i data-lucide="file-text" class="h-4 w-4"></i> Documents
+          </a>
+          <a
+            class="duration-fast flex items-center gap-2 rounded-md bg-accent px-2 py-1.5 text-accent-foreground transition-colors"
+            href="#"
+          >
+            <i data-lucide="messages-square" class="h-4 w-4"></i> Conversation
+          </a>
+          <a
+            class="duration-fast flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            href="#"
+          >
+            <i data-lucide="kanban" class="h-4 w-4"></i> Board
+          </a>
+        </nav>
+      </aside>
 
-        <div class="box-border flex h-[var(--surface-footer-height)] shrink-0 flex-col px-1 py-3 sm:px-2" id="composer-region">
-          <div id="permission-empty" class="mx-auto hidden max-w-3xl rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
-            You don’t have permission to post in this channel.
-          </div>
-          <div id="composer-wrap" class="relative mx-auto flex w-full max-w-3xl flex-1 flex-col">
-            <div id="bubble-menu" data-open="false" class="absolute z-50 flex items-center gap-0.5 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
-              <button type="button" data-cmd="bold" class="rounded-sm px-2 py-1 text-xs font-semibold hover:bg-accent transition-colors duration-fast" title="Bold">B</button>
-              <button type="button" data-cmd="italic" class="rounded-sm px-2 py-1 text-xs italic hover:bg-accent transition-colors duration-fast" title="Italic">I</button>
-              <button type="button" data-cmd="strikeThrough" class="rounded-sm px-2 py-1 text-xs line-through hover:bg-accent transition-colors duration-fast" title="Strike">S</button>
-              <span class="mx-0.5 h-4 w-px bg-border"></span>
-              <button type="button" data-cmd="formatBlock" data-value="blockquote" class="rounded-sm px-2 py-1 text-xs hover:bg-accent transition-colors duration-fast" title="Blockquote">“</button>
-              <button type="button" data-cmd="createLink" class="rounded-sm px-2 py-1 text-xs hover:bg-accent transition-colors duration-fast" title="Link"><i data-lucide="link" class="h-3.5 w-3.5"></i></button>
+      <!-- Channel = primary calm surface; Thread = distinct elevated card -->
+      <div class="relative flex min-w-0 flex-1 gap-3 bg-background p-3">
+        <section
+          class="flex min-w-0 flex-1 flex-col"
+          id="conversation-column"
+          aria-label="Conversation"
+        >
+          <header
+            class="flex h-[var(--surface-header-height)] shrink-0 items-center gap-3 px-1 sm:px-2"
+          >
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <h1 class="truncate text-base font-semibold"># product-launch</h1>
+                <span class="hidden text-xs text-muted-foreground sm:inline">3 online</span>
+              </div>
+              <p class="truncate text-xs text-muted-foreground">
+                Ship notes, decisions, and day-to-day chatter for the launch.
+              </p>
             </div>
-
-            <div class="flex min-h-0 flex-1 flex-col rounded-lg border border-input bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring/40 transition-[box-shadow] duration-fast">
+            <div class="flex items-center -space-x-1.5">
+              <span
+                class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-medium ring-2 ring-background"
+                title="Alice Chen"
+                >AC</span
+              >
+              <span
+                class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-medium ring-2 ring-background"
+                title="Bob Rivera"
+                >BR</span
+              >
+              <span
+                class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-muted-foreground ring-2 ring-background"
+                >+4</span
+              >
+            </div>
+            <div class="relative">
+              <button
+                type="button"
+                id="btn-channel-menu"
+                class="duration-fast rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                aria-label="Channel menu"
+              >
+                <i data-lucide="ellipsis" class="h-4 w-4"></i>
+              </button>
               <div
-                id="editor"
-                class="min-h-0 flex-1 overflow-y-auto px-3 py-2.5 text-sm leading-normal text-card-foreground"
-                contenteditable="true"
-                role="textbox"
-                aria-multiline="true"
-                data-placeholder="Message #product-launch"
-              ></div>
-              <div class="flex h-10 shrink-0 items-center gap-1 bg-muted/50 px-2" id="action-row">
-                <div class="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden" id="action-visible"></div>
-                <div class="relative shrink-0">
-                  <button type="button" id="btn-more" class="hidden items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast">
-                    <i data-lucide="ellipsis" class="h-3.5 w-3.5"></i>
-                    <span>More</span>
-                  </button>
-                  <div id="more-menu" class="absolute bottom-full right-0 z-40 mb-1 hidden min-w-[12rem] rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-lg"></div>
-                </div>
-                <button type="button" id="btn-send" disabled class="ml-1 shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-50 transition-opacity duration-fast disabled:cursor-not-allowed enabled:opacity-100 enabled:hover:opacity-90">
-                  Send
+                id="channel-menu"
+                class="absolute top-full right-0 z-40 mt-1 hidden min-w-[11rem] rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-lg"
+              >
+                <button
+                  type="button"
+                  class="duration-fast flex w-full items-center gap-2 rounded-sm px-2 py-1.5 transition-colors hover:bg-accent"
+                >
+                  <i data-lucide="bell" class="h-3.5 w-3.5"></i> Notifications
+                </button>
+                <button
+                  type="button"
+                  class="duration-fast flex w-full items-center gap-2 rounded-sm px-2 py-1.5 transition-colors hover:bg-accent"
+                >
+                  <i data-lucide="users" class="h-3.5 w-3.5"></i> Members
+                </button>
+                <button
+                  type="button"
+                  class="duration-fast flex w-full items-center gap-2 rounded-sm px-2 py-1.5 transition-colors hover:bg-accent"
+                >
+                  <i data-lucide="settings" class="h-3.5 w-3.5"></i> Settings
                 </button>
               </div>
             </div>
-            <p class="mt-1.5 h-4 shrink-0 text-[11px] leading-4 text-muted-foreground">Select text for formatting · Enter to send · Shift+Enter for newline</p>
-          </div>
-        </div>
-      </section>
+          </header>
 
-      <aside
-        id="thread-pane"
-        class="hidden w-full max-w-md flex-col overflow-hidden rounded-2xl bg-card text-card-foreground shadow-lg ring-1 ring-black/5 dark:bg-[#121314] dark:ring-white/10 sm:w-[22rem]"
-        aria-label="Thread"
-      >
-        <header class="flex h-[var(--surface-header-height)] shrink-0 items-center gap-2 px-4">
-          <div class="min-w-0 flex-1">
-            <div class="text-sm font-semibold">Thread</div>
-            <div class="truncate text-xs text-muted-foreground" id="thread-parent-preview">—</div>
+          <div class="relative min-h-0 flex-1 overflow-y-auto" id="message-scroller">
+            <div class="mx-auto max-w-3xl space-y-1 px-4 py-6" id="message-list"></div>
+            <button
+              type="button"
+              id="btn-jump-latest"
+              class="duration-normal absolute bottom-3 left-1/2 z-10 hidden -translate-x-1/2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-lg transition-opacity hover:bg-accent"
+            >
+              Jump to latest
+            </button>
           </div>
-          <button type="button" id="btn-close-thread" class="rounded-md p-2 text-muted-foreground hover:bg-accent transition-colors duration-fast" aria-label="Close thread">
-            <i data-lucide="x" class="h-4 w-4"></i>
-          </button>
-        </header>
-        <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3 space-y-3" id="thread-messages"></div>
-        <div class="box-border flex h-[var(--surface-footer-height)] shrink-0 flex-col bg-muted/35 px-4 py-3">
-          <div class="relative flex flex-1 flex-col">
-            <div class="flex min-h-0 flex-1 flex-col rounded-xl border border-input bg-background/80 shadow-sm focus-within:ring-2 focus-within:ring-ring/40 transition-[box-shadow] duration-fast">
-              <div id="thread-editor" class="min-h-0 flex-1 overflow-y-auto px-3 py-2.5 text-sm" contenteditable="true" data-placeholder="Reply in thread…"></div>
-              <div class="flex h-10 shrink-0 items-center justify-end bg-muted/30 px-2">
-                <button type="button" id="btn-thread-send" class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity duration-fast">Reply</button>
-              </div>
+
+          <div
+            class="box-border flex h-[var(--surface-footer-height)] shrink-0 flex-col px-1 py-3 sm:px-2"
+            id="composer-region"
+          >
+            <div
+              id="permission-empty"
+              class="mx-auto hidden max-w-3xl rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground"
+            >
+              You don’t have permission to post in this channel.
             </div>
-            <p class="mt-1.5 h-4 shrink-0 text-[11px] leading-4 text-muted-foreground">Enter to reply · Shift+Enter for newline</p>
+            <div id="composer-wrap" class="relative mx-auto flex w-full max-w-3xl flex-1 flex-col">
+              <div
+                id="bubble-menu"
+                data-open="false"
+                class="absolute z-50 flex items-center gap-0.5 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+              >
+                <button
+                  type="button"
+                  data-cmd="bold"
+                  class="duration-fast rounded-sm px-2 py-1 text-xs font-semibold transition-colors hover:bg-accent"
+                  title="Bold"
+                >
+                  B
+                </button>
+                <button
+                  type="button"
+                  data-cmd="italic"
+                  class="duration-fast rounded-sm px-2 py-1 text-xs italic transition-colors hover:bg-accent"
+                  title="Italic"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  data-cmd="strikeThrough"
+                  class="duration-fast rounded-sm px-2 py-1 text-xs line-through transition-colors hover:bg-accent"
+                  title="Strike"
+                >
+                  S
+                </button>
+                <span class="mx-0.5 h-4 w-px bg-border"></span>
+                <button
+                  type="button"
+                  data-cmd="formatBlock"
+                  data-value="blockquote"
+                  class="duration-fast rounded-sm px-2 py-1 text-xs transition-colors hover:bg-accent"
+                  title="Blockquote"
+                >
+                  “
+                </button>
+                <button
+                  type="button"
+                  data-cmd="createLink"
+                  class="duration-fast rounded-sm px-2 py-1 text-xs transition-colors hover:bg-accent"
+                  title="Link"
+                >
+                  <i data-lucide="link" class="h-3.5 w-3.5"></i>
+                </button>
+              </div>
+
+              <div
+                class="duration-fast flex min-h-0 flex-1 flex-col rounded-lg border border-input bg-card shadow-sm transition-[box-shadow] focus-within:ring-2 focus-within:ring-ring/40"
+              >
+                <div
+                  id="editor"
+                  class="min-h-0 flex-1 overflow-y-auto px-3 py-2.5 text-sm leading-normal text-card-foreground"
+                  contenteditable="true"
+                  role="textbox"
+                  aria-multiline="true"
+                  data-placeholder="Message #product-launch"
+                ></div>
+                <div class="flex h-10 shrink-0 items-center gap-1 bg-muted/50 px-2" id="action-row">
+                  <div
+                    class="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden"
+                    id="action-visible"
+                  ></div>
+                  <div class="relative shrink-0">
+                    <button
+                      type="button"
+                      id="btn-more"
+                      class="duration-fast hidden items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <i data-lucide="ellipsis" class="h-3.5 w-3.5"></i>
+                      <span>More</span>
+                    </button>
+                    <div
+                      id="more-menu"
+                      class="absolute right-0 bottom-full z-40 mb-1 hidden min-w-[12rem] rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-lg"
+                    ></div>
+                  </div>
+                  <button
+                    type="button"
+                    id="btn-send"
+                    disabled
+                    class="duration-fast ml-1 shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-50 transition-opacity enabled:opacity-100 enabled:hover:opacity-90 disabled:cursor-not-allowed"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+              <p class="mt-1.5 h-4 shrink-0 text-[11px] leading-4 text-muted-foreground">
+                Select text for formatting · Enter to send · Shift+Enter for newline
+              </p>
+            </div>
           </div>
-        </div>
-      </aside>
+        </section>
+
+        <aside
+          id="thread-pane"
+          class="hidden w-full max-w-md flex-col overflow-hidden rounded-2xl bg-card text-card-foreground shadow-lg ring-1 ring-black/5 sm:w-[22rem] dark:bg-[#121314] dark:ring-white/10"
+          aria-label="Thread"
+        >
+          <header class="flex h-[var(--surface-header-height)] shrink-0 items-center gap-2 px-4">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-semibold">Thread</div>
+              <div class="truncate text-xs text-muted-foreground" id="thread-parent-preview">—</div>
+            </div>
+            <button
+              type="button"
+              id="btn-close-thread"
+              class="duration-fast rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent"
+              aria-label="Close thread"
+            >
+              <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+          </header>
+          <div
+            class="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3"
+            id="thread-messages"
+          ></div>
+          <div
+            class="box-border flex h-[var(--surface-footer-height)] shrink-0 flex-col bg-muted/35 px-4 py-3"
+          >
+            <div class="relative flex flex-1 flex-col">
+              <div
+                class="duration-fast flex min-h-0 flex-1 flex-col rounded-xl border border-input bg-background/80 shadow-sm transition-[box-shadow] focus-within:ring-2 focus-within:ring-ring/40"
+              >
+                <div
+                  id="thread-editor"
+                  class="min-h-0 flex-1 overflow-y-auto px-3 py-2.5 text-sm"
+                  contenteditable="true"
+                  data-placeholder="Reply in thread…"
+                ></div>
+                <div class="flex h-10 shrink-0 items-center justify-end bg-muted/30 px-2">
+                  <button
+                    type="button"
+                    id="btn-thread-send"
+                    class="duration-fast rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    Reply
+                  </button>
+                </div>
+              </div>
+              <p class="mt-1.5 h-4 shrink-0 text-[11px] leading-4 text-muted-foreground">
+                Enter to reply · Shift+Enter for newline
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
-  </div>
 
-  <!-- Schedule popover -->
-  <div id="schedule-backdrop" class="fixed inset-0 z-[60] hidden bg-foreground/20"></div>
-  <div id="schedule-popover" class="fixed bottom-24 left-1/2 z-[70] hidden w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg">
-    <div class="mb-2 text-sm font-semibold">Schedule message</div>
-    <div class="space-y-1">
-      <button type="button" class="schedule-preset flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors duration-fast" data-when="in 1 hour">In 1 hour</button>
-      <button type="button" class="schedule-preset flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors duration-fast" data-when="tomorrow 9:00">Tomorrow 9:00</button>
-      <button type="button" class="schedule-preset flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors duration-fast" data-when="monday 9:00">Next Monday 9:00</button>
+    <!-- Schedule popover -->
+    <div id="schedule-backdrop" class="fixed inset-0 z-[60] hidden bg-foreground/20"></div>
+    <div
+      id="schedule-popover"
+      class="fixed bottom-24 left-1/2 z-[70] hidden w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg"
+    >
+      <div class="mb-2 text-sm font-semibold">Schedule message</div>
+      <div class="space-y-1">
+        <button
+          type="button"
+          class="schedule-preset duration-fast flex w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+          data-when="in 1 hour"
+        >
+          In 1 hour
+        </button>
+        <button
+          type="button"
+          class="schedule-preset duration-fast flex w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+          data-when="tomorrow 9:00"
+        >
+          Tomorrow 9:00
+        </button>
+        <button
+          type="button"
+          class="schedule-preset duration-fast flex w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+          data-when="monday 9:00"
+        >
+          Next Monday 9:00
+        </button>
+      </div>
+      <div class="my-2"></div>
+      <label class="block text-xs text-muted-foreground">Custom time</label>
+      <input
+        id="schedule-custom"
+        type="datetime-local"
+        class="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+      />
+      <label class="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <input id="schedule-recur" type="checkbox" class="rounded border-input" /> Recurring weekly
+      </label>
+      <div class="mt-3 flex justify-end gap-2">
+        <button
+          type="button"
+          id="schedule-cancel"
+          class="duration-fast rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-accent"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          id="schedule-confirm"
+          class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+        >
+          Schedule
+        </button>
+      </div>
     </div>
-    <div class="my-2"></div>
-    <label class="block text-xs text-muted-foreground">Custom time</label>
-    <input id="schedule-custom" type="datetime-local" class="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
-    <label class="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-      <input id="schedule-recur" type="checkbox" class="rounded border-input" /> Recurring weekly
-    </label>
-    <div class="mt-3 flex justify-end gap-2">
-      <button type="button" id="schedule-cancel" class="rounded-md px-2 py-1.5 text-xs hover:bg-accent transition-colors duration-fast">Cancel</button>
-      <button type="button" id="schedule-confirm" class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Schedule</button>
-    </div>
-  </div>
 
-  <!-- Toast -->
-  <div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[80] hidden -translate-x-1/2 rounded-md border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg"></div>
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="pointer-events-none fixed bottom-6 left-1/2 z-[80] hidden -translate-x-1/2 rounded-md border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg"
+    ></div>
 
-  <script>
-    /* ========== Prototype state (in-memory) ========== */
-    const me = { id: "u-me", name: "You", initials: "YO" };
-    const users = {
-      "u-alice": { id: "u-alice", name: "Alice Chen", initials: "AC" },
-      "u-bob": { id: "u-bob", name: "Bob Rivera", initials: "BR" },
-      "u-me": me,
-    };
+    <script>
+      /* ========== Prototype state (in-memory) ========== */
+      const me = { id: "u-me", name: "You", initials: "YO" };
+      const users = {
+        "u-alice": { id: "u-alice", name: "Alice Chen", initials: "AC" },
+        "u-bob": { id: "u-bob", name: "Bob Rivera", initials: "BR" },
+        "u-me": me,
+      };
 
-    let messages = [
-      {
-        id: "m1",
-        authorId: "u-alice",
-        body: "Kickoff: let’s keep launch blockers in this channel so we don’t recreate the same notes elsewhere.",
-        createdAt: "2026-08-10T09:12:00",
-        reactions: { "👍": ["u-bob", "u-me"] },
-        threadCount: 2,
-      },
-      {
-        id: "m2",
-        authorId: "u-bob",
-        body: "Agreed. I’ll drop the checklist as a follow-up thread on the first message.",
-        createdAt: "2026-08-10T09:14:00",
-        reactions: {},
-        threadCount: 0,
-      },
-      {
-        id: "m3",
-        authorId: "u-alice",
-        body: "Composer should stay calm: formatting on <strong>selection</strong>, inserts overflow by width — not a permanent formatting strip.",
-        createdAt: "2026-08-10T10:02:00",
-        reactions: { "✨": ["u-bob"] },
-        threadCount: 0,
-      },
-    ];
+      let messages = [
+        {
+          id: "m1",
+          authorId: "u-alice",
+          body: "Kickoff: let’s keep launch blockers in this channel so we don’t recreate the same notes elsewhere.",
+          createdAt: "2026-08-10T09:12:00",
+          reactions: { "👍": ["u-bob", "u-me"] },
+          threadCount: 2,
+        },
+        {
+          id: "m2",
+          authorId: "u-bob",
+          body: "Agreed. I’ll drop the checklist as a follow-up thread on the first message.",
+          createdAt: "2026-08-10T09:14:00",
+          reactions: {},
+          threadCount: 0,
+        },
+        {
+          id: "m3",
+          authorId: "u-alice",
+          body: "Composer should stay calm: formatting on <strong>selection</strong>, inserts overflow by width — not a permanent formatting strip.",
+          createdAt: "2026-08-10T10:02:00",
+          reactions: { "✨": ["u-bob"] },
+          threadCount: 0,
+        },
+      ];
 
-    const threads = {
-      m1: [
-        { id: "t1", authorId: "u-bob", body: "Checklist draft: pricing page, email, status page.", createdAt: "2026-08-10T09:20:00" },
-        { id: "t2", authorId: "u-alice", body: "Add legal review before we announce.", createdAt: "2026-08-10T09:22:00" },
-      ],
-    };
+      const threads = {
+        m1: [
+          {
+            id: "t1",
+            authorId: "u-bob",
+            body: "Checklist draft: pricing page, email, status page.",
+            createdAt: "2026-08-10T09:20:00",
+          },
+          {
+            id: "t2",
+            authorId: "u-alice",
+            body: "Add legal review before we announce.",
+            createdAt: "2026-08-10T09:22:00",
+          },
+        ],
+      };
 
-    let activeThreadId = null;
-    let canPost = true;
-    let narrowComposer = false;
+      let activeThreadId = null;
+      let canPost = true;
+      let narrowComposer = false;
 
-    const ACTION_ITEMS = [
-      { id: "mention", priority: 1, label: "Mention", icon: "at-sign", toast: "Mention picker (stub)" },
-      { id: "image", priority: 1, label: "Image", icon: "image", toast: "Insert image (stub)" },
-      { id: "attach", priority: 1, label: "Attachment", icon: "paperclip", toast: "Insert attachment (stub)" },
-      { id: "code", priority: 2, label: "Code block", icon: "code-2", toast: "Inserted code block placeholder" },
-      { id: "poll", priority: 2, label: "Poll", icon: "bar-chart-3", toast: "Poll builder (stub)" },
-      { id: "record", priority: 3, label: "Record screen", icon: "monitor-play", toast: "Screen recording (stub)" },
-      { id: "schedule", priority: 3, label: "Schedule", icon: "clock", special: "schedule" },
-    ];
+      const ACTION_ITEMS = [
+        {
+          id: "mention",
+          priority: 1,
+          label: "Mention",
+          icon: "at-sign",
+          toast: "Mention picker (stub)",
+        },
+        { id: "image", priority: 1, label: "Image", icon: "image", toast: "Insert image (stub)" },
+        {
+          id: "attach",
+          priority: 1,
+          label: "Attachment",
+          icon: "paperclip",
+          toast: "Insert attachment (stub)",
+        },
+        {
+          id: "code",
+          priority: 2,
+          label: "Code block",
+          icon: "code-2",
+          toast: "Inserted code block placeholder",
+        },
+        {
+          id: "poll",
+          priority: 2,
+          label: "Poll",
+          icon: "bar-chart-3",
+          toast: "Poll builder (stub)",
+        },
+        {
+          id: "record",
+          priority: 3,
+          label: "Record screen",
+          icon: "monitor-play",
+          toast: "Screen recording (stub)",
+        },
+        { id: "schedule", priority: 3, label: "Schedule", icon: "clock", special: "schedule" },
+      ];
 
-    /* ========== Helpers ========== */
-    function $(sel, root = document) { return root.querySelector(sel); }
-    function toast(msg) {
-      const el = $("#toast");
-      el.textContent = msg;
-      el.classList.remove("hidden");
-      clearTimeout(toast._t);
-      toast._t = setTimeout(() => el.classList.add("hidden"), 2200);
-    }
-    function fmtTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    }
-    function dayLabel(iso) {
-      const d = new Date(iso);
-      return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
-    }
-    function editorHasContent(el) {
-      return (el.textContent || "").trim().length > 0;
-    }
-    function avatar(user, size = "h-8 w-8 text-[11px]") {
-      return `<span class="inline-flex ${size} shrink-0 items-center justify-center rounded-full bg-secondary font-medium text-secondary-foreground">${user.initials}</span>`;
-    }
+      /* ========== Helpers ========== */
+      function $(sel, root = document) {
+        return root.querySelector(sel);
+      }
+      function toast(msg) {
+        const el = $("#toast");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => el.classList.add("hidden"), 2200);
+      }
+      function fmtTime(iso) {
+        const d = new Date(iso);
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+      function dayLabel(iso) {
+        const d = new Date(iso);
+        return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+      }
+      function editorHasContent(el) {
+        return (el.textContent || "").trim().length > 0;
+      }
+      function avatar(user, size = "h-8 w-8 text-[11px]") {
+        return `<span class="inline-flex ${size} shrink-0 items-center justify-center rounded-full bg-secondary font-medium text-secondary-foreground">${user.initials}</span>`;
+      }
 
-    /* ========== Theme ========== */
-    function applyTheme() {
-      const preferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const stored = localStorage.getItem("denser-proto-theme");
-      const dark = stored ? stored === "dark" : preferDark;
-      document.documentElement.classList.toggle("dark", dark);
-    }
-    $("#btn-theme").addEventListener("click", () => {
-      const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
-      localStorage.setItem("denser-proto-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
-    });
-    applyTheme();
+      /* ========== Theme ========== */
+      function applyTheme() {
+        const preferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const stored = localStorage.getItem("denser-proto-theme");
+        const dark = stored ? stored === "dark" : preferDark;
+        document.documentElement.classList.toggle("dark", dark);
+      }
+      $("#btn-theme").addEventListener("click", () => {
+        const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
+        localStorage.setItem("denser-proto-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+      });
+      applyTheme();
 
-    /* ========== Messages render ========== */
-    function renderMessages() {
-      const list = $("#message-list");
-      let lastDay = "";
-      let html = "";
-      messages.forEach((m, i) => {
-        const day = dayLabel(m.createdAt);
-        if (day !== lastDay) {
-          lastDay = day;
-          html += `<div class="flex justify-center py-5"><span class="text-xs font-medium text-muted-foreground">${day}</span></div>`;
-        }
-        const user = users[m.authorId];
-        const prev = messages[i - 1];
-        const grouped = prev && prev.authorId === m.authorId && dayLabel(prev.createdAt) === day;
-        const reactions = Object.entries(m.reactions || {})
-          .map(([emoji, ids]) => {
-            const mine = ids.includes(me.id);
-            return `<button type="button" data-react="${m.id}" data-emoji="${emoji}" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors duration-fast hover:bg-accent ${mine ? "bg-accent text-accent-foreground" : "bg-muted/60"}">${emoji} <span class="text-muted-foreground">${ids.length}</span></button>`;
-          })
-          .join("");
+      /* ========== Messages render ========== */
+      function renderMessages() {
+        const list = $("#message-list");
+        let lastDay = "";
+        let html = "";
+        messages.forEach((m, i) => {
+          const day = dayLabel(m.createdAt);
+          if (day !== lastDay) {
+            lastDay = day;
+            html += `<div class="flex justify-center py-5"><span class="text-xs font-medium text-muted-foreground">${day}</span></div>`;
+          }
+          const user = users[m.authorId];
+          const prev = messages[i - 1];
+          const grouped = prev && prev.authorId === m.authorId && dayLabel(prev.createdAt) === day;
+          const reactions = Object.entries(m.reactions || {})
+            .map(([emoji, ids]) => {
+              const mine = ids.includes(me.id);
+              return `<button type="button" data-react="${m.id}" data-emoji="${emoji}" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors duration-fast hover:bg-accent ${mine ? "bg-accent text-accent-foreground" : "bg-muted/60"}">${emoji} <span class="text-muted-foreground">${ids.length}</span></button>`;
+            })
+            .join("");
 
-        html += `
+          html += `
           <article class="msg-row group relative rounded-md px-1 py-1 hover:bg-muted/40 transition-colors duration-fast ${grouped ? "mt-0.5" : "mt-3"}" data-id="${m.id}" tabindex="0">
             <div class="flex gap-3">
               <div class="w-8 shrink-0">${grouped ? "" : avatar(user)}</div>
@@ -437,310 +706,330 @@
               </div>
             </div>
           </article>`;
-      });
-      list.innerHTML = html;
-      lucide.createIcons();
-      list.querySelectorAll("[data-react]").forEach((btn) => {
-        btn.addEventListener("click", () => toggleReaction(btn.dataset.react, btn.dataset.emoji));
-      });
-      list.querySelectorAll("[data-open-thread]").forEach((btn) => {
-        btn.addEventListener("click", () => openThread(btn.dataset.openThread));
-      });
-    }
-
-    function toggleReaction(messageId, emoji) {
-      const m = messages.find((x) => x.id === messageId);
-      if (!m) return;
-      m.reactions = m.reactions || {};
-      const set = new Set(m.reactions[emoji] || []);
-      if (set.has(me.id)) set.delete(me.id);
-      else set.add(me.id);
-      if (set.size === 0) delete m.reactions[emoji];
-      else m.reactions[emoji] = [...set];
-      renderMessages();
-    }
-
-    function openThread(messageId) {
-      activeThreadId = messageId;
-      const parent = messages.find((m) => m.id === messageId);
-      $("#thread-parent-preview").textContent = parent ? parent.body.replace(/<[^>]+>/g, "").slice(0, 80) : "—";
-      if (!threads[messageId]) threads[messageId] = [];
-      renderThread();
-      $("#thread-pane").classList.remove("hidden");
-      $("#thread-pane").classList.add("flex");
-      $("#thread-editor").focus();
-    }
-
-    function closeThread() {
-      activeThreadId = null;
-      $("#thread-pane").classList.add("hidden");
-      $("#thread-pane").classList.remove("flex");
-    }
-
-    function renderThread() {
-      const box = $("#thread-messages");
-      const items = threads[activeThreadId] || [];
-      box.innerHTML = items
-        .map((m) => {
-          const u = users[m.authorId];
-          return `<div class="flex gap-2"><div>${avatar(u, "h-7 w-7 text-[10px]")}</div><div><div class="text-xs font-medium">${u.name} <span class="font-normal text-muted-foreground">${fmtTime(m.createdAt)}</span></div><div class="text-sm">${m.body}</div></div></div>`;
-        })
-        .join("") || `<p class="text-sm text-muted-foreground">No replies yet.</p>`;
-      lucide.createIcons();
-    }
-
-    $("#btn-close-thread").addEventListener("click", closeThread);
-    $("#btn-thread-send").addEventListener("click", () => {
-      const ed = $("#thread-editor");
-      if (!editorHasContent(ed) || !activeThreadId) return;
-      const body = ed.innerText.trim();
-      threads[activeThreadId].push({
-        id: "t-" + Date.now(),
-        authorId: me.id,
-        body,
-        createdAt: new Date().toISOString(),
-      });
-      const parent = messages.find((m) => m.id === activeThreadId);
-      if (parent) parent.threadCount = threads[activeThreadId].length;
-      ed.innerHTML = "";
-      renderThread();
-      renderMessages();
-    });
-
-    /* ========== Composer overflow ========== */
-    function runAction(item) {
-      if (item.special === "schedule") {
-        openSchedule();
-        return;
+        });
+        list.innerHTML = html;
+        lucide.createIcons();
+        list.querySelectorAll("[data-react]").forEach((btn) => {
+          btn.addEventListener("click", () => toggleReaction(btn.dataset.react, btn.dataset.emoji));
+        });
+        list.querySelectorAll("[data-open-thread]").forEach((btn) => {
+          btn.addEventListener("click", () => openThread(btn.dataset.openThread));
+        });
       }
-      if (item.id === "code") {
-        document.execCommand("insertHTML", false, "<pre class='rounded-md bg-muted px-2 py-1 text-xs font-mono my-1'>// code</pre>");
-        syncSend();
+
+      function toggleReaction(messageId, emoji) {
+        const m = messages.find((x) => x.id === messageId);
+        if (!m) return;
+        m.reactions = m.reactions || {};
+        const set = new Set(m.reactions[emoji] || []);
+        if (set.has(me.id)) set.delete(me.id);
+        else set.add(me.id);
+        if (set.size === 0) delete m.reactions[emoji];
+        else m.reactions[emoji] = [...set];
+        renderMessages();
       }
-      toast(item.toast || item.label);
-    }
 
-    function renderActionRow() {
-      const visible = $("#action-visible");
-      const moreBtn = $("#btn-more");
-      const moreMenu = $("#more-menu");
-      const row = $("#action-row");
-      const wrap = $("#composer-wrap");
+      function openThread(messageId) {
+        activeThreadId = messageId;
+        const parent = messages.find((m) => m.id === messageId);
+        $("#thread-parent-preview").textContent = parent
+          ? parent.body.replace(/<[^>]+>/g, "").slice(0, 80)
+          : "—";
+        if (!threads[messageId]) threads[messageId] = [];
+        renderThread();
+        $("#thread-pane").classList.remove("hidden");
+        $("#thread-pane").classList.add("flex");
+        $("#thread-editor").focus();
+      }
 
-      // Measure: leave room for More + Send (~120px)
-      const budget = Math.max(0, (narrowComposer ? 280 : wrap.clientWidth) - 140);
-      const sorted = [...ACTION_ITEMS].sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id));
+      function closeThread() {
+        activeThreadId = null;
+        $("#thread-pane").classList.add("hidden");
+        $("#thread-pane").classList.remove("flex");
+      }
 
-      // Approximate widths
-      const approx = { mention: 34, image: 34, attach: 34, code: 34, poll: 34, record: 34, schedule: 34 };
-      let used = 0;
-      const show = [];
-      const hide = [];
-      for (const item of sorted) {
-        const w = approx[item.id] || 36;
-        if (used + w <= budget) {
-          show.push(item);
-          used += w;
-        } else {
-          hide.push(item);
+      function renderThread() {
+        const box = $("#thread-messages");
+        const items = threads[activeThreadId] || [];
+        box.innerHTML =
+          items
+            .map((m) => {
+              const u = users[m.authorId];
+              return `<div class="flex gap-2"><div>${avatar(u, "h-7 w-7 text-[10px]")}</div><div><div class="text-xs font-medium">${u.name} <span class="font-normal text-muted-foreground">${fmtTime(m.createdAt)}</span></div><div class="text-sm">${m.body}</div></div></div>`;
+            })
+            .join("") || `<p class="text-sm text-muted-foreground">No replies yet.</p>`;
+        lucide.createIcons();
+      }
+
+      $("#btn-close-thread").addEventListener("click", closeThread);
+      $("#btn-thread-send").addEventListener("click", () => {
+        const ed = $("#thread-editor");
+        if (!editorHasContent(ed) || !activeThreadId) return;
+        const body = ed.innerText.trim();
+        threads[activeThreadId].push({
+          id: "t-" + Date.now(),
+          authorId: me.id,
+          body,
+          createdAt: new Date().toISOString(),
+        });
+        const parent = messages.find((m) => m.id === activeThreadId);
+        if (parent) parent.threadCount = threads[activeThreadId].length;
+        ed.innerHTML = "";
+        renderThread();
+        renderMessages();
+      });
+
+      /* ========== Composer overflow ========== */
+      function runAction(item) {
+        if (item.special === "schedule") {
+          openSchedule();
+          return;
         }
+        if (item.id === "code") {
+          document.execCommand(
+            "insertHTML",
+            false,
+            "<pre class='rounded-md bg-muted px-2 py-1 text-xs font-mono my-1'>// code</pre>",
+          );
+          syncSend();
+        }
+        toast(item.toast || item.label);
       }
-      // Prefer hiding lowest priority first — rebalance if we hid P1 while showing P3
-      hide.sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
 
-      visible.innerHTML = show
-        .map(
-          (item) =>
-            `<button type="button" data-action="${item.id}" class="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast" title="${item.label}"><i data-lucide="${item.icon}" class="h-4 w-4"></i></button>`
-        )
-        .join("");
+      function renderActionRow() {
+        const visible = $("#action-visible");
+        const moreBtn = $("#btn-more");
+        const moreMenu = $("#more-menu");
+        const row = $("#action-row");
+        const wrap = $("#composer-wrap");
 
-      if (hide.length) {
-        moreBtn.classList.remove("hidden");
-        moreBtn.classList.add("inline-flex");
-        moreMenu.innerHTML = hide
+        // Measure: leave room for More + Send (~120px)
+        const budget = Math.max(0, (narrowComposer ? 280 : wrap.clientWidth) - 140);
+        const sorted = [...ACTION_ITEMS].sort(
+          (a, b) => a.priority - b.priority || a.id.localeCompare(b.id),
+        );
+
+        // Approximate widths
+        const approx = {
+          mention: 34,
+          image: 34,
+          attach: 34,
+          code: 34,
+          poll: 34,
+          record: 34,
+          schedule: 34,
+        };
+        let used = 0;
+        const show = [];
+        const hide = [];
+        for (const item of sorted) {
+          const w = approx[item.id] || 36;
+          if (used + w <= budget) {
+            show.push(item);
+            used += w;
+          } else {
+            hide.push(item);
+          }
+        }
+        // Prefer hiding lowest priority first — rebalance if we hid P1 while showing P3
+        hide.sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
+
+        visible.innerHTML = show
           .map(
             (item) =>
-              `<button type="button" data-action="${item.id}" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent transition-colors duration-fast"><i data-lucide="${item.icon}" class="h-3.5 w-3.5"></i>${item.label}</button>`
+              `<button type="button" data-action="${item.id}" class="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-fast" title="${item.label}"><i data-lucide="${item.icon}" class="h-4 w-4"></i></button>`,
           )
           .join("");
-      } else {
-        moreBtn.classList.add("hidden");
-        moreBtn.classList.remove("inline-flex");
-        moreMenu.classList.add("hidden");
+
+        if (hide.length) {
+          moreBtn.classList.remove("hidden");
+          moreBtn.classList.add("inline-flex");
+          moreMenu.innerHTML = hide
+            .map(
+              (item) =>
+                `<button type="button" data-action="${item.id}" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent transition-colors duration-fast"><i data-lucide="${item.icon}" class="h-3.5 w-3.5"></i>${item.label}</button>`,
+            )
+            .join("");
+        } else {
+          moreBtn.classList.add("hidden");
+          moreBtn.classList.remove("inline-flex");
+          moreMenu.classList.add("hidden");
+        }
+
+        lucide.createIcons();
+        [
+          ...visible.querySelectorAll("[data-action]"),
+          ...moreMenu.querySelectorAll("[data-action]"),
+        ].forEach((btn) => {
+          btn.addEventListener("click", () => {
+            moreMenu.classList.add("hidden");
+            const item = ACTION_ITEMS.find((x) => x.id === btn.dataset.action);
+            if (item) runAction(item);
+          });
+        });
       }
 
-      lucide.createIcons();
-      [...visible.querySelectorAll("[data-action]"), ...moreMenu.querySelectorAll("[data-action]")].forEach((btn) => {
+      $("#btn-more").addEventListener("click", (e) => {
+        e.stopPropagation();
+        $("#more-menu").classList.toggle("hidden");
+        $("#channel-menu").classList.add("hidden");
+      });
+
+      const ro = new ResizeObserver(() => renderActionRow());
+      ro.observe($("#composer-wrap"));
+
+      $("#btn-narrow").addEventListener("click", () => {
+        narrowComposer = !narrowComposer;
+        $("#composer-wrap").classList.toggle("max-w-xs", narrowComposer);
+        $("#composer-wrap").classList.toggle("max-w-3xl", !narrowComposer);
+        renderActionRow();
+        toast(narrowComposer ? "Narrow composer — watch More overflow" : "Full-width composer");
+      });
+
+      /* ========== Selection bubble ========== */
+      const editor = $("#editor");
+      const bubble = $("#bubble-menu");
+
+      function placeBubble() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
+          bubble.dataset.open = "false";
+          return;
+        }
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const wrapRect = $("#composer-wrap").getBoundingClientRect();
+        bubble.dataset.open = "true";
+        const top = rect.top - wrapRect.top - bubble.offsetHeight - 8;
+        const left = Math.min(
+          Math.max(0, rect.left - wrapRect.left + rect.width / 2 - bubble.offsetWidth / 2),
+          wrapRect.width - bubble.offsetWidth,
+        );
+        bubble.style.top = `${Math.max(-8, top)}px`;
+        bubble.style.left = `${left}px`;
+      }
+
+      document.addEventListener("selectionchange", () => {
+        if (document.activeElement === editor) placeBubble();
+        else bubble.dataset.open = "false";
+      });
+      editor.addEventListener("keyup", placeBubble);
+      editor.addEventListener("mouseup", placeBubble);
+
+      bubble.querySelectorAll("[data-cmd]").forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => e.preventDefault());
         btn.addEventListener("click", () => {
-          moreMenu.classList.add("hidden");
-          const item = ACTION_ITEMS.find((x) => x.id === btn.dataset.action);
-          if (item) runAction(item);
+          const cmd = btn.dataset.cmd;
+          if (cmd === "createLink") {
+            const url = prompt("Link URL", "https://");
+            if (url) document.execCommand("createLink", false, url);
+          } else if (cmd === "formatBlock") {
+            document.execCommand("formatBlock", false, btn.dataset.value);
+          } else {
+            document.execCommand(cmd, false, null);
+          }
+          placeBubble();
+          syncSend();
         });
       });
-    }
 
-    $("#btn-more").addEventListener("click", (e) => {
-      e.stopPropagation();
-      $("#more-menu").classList.toggle("hidden");
-      $("#channel-menu").classList.add("hidden");
-    });
-
-    const ro = new ResizeObserver(() => renderActionRow());
-    ro.observe($("#composer-wrap"));
-
-    $("#btn-narrow").addEventListener("click", () => {
-      narrowComposer = !narrowComposer;
-      $("#composer-wrap").classList.toggle("max-w-xs", narrowComposer);
-      $("#composer-wrap").classList.toggle("max-w-3xl", !narrowComposer);
-      renderActionRow();
-      toast(narrowComposer ? "Narrow composer — watch More overflow" : "Full-width composer");
-    });
-
-    /* ========== Selection bubble ========== */
-    const editor = $("#editor");
-    const bubble = $("#bubble-menu");
-
-    function placeBubble() {
-      const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
-        bubble.dataset.open = "false";
-        return;
+      /* ========== Send ========== */
+      function syncSend() {
+        $("#btn-send").disabled = !editorHasContent(editor) || !canPost;
       }
-      const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const wrapRect = $("#composer-wrap").getBoundingClientRect();
-      bubble.dataset.open = "true";
-      const top = rect.top - wrapRect.top - bubble.offsetHeight - 8;
-      const left = Math.min(
-        Math.max(0, rect.left - wrapRect.left + rect.width / 2 - bubble.offsetWidth / 2),
-        wrapRect.width - bubble.offsetWidth
-      );
-      bubble.style.top = `${Math.max(-8, top)}px`;
-      bubble.style.left = `${left}px`;
-    }
+      editor.addEventListener("input", syncSend);
 
-    document.addEventListener("selectionchange", () => {
-      if (document.activeElement === editor) placeBubble();
-      else bubble.dataset.open = "false";
-    });
-    editor.addEventListener("keyup", placeBubble);
-    editor.addEventListener("mouseup", placeBubble);
-
-    bubble.querySelectorAll("[data-cmd]").forEach((btn) => {
-      btn.addEventListener("mousedown", (e) => e.preventDefault());
-      btn.addEventListener("click", () => {
-        const cmd = btn.dataset.cmd;
-        if (cmd === "createLink") {
-          const url = prompt("Link URL", "https://");
-          if (url) document.execCommand("createLink", false, url);
-        } else if (cmd === "formatBlock") {
-          document.execCommand("formatBlock", false, btn.dataset.value);
-        } else {
-          document.execCommand(cmd, false, null);
-        }
-        placeBubble();
+      function sendMessage() {
+        if (!editorHasContent(editor) || !canPost) return;
+        const body = editor.innerHTML.trim();
+        messages.push({
+          id: "m-" + Date.now(),
+          authorId: me.id,
+          body,
+          createdAt: new Date().toISOString(),
+          reactions: {},
+          threadCount: 0,
+        });
+        editor.innerHTML = "";
         syncSend();
-      });
-    });
-
-    /* ========== Send ========== */
-    function syncSend() {
-      $("#btn-send").disabled = !editorHasContent(editor) || !canPost;
-    }
-    editor.addEventListener("input", syncSend);
-
-    function sendMessage() {
-      if (!editorHasContent(editor) || !canPost) return;
-      const body = editor.innerHTML.trim();
-      messages.push({
-        id: "m-" + Date.now(),
-        authorId: me.id,
-        body,
-        createdAt: new Date().toISOString(),
-        reactions: {},
-        threadCount: 0,
-      });
-      editor.innerHTML = "";
-      syncSend();
-      bubble.dataset.open = "false";
-      renderMessages();
-      const scroller = $("#message-scroller");
-      scroller.scrollTop = scroller.scrollHeight;
-      toast("Message sent");
-    }
-
-    $("#btn-send").addEventListener("click", sendMessage);
-    editor.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+        bubble.dataset.open = "false";
+        renderMessages();
+        const scroller = $("#message-scroller");
+        scroller.scrollTop = scroller.scrollHeight;
+        toast("Message sent");
       }
-    });
 
-    /* ========== Schedule ========== */
-    function openSchedule() {
-      $("#schedule-backdrop").classList.remove("hidden");
-      $("#schedule-popover").classList.remove("hidden");
-    }
-    function closeSchedule() {
-      $("#schedule-backdrop").classList.add("hidden");
-      $("#schedule-popover").classList.add("hidden");
-    }
-    $("#schedule-backdrop").addEventListener("click", closeSchedule);
-    $("#schedule-cancel").addEventListener("click", closeSchedule);
-    document.querySelectorAll(".schedule-preset").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      $("#btn-send").addEventListener("click", sendMessage);
+      editor.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      /* ========== Schedule ========== */
+      function openSchedule() {
+        $("#schedule-backdrop").classList.remove("hidden");
+        $("#schedule-popover").classList.remove("hidden");
+      }
+      function closeSchedule() {
+        $("#schedule-backdrop").classList.add("hidden");
+        $("#schedule-popover").classList.add("hidden");
+      }
+      $("#schedule-backdrop").addEventListener("click", closeSchedule);
+      $("#schedule-cancel").addEventListener("click", closeSchedule);
+      document.querySelectorAll(".schedule-preset").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          closeSchedule();
+          editor.innerHTML = "";
+          syncSend();
+          toast(`Scheduled: ${btn.dataset.when}`);
+        });
+      });
+      $("#schedule-confirm").addEventListener("click", () => {
+        const custom = $("#schedule-custom").value;
+        const recur = $("#schedule-recur").checked;
         closeSchedule();
         editor.innerHTML = "";
         syncSend();
-        toast(`Scheduled: ${btn.dataset.when}`);
+        toast(custom ? `Scheduled ${custom}${recur ? " (weekly)" : ""}` : "Pick a time");
       });
-    });
-    $("#schedule-confirm").addEventListener("click", () => {
-      const custom = $("#schedule-custom").value;
-      const recur = $("#schedule-recur").checked;
-      closeSchedule();
-      editor.innerHTML = "";
+
+      /* ========== Channel menu / permission ========== */
+      $("#btn-channel-menu").addEventListener("click", (e) => {
+        e.stopPropagation();
+        $("#channel-menu").classList.toggle("hidden");
+        $("#more-menu").classList.add("hidden");
+      });
+      document.addEventListener("click", () => {
+        $("#channel-menu").classList.add("hidden");
+        $("#more-menu").classList.add("hidden");
+      });
+
+      $("#btn-nopost").addEventListener("click", () => {
+        canPost = !canPost;
+        $("#composer-wrap").classList.toggle("hidden", !canPost);
+        $("#permission-empty").classList.toggle("hidden", canPost);
+        syncSend();
+        toast(canPost ? "Posting enabled" : "No-post state");
+      });
+
+      /* ========== Jump to latest ========== */
+      const scroller = $("#message-scroller");
+      scroller.addEventListener("scroll", () => {
+        const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+        $("#btn-jump-latest").classList.toggle("hidden", nearBottom);
+      });
+      $("#btn-jump-latest").addEventListener("click", () => {
+        scroller.scrollTop = scroller.scrollHeight;
+      });
+
+      /* ========== Boot ========== */
+      renderMessages();
+      renderActionRow();
       syncSend();
-      toast(custom ? `Scheduled ${custom}${recur ? " (weekly)" : ""}` : "Pick a time");
-    });
-
-    /* ========== Channel menu / permission ========== */
-    $("#btn-channel-menu").addEventListener("click", (e) => {
-      e.stopPropagation();
-      $("#channel-menu").classList.toggle("hidden");
-      $("#more-menu").classList.add("hidden");
-    });
-    document.addEventListener("click", () => {
-      $("#channel-menu").classList.add("hidden");
-      $("#more-menu").classList.add("hidden");
-    });
-
-    $("#btn-nopost").addEventListener("click", () => {
-      canPost = !canPost;
-      $("#composer-wrap").classList.toggle("hidden", !canPost);
-      $("#permission-empty").classList.toggle("hidden", canPost);
-      syncSend();
-      toast(canPost ? "Posting enabled" : "No-post state");
-    });
-
-    /* ========== Jump to latest ========== */
-    const scroller = $("#message-scroller");
-    scroller.addEventListener("scroll", () => {
-      const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
-      $("#btn-jump-latest").classList.toggle("hidden", nearBottom);
-    });
-    $("#btn-jump-latest").addEventListener("click", () => {
+      lucide.createIcons();
       scroller.scrollTop = scroller.scrollHeight;
-    });
-
-    /* ========== Boot ========== */
-    renderMessages();
-    renderActionRow();
-    syncSend();
-    lucide.createIcons();
-    scroller.scrollTop = scroller.scrollHeight;
-  </script>
-</body>
+    </script>
+  </body>
 </html>

@@ -4,7 +4,7 @@ import { Badge } from "@denser/design-system";
 export type HealthStatus = "unknown" | "ok" | "error";
 
 defineProps<{
-  status: HealthStatus
+  status: HealthStatus;
 }>();
 </script>
 

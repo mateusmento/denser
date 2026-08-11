@@ -8,6 +8,10 @@
     "dev:app": "pnpm --filter @denser/app dev",
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint . && stylelint \"**/*.{css,vue}\"",
+    "lint:fix": "eslint . --fix && stylelint \"**/*.{css,vue}\" --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "test:e2e": "pnpm --filter @denser/e2e test",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
@@ -18,6 +22,22 @@
     "storybook:app": "pnpm --filter @denser/app storybook",
     "build-storybook:design-system": "pnpm --filter @denser/design-system build-storybook",
     "build-storybook:app": "pnpm --filter @denser/app build-storybook"
+  },
+  "devDependencies": {
+    "@dreamsicle.io/stylelint-config-tailwindcss": "^1.2.2",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-better-tailwindcss": "^4.7.0",
+    "eslint-plugin-vue": "^10.10.0",
+    "globals": "^17.9.0",
+    "oxfmt": "^0.63.0",
+    "postcss-html": "^2.0.0",
+    "stylelint": "^17.14.1",
+    "stylelint-config-html": "^2.0.0",
+    "stylelint-config-recommended": "^18.0.0",
+    "stylelint-config-recommended-vue": "^2.0.0",
+    "typescript-eslint": "^8.67.0"
   },
   "packageManager": "pnpm@11.17.0"
 }

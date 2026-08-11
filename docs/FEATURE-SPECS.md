@@ -2,7 +2,7 @@
 
 **Status:** Draft scaffold — specify product features as **core objects**, **data shapes**, **behaviors**, and **constraints**. UI layout and chrome live under [ui-surfaces/](./ui-surfaces/) (catalog: [UI-SURFACES.md](./UI-SURFACES.md)).
 
-**Audience:** Product, backend, and frontend when agreeing what a feature *is* before (or while) building it.
+**Audience:** Product, backend, and frontend when agreeing what a feature _is_ before (or while) building it.
 
 **Related:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) (v1 filing model), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ONTHOLOGY.md](./ONTHOLOGY.md) (broader vocabulary — prefer Artifacts & Spaces where they conflict), [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), `@denser/contracts` (wire Zod once implemented).
 
@@ -12,13 +12,13 @@
 
 A feature spec answers:
 
-| Question | Section |
-| --- | --- |
-| What nouns exist? | Core objects |
-| What fields / relations? | Data schema (conceptual → later Zod/SQL) |
-| What can happen? | Behaviors |
-| What must never happen / edge rules? | Constraints |
-| How does the user touch it? | UI surfaces (link only) |
+| Question                             | Section                                  |
+| ------------------------------------ | ---------------------------------------- |
+| What nouns exist?                    | Core objects                             |
+| What fields / relations?             | Data schema (conceptual → later Zod/SQL) |
+| What can happen?                     | Behaviors                                |
+| What must never happen / edge rules? | Constraints                              |
+| How does the user touch it?          | UI surfaces (link only)                  |
 
 Keep specs **implementation-honest but UI-light**: name API/events when known; do not redesign the composer here.
 
@@ -29,39 +29,46 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 ```markdown
 ## <Feature name>
 
-| Field | Value |
-| --- | --- |
-| Status | Draft \| Active \| Deferred |
-| Owner surface(s) | Links to UI-SURFACES |
-| v1 scope | One sentence |
+| Field            | Value                       |
+| ---------------- | --------------------------- |
+| Status           | Draft \| Active \| Deferred |
+| Owner surface(s) | Links to UI-SURFACES        |
+| v1 scope         | One sentence                |
 
 ### Core objects
+
 | Object | Role |
-| --- | --- |
-| … | … |
+| ------ | ---- |
+| …      | …    |
 
 ### Data schema (conceptual)
+
 - **Object:** fields (type, required, notes)
 - **Relations:** …
 - **Identity / versioning:** …
 
 ### Behaviors
+
 | Behavior | Trigger | Result |
-| --- | --- | --- |
-| … | … | … |
+| -------- | ------- | ------ |
+| …        | …       | …      |
 
 ### Constraints
+
 - …
 - Invariants: …
 - Permissions: …
 
 ### Events / sync (if realtime)
+
 - …
 
 ### Out of scope (v1)
+
 - …
 
 ### Open questions
+
 - …
 ```
 
@@ -69,34 +76,34 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 
 ## Index
 
-| Feature | Status | Objects (summary) | UI surfaces |
-| --- | --- | --- | --- |
-| [Conversation](#conversation-draft) | Draft | Channel, Message, Thread?, Reaction? | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
-| Document | TBD | Artifact(document), body, … | [ui-surfaces/document.md](./ui-surfaces/document.md) |
-| Spaces & membership | TBD | Space, Membership, Invite | Shell, home, invites |
-| Workflow / Board | TBD | Status, assignment, … | Board, backlog |
+| Feature                             | Status | Objects (summary)                    | UI surfaces                                                  |
+| ----------------------------------- | ------ | ------------------------------------ | ------------------------------------------------------------ |
+| [Conversation](#conversation-draft) | Draft  | Channel, Message, Thread?, Reaction? | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
+| Document                            | TBD    | Artifact(document), body, …          | [ui-surfaces/document.md](./ui-surfaces/document.md)         |
+| Spaces & membership                 | TBD    | Space, Membership, Invite            | Shell, home, invites                                         |
+| Workflow / Board                    | TBD    | Status, assignment, …                | Board, backlog                                               |
 
 ---
 
 ## Conversation (draft)
 
-| Field | Value |
-| --- | --- |
-| Status | Draft |
+| Field            | Value                                                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status           | Draft                                                                                                                                                |
 | Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) (MessageComposer); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
-| v1 scope | Persistent channel messaging with rich-text posts, history, and membership-gated access (poll / schedule / recording may phase in) |
+| v1 scope         | Persistent channel messaging with rich-text posts, history, and membership-gated access (poll / schedule / recording may phase in)                   |
 
 ### Core objects
 
-| Object | Role |
-| --- | --- |
-| **Channel** | Collaboration space for a conversation stream (Space-scoped or as product decides vs Artifact — see open questions) |
-| **Message** | One post in a channel (or thread); rich body |
-| **Thread** (optional v1) | Side conversation anchored to a parent message |
-| **Reaction** (optional v1) | Emoji (or short) reaction on a message |
-| **Poll** (phased) | Structured poll embedded or referenced from a message |
-| **ScheduledMessage** (phased) | Message payload + send-at / recurrence before it becomes a live Message |
-| **Membership / permission** | Who can read / post (reuse Space membership where Channel lives in a Space) |
+| Object                        | Role                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Channel**                   | Collaboration space for a conversation stream (Space-scoped or as product decides vs Artifact — see open questions) |
+| **Message**                   | One post in a channel (or thread); rich body                                                                        |
+| **Thread** (optional v1)      | Side conversation anchored to a parent message                                                                      |
+| **Reaction** (optional v1)    | Emoji (or short) reaction on a message                                                                              |
+| **Poll** (phased)             | Structured poll embedded or referenced from a message                                                               |
+| **ScheduledMessage** (phased) | Message payload + send-at / recurrence before it becomes a live Message                                             |
+| **Membership / permission**   | Who can read / post (reuse Space membership where Channel lives in a Space)                                         |
 
 ### Data schema (conceptual)
 
@@ -139,16 +146,16 @@ Wire schemas later land in `@denser/contracts`; this section stays the product c
 
 ### Behaviors
 
-| Behavior | Trigger | Result |
-| --- | --- | --- |
-| Post message | Author with post permission submits via composer | Message persisted; appears in channel stream; realtime fan-out to members |
-| Schedule message | Author confirms schedule options | ScheduledMessage stored; live Message created at fire time (or equivalent job) |
-| Edit message | Author (or moderator — TBD) | Body updated; `edited_at` set; clients refresh |
-| Delete message | Author / moderator | Soft or hard delete per policy; UI shows tombstone or removal |
-| Open thread | User acts on parent message | Thread created or focused; composer may target thread (thread shape) |
-| React | User toggles reaction | Reaction added/removed |
-| Insert poll / recording / attach | Composer actions | Creates/refs related objects or blobs per constraints |
-| Read history | User opens channel | Paginated or windowed history (cursor TBD) |
+| Behavior                         | Trigger                                          | Result                                                                         |
+| -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Post message                     | Author with post permission submits via composer | Message persisted; appears in channel stream; realtime fan-out to members      |
+| Schedule message                 | Author confirms schedule options                 | ScheduledMessage stored; live Message created at fire time (or equivalent job) |
+| Edit message                     | Author (or moderator — TBD)                      | Body updated; `edited_at` set; clients refresh                                 |
+| Delete message                   | Author / moderator                               | Soft or hard delete per policy; UI shows tombstone or removal                  |
+| Open thread                      | User acts on parent message                      | Thread created or focused; composer may target thread (thread shape)           |
+| React                            | User toggles reaction                            | Reaction added/removed                                                         |
+| Insert poll / recording / attach | Composer actions                                 | Creates/refs related objects or blobs per constraints                          |
+| Read history                     | User opens channel                               | Paginated or windowed history (cursor TBD)                                     |
 
 ### Constraints
 
@@ -186,8 +193,8 @@ Wire schemas later land in `@denser/contracts`; this section stays the product c
 
 ## Changelog
 
-| Date | Change |
-| --- | --- |
-| 2026-08-10 | Scaffold + Conversation draft. |
+| Date       | Change                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| 2026-08-10 | Scaffold + Conversation draft.                                                                 |
 | 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note. |
-| 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON. |
+| 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON.                                              |

@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [".cursor/**"],
+  "sortTailwindcss": {
+    "stylesheet": "./packages/design-system/src/styles.css",
+    "functions": ["clsx", "cn"]
+  }
+}

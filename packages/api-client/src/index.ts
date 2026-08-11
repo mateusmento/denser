@@ -1,9 +1,4 @@
-export {
-  ApiClient,
-  ApiError,
-  createApiClient,
-  type ApiClientOptions,
-} from "./http.js";
+export { ApiClient, ApiError, createApiClient, type ApiClientOptions } from "./http.js";
 export {
   connectSocket,
   createSocketClient,

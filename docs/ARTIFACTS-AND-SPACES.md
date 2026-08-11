@@ -35,12 +35,12 @@ Folders are **deferred**; nesting Spaces covers organization for now.
 
 ## Location & tenancy
 
-| Item | Parent | Home? |
-| --- | --- | --- |
-| Root Space | none | Yes, if user owns or is a member |
-| Nested Space | another Space | No — only under parent |
-| Root Artifact | none (`space_id` null) | Yes, if user owns it |
-| Nested Artifact | a Space | No — only when browsing that Space |
+| Item            | Parent                 | Home?                              |
+| --------------- | ---------------------- | ---------------------------------- |
+| Root Space      | none                   | Yes, if user owns or is a member   |
+| Nested Space    | another Space          | No — only under parent             |
+| Root Artifact   | none (`space_id` null) | Yes, if user owns it               |
+| Nested Artifact | a Space                | No — only when browsing that Space |
 
 Persist **`root_space_id`** alongside **`space_id`** on rows that live in a Space tree (tenant index). Root Artifacts have no Space parent; do not invent a fake Space row for personal home unless storage forces it later.
 
@@ -48,11 +48,11 @@ Persist **`root_space_id`** alongside **`space_id`** on rows that live in a Spac
 
 ## Visibility
 
-| Space | Visibility | Membership | Behavior |
-| --- | --- | --- | --- |
-| **Root** | **Always private** | Explicit | Never public; lives at personal-home root |
-| **Nested** | **Public by default** | Inherited from parent ∪ optional explicit adds | Acts like a folder |
-| **Nested** | **Private** (optional) | Explicit list only | Sealed room; no casual move of Artifacts across its boundary |
+| Space      | Visibility             | Membership                                     | Behavior                                                     |
+| ---------- | ---------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
+| **Root**   | **Always private**     | Explicit                                       | Never public; lives at personal-home root                    |
+| **Nested** | **Public by default**  | Inherited from parent ∪ optional explicit adds | Acts like a folder                                           |
+| **Nested** | **Private** (optional) | Explicit list only                             | Sealed room; no casual move of Artifacts across its boundary |
 
 When flipping nested **public → private**, **copy current members** into an explicit list so nobody is locked out.
 
@@ -66,11 +66,11 @@ When flipping nested **public → private**, **copy current members** into an ex
 
 ### Roles
 
-| Role | Where | Notes |
-| --- | --- | --- |
-| **Owner** | Root Spaces only | Can do everything Admin can; unique root powers (e.g. delete root Space). **Break-glass** over the whole tree under that root: control/recovery (membership, visibility, delete nested Spaces) — **not** ambient Member read of every private child. Private nested content still needs membership or a deliberate Owner override. |
-| **Admin** | Root and nested | Day-to-day control; on nested Spaces may delete that Space. Cannot delete a **root** Space. |
-| **Member** | Root and nested | Participate per action grants (create content, etc., as configured). |
+| Role       | Where            | Notes                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Owner**  | Root Spaces only | Can do everything Admin can; unique root powers (e.g. delete root Space). **Break-glass** over the whole tree under that root: control/recovery (membership, visibility, delete nested Spaces) — **not** ambient Member read of every private child. Private nested content still needs membership or a deliberate Owner override. |
+| **Admin**  | Root and nested  | Day-to-day control; on nested Spaces may delete that Space. Cannot delete a **root** Space.                                                                                                                                                                                                                                        |
+| **Member** | Root and nested  | Participate per action grants (create content, etc., as configured).                                                                                                                                                                                                                                                               |
 
 Permissions are **role-based plus action grants** (granular). Exact action matrices can be refined in implementation; the role split above is the product rule.
 
@@ -98,7 +98,7 @@ Defer: Event, Map, Whiteboard, Conversation, Meeting, Workflow, Sprint, and othe
 
 ### Document
 
-Artifact shell + **title** + **rich-text body**.  
+Artifact shell + **title** + **rich-text body**.
 
 Defer: custom properties, board/calendar enablement, relationships, comments-as-capability, issue workflows. Property-based view enablement remains a **later Document feature**, not the foundation of the type system.
 

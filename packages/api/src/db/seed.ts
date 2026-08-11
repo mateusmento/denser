@@ -7,7 +7,10 @@ import { faker } from "@faker-js/faker";
 import { db } from "./client.js";
 import { account, session, user } from "./schema.js";
 
-config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"), quiet: true });
+config({
+  path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"),
+  quiet: true,
+});
 
 type Hero = { username: string; displayName: string };
 
@@ -57,7 +60,11 @@ for (const hero of heroes) {
 
 if (mode === "full") {
   const bulk = Array.from({ length: 8 }, () => ({
-    username: faker.internet.username().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24),
+    username: faker.internet
+      .username()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 24),
     displayName: faker.person.fullName(),
   }));
   const unique = [...new Map(bulk.map((u) => [u.username, u])).values()].filter(

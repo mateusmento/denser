@@ -5,7 +5,10 @@ import { serve } from "@hono/node-server";
 import { app } from "./app.js";
 import { attachRealtime } from "./realtime/attach.js";
 
-config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../.env"), quiet: true });
+config({
+  path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../.env"),
+  quiet: true,
+});
 
 const port = Number(process.env.API_PORT ?? 3457);
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:5173";

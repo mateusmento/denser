@@ -24,15 +24,15 @@ Documents represent pieces of work or knowledge that accumulate context over tim
 
 A Document may represent:
 
-* Notes
-* Specifications
-* Documentation
-* Tasks
-* Issues
-* Decisions
-* Meeting notes
-* Research
-* Proposals
+- Notes
+- Specifications
+- Documentation
+- Tasks
+- Issues
+- Decisions
+- Meeting notes
+- Research
+- Proposals
 
 Documents evolve by acquiring structure rather than being recreated.
 
@@ -44,8 +44,8 @@ A Map is a spatial artifact used to organize ideas and information.
 
 Maps support two distinct modes:
 
-* **Structured Mode**, where the Map visualizes and edits existing workspace objects.
-* **Free-form Mode**, where the Map owns its own exploratory content for brainstorming and modeling.
+- **Structured Mode**, where the Map visualizes and edits existing workspace objects.
+- **Free-form Mode**, where the Map owns its own exploratory content for brainstorming and modeling.
 
 Maps can later reference or embed workspace objects while remaining artifacts in their own right.
 
@@ -137,12 +137,12 @@ They express semantic meaning rather than hierarchy.
 
 Examples include:
 
-* references
-* blocks
-* duplicates
-* belongs to
-* parent
-* child
+- references
+- blocks
+- duplicates
+- belongs to
+- parent
+- child
 
 Relationships enable navigation, impact analysis, dependency tracking, and relationship visualizations while preserving a single source of truth.
 
@@ -158,17 +158,17 @@ They answer:
 
 Examples include:
 
-* Title
-* Status
-* Assignee
-* Owner
-* Due Date
-* Start Date
-* Labels
-* Priority
-* Parent
-* Created At
-* Updated At
+- Title
+- Status
+- Assignee
+- Owner
+- Due Date
+- Start Date
+- Labels
+- Priority
+- Parent
+- Created At
+- Updated At
 
 Properties are structured data that can be searched, filtered, sorted, grouped, and visualized.
 
@@ -292,15 +292,15 @@ A View is enabled for an artifact type when that type (or instance) supplies the
 
 Views do not invent data. They project existing Properties (and Relationships where relevant). An artifact can appear in multiple Views as it acquires the matching properties over time.
 
-| View | Required properties | What the view does with them | Notes / enriching (optional) |
-| --- | --- | --- | --- |
-| **List / Backlog** | Title | Browse, filter, sort, bulk-edit a flat set of artifacts | Status, Assignee, Priority, Labels, Due Date, Rank/Order (for backlog prioritization). “Issue key” is presentation of identity or a tracking property — not a separate ontology concept unless we define it as one. |
-| **Tree** | Parent (hierarchy edge) | Nested navigation / containment | Title for labels; Rank/Order among siblings |
-| **Board** | Status *or* Workflow stage | Columns = stages; drag moves stage/status | Title; Assignee, Priority, Due Date as card chrome. Board is a view over Workflow-capable artifacts. |
-| **Calendar** | A date property: single date *or* interval (Start + End / Due) | Place artifacts (and Events) on days/weeks | Title; Event objects are first-class time intervals and always calendar-eligible |
-| **Timeline** | Start and End (interval) | Horizontal bars / sequencing over time | Title; Dependencies via Relationships for critical-path style overlays |
-| **Structured Map / Flow Map** | Node identity + Title; plus either **Parent** (structure) or **Relationships** (flow/edges) | Spatial layout of existing objects; edits write through to source | Free-form Map content is owned by the Map artifact (Modeling), not a View over foreign properties |
-| **Relationship Graph** | Relationships (typed links) | Connectivity, not hierarchy | Title for node labels; filter by relationship type (blocks, references, …) |
+| View                          | Required properties                                                                         | What the view does with them                                      | Notes / enriching (optional)                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **List / Backlog**            | Title                                                                                       | Browse, filter, sort, bulk-edit a flat set of artifacts           | Status, Assignee, Priority, Labels, Due Date, Rank/Order (for backlog prioritization). “Issue key” is presentation of identity or a tracking property — not a separate ontology concept unless we define it as one. |
+| **Tree**                      | Parent (hierarchy edge)                                                                     | Nested navigation / containment                                   | Title for labels; Rank/Order among siblings                                                                                                                                                                         |
+| **Board**                     | Status _or_ Workflow stage                                                                  | Columns = stages; drag moves stage/status                         | Title; Assignee, Priority, Due Date as card chrome. Board is a view over Workflow-capable artifacts.                                                                                                                |
+| **Calendar**                  | A date property: single date _or_ interval (Start + End / Due)                              | Place artifacts (and Events) on days/weeks                        | Title; Event objects are first-class time intervals and always calendar-eligible                                                                                                                                    |
+| **Timeline**                  | Start and End (interval)                                                                    | Horizontal bars / sequencing over time                            | Title; Dependencies via Relationships for critical-path style overlays                                                                                                                                              |
+| **Structured Map / Flow Map** | Node identity + Title; plus either **Parent** (structure) or **Relationships** (flow/edges) | Spatial layout of existing objects; edits write through to source | Free-form Map content is owned by the Map artifact (Modeling), not a View over foreign properties                                                                                                                   |
+| **Relationship Graph**        | Relationships (typed links)                                                                 | Connectivity, not hierarchy                                       | Title for node labels; filter by relationship type (blocks, references, …)                                                                                                                                          |
 
 ### Enablement rule (draft)
 
@@ -329,11 +329,11 @@ Creating or modifying structured information.
 
 Examples include:
 
-* Writing
-* Editing
-* Commenting
-* Defining properties
-* Creating relationships
+- Writing
+- Editing
+- Commenting
+- Defining properties
+- Creating relationships
 
 Authoring contributes directly to the workspace's source of truth.
 
@@ -345,11 +345,11 @@ Understanding existing structured information.
 
 Examples include:
 
-* Reading
-* Browsing
-* Filtering
-* Navigating
-* Comparing
+- Reading
+- Browsing
+- Filtering
+- Navigating
+- Comparing
 
 Visualization reveals information without changing its meaning.
 
@@ -361,10 +361,10 @@ Exploring ideas before they become fully structured.
 
 Examples include:
 
-* Free-form Maps
-* Brainstorming
-* Spatial organization
-* Concept exploration
+- Free-form Maps
+- Brainstorming
+- Spatial organization
+- Concept exploration
 
 Modeling helps users discover structure before formalizing it into Objects and Relationships.
 
@@ -374,11 +374,11 @@ Modeling helps users discover structure before formalizing it into Objects and R
 
 Denser separates concerns into complementary dimensions.
 
-* **Objects** define what exists.
-* **Properties** describe the current state of those Objects.
-* **Capabilities** define what those Objects can do.
-* **Views** define how users visualize and manipulate them.
-* **Modes of Interaction** describe the user's intent while working.
+- **Objects** define what exists.
+- **Properties** describe the current state of those Objects.
+- **Capabilities** define what those Objects can do.
+- **Views** define how users visualize and manipulate them.
+- **Modes of Interaction** describe the user's intent while working.
 
 This separation allows Denser to remain conceptually small while supporting a wide range of workflows.
 

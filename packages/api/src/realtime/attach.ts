@@ -72,9 +72,7 @@ async function authenticateSocket(socket: DenserSocket): Promise<string> {
   const body = (await res.json()) as SessionPayload;
   const userId = body?.user?.id;
   if (!res.ok || !userId) {
-    throw new Error(
-      `unauthorized: session status=${res.status} body=${JSON.stringify(body)}`,
-    );
+    throw new Error(`unauthorized: session status=${res.status} body=${JSON.stringify(body)}`);
   }
   return userId;
 }

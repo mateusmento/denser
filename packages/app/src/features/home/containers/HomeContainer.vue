@@ -25,9 +25,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="min-h-screen bg-background text-foreground p-8 space-y-4">
+  <main class="min-h-screen space-y-4 bg-background p-8 text-foreground">
     <h1 class="text-2xl font-semibold tracking-tight">Denser</h1>
-    <p class="text-muted-foreground text-sm">Full-stack skeleton — health check via api-client.</p>
+    <p class="text-sm text-muted-foreground">Full-stack skeleton — health check via api-client.</p>
     <div class="flex items-center gap-3">
       <HealthStatusBadge :status="status" />
       <Button type="button" @click="checkHealth">Recheck</Button>

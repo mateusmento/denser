@@ -26,10 +26,10 @@ Over time, some become commitments, then execution, and eventually documentation
 
 Most software forces users to translate the same information repeatedly as work progresses.
 
-* Meeting notes become Jira issues.
-* Slack discussions become Linear tickets.
-* Completed issues become release notes.
-* Finished projects become documentation.
+- Meeting notes become Jira issues.
+- Slack discussions become Linear tickets.
+- Completed issues become release notes.
+- Finished projects become documentation.
 
 Each transition creates another object that must be maintained independently.
 
@@ -137,12 +137,12 @@ Denser applies the same idea to work.
 
 An artifact becomes denser as it accumulates:
 
-* context
-* conversations
-* decisions
-* structure
-* implementation
-* history
+- context
+- conversations
+- decisions
+- structure
+- implementation
+- history
 
 without fragmenting into separate systems.
 

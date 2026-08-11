@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from "vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps<{
-  class?: HTMLAttributes['class']
-}>()
+  class?: HTMLAttributes["class"];
+}>();
 </script>
 
 <template>
   <span
     data-slot="menubar-shortcut"
-    :class="cn('text-muted-foreground group-focus/menubar-item:text-accent-foreground text-xs tracking-widest ml-auto', props.class)"
+    :class="
+      cn(
+        'ml-auto text-xs tracking-widest text-muted-foreground group-focus/menubar-item:text-accent-foreground',
+        props.class,
+      )
+    "
   >
     <slot />
   </span>

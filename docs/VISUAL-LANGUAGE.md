@@ -12,7 +12,7 @@
 
 Denser’s UI should make work feel continuous and light, even when the underlying artifact is dense with context.
 
-Philosophy already says: *the software should disappear behind the work*, *consistency does not mean uniformity*, and *every context deserves its own interface*. This document turns that into visual and interaction rules.
+Philosophy already says: _the software should disappear behind the work_, _consistency does not mean uniformity_, and _every context deserves its own interface_. This document turns that into visual and interaction rules.
 
 The visual language exists so that:
 
@@ -59,17 +59,17 @@ Group related actions into labeled regions and progressive disclosure (collapsed
 
 Three layers of UI chrome. Most screens use all three; denser Views expose more of layer 1.
 
-| Layer | Name | What lives here | Rule |
-| --- | --- | --- | --- |
-| 1 | **Persistent** | Navigation, View identity, primary create/filter for *this* View, selection affordances | Always visible when relevant to the current job |
-| 2 | **Progressive** | Secondary filters, display options, bulk actions, less-common View tools | One obvious click/gesture away; labeled; not scavenger-hunt |
-| 3 | **Ambient** | Command palette, keyboard shortcuts, object context menus, help | Global or object-local; never the only way to discover a *routine* action for the current View |
+| Layer | Name            | What lives here                                                                         | Rule                                                                                           |
+| ----- | --------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1     | **Persistent**  | Navigation, View identity, primary create/filter for _this_ View, selection affordances | Always visible when relevant to the current job                                                |
+| 2     | **Progressive** | Secondary filters, display options, bulk actions, less-common View tools                | One obvious click/gesture away; labeled; not scavenger-hunt                                    |
+| 3     | **Ambient**     | Command palette, keyboard shortcuts, object context menus, help                         | Global or object-local; never the only way to discover a _routine_ action for the current View |
 
 ### Draft decision rules
 
-1. Ask: *Would a regular user of this View need this in the first minute?* → Layer 1.
-2. Ask: *Is this important but intermittent?* → Layer 2, with a visible entry (icon + label or “⋯” that reveals a named group).
-3. Ask: *Is this rare, power-user, or cross-cutting?* → Layer 3.
+1. Ask: _Would a regular user of this View need this in the first minute?_ → Layer 1.
+2. Ask: _Is this important but intermittent?_ → Layer 2, with a visible entry (icon + label or “⋯” that reveals a named group).
+3. Ask: _Is this rare, power-user, or cross-cutting?_ → Layer 3.
 4. If a Layer 3 action becomes common in support/feedback, promote it to Layer 2 or 1 for that View.
 5. Prefer **object-local** actions on the artifact (context menu, inline) over global toolbars when the action applies to a selection.
 
@@ -79,16 +79,16 @@ Three layers of UI chrome. Most screens use all three; denser Views expose more 
 
 ## 4. Surface types (draft)
 
-| Surface | Density | Calm cues | Dense cues |
-| --- | --- | --- | --- |
-| Document | Calm | Wide measure, generous vertical rhythm, minimal sticky chrome | Formatting / insert appear on selection or focus |
-| Channel / conversation | Calm–medium | Message flow dominates; composer persistent but quiet | Mentions, threads, reactions on the message |
-| Backlog / list | Dense | Clear list rhythm; muted metadata | Filters, sort, bulk select, inline status on row |
-| Board | Dense | Columns readable; cards not ornamental | Drag, quick status, assignees, WIP visible |
-| Map | Medium–dense | Canvas is primary | Tool palette and inspectors progressive |
-| Settings / admin | Calm | Sectioned forms | No dashboard chrome |
+| Surface                | Density      | Calm cues                                                     | Dense cues                                       |
+| ---------------------- | ------------ | ------------------------------------------------------------- | ------------------------------------------------ |
+| Document               | Calm         | Wide measure, generous vertical rhythm, minimal sticky chrome | Formatting / insert appear on selection or focus |
+| Channel / conversation | Calm–medium  | Message flow dominates; composer persistent but quiet         | Mentions, threads, reactions on the message      |
+| Backlog / list         | Dense        | Clear list rhythm; muted metadata                             | Filters, sort, bulk select, inline status on row |
+| Board                  | Dense        | Columns readable; cards not ornamental                        | Drag, quick status, assignees, WIP visible       |
+| Map                    | Medium–dense | Canvas is primary                                             | Tool palette and inspectors progressive          |
+| Settings / admin       | Calm         | Sectioned forms                                               | No dashboard chrome                              |
 
-Shared shell (sidebar, top bar, space switcher) stays **consistent** across surfaces; only the *content region* changes density.
+Shared shell (sidebar, top bar, space switcher) stays **consistent** across surfaces; only the _content region_ changes density.
 
 ---
 
@@ -102,7 +102,7 @@ Shared shell (sidebar, top bar, space switcher) stays **consistent** across surf
 
 4. **Avoid unnecessary shadows.** Shadows exist for one purpose: indicating elevation during interaction (drag, popover, modal). Static surfaces should not cast shadows by default. Elevated interaction states may.
 
-5. **Prefer one accent color.** A single accent draws the eye to primary actions — nothing else should compete. Everything else is neutral (grays) or semantic (status / priority / danger). The concrete hue is provisional (see §6); the *one-accent* rule is not.
+5. **Prefer one accent color.** A single accent draws the eye to primary actions — nothing else should compete. Everything else is neutral (grays) or semantic (status / priority / danger). The concrete hue is provisional (see §6); the _one-accent_ rule is not.
 
 6. **Cards are for interaction or ownership, not decoration.** Default: no card chrome on calm document surfaces. On lists/boards and similar work surfaces, card/row chrome exists to support selection, drag, and scanning — not to look “designed.” An inset **card** / owned shell may also mark a region inside an otherwise borderless pane (e.g. composer) without requiring pane-level separators.
 
@@ -111,7 +111,7 @@ Shared shell (sidebar, top bar, space switcher) stays **consistent** across surf
 8. **Sibling edges align.** When regions sit as siblings in a row or column (channel + thread, list + inspector, split panes), shared structural edges must line up — especially header bottoms and footer tops. Prefer **matching track sizes** (shared heading / footer height tokens both sides know) over merging distinct sections into one parent band just for alignment. Distinct activities stay distinct components; alignment is a fine coupling via size contract, not ownership of each other’s DOM. **Alignment holds whether sectioning is bordered or borderless.**
 
 9. **Separators divide; borders enclose; either may be omitted.**
-   - **Separator** — hairline between stack/cross-axis siblings *when a line is chosen*.
+   - **Separator** — hairline between stack/cross-axis siblings _when a line is chosen_.
    - **Border** — outer edge of a contained surface (popover, menu, input, composer/card shell).
    - **Omit** — when spacing, surface color, or an inset card already sections the UI (see §5.2).
    - Avoid double-painting the same adjoining edge. Prefer one owner per join when a line is used.
@@ -126,13 +126,13 @@ Applies whenever two or more **distinct** panes share a viewport band (side-by-s
 
 **Avoid:** folding unrelated activities into one parent header/footer row solely so a line looks continuous — that erases section boundaries (e.g. conversation stream vs thread are no longer separable surfaces).
 
-| Do | Don’t |
-| --- | --- |
-| Use a shared **fixed** track token (`--surface-header-height`, `--surface-footer-height`) on sibling headers/footers — not `min-height`, which still lets one pane grow and stagger the join | Merge channel + thread headers into one DOM row “for alignment” |
-| Keep Conversation and Thread as separate sections with their own scrollers/composers | Make one section’s layout own the other’s header |
-| Mirror footer **internal slots** when both have composers (shell + action row + hint row heights) so the shells line up, not only the band | Let unequal padding/line-count or missing hint rows stagger composer tops |
-| Truncate or clamp header content to fit the shared height | Grow one header with extra lines and leave the sibling short |
-| Rely on the height contract for alignment even when bands are borderless | Treat hairlines as the only way siblings “know” where the band ends |
+| Do                                                                                                                                                                                           | Don’t                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Use a shared **fixed** track token (`--surface-header-height`, `--surface-footer-height`) on sibling headers/footers — not `min-height`, which still lets one pane grow and stagger the join | Merge channel + thread headers into one DOM row “for alignment”           |
+| Keep Conversation and Thread as separate sections with their own scrollers/composers                                                                                                         | Make one section’s layout own the other’s header                          |
+| Mirror footer **internal slots** when both have composers (shell + action row + hint row heights) so the shells line up, not only the band                                                   | Let unequal padding/line-count or missing hint rows stagger composer tops |
+| Truncate or clamp header content to fit the shared height                                                                                                                                    | Grow one header with extra lines and leave the sibling short              |
+| Rely on the height contract for alignment even when bands are borderless                                                                                                                     | Treat hairlines as the only way siblings “know” where the band ends       |
 
 **Conversation example:** Channel header and Thread header remain in their own sections. Both use the same heading height token so their bottom edges align. A vertical join may be a separator, a surface-color change, or neither — alignment still comes from the height contract.
 
@@ -174,17 +174,17 @@ Borderless sectioning **does not relax** §5.1. Sibling headers/footers still sh
 
 **Implementation today** (`packages/design-system/src/styles.css`): Linear-adjacent purple primary `#5e6ad2`, near-white / near-black neutrals, Geist sans, light + dark tokens, status/priority semantic colors.
 
-**Draft recommendation:** Keep the **role structure** (background, foreground, primary, muted, destructive, sidebar, status_*, priority_*). Treat the specific purple as **provisional** until brand grilling lands — avoid locking marketing identity to “another purple productivity app” without an explicit decision.
+**Draft recommendation:** Keep the **role structure** (background, foreground, primary, muted, destructive, sidebar, status__, priority__). Treat the specific purple as **provisional** until brand grilling lands — avoid locking marketing identity to “another purple productivity app” without an explicit decision.
 
-| Role | Usage |
-| --- | --- |
-| `background` / `foreground` | App canvas and primary text |
-| `card` / `popover` | Elevated surfaces |
-| `primary` | Primary actions, key focus |
-| `muted` / `muted-foreground` | De-emphasized text and fills |
-| `destructive` | Irreversible / danger |
-| `border` / `input` / `ring` | Structure and focus |
-| `status-*` / `priority-*` | Workflow semantics only — not decoration |
+| Role                         | Usage                                    |
+| ---------------------------- | ---------------------------------------- |
+| `background` / `foreground`  | App canvas and primary text              |
+| `card` / `popover`           | Elevated surfaces                        |
+| `primary`                    | Primary actions, key focus               |
+| `muted` / `muted-foreground` | De-emphasized text and fills             |
+| `destructive`                | Irreversible / danger                    |
+| `border` / `input` / `ring`  | Structure and focus                      |
+| `status-*` / `priority-*`    | Workflow semantics only — not decoration |
 
 ### Rules
 
@@ -215,11 +215,11 @@ Never use gradients for: page backgrounds, static cards, buttons, or decorative 
 
 ### Type roles (max 3 sizes in a region)
 
-| Role | Typical Tailwind | Weight | Usage |
-| --- | --- | --- | --- |
-| Meta | `text-xs` | 400/500 | Labels, metadata, ids |
-| Body | `text-sm` | 400/500 | Body text, list primary labels, descriptions |
-| Title | `text-base` | 500/600 | View names, section titles, document title in chrome |
+| Role  | Typical Tailwind | Weight  | Usage                                                |
+| ----- | ---------------- | ------- | ---------------------------------------------------- |
+| Meta  | `text-xs`        | 400/500 | Labels, metadata, ids                                |
+| Body  | `text-sm`        | 400/500 | Body text, list primary labels, descriptions         |
+| Title | `text-base`      | 500/600 | View names, section titles, document title in chrome |
 
 ### Line heights
 
@@ -235,10 +235,10 @@ Use Tailwind’s spacing scale. Base unit: `4px`.
 
 ### Density modes
 
-| Mode | Padding / gap feel | When |
-| --- | --- | --- |
-| Calm | Comfortable vertical rhythm; fewer columns of chrome | Documents, settings, empty/overview |
-| Dense | Compact rows/cards; tighter meta; more information per viewport | Backlog, board, dense tables |
+| Mode  | Padding / gap feel                                              | When                                |
+| ----- | --------------------------------------------------------------- | ----------------------------------- |
+| Calm  | Comfortable vertical rhythm; fewer columns of chrome            | Documents, settings, empty/overview |
+| Dense | Compact rows/cards; tighter meta; more information per viewport | Backlog, board, dense tables        |
 
 Do not mix modes inside one region. A dense board/list region beside a document pane keeps each region in its own mode.
 
@@ -257,12 +257,12 @@ Motion is **functional feedback**, not decoration. Every animation communicates 
 
 ### Timing
 
-| Token | Duration | Easing | Usage |
-| --- | --- | --- | --- |
-| `fast` | 100ms | `ease-out` | Hover states, color transitions |
-| `normal` | 200ms | `ease-in-out` | Panels, menus, settle after move |
-| `slow` | 300ms | `cubic-bezier(0.16, 1, 0.3, 1)` | View transitions, modal open, theme crossfade |
-| `spring` | 400ms | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Release / drop feedback on work surfaces only |
+| Token    | Duration | Easing                              | Usage                                         |
+| -------- | -------- | ----------------------------------- | --------------------------------------------- |
+| `fast`   | 100ms    | `ease-out`                          | Hover states, color transitions               |
+| `normal` | 200ms    | `ease-in-out`                       | Panels, menus, settle after move              |
+| `slow`   | 300ms    | `cubic-bezier(0.16, 1, 0.3, 1)`     | View transitions, modal open, theme crossfade |
+| `spring` | 400ms    | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Release / drop feedback on work surfaces only |
 
 ### Micro-interactions
 
@@ -293,7 +293,7 @@ Calm document surfaces should almost never use springy motion. Prefer `transform
 
 **Open for review:** System-first vs dark-first.
 
-**Ownership:** the Theme *control* and `html.dark` owner live in [ui-surfaces/theme.md](./ui-surfaces/theme.md). This section owns look, motion, and contrast only.
+**Ownership:** the Theme _control_ and `html.dark` owner live in [ui-surfaces/theme.md](./ui-surfaces/theme.md). This section owns look, motion, and contrast only.
 
 ---
 
@@ -345,11 +345,11 @@ These rules exist so progressive density does not become feature hide-and-seek.
 
 ## 13. Relationship to implementation
 
-| Source of truth | Owns |
-| --- | --- |
-| This doc | Visual language decisions |
-| `@denser/design-system` | Tokens (`styles.css`), primitives, Storybook |
-| App features / Views | Density mode choice + Layer 1/2 composition per View |
+| Source of truth         | Owns                                                 |
+| ----------------------- | ---------------------------------------------------- |
+| This doc                | Visual language decisions                            |
+| `@denser/design-system` | Tokens (`styles.css`), primitives, Storybook         |
+| App features / Views    | Density mode choice + Layer 1/2 composition per View |
 
 When tokens and this doc disagree, **update one of them deliberately** — do not silently drift.
 
@@ -368,10 +368,10 @@ When tokens and this doc disagree, **update one of them deliberately** — do no
 
 ## 15. Changelog
 
-| Date | Change |
-| --- | --- |
-| 2026-08-10 | Initial draft; **progressive density** locked from product grilling. |
+| Date       | Change                                                                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-10 | Initial draft; **progressive density** locked from product grilling.                                                                                                                                                            |
 | 2026-08-10 | Integrated descriptive design principles, spacing, type roles, motion, theme, and do/don’t from the kanban DESIGN.md — without board-specific recipes; left hue, type stack, and system-first theme as current draft decisions. |
-| 2026-08-10 | Added sibling alignment + separator-vs-border rules (§5.8–5.9, §5.1). |
-| 2026-08-10 | Alignment via shared heading-height contract; do not merge distinct sections into parent bands. |
-| 2026-08-10 | Borderless sectioning case (§5.2); borders optional / not layout-flow; alignment independent of hairlines. |
+| 2026-08-10 | Added sibling alignment + separator-vs-border rules (§5.8–5.9, §5.1).                                                                                                                                                           |
+| 2026-08-10 | Alignment via shared heading-height contract; do not merge distinct sections into parent bands.                                                                                                                                 |
+| 2026-08-10 | Borderless sectioning case (§5.2); borders optional / not layout-flow; alignment independent of hairlines.                                                                                                                      |

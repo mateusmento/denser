@@ -12,12 +12,12 @@ Objects are the fundamental entities of the system.
 
 An Object has:
 
-* identity
-* structured data
-* lifecycle
-* history
-* permissions
-* capabilities
+- identity
+- structured data
+- lifecycle
+- history
+- permissions
+- capabilities
 
 Objects answer:
 
@@ -25,13 +25,13 @@ Objects answer:
 
 Examples include:
 
-* Document
-* Channel
-* Map
-* Event
-* Project
-* Workflow
-* User
+- Document
+- Channel
+- Map
+- Event
+- Project
+- Workflow
+- User
 
 Objects are the source of truth for the workspace.
 
@@ -47,26 +47,26 @@ Properties answer:
 
 Examples include:
 
-* Title
-* Status
-* Assignee
-* Due Date
-* Labels
-* Priority
-* Owner
-* Parent
-* Created At
-* Updated At
+- Title
+- Status
+- Assignee
+- Due Date
+- Labels
+- Priority
+- Owner
+- Parent
+- Created At
+- Updated At
 
 Properties are part of an Object's source of truth. They are structured data that can be searched, filtered, sorted, validated, and visualized across different Views.
 
 For example:
 
-* A **Board** visualizes the **Status** property.
-* A **Calendar** visualizes **Due Dates** and **Events**.
-* A **Timeline** visualizes **Start** and **End Dates**.
-* A **Tree** visualizes the **Parent** property.
-* A **Relationship Graph** visualizes **Relationships**.
+- A **Board** visualizes the **Status** property.
+- A **Calendar** visualizes **Due Dates** and **Events**.
+- A **Timeline** visualizes **Start** and **End Dates**.
+- A **Tree** visualizes the **Parent** property.
+- A **Relationship Graph** visualizes **Relationships**.
 
 Properties should remain simple and composable. Rather than introducing new object types for every use case, Denser should prefer enriching existing Objects with meaningful Properties whenever they express state without introducing new behavior.
 
@@ -84,13 +84,13 @@ Capabilities answer:
 
 Examples include:
 
-* Rich Text
-* Conversation
-* Workflow
-* Attachments
-* Relationships
-* Presence
-* AI
+- Rich Text
+- Conversation
+- Workflow
+- Attachments
+- Relationships
+- Presence
+- AI
 
 A Document may support Rich Text, Conversation, Workflow, and Relationships.
 
@@ -112,17 +112,17 @@ For example, an Issue-like Document may have:
 
 **Properties**
 
-* Status
-* Assignee
-* Priority
-* Due Date
+- Status
+- Assignee
+- Priority
+- Due Date
 
 **Capabilities**
 
-* Rich Text
-* Conversation
-* Workflow
-* Relationships
+- Rich Text
+- Conversation
+- Workflow
+- Relationships
 
 Changing a Property changes the state of an Object.
 
@@ -144,13 +144,13 @@ Views do not define new domain concepts. Instead, they expose existing structure
 
 Examples include:
 
-* List
-* Tree
-* Structured Map
-* Board
-* Timeline
-* Calendar
-* Relationship Graph
+- List
+- Tree
+- Structured Map
+- Board
+- Timeline
+- Calendar
+- Relationship Graph
 
 A Board visualizes and edits Workflow.
 
@@ -176,11 +176,11 @@ It produces or changes the source of truth.
 
 Examples:
 
-* Writing a document
-* Editing properties
-* Adding comments
-* Creating Mermaid diagrams
-* Uploading attachments
+- Writing a document
+- Editing properties
+- Adding comments
+- Creating Mermaid diagrams
+- Uploading attachments
 
 ---
 
@@ -192,11 +192,11 @@ It reveals information without changing its meaning.
 
 Examples:
 
-* Reading a document
-* Viewing a Calendar
-* Exploring a Relationship Graph
-* Navigating a Tree
-* Browsing a Board
+- Reading a document
+- Viewing a Calendar
+- Exploring a Relationship Graph
+- Navigating a Tree
+- Browsing a Board
 
 Many visualization modes also support direct editing without changing their fundamental purpose.
 
@@ -210,9 +210,9 @@ Unlike Authoring, Modeling is intentionally exploratory.
 
 Examples:
 
-* Free-form Maps
-* Brainstorming
-* AI clustering
+- Free-form Maps
+- Brainstorming
+- AI clustering
 
 Modeling creates understanding before creating structure.
 
@@ -234,15 +234,15 @@ They are intentionally created by users and evolve over time.
 
 Artifacts:
 
-* accumulate context
-* preserve history
-* become richer
-* evolve instead of being recreated
+- accumulate context
+- preserve history
+- become richer
+- evolve instead of being recreated
 
 Examples:
 
-* Document
-* Map
+- Document
+- Map
 
 Artifacts embody one of Denser's central principles:
 
@@ -258,9 +258,9 @@ Rather than containing work, they contain people, conversations, and shared cont
 
 Examples:
 
-* Channel
-* Project
-* Workspace
+- Channel
+- Project
+- Workspace
 
 ---
 
@@ -272,9 +272,9 @@ They define how work progresses through time.
 
 Examples:
 
-* Workflow
-* Sprint
-* Milestone
+- Workflow
+- Sprint
+- Milestone
 
 ---
 
@@ -286,11 +286,11 @@ Rather than containing information themselves, they describe how information fit
 
 Examples:
 
-* references
-* blocks
-* belongs to
-* duplicates
-* parent/child
+- references
+- blocks
+- belongs to
+- duplicates
+- parent/child
 
 Relationships enable visualizations such as Relationship Graphs while preserving a single source of truth.
 
@@ -329,16 +329,16 @@ Objects are enriched by **Capabilities**, experienced through **Views**, and man
 
 These classifications reinforce one another instead of competing.
 
-* **Objects** answer: **What exists?**
-* **Capabilities** answer: **What behaviors does it support?**
-* **Views** answer: **How is it visualized and manipulated?**
-* **Modes of Interaction** answer: **What is the user trying to accomplish?**
+- **Objects** answer: **What exists?**
+- **Capabilities** answer: **What behaviors does it support?**
+- **Views** answer: **How is it visualized and manipulated?**
+- **Modes of Interaction** answer: **What is the user trying to accomplish?**
 
 Together, they support Denser's broader philosophy:
 
-* **Information has one source of truth.**
-* **Work should evolve, not be recreated.**
-* **Every capability should reduce complexity somewhere else.**
-* **Every context deserves its own interface.**
+- **Information has one source of truth.**
+- **Work should evolve, not be recreated.**
+- **Every capability should reduce complexity somewhere else.**
+- **Every context deserves its own interface.**
 
 This framework gives Denser a stable conceptual foundation. New features shouldn't require inventing new concepts; they should fit naturally into one of these dimensions. That's what keeps the product cohesive as it grows.

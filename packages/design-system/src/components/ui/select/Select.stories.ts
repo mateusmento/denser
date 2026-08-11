@@ -1,11 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./index";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./index";
 
 const meta = {
   title: "primitives/Select",
