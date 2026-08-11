@@ -1,0 +1,44 @@
+---
+description: Storybook files live in a stories/ sibling folder, not colocated with presentationals
+globs: packages/app/src/features/**/*.{vue,ts},packages/app/src/modules/**/*.{vue,ts},packages/app/**/*.stories.*
+alwaysApply: false
+---
+
+# Storybook file location (app)
+
+Story files for feature/module presentationals live in a **`stories/` sibling folder**, not next to the `.vue` file.
+
+```text
+features/<feature>/
+  presentationals/     # Foo.vue
+  stories/             # Foo.stories.vue  ← here
+  containers/
+  composables/
+
+modules/<domain>/
+  presentationals/
+  stories/             # same rule
+  composables/
+```
+
+## Rules
+
+- Prefer **`*.stories.vue`** (Vue CSF / `sb-addon-vue-csf`).
+- One story file per presentational (or one composed prototype story), named after the component: `MessageComposer.stories.vue`.
+- Import the presentational with a **relative path into `../presentationals/`** (and fixtures/helpers the same way).
+- Do **not** place `*.stories.*` inside `presentationals/`, `containers/`, or `composables/`.
+- Containers stay out of the default Storybook catalog.
+
+```vue
+<!-- ✅ features/conversation/stories/ChannelHeader.stories.vue -->
+<script setup lang="ts">
+import { defineMeta } from "sb-addon-vue-csf";
+import ChannelHeader from "../presentationals/ChannelHeader.vue";
+</script>
+```
+
+```text
+❌ features/conversation/presentationals/ChannelHeader.stories.vue
+```
+
+Design-system primitives may keep colocated stories under `packages/design-system` (shadcn kit convention); this rule is for **`@denser/app`** features/modules.

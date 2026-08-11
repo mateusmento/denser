@@ -37,9 +37,11 @@ app/   # or src/ — names flexible
   features/<feature>/
     containers/           # all containers live here
     presentationals/      # optional — feature-only UI
+    stories/              # sibling — presentational Storybook (*.stories.vue); not inside presentationals/
     composables/          # optional — feature-only until reusability promotion
   modules/<domain>/
     presentationals/
+    stories/              # sibling — same Storybook rule as features
     composables/
     index.ts              # public barrel — only import surface from outside
   views/                  # routes; thin → feature containers
@@ -47,6 +49,7 @@ app/   # or src/ — names flexible
     types/                # optional — types reused across features/modules/views
 ```
 
+Story files are **not** colocated next to presentational SFCs. They live in the feature/module **`stories/`** sibling folder and import from `../presentationals/`. Prefer Vue CSF (`*.stories.vue` / `sb-addon-vue-csf`) in `@denser/app`.
 ---
 
 ## Types (where they live)
@@ -154,6 +157,7 @@ Same pressure test applies whether the artifact started in a feature, a module, 
 | Types dumped in `contracts` | Frontend-only / composable-local types in the wire package |
 | Ad-hoc fetch in composables | Bypassing `api-client` for the same HTTP surface |
 | `layouts/` junk drawer | Top-level layouts folder instead of feature chrome / presentational shells |
+| Stories inside `presentationals/` | Storybook files must live in the sibling `stories/` folder |
 
 ---
 

@@ -1,6 +1,6 @@
 # Frontend Architecture Decisions
 
-Portable architecture for Denser. **Package layout and client state follow** [`.cursor/skills/frontend-patterns`](.cursor/skills/frontend-patterns/SKILL.md). Proven stack patterns (Hono, Better Auth, Drizzle, Socket.IO, Testcontainers e2e, hybrid seed) come from the [`frontend-architecture`](../frontend-architecture) demo ADRs.
+Portable architecture for Denser. **Package layout and client state follow** [`.cursor/skills/frontend-patterns`](.cursor/skills/frontend-patterns/SKILL.md). Proven stack patterns (Hono, Better Auth, Drizzle, Socket.IO, Testcontainers e2e, hybrid seed) come from the [`frontend-architecture`](../frontend-architecture) demo ADRs. Product UI inventories: [UI-SURFACES.md](./UI-SURFACES.md); domain feature contracts: [FEATURE-SPECS.md](./FEATURE-SPECS.md); look-and-feel: [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md).
 
 ---
 
@@ -53,14 +53,13 @@ Exactly one owner per fact. Realtime is another **ingest** into the same canonic
 
 ```text
 packages/app/src/
-  features/<feature>/containers|presentationals|composables
-  modules/<domain>/presentationals|composables   # reusable; no containers
+  features/<feature>/containers|presentationals|stories|composables
+  modules/<domain>/presentationals|stories|composables   # reusable; no containers
   views/                                          # thin routes
   lib/                                            # pure helpers, async view-models, db stub
 ```
 
-Containers wire sync → presentationals (no chrome of their own). Presentationals are Storybookable without MSW/API/sync.
-
+Containers wire sync → presentationals (no chrome of their own). Presentationals are Storybookable without MSW/API/sync. Story files live in the feature/module **`stories/`** sibling folder (not inside `presentationals/`).
 ---
 
 ## 5. Dual Storybook

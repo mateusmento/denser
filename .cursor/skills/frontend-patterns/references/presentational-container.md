@@ -46,7 +46,7 @@ Owns **markup, styles, a11y**, and **controlled** UI behavior.
 
 **Controllable state:** ephemeral UI state may stay internal. Any state a container must drive or observe is **controllable** — `v-model` and/or props + events (e.g. assignee selection).
 
-**Storybook (mandatory):** every presentational has stories. Stories render **without MSW, real API, or sync adapters** — fixture ambient ports + props/`v-model` controls. The more behavior stories exercise, the better.
+**Storybook (mandatory):** every presentational has stories. Stories live in the feature/module **`stories/`** sibling folder (see [`folder-structure.md`](folder-structure.md)); they render **without MSW, real API, or sync adapters** — fixture ambient ports + props/`v-model` controls. The more behavior stories exercise, the better.
 
 **API shape:** call-site-coupled. Favor separation of concerns over inventing empty shells for every `div`. Provide slots/compounds for (#1) smell avoidance and (#2) real call-site variation — not maximal creative reuse.
 
