@@ -16,5 +16,5 @@
     "declarationMap": false
   },
   "include": ["src", ".storybook", "vite.config.ts", "env.d.ts"],
-  "exclude": ["src/**/*.stories.ts"]
+  "exclude": ["src/**/*.stories.ts", "src/**/*.stories.vue", "src/**/stories/**"]
 }

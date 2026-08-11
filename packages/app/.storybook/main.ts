@@ -7,10 +7,14 @@ const designSystemSrc = path.resolve(__dirname, "../../design-system/src");
 
 const config: StorybookConfig = {
   stories: [
-    "../src/features/**/presentationals/**/*.stories.@(ts|tsx|mdx)",
-    "../src/modules/**/presentationals/**/*.stories.@(ts|tsx|mdx)",
+    "../src/features/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|vue)",
+    "../src/modules/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|vue)",
   ],
-  addons: ["@storybook/addon-essentials", "@storybook/addon-links"],
+  addons: [
+    "sb-addon-vue-csf",
+    "@storybook/addon-essentials",
+    "@storybook/addon-links",
+  ],
   framework: {
     name: "@storybook/vue3-vite",
     options: {},
