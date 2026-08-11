@@ -7,7 +7,7 @@ import { faker } from "@faker-js/faker";
 import { db } from "./client.js";
 import { account, session, user } from "./schema.js";
 
-config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env") });
+config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"), quiet: true });
 
 type Hero = { username: string; displayName: string };
 

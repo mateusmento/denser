@@ -14,21 +14,21 @@
   },
   "dependencies": {
     "@denser/contracts": "workspace:*",
-    "@hono/node-server": "^1.14.4",
-    "@hono/zod-validator": "^0.7.0",
+    "@hono/node-server": "^2.1.0",
+    "@hono/zod-validator": "^0.9.0",
     "better-auth": "^1.6.26",
-    "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.44.2",
-    "hono": "^4.8.3",
-    "postgres": "^3.4.7",
-    "socket.io": "^4.8.1",
-    "zod": "^4.0.5"
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.1",
+    "postgres": "^3.4.9",
+    "socket.io": "^4.8.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.8.0",
-    "@types/node": "^24.0.10",
-    "drizzle-kit": "^0.31.4",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "@faker-js/faker": "^10.5.0",
+    "@types/node": "^24.13.3",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
   }
 }

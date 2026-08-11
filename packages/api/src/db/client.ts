@@ -5,7 +5,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema.js";
 
-config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env") });
+config({ path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../.env"), quiet: true });
 
 
 const url = process.env.DATABASE_URL;

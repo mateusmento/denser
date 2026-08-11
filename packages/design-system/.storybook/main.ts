@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.@(ts|tsx|mdx)"],
-  addons: ["@storybook/addon-essentials", "@storybook/addon-links"],
+  addons: ["@storybook/addon-docs"],
   framework: {
     name: "@storybook/vue3-vite",
     options: {},
@@ -15,7 +15,7 @@ const config: StorybookConfig = {
       plugins: [tailwindcss()],
       resolve: {
         alias: {
-          "@": path.resolve(__dirname, "../src"),
+          "@": path.resolve(import.meta.dirname, "../src"),
         },
       },
     });

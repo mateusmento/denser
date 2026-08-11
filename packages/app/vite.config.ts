@@ -3,7 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 
-const designSystemSrc = path.resolve(__dirname, "../design-system/src");
+const designSystemSrc = path.resolve(import.meta.dirname, "../design-system/src");
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -21,7 +21,7 @@ export default defineConfig({
         find: "@/composables",
         replacement: path.join(designSystemSrc, "composables"),
       },
-      { find: "@", replacement: path.resolve(__dirname, "src") },
+      { find: "@", replacement: path.resolve(import.meta.dirname, "src") },
     ],
   },
   server: {
