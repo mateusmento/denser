@@ -15,24 +15,25 @@
     "@denser/api-client": "workspace:*",
     "@denser/contracts": "workspace:*",
     "@denser/design-system": "workspace:*",
+    "@lucide/vue": "^1.31.0",
     "@tanstack/vue-db": "^0.0.128",
-    "@tanstack/vue-query": "^5.81.5",
-    "@vueuse/core": "^14.3.0",
-    "vue": "^3.5.17",
-    "vue-router": "^4.5.1"
+    "@tanstack/vue-query": "^5.101.4",
+    "@vueuse/core": "^14.4.0",
+    "vue": "^3.5.41",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.14",
-    "@storybook/addon-links": "^8.6.14",
-    "@storybook/vue3": "^8.6.14",
-    "@storybook/vue3-vite": "^8.6.14",
-    "@tailwindcss/vite": "^4.1.11",
+    "@storybook/addon-links": "^8.6.18",
+    "@storybook/vue3": "^8.6.18",
+    "@storybook/vue3-vite": "^8.6.18",
+    "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-vue": "^5.2.4",
     "sb-addon-vue-csf": "^0.0.4",
-    "storybook": "^8.6.14",
-    "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5",
-    "vue-tsc": "^2.2.10"
+    "storybook": "^8.6.18",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3",
+    "vue-tsc": "^2.2.12"
   }
 }
