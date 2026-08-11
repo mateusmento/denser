@@ -72,7 +72,7 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 | Feature | Status | Objects (summary) | UI surfaces |
 | --- | --- | --- | --- |
 | [Conversation](#conversation-draft) | Draft | Channel, Message, Thread?, Reaction? | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
-| Document | TBD | Artifact(document), body, … | Document view |
+| Document | TBD | Artifact(document), body, … | [ui-surfaces/document.md](./ui-surfaces/document.md) |
 | Spaces & membership | TBD | Space, Membership, Invite | Shell, home, invites |
 | Workflow / Board | TBD | Status, assignment, … | Board, backlog |
 
@@ -83,7 +83,7 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 | Field | Value |
 | --- | --- |
 | Status | Draft |
-| Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
+| Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) (MessageComposer); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
 | v1 scope | Persistent channel messaging with rich-text posts, history, and membership-gated access (poll / schedule / recording may phase in) |
 
 ### Core objects
@@ -114,7 +114,7 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 - `channel_id`
 - `thread_id` (nullable)
 - `author_id`
-- `body` (rich document / structured rich text — exact format TBD)
+- `body` (TipTap / ProseMirror JSON document — not an HTML string)
 - `created_at` / `edited_at` (nullable)
 - `deleted_at` or soft-delete marker (TBD)
 - attachments / images: list of refs (TBD)
@@ -178,7 +178,7 @@ Wire schemas later land in `@denser/contracts`; this section stays the product c
 
 - Is Channel a **Space-native** collaboration object, an **Artifact kind**, or something else under [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md)?
 - Threads in v1 or defer?
-- Rich body format (ProseMirror JSON, markdown subset, …)?
+- ~~Rich body format~~ → TipTap / ProseMirror JSON (locked).
 - Which composer inserts ship in v1 vs later: poll, recording, recurrence?
 - Attachment storage (R2 later vs defer)?
 
@@ -190,3 +190,4 @@ Wire schemas later land in `@denser/contracts`; this section stays the product c
 | --- | --- |
 | 2026-08-10 | Scaffold + Conversation draft. |
 | 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note. |
+| 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON. |

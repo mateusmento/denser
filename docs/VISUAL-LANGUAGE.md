@@ -293,6 +293,8 @@ Calm document surfaces should almost never use springy motion. Prefer `transform
 
 **Open for review:** System-first vs dark-first.
 
+**Ownership:** the Theme *control* and `html.dark` owner live in [ui-surfaces/theme.md](./ui-surfaces/theme.md). This section owns look, motion, and contrast only.
+
 ---
 
 ## 11. Navigation & discovery (draft)

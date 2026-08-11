@@ -158,6 +158,7 @@ Same pressure test applies whether the artifact started in a feature, a module, 
 | Ad-hoc fetch in composables | Bypassing `api-client` for the same HTTP surface |
 | `layouts/` junk drawer | Top-level layouts folder instead of feature chrome / presentational shells |
 | Stories inside `presentationals/` | Storybook files must live in the sibling `stories/` folder |
+| Handmade widget in a feature | Domain-agnostic chrome belongs in design-system; feature glue must not be dumped there — [`handmade-interactivity`](../rules/handmade-interactivity.md) |
 
 ---
 

@@ -7,7 +7,8 @@ description: >-
   composables (sync vs UI vs ambient), feature vs module folders and reusability promotion,
   state ownership and TanStack Query/DB, async view-models, realtime ingest,
   versioned conflict (409 merge-retry), and coding style (FP, reuse, VueUse, Remeda vs
-  native, Pick/Omit, ReadonlyRefOrGetter + toReadonlyRef). Use when designing or reviewing
+  native, Pick/Omit, ReadonlyRefOrGetter + toReadonlyRef, no unsafe HTML / handmade
+  widget JS). Use when designing or reviewing
   components, slots, prop surfaces, sync composables, normalization, optimistic
   updates, sockets, folder layout, concurrency, Storybookable UI, or TS style.
   Load matching references/ and rules/ only for the decision at hand — not the whole catalog.
@@ -88,6 +89,8 @@ Earn a `rules/` file only when recognition + remedy are not just “follow the r
 | [`ad-hoc-domain-types`](rules/ad-hoc-domain-types.md) | MEDIUM | Types drift from Zod/`contracts` |
 | [`composable-multiple-reasons`](rules/composable-multiple-reasons.md) | MEDIUM | One composable, many reasons to change |
 | [`pure-helper-as-composable`](rules/pure-helper-as-composable.md) | LOW | Pure helper named `useX` |
+| [`handmade-interactivity`](rules/handmade-interactivity.md) | MEDIUM | Raw DOM widget JS — DS/library first; don’t dump feature glue into DS |
+| [`unsafe-html`](rules/unsafe-html.md) | HIGH | `innerHTML` / `v-html` / `insertHTML` of unsanitized strings |
 
 ### Slots & prop surfaces
 

@@ -24,6 +24,9 @@ pnpm workspaces (`packages/*`). Node **v24.18.0** (`.nvmrc`). No Turborepo.
 ## 2. Stack locks
 
 - **Vue 3** + Vite + Vue Router + Tailwind 4
+- **TipTap** — shared rich-text infrastructure ([ui-surfaces/rich-text-composer.md](./ui-surfaces/rich-text-composer.md)). Views derive **DocumentComposer** / **MessageComposer**. Canonical `body` is TipTap / ProseMirror JSON, not HTML strings. Do not use `contenteditable` + `execCommand` as the product editor. Selection menu = Vue **BubbleMenu**; slash / `@` = **Suggestion** + **Mention**; popover position for those lists = **`@floating-ui/dom`** (Suggestion `props.mount` — Suggestion does not ship a BubbleMenu-like floater).
+- **Theme** — shell-owned `html.dark` via VueUse `useDark` / `useColorMode` ([ui-surfaces/theme.md](./ui-surfaces/theme.md))
+- **Toast** — one design-system `Toaster` (vue-sonner); not feature-local timers ([ui-surfaces/toast.md](./ui-surfaces/toast.md))
 - **TanStack Query** — transport for synchronized server data
 - **TanStack DB** — canonical client entity replica under sync pressure (stub wired in app; grow with multi-entity features)
 - **No Pinia** — ephemeral UI in component state, URL, or VueUse `createGlobalState` / `createSharedComposable`
@@ -93,5 +96,6 @@ Root scripts: `pnpm storybook:design-system`, `pnpm storybook:app`.
 ## 8. Deferred
 
 - Artifact/Space/View product surfaces
+- Replace transitional `contenteditable` composer with TipTap (engine locked above)
 - Extracting store packages until pressure exists
 - Deployments

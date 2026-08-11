@@ -184,3 +184,5 @@ No separate rule files unless a distinct recognition+remedy pair emerges beyond 
 | Types homes / reusability promotion | [`folder-structure.md`](folder-structure.md) |
 | Ownership of writes | [`state-management.md`](state-management.md) |
 | Pure helper wrapped as `useX` | [`../rules/pure-helper-as-composable.md`](../rules/pure-helper-as-composable.md) |
+| Handmade widget JS / DS promotion | [`../rules/handmade-interactivity.md`](../rules/handmade-interactivity.md) |
+| `innerHTML` / `v-html` of unsanitized strings | [`../rules/unsafe-html.md`](../rules/unsafe-html.md) |

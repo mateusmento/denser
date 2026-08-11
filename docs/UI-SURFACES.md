@@ -23,25 +23,27 @@ Feature Specs answer: *What exists, what’s allowed, how does it behave?*
 
 | Surface | Density | Job | Spec |
 | --- | --- | --- | --- |
-| App shell (sidebar, top bar, space switcher) | Calm chrome | Navigate Spaces / Artifacts / Views | TBD |
+| App shell (sidebar, top bar, space switcher) | Calm chrome | Navigate Spaces / Artifacts / Views | [shell.md](./ui-surfaces/shell.md) (nav TBD) |
+| Theme | Calm | Light / dark / system | [theme.md](./ui-surfaces/theme.md) |
+| Toast | Calm | Transient non-blocking feedback | [toast.md](./ui-surfaces/toast.md) |
 | Command palette | Ambient | Accelerator + safety net | TBD |
 
 ### Views / capability UIs
 
 | Surface | Density | Job | Spec |
 | --- | --- | --- | --- |
-| Document | Calm | Read / write primary artifact | TBD |
-| Conversation | Calm–medium | Persistent discussion | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
+| Document | Calm | Read / write primary artifact | [document.md](./ui-surfaces/document.md) |
+| Conversation | Calm–medium | Persistent discussion | [conversation.md](./ui-surfaces/conversation.md) |
 | Backlog / list | Dense | Scan, rank, bulk-act | TBD |
 | Board | Dense | Workflow by status | TBD |
 | Map | Medium–dense | Spatial organize / model | TBD |
 | Personal home | Calm | Root Spaces & Artifacts landing | TBD |
 
-### Shared components (product behavior)
+### Shared infrastructure
 
-| Component | Used in | Job | Spec |
+| Piece | Derived by | Job | Spec |
 | --- | --- | --- | --- |
-| MessageComposer | Conversation (channel / thread shapes); later artifact comments | Author and send / schedule | [conversation.md § MessageComposer](./ui-surfaces/conversation.md#messagecomposer) |
+| Rich-text composer | **DocumentComposer** ([document.md](./ui-surfaces/document.md)); **MessageComposer** ([conversation.md](./ui-surfaces/conversation.md)) | RichTextComposer, SelectionMenu, Preview/Subtree, shared `rt-*` styles | [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
 
 ---
 
@@ -51,3 +53,6 @@ Feature Specs answer: *What exists, what’s allowed, how does it behave?*
 | --- | --- |
 | 2026-08-10 | Scaffold + Message composer draft. |
 | 2026-08-10 | Conversation surface moved to `ui-surfaces/conversation.md`; this file is the catalog index. |
+| 2026-08-11 | App shell spec: Theme + Toast ownership (`ui-surfaces/shell.md`). |
+| 2026-08-11 | Split Theme, Toast, rich-text composer, and Document into their own surface specs. |
+| 2026-08-11 | Rich-text composer is shared infrastructure; Views derive DocumentComposer / MessageComposer. |
