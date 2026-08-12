@@ -12,7 +12,7 @@ const config: StorybookConfig = {
     "../src/modules/**/stories/**/*.mdx",
     "../src/modules/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|vue)",
   ],
-  addons: ["sb-addon-vue-csf", "@storybook/addon-docs"],
+  addons: ["sb-addon-vue-csf", "@storybook/addon-docs", "@storybook/addon-themes"],
   framework: {
     name: "@storybook/vue3-vite",
     options: {},

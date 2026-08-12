@@ -1,0 +1,108 @@
+/* Preview-only Docs/canvas theming.
+ * Storybook's docs.theme cannot use CSS variables (it parses colors), so we
+ * override Emotion's light chrome when `html.dark` is set by the theme switcher.
+ */
+
+/* Canvas (story view) — always follows tokens */
+html,
+body,
+#storybook-root,
+.sb-show-main {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+/* ---- Dark Docs chrome (beats Storybook light Emotion fills) ---- */
+
+html.dark .sbdocs-wrapper,
+html.dark .sbdocs-content {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+html.dark .sbdocs h1,
+html.dark .sbdocs h2,
+html.dark .sbdocs h3,
+html.dark .sbdocs h4,
+html.dark .sbdocs h5,
+html.dark .sbdocs h6 {
+  color: var(--foreground) !important;
+}
+
+html.dark .sbdocs p,
+html.dark .sbdocs li,
+html.dark .sbdocs a {
+  color: var(--muted-foreground) !important;
+}
+
+/* Preview frame + toolbar (was solid white from getBlockBackgroundStyle) */
+html.dark .sbdocs.sbdocs-preview,
+html.dark .sbdocs-preview {
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+html.dark .sbdocs [role="toolbar"] {
+  background: var(--muted) !important;
+  background-color: var(--muted) !important;
+  color: var(--muted-foreground) !important;
+  box-shadow: inset 0 -1px 0 var(--border) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .sbdocs [role="toolbar"] button,
+html.dark .sbdocs [role="toolbar"] a {
+  color: var(--muted-foreground) !important;
+}
+
+html.dark .sbdocs [role="toolbar"] button:hover,
+html.dark .sbdocs [role="toolbar"] a:hover {
+  color: var(--foreground) !important;
+  background: var(--accent) !important;
+}
+
+html.dark .sbdocs-preview .docs-story,
+html.dark .sbdocs-preview .innerZoomElementWrapper,
+html.dark .sbdocs-preview .innerZoomElementWrapper > * {
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+}
+
+/* Args table opaque cells (Emotion sets background on tbody > tr > *) */
+html.dark .docblock-argstable-body > tr > *,
+html.dark .docblock-argstable tbody td,
+html.dark .docblock-argstable tbody th {
+  background: var(--popover) !important;
+  background-color: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .docblock-argstable-head th,
+html.dark .docblock-argstable thead th {
+  color: var(--muted-foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* Section labels (SLOTS, etc.) — Emotion uses !important + background.app */
+html.dark .docblock-argstable-body td[bgcolor],
+html.dark .docblock-argstable-body tr td:first-child:last-child,
+html.dark .docblock-argstable-body > tr > td[colspan] {
+  background: var(--secondary) !important;
+  background-color: var(--secondary) !important;
+  color: var(--muted-foreground) !important;
+}
+
+html.dark .docblock-argstable code,
+html.dark .sbdocs-expandable {
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .sbdocs hr {
+  border-color: var(--border) !important;
+  background: var(--border) !important;
+}
