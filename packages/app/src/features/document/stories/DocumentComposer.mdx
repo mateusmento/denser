@@ -1,0 +1,14 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as DocumentComposerStories from "./DocumentComposer.stories.vue";
+
+<Meta of={DocumentComposerStories} />
+
+# DocumentComposer
+
+Page-body chrome over the shared rich-text engine. Spec: `docs/ui-surfaces/document.md` (derived from `rich-text-composer.md`).
+
+<Canvas of={DocumentComposerStories.Edit} />
+
+<Canvas of={DocumentComposerStories.ReadOnly} />
+
+<Canvas of={DocumentComposerStories.Empty} />

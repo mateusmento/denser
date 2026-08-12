@@ -1,0 +1,16 @@
+import { Meta, Canvas, Controls } from "@storybook/addon-docs/blocks";
+import * as HealthStatusBadgeStories from "./HealthStatusBadge.stories.vue";
+
+<Meta of={HealthStatusBadgeStories} />
+
+# HealthStatusBadge
+
+API health chip for the home presentational.
+
+<Canvas of={HealthStatusBadgeStories.Unknown} />
+
+<Controls of={HealthStatusBadgeStories.Unknown} />
+
+<Canvas of={HealthStatusBadgeStories.Ok} />
+
+<Canvas of={HealthStatusBadgeStories.ErrorState} />

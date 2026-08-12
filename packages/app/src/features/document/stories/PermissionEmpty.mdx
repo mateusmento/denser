@@ -1,0 +1,10 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as PermissionEmptyStories from "./PermissionEmpty.stories.vue";
+
+<Meta of={PermissionEmptyStories} />
+
+# PermissionEmpty
+
+Replaces the title and body when the user cannot edit. Spec: `docs/ui-surfaces/document.md`.
+
+<Canvas of={PermissionEmptyStories.Default} />

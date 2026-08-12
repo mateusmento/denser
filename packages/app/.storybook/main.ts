@@ -7,7 +7,9 @@ const designSystemSrc = path.resolve(import.meta.dirname, "../../design-system/s
 
 const config: StorybookConfig = {
   stories: [
+    "../src/features/**/stories/**/*.mdx",
     "../src/features/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|vue)",
+    "../src/modules/**/stories/**/*.mdx",
     "../src/modules/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|vue)",
   ],
   addons: ["sb-addon-vue-csf", "@storybook/addon-docs"],

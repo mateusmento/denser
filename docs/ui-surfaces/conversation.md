@@ -5,8 +5,7 @@
 **Density:** Calm–medium ([VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md))  
 **Feature spec:** [FEATURE-SPECS.md — Conversation](../FEATURE-SPECS.md#conversation-draft)  
 **Guideline:** [UI-SURFACE-SPEC-GUIDELINE.md](./UI-SURFACE-SPEC-GUIDELINE.md)  
-**Prototype (throwaway HTML):** [prototype-conversation.html](./prototype-conversation.html) — open in a browser (no build).  
-**Presentational (Vue):** `packages/app/src/features/conversation/presentationals/` — full screen: `ConversationPrototype` (Storybook `pnpm storybook:app` → `features/conversation/ConversationPrototype`; stories in `features/conversation/stories/`).  
+**Presentational (Vue):** `packages/app/src/features/conversation/presentationals/` (Storybook `pnpm storybook:app` → `features/conversation/*`; stories in `features/conversation/stories/`). No shell chrome on this surface.  
 **Composer:** **MessageComposer** — derived from [rich-text-composer.md](./rich-text-composer.md) (engine only; this file owns send chrome).
 
 ---
@@ -29,12 +28,12 @@ The surface should feel **calm by default** (message stream dominates) while kee
 └─────────────────────────────────────────────┴──────────────────────────┘
 ```
 
-| Region | Job | Density |
-| --- | --- | --- |
-| **Header** | Orient: which channel, who is here, channel-level actions | Calm chrome; shared `--surface-header-height` with Thread |
-| **Message scroller** | Read and act on history | Calm–medium; content-first |
-| **Thread pane** (when open) | Focused side conversation | **Distinct elevated card**: `rounded-2xl`, `card` / elevated fill, shadow — not a flush split pane |
-| **MessageComposer** | Author and send / schedule | Derived composer; [below](#messagecomposer) |
+| Region                      | Job                                                       | Density                                                                                            |
+| --------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Header**                  | Orient: which channel, who is here, channel-level actions | Calm chrome; shared `h-surface-header` with Thread                                          |
+| **Message scroller**        | Read and act on history                                   | Calm–medium; content-first                                                                         |
+| **Thread pane** (when open) | Focused side conversation                                 | **Distinct elevated card**: `rounded-2xl`, `card` / elevated fill, shadow — not a flush split pane |
+| **MessageComposer**         | Author and send / schedule                                | Derived composer; [below](#messagecomposer)                                                        |
 
 Shared app shell (nav sidebar, space switcher) stays outside this surface; Conversation owns only the content column above. Theme / Toast are [theme.md](./theme.md) / [toast.md](./toast.md), not this surface.
 
@@ -42,15 +41,15 @@ Shared app shell (nav sidebar, space switcher) stays outside this surface; Conve
 
 ## Sub-components
 
-| Sub-component | Role | Spec depth |
-| --- | --- | --- |
-| **ChannelHeader** | Title, topic/description (if any), member/presence affordances, channel menu | Below |
-| **MessageScroller** (`ConversationMessageList`) | Windowed list (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below |
-| **MessageItem** | Author, timestamp, rich body, attachments/embeds, reactions, hover/focus actions | Below |
-| **MessageGroup** | Consecutive messages from same author (collapsed chrome) | Light |
-| **ThreadPane** | Parent summary + thread scroller + MessageComposer (thread) | Below |
-| **MessageComposer** | Channel / thread chrome over the shared editor | [Detailed](#messagecomposer) |
-| **PermissionEmpty** | Replaces MessageComposer when user cannot post | States |
+| Sub-component                                   | Role                                                                                                | Spec depth                   |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **ChannelHeader**                               | Title, topic/description (if any), member/presence affordances, channel menu                        | Below                        |
+| **MessageScroller** (`ConversationMessageList`) | Windowed list (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                        |
+| **MessageItem**                                 | Author, timestamp, rich body, attachments/embeds, reactions, hover/focus actions                    | Below                        |
+| **MessageGroup**                                | Consecutive messages from same author (collapsed chrome)                                            | Light                        |
+| **ThreadPane**                                  | Parent summary + thread scroller + MessageComposer (thread)                                         | Below                        |
+| **MessageComposer**                             | Channel / thread chrome over the shared editor                                                      | [Detailed](#messagecomposer) |
+| **PermissionEmpty**                             | Replaces MessageComposer when user cannot post                                                      | States                       |
 
 Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, etc.) are implementation detail; this doc names **product** sub-components.
 
@@ -58,20 +57,20 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, etc.) 
 
 ## Features
 
-| Feature | Where it lives | Notes |
-| --- | --- | --- |
-| Read channel history | MessageScroller | Cursor/window load; stable order |
-| Jump to latest / unread | Scroller + header or floating control | TBD exact chrome |
-| Post rich message | MessageComposer (channel) | Send Layer 1 |
-| Format selection | MessageComposer → RichTextSelectionMenu / slash | [Standard formatting](./rich-text-composer.md#standard-formatting) |
-| Mention / image / attachment | MessageComposer action row | |
-| Code block / poll | MessageComposer action row | Poll phased |
-| Screen recording / schedule | MessageComposer action row | Phased; schedule → SchedulePopover |
-| React to message | MessageItem | |
-| Edit / delete own message | MessageItem actions | Permission rules in feature spec |
-| Open / reply in thread | MessageItem → ThreadPane + composer thread shape | |
-| Presence (viewing / typing) | Header and/or scroller | TBD v1 |
-| Search in channel | Header or ambient | Likely Layer 2/3 |
+| Feature                      | Where it lives                                   | Notes                                                              |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Read channel history         | MessageScroller                                  | Cursor/window load; stable order                                   |
+| Jump to latest / unread      | Scroller + header or floating control            | TBD exact chrome                                                   |
+| Post rich message            | MessageComposer (channel)                        | Send Layer 1                                                       |
+| Format selection             | MessageComposer → RichTextSelectionMenu / slash  | [Standard formatting](./rich-text-composer.md#standard-formatting) |
+| Mention / image / attachment | MessageComposer action row                       |                                                                    |
+| Code block / poll            | MessageComposer action row                       | Poll phased                                                        |
+| Screen recording / schedule  | MessageComposer action row                       | Phased; schedule → SchedulePopover                                 |
+| React to message             | MessageItem                                      |                                                                    |
+| Edit / delete own message    | MessageItem actions                              | Permission rules in feature spec                                   |
+| Open / reply in thread       | MessageItem → ThreadPane + composer thread shape |                                                                    |
+| Presence (viewing / typing)  | Header and/or scroller                           | TBD v1                                                             |
+| Search in channel            | Header or ambient                                | Likely Layer 2/3                                                   |
 
 ---
 
@@ -79,17 +78,17 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, etc.) 
 
 UI consumes the Conversation feature model; it does not invent a second schema. Summary of what this surface binds:
 
-| UI need | Source objects / fields |
-| --- | --- |
-| Channel title, id | Channel |
-| Message list | Message (`id`, `author_id`, `body`, timestamps, `thread_id`, attachments/embeds) |
-| Author display | User (avatar, display name) via author id |
-| Reactions | Reaction aggregates per message |
-| Thread | Messages with same `thread_id` + parent message |
-| Composer draft | Local UI state until send/schedule succeeds |
-| Schedule | ScheduledMessage (when phased) |
-| Poll embed | Poll (when phased) |
-| Can read / can post | Membership / permission |
+| UI need             | Source objects / fields                                                          |
+| ------------------- | -------------------------------------------------------------------------------- |
+| Channel title, id   | Channel                                                                          |
+| Message list        | Message (`id`, `author_id`, `body`, timestamps, `thread_id`, attachments/embeds) |
+| Author display      | User (avatar, display name) via author id                                        |
+| Reactions           | Reaction aggregates per message                                                  |
+| Thread              | Messages with same `thread_id` + parent message                                  |
+| Composer draft      | Local UI state until send/schedule succeeds                                      |
+| Schedule            | ScheduledMessage (when phased)                                                   |
+| Poll embed          | Poll (when phased)                                                               |
+| Can read / can post | Membership / permission                                                          |
 
 Realtime: apply `message.*` / `reaction.*` (and schedule events if any) into the same replica the scroller reads — no divergent client cache. Details: feature spec.
 
@@ -101,22 +100,22 @@ Chrome layers follow [VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md) decision rules.
 
 ### Channel surface
 
-| Layer | Visible by default | Progressive / overflow | Ambient |
-| --- | --- | --- | --- |
-| **1 Persistent** | Header identity; message scroller; composer editor + Send; as many P1 composer actions as fit | — | — |
-| **2 Progressive** | — | Channel menu (notifications, members, settings); message hover actions (edit, delete, pin TBD); thread open; composer **More** / schedule / selection bubble | — |
-| **3 Ambient** | — | — | Shortcuts, command palette jumps, slash inserts into composer |
+| Layer             | Visible by default                                                                            | Progressive / overflow                                                                                                                                       | Ambient                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| **1 Persistent**  | Header identity; message scroller; composer editor + Send; as many P1 composer actions as fit | —                                                                                                                                                            | —                                                             |
+| **2 Progressive** | —                                                                                             | Channel menu (notifications, members, settings); message hover actions (edit, delete, pin TBD); thread open; composer **More** / schedule / selection bubble | —                                                             |
+| **3 Ambient**     | —                                                                                             | —                                                                                                                                                            | Shortcuts, command palette jumps, slash inserts into composer |
 
 ### MessageComposer action-row priority (space-driven)
 
 Always **available**; visibility depends on composer **container width**. Hide lowest priority first into **More**. Growing reveals in reverse. Prefer one action row + overflow — do not wrap into multiple icon rows.
 
-| Priority | Control | Overflow? |
-| --- | --- | --- |
-| P0 | Rich text editor + **Send** | Never |
-| P1 | Mention · Insert image · Insert attachment | Last among P1 |
-| P2 | Insert code block · Insert poll | Yes |
-| P3 | Screen recording · Schedule message | First to hide |
+| Priority | Control                                    | Overflow?     |
+| -------- | ------------------------------------------ | ------------- |
+| P0       | Rich text editor + **Send**                | Never         |
+| P1       | Mention · Insert image · Insert attachment | Last among P1 |
+| P2       | Insert code block · Insert poll            | Yes           |
+| P3       | Screen recording · Schedule message        | First to hide |
 
 **Resize rule:** container width drives **visibility**, not **capability**. More must remain a labeled trail.
 
@@ -126,20 +125,20 @@ Selection bubble: [rich-text-composer.md](./rich-text-composer.md) (shared). Ins
 
 ## Interactions
 
-| Interaction | Result |
-| --- | --- |
-| Open channel | Load permissioned history window; place scroller (latest or unread TBD); mount channel-shape composer if can post |
-| Scroll up | Fetch older page/window; preserve anchor |
-| Hover / focus message | Reveal message actions (reply in thread, react, edit/delete if allowed) |
-| React | Toggle reaction; optimistic UI gated by feature constraints |
-| Reply in thread | Open ThreadPane; focus thread-shape composer |
-| Type / select in MessageComposer | Draft local; bubble + markers from infrastructure; Send when content (or allowed attachment-only) |
-| Click action-row insert | Run mention / upload / poll / recording / schedule flow |
-| Narrow resize | Demote action-row icons to More by priority |
-| Send | Optimistic append or wait-for-ack (TBD); clear draft on success; keep draft + retry on failure |
-| Schedule | Open SchedulePopover; commit creates ScheduledMessage; composer clears per rules |
-| No post permission | Hide MessageComposer; show PermissionEmpty |
-| Offline | Queue or block send with clear copy (TBD with realtime) |
+| Interaction                      | Result                                                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Open channel                     | Load permissioned history window; place scroller (latest or unread TBD); mount channel-shape composer if can post |
+| Scroll up                        | Fetch older page/window; preserve anchor                                                                          |
+| Hover / focus message            | Reveal message actions (reply in thread, react, edit/delete if allowed)                                           |
+| React                            | Toggle reaction; optimistic UI gated by feature constraints                                                       |
+| Reply in thread                  | Open ThreadPane; focus thread-shape composer                                                                      |
+| Type / select in MessageComposer | Draft local; bubble + markers from infrastructure; Send when content (or allowed attachment-only)                 |
+| Click action-row insert          | Run mention / upload / poll / recording / schedule flow                                                           |
+| Narrow resize                    | Demote action-row icons to More by priority                                                                       |
+| Send                             | Optimistic append or wait-for-ack (TBD); clear draft on success; keep draft + retry on failure                    |
+| Schedule                         | Open SchedulePopover; commit creates ScheduledMessage; composer clears per rules                                  |
+| No post permission               | Hide MessageComposer; show PermissionEmpty                                                                        |
+| Offline                          | Queue or block send with clear copy (TBD with realtime)                                                           |
 
 ---
 
@@ -147,20 +146,20 @@ Selection bubble: [rich-text-composer.md](./rich-text-composer.md) (shared). Ins
 
 Derived from [rich-text-composer.md](./rich-text-composer.md). Conversation owns chrome, insert set, send/schedule, and shapes. Document owns a separate **DocumentComposer** — do not reuse this component as the page body.
 
-| Field | Value |
-| --- | --- |
-| Kind | Conversation-derived composer (multiple **shapes**) |
+| Field       | Value                                                             |
+| ----------- | ----------------------------------------------------------------- |
+| Kind        | Conversation-derived composer (multiple **shapes**)               |
 | Primary job | Author a message and send or schedule without leaving the channel |
-| Engine | Shared TipTap infrastructure |
+| Engine      | Shared TipTap infrastructure                                      |
 
 ### Shapes
 
 Same engine; shape selects chrome and insert set.
 
-| Shape | Context | Notes |
-| --- | --- | --- |
-| **Channel message** | Footer of main scroller | Full insert priority table; Send + schedule |
-| **Thread reply** | Thread pane footer | Narrower; drop P3 first, then some P2. Keep P1 (mention, image, attach). |
+| Shape               | Context                 | Notes                                                                    |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------ |
+| **Channel message** | Footer of main scroller | Full insert priority table; Send + schedule                              |
+| **Thread reply**    | Thread pane footer      | Narrower; drop P3 first, then some P2. Keep P1 (mention, image, attach). |
 
 ### Layout (channel shape)
 
@@ -170,17 +169,17 @@ Same engine; shape selects chrome and insert set.
 
 ### Composer states
 
-| State | Behavior |
-| --- | --- |
-| Empty | Placeholder; Send disabled or no-op |
-| Drafting | Send enabled when allowed content |
-| Selection active | Bubble visible (infrastructure) |
-| Narrow | Lower-priority actions in More |
-| Sending | Prevent double-send; keep draft until ack |
-| Scheduling | SchedulePopover open; commit path is schedule |
-| Failed | Keep draft; show retry **inline** (not a toast — [toast.md](./toast.md)) |
-| No permission | Replaced by PermissionEmpty |
-| Offline | Queue or block (TBD) |
+| State            | Behavior                                                                 |
+| ---------------- | ------------------------------------------------------------------------ |
+| Empty            | Placeholder; Send disabled or no-op                                      |
+| Drafting         | Send enabled when allowed content                                        |
+| Selection active | Bubble visible (infrastructure)                                          |
+| Narrow           | Lower-priority actions in More                                           |
+| Sending          | Prevent double-send; keep draft until ack                                |
+| Scheduling       | SchedulePopover open; commit path is schedule                            |
+| Failed           | Keep draft; show retry **inline** (not a toast — [toast.md](./toast.md)) |
+| No permission    | Replaced by PermissionEmpty                                              |
+| Offline          | Queue or block (TBD)                                                     |
 
 MessageItem bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`), never `v-html` of a string.
 
@@ -195,14 +194,14 @@ MessageItem bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`
 
 ## Surface states
 
-| State | UI |
-| --- | --- |
-| Loading | Scroller skeletons / muted placeholder; composer deferred or disabled until permission known |
-| Empty channel | Friendly empty + composer ready (if allowed) |
-| Ready | Scroller + composer as above |
-| Thread open | Split or overlay ThreadPane; main scroller may dim or stay |
-| Error (load) | Inline error + retry; don’t wipe a usable composer draft |
-| Forbidden | Entire surface or read-only explanation; no message payloads |
+| State         | UI                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| Loading       | Scroller skeletons / muted placeholder; composer deferred or disabled until permission known |
+| Empty channel | Friendly empty + composer ready (if allowed)                                                 |
+| Ready         | Scroller + composer as above                                                                 |
+| Thread open   | Split or overlay ThreadPane; main scroller may dim or stay                                   |
+| Error (load)  | Inline error + retry; don’t wipe a usable composer draft                                     |
+| Forbidden     | Entire surface or read-only explanation; no message payloads                                 |
 
 ---
 
@@ -220,9 +219,9 @@ MessageItem bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`
 
 ## Changelog
 
-| Date | Change |
-| --- | --- |
-| 2026-08-10 | Initial Conversation UI surface spec from guideline + prior MessageComposer draft. |
-| 2026-08-11 | Lock TipTap; thread keeps P1 inserts; sticky day separators. |
+| Date       | Change                                                                              |
+| ---------- | ----------------------------------------------------------------------------------- |
+| 2026-08-10 | Initial Conversation UI surface spec from guideline + prior MessageComposer draft.  |
+| 2026-08-11 | Lock TipTap; thread keeps P1 inserts; sticky day separators.                        |
 | 2026-08-11 | Composer chrome moved to `rich-text-composer.md`; Theme/Toast are sibling surfaces. |
-| 2026-08-11 | MessageComposer owned here again; shared file is engine infrastructure only. |
+| 2026-08-11 | MessageComposer owned here again; shared file is engine infrastructure only.        |

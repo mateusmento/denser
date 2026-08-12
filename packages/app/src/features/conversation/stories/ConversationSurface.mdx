@@ -1,0 +1,16 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as ConversationSurfaceStories from "./ConversationSurface.stories.vue";
+
+<Meta of={ConversationSurfaceStories} />
+
+# ConversationSurface
+
+Channel canvas: header, message stream, composer, optional thread card. Spec: `docs/ui-surfaces/conversation.md`.
+
+<Canvas of={ConversationSurfaceStories.Ready} />
+
+<Canvas of={ConversationSurfaceStories.ThreadOpen} />
+
+<Canvas of={ConversationSurfaceStories.EmptyChannel} />
+
+<Canvas of={ConversationSurfaceStories.NoPostPermission} />

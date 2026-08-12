@@ -1,1 +1,4 @@
 @import "@denser/design-system/styles.css";
+@import "./modules/rich-text/rich-text.css";
+
+@source "./**/*.{vue,ts}";

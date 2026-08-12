@@ -1,0 +1,88 @@
+import type { JSONContent } from "@/modules/rich-text";
+
+export type ConversationPersonView = {
+  id: string;
+  name: string;
+  initials: string;
+  avatarUrl?: string;
+};
+
+export type ConversationReactionView = {
+  emoji: string;
+  count: number;
+  mine: boolean;
+};
+
+export type ConversationAttachmentView = {
+  id: string;
+  name: string;
+};
+
+export type ConversationMessageView = {
+  id: string;
+  author: ConversationPersonView;
+  body: JSONContent;
+  createdAt: string;
+  createdAtLabel: string;
+  grouped: boolean;
+  reactions: readonly ConversationReactionView[];
+  replyCount: number;
+  attachments?: readonly ConversationAttachmentView[];
+  canEdit?: boolean;
+  canDelete?: boolean;
+};
+
+export type ConversationChannelHeaderView = {
+  title: string;
+  description?: string;
+  presenceLabel?: string;
+  members: readonly ConversationPersonView[];
+  extraMemberCount?: number;
+};
+
+export type ComposerShape = "channel" | "thread";
+
+export type ComposerActionId =
+  | "mention"
+  | "image"
+  | "attach"
+  | "code"
+  | "poll"
+  | "record"
+  | "schedule";
+
+export type ComposerActionPriority = 1 | 2 | 3;
+
+export type ComposerActionDef = {
+  id: ComposerActionId;
+  priority: ComposerActionPriority;
+  label: string;
+};
+
+export type SchedulePreset = {
+  id: string;
+  label: string;
+  whenLabel: string;
+};
+
+export type ScheduleCommitPayload = {
+  whenLabel: string;
+  recurringWeekly: boolean;
+  customIso?: string;
+};
+
+export type MessageComposerView = {
+  shape: ComposerShape;
+  placeholder: string;
+  sendLabel: string;
+  hint: string;
+  disabled: boolean;
+  sending: boolean;
+  failed: boolean;
+  schedulePresets: readonly SchedulePreset[];
+};
+
+export type ConversationThreadView = {
+  parent: ConversationMessageView;
+  messages: readonly ConversationMessageView[];
+};

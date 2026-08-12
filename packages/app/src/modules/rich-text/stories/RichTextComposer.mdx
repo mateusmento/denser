@@ -1,0 +1,16 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as RichTextComposerStories from "./RichTextComposer.stories.vue";
+
+<Meta of={RichTextComposerStories} />
+
+# RichTextComposer
+
+Shared TipTap editor (hosts wrap with their own chrome). Spec: `docs/ui-surfaces/rich-text-composer.md`.
+
+<Canvas of={RichTextComposerStories.Empty} />
+
+<Canvas of={RichTextComposerStories.Selection} />
+
+<Canvas of={RichTextComposerStories.CodeBlock} />
+
+<Canvas of={RichTextComposerStories.Disabled} />

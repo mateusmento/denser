@@ -1,0 +1,12 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as ConversationMessageItemStories from "./ConversationMessageItem.stories.vue";
+
+<Meta of={ConversationMessageItemStories} />
+
+# ConversationMessageItem
+
+One message in the stream (lead vs continuation, thread affordance). Spec: `docs/ui-surfaces/conversation.md`.
+
+<Canvas of={ConversationMessageItemStories.Lead} />
+
+<Canvas of={ConversationMessageItemStories.WithThread} />

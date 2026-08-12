@@ -1,0 +1,16 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as MessageComposerStories from "./MessageComposer.stories.vue";
+
+<Meta of={MessageComposerStories} />
+
+# MessageComposer
+
+Channel / thread send chrome over the shared rich-text engine. Spec: `docs/ui-surfaces/conversation.md` (derived from `rich-text-composer.md`).
+
+<Canvas of={MessageComposerStories.Channel} />
+
+<Canvas of={MessageComposerStories.Thread} />
+
+<Canvas of={MessageComposerStories.Failed} />
+
+<Canvas of={MessageComposerStories.Narrow} />

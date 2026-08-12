@@ -1,0 +1,10 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as PermissionEmptyStories from "./PermissionEmpty.stories.vue";
+
+<Meta of={PermissionEmptyStories} />
+
+# PermissionEmpty
+
+Replaces the channel composer when the user cannot post. Spec: `docs/ui-surfaces/conversation.md`.
+
+<Canvas of={PermissionEmptyStories.Default} />

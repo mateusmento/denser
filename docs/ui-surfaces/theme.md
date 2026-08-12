@@ -5,7 +5,8 @@
 **Density:** Calm  
 **Guideline:** [UI-SURFACE-SPEC-GUIDELINE.md](./UI-SURFACE-SPEC-GUIDELINE.md)  
 **Look / motion / contrast:** [VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md) §10  
-**Owner chrome:** [shell.md](./shell.md) (sidebar / space switcher TBD; this file owns appearance)
+**Owner chrome:** [shell.md](./shell.md) (sidebar / space switcher TBD; this file owns appearance)  
+**Presentational (Vue):** `packages/app/src/modules/theme/` — `ThemeSwitcher` + `useColorModeOwner`. Not mounted on Conversation or Document.
 
 ---
 
@@ -25,9 +26,9 @@ Prototype Theme buttons on Conversation are demos only.
 
 ## Sub-components
 
-| Sub-component | Role |
-| --- | --- |
-| **ThemeSwitcher** | Light / Dark / System. Shell chrome, not a feature banner. |
+| Sub-component        | Role                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| **ThemeSwitcher**    | Light / Dark / System. Shell chrome, not a feature banner.                                             |
 | **Color-mode owner** | One VueUse `useDark` / `useColorMode` (or `createGlobalState` wrapper). Sets `html.dark` before paint. |
 
 Design-system tokens (`background`, `foreground`, `card`, …) are implementation; this spec names the product control and the owner.
@@ -36,23 +37,23 @@ Design-system tokens (`background`, `foreground`, `card`, …) are implementatio
 
 ## Features
 
-| Feature | Where | Notes |
-| --- | --- | --- |
-| Follow system | Owner composable | `prefers-color-scheme` until overridden |
-| Manual light / dark | ThemeSwitcher | Persist override |
-| Return to system | ThemeSwitcher | Clear override |
-| Crossfade | Tokens / CSS | 300ms; [VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md) §9–10 |
-| No FOUC | Owner + boot | Class on `<html>` before first paint |
+| Feature             | Where            | Notes                                                    |
+| ------------------- | ---------------- | -------------------------------------------------------- |
+| Follow system       | Owner composable | `prefers-color-scheme` until overridden                  |
+| Manual light / dark | ThemeSwitcher    | Persist override                                         |
+| Return to system    | ThemeSwitcher    | Clear override                                           |
+| Crossfade           | Tokens / CSS     | 300ms; [VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md) §9–10 |
+| No FOUC             | Owner + boot     | Class on `<html>` before first paint                     |
 
 ---
 
 ## Data (UI-facing)
 
-| UI need | Source |
-| --- | --- |
-| Current mode | `html.dark` / VueUse color mode |
-| User override | `localStorage` (VueUse persistence) |
-| System preference | `prefers-color-scheme` |
+| UI need           | Source                              |
+| ----------------- | ----------------------------------- |
+| Current mode      | `html.dark` / VueUse color mode     |
+| User override     | `localStorage` (VueUse persistence) |
+| System preference | `prefers-color-scheme`              |
 
 No server entity. Do not store theme on User until a later sync requirement exists.
 
@@ -60,11 +61,11 @@ No server entity. Do not store theme on User until a later sync requirement exis
 
 ## Visible vs hidden UI and navigation
 
-| Layer | Visible by default | Progressive | Ambient |
-| --- | --- | --- | --- |
-| **1 Persistent** | Correct theme on every paint | — | — |
-| **2 Progressive** | — | ThemeSwitcher in shell (settings or compact control) | — |
-| **3 Ambient** | — | — | Optional shortcut to cycle modes |
+| Layer             | Visible by default           | Progressive                                          | Ambient                          |
+| ----------------- | ---------------------------- | ---------------------------------------------------- | -------------------------------- |
+| **1 Persistent**  | Correct theme on every paint | —                                                    | —                                |
+| **2 Progressive** | —                            | ThemeSwitcher in shell (settings or compact control) | —                                |
+| **3 Ambient**     | —                            | —                                                    | Optional shortcut to cycle modes |
 
 Do not put a theme toggle on Conversation / Document chrome.
 
@@ -72,13 +73,13 @@ Do not put a theme toggle on Conversation / Document chrome.
 
 ## Interactions
 
-| Interaction | Result |
-| --- | --- |
-| First visit | Follow system; no forced dark-as-brand |
-| Choose Light / Dark | Persist override; `html.dark` matches; 300ms crossfade |
-| Choose System | Clear override; follow OS; update if OS changes |
-| OS preference changes | Apply only when mode is System |
-| Capability presentational mounts | Must not toggle `document.documentElement.classList` |
+| Interaction                      | Result                                                 |
+| -------------------------------- | ------------------------------------------------------ |
+| First visit                      | Follow system; no forced dark-as-brand                 |
+| Choose Light / Dark              | Persist override; `html.dark` matches; 300ms crossfade |
+| Choose System                    | Clear override; follow OS; update if OS changes        |
+| OS preference changes            | Apply only when mode is System                         |
+| Capability presentational mounts | Must not toggle `document.documentElement.classList`   |
 
 Mechanism: VueUse `useDark` / `useColorMode` (or the shell owner composable). Not handmade `classList` from a feature.
 
@@ -86,12 +87,12 @@ Mechanism: VueUse `useDark` / `useColorMode` (or the shell owner composable). No
 
 ## Surface states
 
-| State | UI |
-| --- | --- |
-| System | Control shows System; tokens match OS |
-| Light override | Control shows Light; `html` without `dark` |
-| Dark override | Control shows Dark; `html.dark` |
-| Boot | Class set before paint so the first frame is not the wrong theme |
+| State          | UI                                                               |
+| -------------- | ---------------------------------------------------------------- |
+| System         | Control shows System; tokens match OS                            |
+| Light override | Control shows Light; `html` without `dark`                       |
+| Dark override  | Control shows Dark; `html.dark`                                  |
+| Boot           | Class set before paint so the first frame is not the wrong theme |
 
 ---
 
@@ -105,6 +106,6 @@ Mechanism: VueUse `useDark` / `useColorMode` (or the shell owner composable). No
 
 ## Changelog
 
-| Date | Change |
-| --- | --- |
+| Date       | Change                                                 |
+| ---------- | ------------------------------------------------------ |
 | 2026-08-11 | Extract Theme from shell.md into its own surface spec. |

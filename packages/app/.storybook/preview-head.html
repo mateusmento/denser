@@ -1,0 +1,13 @@
+<script>
+  (function () {
+    try {
+      var raw = localStorage.getItem("denser-color-mode");
+      if (raw && raw.charAt(0) === '"') raw = JSON.parse(raw);
+      var mode = raw === "dark" || raw === "light" || raw === "auto" ? raw : "auto";
+      var dark =
+        mode === "dark" ||
+        (mode !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+    } catch (e) {}
+  })();
+</script>

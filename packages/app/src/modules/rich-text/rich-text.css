@@ -1,0 +1,125 @@
+.rt-paragraph {
+  @apply my-1 leading-relaxed text-foreground;
+}
+
+.rt-heading-1 {
+  @apply mt-6 mb-2 text-xl leading-tight font-semibold text-foreground;
+}
+
+.rt-heading-2 {
+  @apply mt-5 mb-1.5 text-lg leading-tight font-semibold text-foreground;
+}
+
+.rt-heading-3 {
+  @apply mt-4 mb-1 text-base leading-tight font-semibold text-foreground;
+}
+
+.rt-bullet-list {
+  @apply my-2 list-disc ps-6;
+}
+
+.rt-ordered-list {
+  @apply my-2 list-decimal ps-6;
+}
+
+.rt-list-item {
+  @apply my-0.5 leading-relaxed;
+}
+
+.rt-task-list {
+  @apply my-2 list-none ps-0;
+}
+
+.rt-task-item {
+  @apply my-0.5 flex items-start gap-2 leading-relaxed;
+}
+
+.rt-blockquote {
+  @apply my-3 border-s-2 border-border ps-3 text-muted-foreground;
+}
+
+.rt-code-block {
+  @apply my-3 overflow-hidden rounded-md border border-border bg-muted;
+}
+
+.rt-code-block-body {
+  @apply grid overflow-x-auto;
+}
+
+.rt-code-layer {
+  @apply col-start-1 row-start-1 m-0 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap tab-4;
+}
+
+.rt-code-highlight {
+  @apply z-0 pointer-events-none select-none text-foreground;
+}
+
+.rt-code-edit {
+  @apply relative z-10 text-transparent caret-foreground;
+}
+
+.rt-code-edit::selection,
+.rt-code-edit *::selection {
+  @apply bg-primary/20 text-transparent;
+}
+
+.rt-code-token-keyword {
+  @apply text-primary;
+}
+
+.rt-code-token-string,
+.rt-code-token-number {
+  @apply text-chart-4;
+}
+
+.rt-code-token-comment {
+  @apply text-muted-foreground;
+}
+
+.rt-code-token-name {
+  @apply text-foreground;
+}
+
+.rt-hr {
+  @apply my-4 border-border;
+}
+
+.rt-image {
+  @apply my-3 max-w-full rounded-md;
+}
+
+.rt-mention {
+  @apply rounded-sm bg-accent px-0.5 font-medium text-accent-foreground;
+}
+
+.rt-bold {
+  @apply font-semibold;
+}
+
+.rt-italic {
+  @apply italic;
+}
+
+.rt-strike {
+  @apply line-through;
+}
+
+.rt-inline-code {
+  @apply rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em];
+}
+
+.rt-link {
+  @apply text-primary underline underline-offset-2;
+}
+
+.rt-code-token {
+  @apply text-foreground;
+}
+
+.ProseMirror {
+  @apply min-h-16 cursor-text outline-none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-muted-foreground content-[attr(data-placeholder)];
+}

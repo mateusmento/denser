@@ -8,14 +8,14 @@ Portable architecture for Denser. **Package layout and client state follow** [`.
 
 pnpm workspaces (`packages/*`). Node **v24.18.0** (`.nvmrc`). No Turborepo.
 
-| Package | Owns |
-| --- | --- |
-| `@denser/contracts` | Zod schemas + branded IDs (API/backend-shared wire vocabulary) |
-| `@denser/api-client` | Typed HTTP + Socket.IO over `contracts` — Vue must not own `io()` |
+| Package                 | Owns                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `@denser/contracts`     | Zod schemas + branded IDs (API/backend-shared wire vocabulary)                         |
+| `@denser/api-client`    | Typed HTTP + Socket.IO over `contracts` — Vue must not own `io()`                      |
 | `@denser/design-system` | Domain-agnostic UI: **shadcn-vue full kit**, tokens, Storybook (primitives, port 6006) |
-| `@denser/api` | Hono, Better Auth, Drizzle/Postgres, Socket.IO, migrate/seed |
-| `@denser/app` | Vue SPA: features / modules / views / lib; Storybook for presentationals (port 6007) |
-| `@denser/e2e` | Vitest + Testcontainers API harness |
+| `@denser/api`           | Hono, Better Auth, Drizzle/Postgres, Socket.IO, migrate/seed                           |
+| `@denser/app`           | Vue SPA: features / modules / views / lib; Storybook for presentationals (port 6007)   |
+| `@denser/e2e`           | Vitest + Testcontainers API harness                                                    |
 
 **Dependency rules:** `api-client` → `contracts`; `contracts` must not depend on app/api-client; app prefers `api-client` over ad-hoc `fetch`; app must not duplicate shadcn under `components/ui`.
 
@@ -39,14 +39,14 @@ pnpm workspaces (`packages/*`). Node **v24.18.0** (`.nvmrc`). No Turborepo.
 
 ## 3. Client data ownership
 
-| Kind | Home |
-| --- | --- |
-| Server transport / list windows | TanStack Query |
-| Canonical domain entities | TanStack DB (when normalize pressure applies) |
-| Ephemeral UI | Component / UI·local composable |
-| Bookmarkable location | URL |
-| App shell singleton UI | VueUse `createGlobalState` |
-| Wire types | Zod in `@denser/contracts` |
+| Kind                            | Home                                          |
+| ------------------------------- | --------------------------------------------- |
+| Server transport / list windows | TanStack Query                                |
+| Canonical domain entities       | TanStack DB (when normalize pressure applies) |
+| Ephemeral UI                    | Component / UI·local composable               |
+| Bookmarkable location           | URL                                           |
+| App shell singleton UI          | VueUse `createGlobalState`                    |
+| Wire types                      | Zod in `@denser/contracts`                    |
 
 Exactly one owner per fact. Realtime is another **ingest** into the same canonical replica (prefer DB apply), not a third store. Optimistic updates must not skip version/409 gates when concurrency applies.
 
@@ -67,10 +67,10 @@ Containers wire sync → presentationals (no chrome of their own). Presentationa
 
 ## 5. Dual Storybook
 
-| Package | Port | Catalog |
-| --- | --- | --- |
-| `design-system` | 6006 | shadcn primitives |
-| `app` | 6007 | feature/module presentationals only |
+| Package         | Port | Catalog                             |
+| --------------- | ---- | ----------------------------------- |
+| `design-system` | 6006 | shadcn primitives                   |
+| `app`           | 6007 | feature/module presentationals only |
 
 Root scripts: `pnpm storybook:design-system`, `pnpm storybook:app`.
 
@@ -96,6 +96,5 @@ Root scripts: `pnpm storybook:design-system`, `pnpm storybook:app`.
 ## 8. Deferred
 
 - Artifact/Space/View product surfaces
-- Replace transitional `contenteditable` composer with TipTap (engine locked above)
 - Extracting store packages until pressure exists
 - Deployments

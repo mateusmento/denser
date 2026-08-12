@@ -1,0 +1,10 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as RichTextPreviewStories from "./RichTextPreview.stories.vue";
+
+<Meta of={RichTextPreviewStories} />
+
+# RichTextPreview
+
+Read-only render of the same ProseMirror JSON as the composer. Spec: `docs/ui-surfaces/rich-text-composer.md`.
+
+<Canvas of={RichTextPreviewStories.Document} />

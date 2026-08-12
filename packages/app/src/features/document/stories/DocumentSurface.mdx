@@ -1,0 +1,24 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as DocumentSurfaceStories from "./DocumentSurface.stories.vue";
+
+<Meta of={DocumentSurfaceStories} />
+
+# DocumentSurface
+
+The document **canvas**: header, in-flow title, and body. Spec: `docs/ui-surfaces/document.md`.
+
+This page is **Docs** (`viewMode: "docs"`). It inlines every story below in **one** scrolling document. Canvas (`viewMode: "story"`) shows a single story in the preview iframe.
+
+If each story used `h-svh` here, this page would be six viewports tall — Ready, then EmptyNew, then ReadOnly, and so on, each as tall as the docs window. The preview decorator therefore caps Docs at `40rem` and only fills the iframe on Canvas (`fullHeight`).
+
+<Canvas of={DocumentSurfaceStories.Ready} />
+
+<Canvas of={DocumentSurfaceStories.EmptyNew} />
+
+<Canvas of={DocumentSurfaceStories.ReadOnly} />
+
+<Canvas of={DocumentSurfaceStories.Loading} />
+
+<Canvas of={DocumentSurfaceStories.Error} />
+
+<Canvas of={DocumentSurfaceStories.Forbidden} />

@@ -7,9 +7,9 @@
 
 Conversation, documents, and Views fill the **main** region. This file owns **navigation chrome** (sidebar, space switcher — TBD). Appearance and transient feedback are sibling specs:
 
-| Concern | Spec |
-| --- | --- |
-| Light / dark / system | [theme.md](./theme.md) |
+| Concern                         | Spec                   |
+| ------------------------------- | ---------------------- |
+| Light / dark / system           | [theme.md](./theme.md) |
 | Transient non-blocking feedback | [toast.md](./toast.md) |
 
 The shell **mounts** ThemeSwitcher and Toaster. It does not re-specify their behavior here.
@@ -30,7 +30,7 @@ Get the user to a Space, Artifact, or View without competing with the content co
 └─────────────────────────────────────────────────────┘
 ```
 
-Sidebar, top bar, and space switcher are **TBD** in this file. Until specified, prototypes may sketch them; product chrome is not Conversation’s job.
+Sidebar, top bar, and space switcher are **TBD** in this file. Product chrome is not Conversation’s or Document’s job.
 
 ---
 
@@ -44,7 +44,7 @@ Sidebar, top bar, and space switcher are **TBD** in this file. Until specified, 
 
 ## Changelog
 
-| Date | Change |
-| --- | --- |
-| 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome. |
+| Date       | Change                                                                             |
+| ---------- | ---------------------------------------------------------------------------------- |
+| 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome.       |
 | 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD. |
