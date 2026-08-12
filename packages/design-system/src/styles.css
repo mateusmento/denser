@@ -4,7 +4,10 @@
 @import "tw-animate-css";
 @import "shadcn-vue/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* CVA/utility classes live in this package; app Storybook CWD would not scan them. */
+@source "./**/*.{vue,ts}";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
@@ -53,6 +56,7 @@
   --priority-none: #a1a1aa;
 }
 
+html.dark,
 .dark {
   color-scheme: dark;
   --background: #010102;
@@ -122,7 +126,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    transition:
+      background-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      color 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html,
   body {
-    @apply bg-background text-foreground;
+    @apply min-h-full bg-background text-foreground;
   }
 }

@@ -24,3 +24,38 @@ export const Default: Story = {
   }),
   args: { variant: "default" },
 };
+
+export const Secondary: Story = {
+  render: () => ({
+    components: { Badge },
+    template: `<Badge variant="secondary">Secondary</Badge>`,
+  }),
+};
+
+export const Destructive: Story = {
+  render: () => ({
+    components: { Badge },
+    template: `<Badge variant="destructive">Destructive</Badge>`,
+  }),
+};
+
+export const Outline: Story = {
+  render: () => ({
+    components: { Badge },
+    template: `<Badge variant="outline">Outline</Badge>`,
+  }),
+};
+
+export const Ghost: Story = {
+  render: () => ({
+    components: { Badge },
+    template: `<Badge variant="ghost">Ghost</Badge>`,
+  }),
+};
+
+export const Link: Story = {
+  render: () => ({
+    components: { Badge },
+    template: `<Badge variant="link">Link</Badge>`,
+  }),
+};

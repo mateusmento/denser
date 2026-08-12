@@ -28,3 +28,38 @@ export const Default: Story = {
   }),
   args: { variant: "default", size: "default" },
 };
+
+export const Outline: Story = {
+  render: () => ({
+    components: { Button },
+    template: `<Button variant="outline">Outline</Button>`,
+  }),
+};
+
+export const Secondary: Story = {
+  render: () => ({
+    components: { Button },
+    template: `<Button variant="secondary">Secondary</Button>`,
+  }),
+};
+
+export const Ghost: Story = {
+  render: () => ({
+    components: { Button },
+    template: `<Button variant="ghost">Ghost</Button>`,
+  }),
+};
+
+export const Destructive: Story = {
+  render: () => ({
+    components: { Button },
+    template: `<Button variant="destructive">Destructive</Button>`,
+  }),
+};
+
+export const Link: Story = {
+  render: () => ({
+    components: { Button },
+    template: `<Button variant="link">Link</Button>`,
+  }),
+};

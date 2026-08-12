@@ -3,7 +3,6 @@
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/lib/utils": ["../design-system/src/lib/utils.ts"],

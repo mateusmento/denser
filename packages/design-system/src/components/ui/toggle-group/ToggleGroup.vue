@@ -21,6 +21,7 @@ const props = withDefaults(
   >(),
   {
     spacing: 0,
+    orientation: "horizontal",
   },
 );
 
@@ -40,6 +41,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
   <ToggleGroupRoot
     v-slot="slotProps"
     data-slot="toggle-group"
+    :data-horizontal="props.orientation !== 'vertical' ? '' : undefined"
+    :data-vertical="props.orientation === 'vertical' ? '' : undefined"
     :data-size="size"
     :data-variant="variant"
     :data-spacing="spacing"

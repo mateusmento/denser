@@ -18,9 +18,9 @@
     "db:generate": "pnpm --filter @denser/api db:generate",
     "db:migrate": "pnpm --filter @denser/api db:migrate",
     "seed": "pnpm --filter @denser/api seed",
-    "storybook:design-system": "pnpm --filter @denser/design-system storybook",
+    "storybook:ds": "pnpm --filter @denser/design-system storybook",
     "storybook:app": "pnpm --filter @denser/app storybook",
-    "build-storybook:design-system": "pnpm --filter @denser/design-system build-storybook",
+    "build-storybook:ds": "pnpm --filter @denser/design-system build-storybook",
     "build-storybook:app": "pnpm --filter @denser/app build-storybook"
   },
   "devDependencies": {
