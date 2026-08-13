@@ -11,6 +11,7 @@ import {
   schedulePresets,
   threadView,
 } from "../fixtures";
+import type { ComposerActionId, ScheduleCommitPayload } from "../types";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationMessageList from "../presentationals/ConversationMessageList.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
@@ -37,13 +38,47 @@ function onMentionSearch(query: string) {
   mentionItems.value = conversationMentionItems(query);
 }
 
-function onSend() {
+function onChannelSend() {
   channelDraft.value = emptyDoc();
 }
 
-function onSchedule() {
-  toast("Message scheduled");
+function onThreadSend() {
+  threadDraft.value = emptyDoc();
+}
+
+function onSchedule(payload: ScheduleCommitPayload) {
+  toast(`Message scheduled · ${payload.whenLabel}`);
   channelDraft.value = emptyDoc();
+}
+
+function onThreadSchedule(payload: ScheduleCommitPayload) {
+  toast(`Reply scheduled · ${payload.whenLabel}`);
+  threadDraft.value = emptyDoc();
+}
+
+function onReact(messageId: string, emoji: string) {
+  toast(`${emoji} on ${messageId}`);
+}
+
+function onOpenThread(messageId: string) {
+  toast(`Thread · ${messageId}`);
+  threadOpen.value = true;
+}
+
+function onEdit(messageId: string) {
+  toast(`Edit · ${messageId}`);
+}
+
+function onDelete(messageId: string) {
+  toast(`Delete · ${messageId}`);
+}
+
+function onRetry() {
+  toast("Retrying…");
+}
+
+function onAction(id: ComposerActionId) {
+  toast(`Coming soon · ${id}`);
 }
 </script>
 
@@ -55,7 +90,13 @@ function onSchedule() {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList :messages="channelMessages" />
+          <ConversationMessageList
+            :messages="channelMessages"
+            @react="onReact"
+            @thread="onOpenThread"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
         </template>
         <template #composer>
           <MessageComposer
@@ -63,9 +104,10 @@ function onSchedule() {
             :view="channelComposer"
             :mention-items="mentionItems"
             @mention-search="onMentionSearch"
-            @send="onSend"
+            @send="onChannelSend"
+            @retry="onRetry"
             @schedule="onSchedule"
-            @action="toast('Coming soon')"
+            @action="onAction"
           />
         </template>
       </ConversationSurface>
@@ -78,7 +120,13 @@ function onSchedule() {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList :messages="channelMessages" @thread="threadOpen = true" />
+          <ConversationMessageList
+            :messages="channelMessages"
+            @react="onReact"
+            @thread="onOpenThread"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
         </template>
         <template #composer>
           <MessageComposer
@@ -86,7 +134,10 @@ function onSchedule() {
             :view="channelComposer"
             :mention-items="mentionItems"
             @mention-search="onMentionSearch"
-            @send="onSend"
+            @send="onChannelSend"
+            @retry="onRetry"
+            @schedule="onSchedule"
+            @action="onAction"
           />
         </template>
         <template v-if="threadOpen" #thread>
@@ -97,7 +148,13 @@ function onSchedule() {
             :mention-items="mentionItems"
             @mention-search="onMentionSearch"
             @close="threadOpen = false"
-            @send="threadDraft = emptyDoc()"
+            @send="onThreadSend"
+            @retry="onRetry"
+            @schedule="onThreadSchedule"
+            @action="onAction"
+            @react="onReact"
+            @edit="onEdit"
+            @delete="onDelete"
           />
         </template>
       </ConversationSurface>
@@ -110,7 +167,13 @@ function onSchedule() {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList :messages="[]" />
+          <ConversationMessageList
+            :messages="[]"
+            @react="onReact"
+            @thread="onOpenThread"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
         </template>
         <template #composer>
           <MessageComposer
@@ -118,6 +181,10 @@ function onSchedule() {
             :view="channelComposer"
             :mention-items="mentionItems"
             @mention-search="onMentionSearch"
+            @send="onChannelSend"
+            @retry="onRetry"
+            @schedule="onSchedule"
+            @action="onAction"
           />
         </template>
       </ConversationSurface>
@@ -130,7 +197,13 @@ function onSchedule() {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList :messages="channelMessages" />
+          <ConversationMessageList
+            :messages="channelMessages"
+            @react="onReact"
+            @thread="onOpenThread"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
         </template>
         <template #composer>
           <PermissionEmpty />

@@ -14,9 +14,14 @@ import { MessageSquareIcon, PencilIcon, SmileIcon, TrashIcon } from "@lucide/vue
 import { RichTextPreview } from "@/modules/rich-text";
 import type { ConversationMessageView } from "../types";
 
-defineProps<{
-  message: ConversationMessageView;
-}>();
+withDefaults(
+  defineProps<{
+    message: ConversationMessageView;
+    /** Channel stream: reply count + open-thread actions. Off inside an open thread. */
+    threadActions?: boolean;
+  }>(),
+  { threadActions: true },
+);
 
 const emit = defineEmits<{
   react: [emoji: string];
@@ -42,7 +47,7 @@ const emit = defineEmits<{
         <AvatarFallback>{{ message.author.initials }}</AvatarFallback>
       </Avatar>
     </MessageAvatar>
-    <div v-else class="w-8 shrink-0" aria-hidden="true" />
+    <div v-else class="w-8 shrink-0 self-start" aria-hidden="true" />
 
     <MessageContent>
       <MessageHeader v-if="!message.grouped" class="gap-2">
@@ -62,7 +67,10 @@ const emit = defineEmits<{
         </li>
       </ul>
 
-      <MessageFooter v-if="message.reactions.length || message.replyCount" class="gap-1">
+      <MessageFooter
+        v-if="message.reactions.length || (threadActions && message.replyCount)"
+        class="gap-1"
+      >
         <Button
           v-for="reaction in message.reactions"
           :key="reaction.emoji"
@@ -72,7 +80,12 @@ const emit = defineEmits<{
         >
           {{ reaction.emoji }} {{ reaction.count }}
         </Button>
-        <Button v-if="message.replyCount" size="xs" variant="ghost" @click="emit('thread')">
+        <Button
+          v-if="threadActions && message.replyCount"
+          size="xs"
+          variant="ghost"
+          @click="emit('thread')"
+        >
           {{ message.replyCount }} {{ message.replyCount === 1 ? "reply" : "replies" }}
         </Button>
       </MessageFooter>
@@ -84,7 +97,13 @@ const emit = defineEmits<{
       <Button size="icon-xs" variant="ghost" aria-label="Add reaction" @click="emit('react', '👍')">
         <SmileIcon class="size-3.5" />
       </Button>
-      <Button size="icon-xs" variant="ghost" aria-label="Reply in thread" @click="emit('thread')">
+      <Button
+        v-if="threadActions"
+        size="icon-xs"
+        variant="ghost"
+        aria-label="Reply in thread"
+        @click="emit('thread')"
+      >
         <MessageSquareIcon class="size-3.5" />
       </Button>
       <Button

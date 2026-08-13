@@ -18,6 +18,7 @@
     "db:generate": "pnpm --filter @denser/api db:generate",
     "db:migrate": "pnpm --filter @denser/api db:migrate",
     "seed": "pnpm --filter @denser/api seed",
+    "storybook": "pnpm -r --parallel --filter @denser/design-system --filter @denser/app run storybook",
     "storybook:ds": "pnpm --filter @denser/design-system storybook",
     "storybook:app": "pnpm --filter @denser/app storybook",
     "build-storybook:ds": "pnpm --filter @denser/design-system build-storybook",
