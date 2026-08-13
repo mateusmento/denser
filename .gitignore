@@ -21,8 +21,9 @@ storybook-static
 # Drizzle / generated
 packages/api/drizzle/meta
 
-# Coverage
-coverage
+# Theme Lab → live app bridge (dev)
+packages/app/public/theme-dev-override.json
+
 
 # TS incremental
 *.tsbuildinfo

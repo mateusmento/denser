@@ -2,11 +2,12 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
+import { themeOverrideDevPlugin } from "./vite-plugin-theme-override";
 
 const designSystemSrc = path.resolve(import.meta.dirname, "../design-system/src");
 
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), themeOverrideDevPlugin()],
   resolve: {
     alias: [
       {

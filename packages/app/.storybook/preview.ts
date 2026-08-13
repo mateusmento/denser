@@ -2,7 +2,12 @@ import type { Decorator, Preview } from "@storybook/vue3-vite";
 import { DecoratorHelpers } from "@storybook/addon-themes";
 import { addons } from "storybook/preview-api";
 import { GLOBALS_UPDATED } from "storybook/internal/core-events";
-import { Toaster } from "@denser/design-system";
+import {
+  syncThemeOverrideFromStorage,
+  THEME_OVERRIDE_EVENT,
+  Toaster,
+  type ThemeMode,
+} from "@denser/design-system";
 import { useColorModeOwner } from "../src/modules/theme";
 import "../src/styles.css";
 import "./preview.css";
@@ -12,9 +17,14 @@ const DEFAULT_THEME = "light";
 
 DecoratorHelpers.initializeThemeState([...THEMES], DEFAULT_THEME);
 
+function themeMode(theme: string | undefined): ThemeMode {
+  return theme === "dark" ? "dark" : "light";
+}
+
 function applyColorMode(theme: string | undefined, syncOwner = false) {
-  const next = theme === "dark" ? "dark" : "light";
+  const next = themeMode(theme);
   document.documentElement.classList.toggle("dark", next === "dark");
+  syncThemeOverrideFromStorage(next);
   if (syncOwner) {
     useColorModeOwner().mode.value = next;
   }
@@ -27,6 +37,11 @@ function ensureGlobalsListener() {
   addons.getChannel().on(GLOBALS_UPDATED, ({ globals }: { globals: { theme?: string } }) => {
     // Owner exists once any story setup has run; keep ThemeSwitcher aligned with toolbar.
     applyColorMode(globals.theme ?? DEFAULT_THEME, true);
+  });
+  window.addEventListener(THEME_OVERRIDE_EVENT, () => {
+    syncThemeOverrideFromStorage(
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
+    );
   });
 }
 
