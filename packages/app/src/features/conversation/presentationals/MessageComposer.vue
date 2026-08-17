@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import {
   Button,
+  Card,
+  CardContent,
+  CardFooter,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -107,32 +110,36 @@ function runAction(id: ComposerActionId) {
 </script>
 
 <template>
-  <div
+  <Card
     ref="root"
-    class="flex h-full min-h-0 flex-col rounded-md border border-border bg-background"
+    size="sm"
+    class="h-full min-h-0 gap-0 py-2"
     data-slot="message-composer"
     :data-shape="view.shape"
   >
-    <RichTextComposer
-      ref="composer"
-      v-model="body"
-      class="min-h-0 flex-1 px-3 pt-2"
-      :placeholder="view.placeholder"
-      :disabled="view.disabled || view.sending"
-      submit-on-enter
-      :mention-items="mentionItems"
-      :upload-image="uploadImage"
-      @submit="canSend && emit('send')"
-      @mention-search="emit('mentionSearch', $event)"
-    />
+    <CardContent class="min-h-0 flex-1 px-3 pt-0">
+      <RichTextComposer
+        ref="composer"
+        v-model="body"
+        class="h-full min-h-0"
+        :placeholder="view.placeholder"
+        :disabled="view.disabled || view.sending"
+        submit-on-enter
+        :mention-items="mentionItems"
+        :upload-image="uploadImage"
+        @submit="canSend && emit('send')"
+        @mention-search="emit('mentionSearch', $event)"
+      />
+    </CardContent>
 
     <p v-if="view.failed" class="px-3 text-xs text-destructive">
       Couldn’t send.
       <button type="button" class="underline" @click="emit('retry')">Retry</button>
     </p>
 
-    <TooltipProvider>
-      <div class="flex items-center gap-1 px-2 pb-2">
+    <CardFooter class="px-2 pb-0">
+      <TooltipProvider>
+        <div class="flex w-full items-center gap-1">
         <template v-for="action in partitioned.visible" :key="action.id">
           <SchedulePopover
             v-if="action.id === 'schedule'"
@@ -190,11 +197,8 @@ function runAction(id: ComposerActionId) {
           <SendIcon class="size-3.5" />
           {{ view.sendLabel }}
         </Button>
-      </div>
-    </TooltipProvider>
-
-    <p class="px-3 pb-2 text-[11px] text-muted-foreground">
-      {{ view.hint }}
-    </p>
-  </div>
+        </div>
+      </TooltipProvider>
+    </CardFooter>
+  </Card>
 </template>

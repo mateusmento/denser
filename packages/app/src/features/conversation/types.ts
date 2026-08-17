@@ -75,7 +75,6 @@ export type MessageComposerView = {
   shape: ComposerShape;
   placeholder: string;
   sendLabel: string;
-  hint: string;
   disabled: boolean;
   sending: boolean;
   failed: boolean;

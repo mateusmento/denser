@@ -27,7 +27,6 @@ export function defaultChannelComposerView(
     shape: "channel",
     placeholder: "Message…",
     sendLabel: "Send",
-    hint: "Select text for formatting · Enter to send · Shift+Enter for newline",
     disabled: false,
     sending: false,
     failed: false,
@@ -43,7 +42,6 @@ export function defaultThreadComposerView(
     shape: "thread",
     sendLabel: "Reply",
     placeholder: "Reply in thread…",
-    hint: "Enter to reply · Shift+Enter for newline",
     ...overrides,
   });
 }
