@@ -8,7 +8,7 @@ const conversationTo = { name: "conversation" as const, params: { channelId: "la
 </script>
 
 <template>
-  <div class="flex h-svh min-h-0 flex-col bg-background text-foreground" data-slot="app-shell">
+  <div class="flex h-svh min-h-0 flex-col" data-slot="app-shell">
     <header
       class="flex h-surface-header shrink-0 items-center gap-3 border-b border-border px-4"
       data-slot="app-shell-header"

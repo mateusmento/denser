@@ -45,7 +45,7 @@ import UpcomingPayments from "./components/UpcomingPayments.vue";
     Wide demos (tables / dual panels) span 2 tracks when there is room.
   -->
   <div
-    class="bg-muted p-4 dark:bg-background"
+    class="p-4 rounded-xl border border-border bg-background"
     data-slot="capture-target"
   >
     <div

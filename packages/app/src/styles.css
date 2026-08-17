@@ -2,3 +2,6 @@
 @import "./modules/rich-text/rich-text.css";
 
 @source "./**/*.{vue,ts}";
+
+/* Explicit: app CWD does not scan the sibling package; ui/ was also gitignored. */
+@source "../../design-system/src/**/*.{vue,ts}";

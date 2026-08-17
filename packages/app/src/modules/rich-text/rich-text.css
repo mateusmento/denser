@@ -39,7 +39,7 @@
 }
 
 .rt-code-block {
-  @apply my-3 overflow-hidden rounded-md border border-border bg-muted;
+  @apply my-3 overflow-hidden rounded-md border border-border bg-card;
 }
 
 .rt-code-block-body {

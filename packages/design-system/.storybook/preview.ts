@@ -56,6 +56,11 @@ const preview: Preview = {
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
     layout: "centered",
     backgrounds: { disable: true },
+    options: {
+      storySort: {
+        order: ["foundations", "primitives"],
+      },
+    },
   },
   decorators: [withColorMode],
 };

@@ -2,7 +2,7 @@
 
 <template>
   <div
-    class="relative flex min-h-0 min-w-0 flex-1 gap-3 bg-background p-3"
+    class="relative flex min-h-0 min-w-0 flex-1 gap-3 p-3"
     data-slot="conversation-surface"
   >
     <section

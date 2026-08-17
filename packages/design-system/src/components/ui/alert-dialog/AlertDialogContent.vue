@@ -1,42 +1,40 @@
 <script setup lang="ts">
-import type { AlertDialogContentEmits, AlertDialogContentProps } from "reka-ui";
-import type { HTMLAttributes } from "vue";
-import { reactiveOmit } from "@vueuse/core";
+import type { AlertDialogContentEmits, AlertDialogContentProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
+import { reactiveOmit } from '@vueuse/core'
 import {
   AlertDialogContent,
   AlertDialogOverlay,
   AlertDialogPortal,
   useForwardPropsEmits,
-} from "reka-ui";
-import { cn } from "@/lib/utils";
+} from 'reka-ui'
+import { cn } from '@/lib/utils'
 
 defineOptions({
   inheritAttrs: false,
-});
+})
 
 const props = withDefaults(
-  defineProps<
-    AlertDialogContentProps & {
-      class?: HTMLAttributes["class"];
-      size?: "default" | "sm";
-    }
-  >(),
+  defineProps<AlertDialogContentProps & {
+    class?: HTMLAttributes['class']
+    size?: 'default' | 'sm'
+  }>(),
   {
-    size: "default",
+    size: 'default',
   },
-);
-const emits = defineEmits<AlertDialogContentEmits>();
+)
+const emits = defineEmits<AlertDialogContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class", "size");
+const delegatedProps = reactiveOmit(props, 'class', 'size')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
   <AlertDialogPortal>
     <AlertDialogOverlay
       data-slot="alert-dialog-overlay"
-      class="fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+      class="data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/30 duration-100 supports-backdrop-filter:backdrop-blur-sm fixed inset-0 z-50"
     />
     <AlertDialogContent
       data-slot="alert-dialog-content"
@@ -44,7 +42,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       v-bind="{ ...$attrs, ...forwarded }"
       :class="
         cn(
-          'group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+          'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 bg-popover text-popover-foreground ring-foreground/5 dark:ring-foreground/10 gap-6 rounded-[min(var(--radius-4xl),24px)] p-6 shadow-xl ring-1 duration-100 data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 outline-none',
           props.class,
         )
       "

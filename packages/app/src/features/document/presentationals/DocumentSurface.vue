@@ -22,7 +22,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col bg-background" data-slot="document-surface">
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col" data-slot="document-surface">
     <div class="flex h-surface-header shrink-0 items-center">
       <DocumentHeader :header="view.header" @move="emit('move')" @share="emit('share')" />
     </div>

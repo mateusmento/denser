@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
-import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from 'vue'
+import { cn } from '@/lib/utils'
 
 const props = defineProps<{
-  class?: HTMLAttributes["class"];
-}>();
+  class?: HTMLAttributes['class']
+}>()
 </script>
 
 <template>
-  <div data-slot="dialog-header" :class="cn('flex flex-col gap-2', props.class)">
+  <div
+    data-slot="dialog-header"
+    :class="cn('gap-1.5 flex flex-col', props.class)"
+  >
     <slot />
   </div>
 </template>

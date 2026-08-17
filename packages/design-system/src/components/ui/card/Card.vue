@@ -1,28 +1,20 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
-import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from 'vue'
+import { cn } from '@/lib/utils'
 
-const props = withDefaults(
-  defineProps<{
-    class?: HTMLAttributes["class"];
-    size?: "default" | "sm";
-  }>(),
-  {
-    size: "default",
-  },
-);
+const props = withDefaults(defineProps<{
+  class?: HTMLAttributes['class']
+  size?: 'default' | 'sm'
+}>(), {
+  size: 'default',
+})
 </script>
 
 <template>
   <div
     data-slot="card"
     :data-size="size"
-    :class="
-      cn(
-        'group/card flex flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl',
-        props.class,
-      )
-    "
+    :class="cn('bg-card text-card-foreground ring-foreground/5 dark:ring-foreground/10 gap-(--card-spacing) overflow-hidden rounded-[min(var(--radius-4xl),24px)] py-(--card-spacing) text-sm shadow-sm ring-1 [--card-spacing:--spacing(5)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-[min(var(--radius-4xl),24px)] *:[img:last-child]:rounded-b-[min(var(--radius-4xl),24px)] group/card flex flex-col', props.class)"
   >
     <slot />
   </div>

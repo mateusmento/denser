@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import type { MenubarRootEmits, MenubarRootProps } from "reka-ui";
-import type { HTMLAttributes } from "vue";
-import { reactiveOmit } from "@vueuse/core";
-import { MenubarRoot, useForwardPropsEmits } from "reka-ui";
-import { cn } from "@/lib/utils";
+import type { MenubarRootEmits, MenubarRootProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
+import { reactiveOmit } from '@vueuse/core'
+import {
+  MenubarRoot,
+  useForwardPropsEmits,
+} from 'reka-ui'
+import { cn } from '@/lib/utils'
 
-const props = defineProps<MenubarRootProps & { class?: HTMLAttributes["class"] }>();
-const emits = defineEmits<MenubarRootEmits>();
+const props = defineProps<MenubarRootProps & { class?: HTMLAttributes['class'] }>()
+const emits = defineEmits<MenubarRootEmits>()
 
-const delegatedProps = reactiveOmit(props, "class");
+const delegatedProps = reactiveOmit(props, 'class')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
@@ -18,7 +21,12 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     v-slot="slotProps"
     data-slot="menubar"
     v-bind="forwarded"
-    :class="cn('flex h-8 items-center gap-0.5 rounded-lg border p-0.75', props.class)"
+    :class="
+      cn(
+        'h-8 rounded-2xl border p-[3px] flex items-center',
+        props.class,
+      )
+    "
   >
     <slot v-bind="slotProps" />
   </MenubarRoot>
