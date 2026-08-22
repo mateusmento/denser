@@ -1,19 +1,14 @@
-import { Extension, mergeAttributes } from "@tiptap/core";
-import type { Editor, JSONContent } from "@tiptap/core";
+import { Extension, type Editor, type JSONContent } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import FileHandler from "@tiptap/extension-file-handler";
-import Heading from "@tiptap/extension-heading";
-import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
 import { PluginKey } from "@tiptap/pm/state";
-import StarterKit from "@tiptap/starter-kit";
 import Suggestion from "@tiptap/suggestion";
 import { VueNodeViewRenderer } from "@tiptap/vue-3";
 import RichTextCodeBlock from "../presentationals/RichTextCodeBlock.vue";
 import type { MentionCandidate, SlashCommandItem } from "../types";
+import { createRichTextDocumentExtensions } from "./documentExtensions";
 import { lowlight } from "./highlight";
 import { filterSlashItems, runSlashCommand, STANDARD_SLASH_ITEMS } from "./slashItems";
 import { createSuggestionRender } from "./suggestionRender";
@@ -90,87 +85,58 @@ async function insertUploadedImage(
 }
 
 export function createRichTextExtensions(ports: RichTextPorts) {
-  return [
-    StarterKit.configure({
-      heading: false,
-      codeBlock: false,
-      underline: false,
-      link: { HTMLAttributes: { class: "rt-link" }, openOnClick: false },
-      bold: { HTMLAttributes: { class: "rt-bold" } },
-      italic: { HTMLAttributes: { class: "rt-italic" } },
-      strike: { HTMLAttributes: { class: "rt-strike" } },
-      code: { HTMLAttributes: { class: "rt-inline-code" } },
-      paragraph: { HTMLAttributes: { class: "rt-paragraph" } },
-      blockquote: { HTMLAttributes: { class: "rt-blockquote" } },
-      bulletList: { HTMLAttributes: { class: "rt-bullet-list" } },
-      orderedList: { HTMLAttributes: { class: "rt-ordered-list" } },
-      listItem: { HTMLAttributes: { class: "rt-list-item" } },
-      horizontalRule: { HTMLAttributes: { class: "rt-hr" } },
-    }),
-    Heading.extend({
-      renderHTML({ node, HTMLAttributes }) {
-        const level = node.attrs.level as 1 | 2 | 3;
-        return [
-          `h${level}`,
-          mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-            class: `rt-heading-${level}`,
-          }),
-          0,
-        ];
-      },
-    }).configure({ levels: [1, 2, 3] }),
-    TaskList.configure({ HTMLAttributes: { class: "rt-task-list" } }),
-    TaskItem.configure({
-      nested: true,
-      HTMLAttributes: { class: "rt-task-item" },
-    }),
-    CodeBlockLowlight.extend({
-      addNodeView() {
-        return VueNodeViewRenderer(RichTextCodeBlock, {
-          ignoreMutation: ({ mutation }) => {
-            if (mutation.type === "selection") return false;
-            const target = mutation.target;
-            if (!(target instanceof Node)) return true;
-            const el = target instanceof Element ? target : target.parentElement;
-            return !el?.closest(".rt-code-edit");
+  const documentExtensions = createRichTextDocumentExtensions().map((extension) => {
+    if (extension.name === "codeBlock") {
+      return CodeBlockLowlight.extend({
+        addNodeView() {
+          return VueNodeViewRenderer(RichTextCodeBlock, {
+            ignoreMutation: ({ mutation }) => {
+              if (mutation.type === "selection") return false;
+              const target = mutation.target;
+              if (!(target instanceof Node)) return true;
+              const el = target instanceof Element ? target : target.parentElement;
+              return !el?.closest(".rt-code-edit");
+            },
+          });
+        },
+      }).configure({
+        lowlight,
+        enableTabIndentation: true,
+        HTMLAttributes: { class: "rt-code-block" },
+      });
+    }
+    if (extension.name === "mention") {
+      return Mention.configure({
+        HTMLAttributes: { class: "rt-mention" },
+        suggestion: {
+          char: "@",
+          ...suggestionFloating,
+          items: ({ query }) => {
+            ports.onMentionSearch?.(query);
+            return [...(ports.mentionItems?.() ?? [])];
           },
-        });
-      },
-    }).configure({
-      lowlight,
-      enableTabIndentation: true,
-      HTMLAttributes: { class: "rt-code-block" },
-    }),
-    Image.configure({
-      inline: false,
-      allowBase64: false,
-      HTMLAttributes: { class: "rt-image" },
-    }),
+          render: createSuggestionRender(ports.mentionItems),
+          command: ({ editor, range, props }) => {
+            const item = props as MentionCandidate;
+            editor
+              .chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent({
+                type: "mention",
+                attrs: { id: item.id, label: item.label },
+              })
+              .run();
+          },
+        },
+      });
+    }
+    return extension;
+  });
+
+  return [
+    ...documentExtensions,
     Placeholder.configure({ placeholder: ports.placeholder }),
-    Mention.configure({
-      HTMLAttributes: { class: "rt-mention" },
-      suggestion: {
-        char: "@",
-        ...suggestionFloating,
-        items: ({ query }) => {
-          ports.onMentionSearch?.(query);
-          return [...(ports.mentionItems?.() ?? [])];
-        },
-        render: createSuggestionRender(ports.mentionItems),
-        command: ({ editor, range, props }) => {
-          const item = props as MentionCandidate;
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .insertContent({
-              type: "mention",
-              attrs: { id: item.id, label: item.label },
-            })
-            .run();
-        },
-      },
-    }),
     SlashCommands(ports),
     FileHandler.configure({
       allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],

@@ -4,10 +4,12 @@ import {
   Card,
   CardContent,
   CardFooter,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  ScrollArea,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -44,6 +46,7 @@ const body = defineModel<JSONContent>({ required: true });
 
 const props = defineProps<{
   view: MessageComposerView;
+  class?: string;
   mentionItems?: readonly MentionCandidate[];
   uploadImage?: (file: File) => Promise<string>;
 }>();
@@ -113,23 +116,33 @@ function runAction(id: ComposerActionId) {
   <Card
     ref="root"
     size="sm"
-    class="h-full min-h-0 gap-0 py-2"
+    :class="cn(
+      'h-full min-h-0 gap-1 rounded-2xl',
+      'border border-secondary transition-[box-shadow,--card-edge-end] duration-[150ms,250ms]',
+      'dark:card-edge card-edge-start-mist-700 card-edge-middle-[var(--color-mist-800)_45%] card-edge-end-mist-950',
+      'bg-linear-to-b from-muted via-muted via-25% to-muted/65',
+      'focus-within:shadow-[0_0_3px_var(--color-primary)]',
+      'focus-within:card-edge-end-primary',
+      props.class
+    )"
     data-slot="message-composer"
     :data-shape="view.shape"
   >
-    <CardContent class="min-h-0 flex-1 px-3 pt-0">
-      <RichTextComposer
-        ref="composer"
-        v-model="body"
-        class="h-full min-h-0"
-        :placeholder="view.placeholder"
-        :disabled="view.disabled || view.sending"
-        submit-on-enter
-        :mention-items="mentionItems"
-        :upload-image="uploadImage"
-        @submit="canSend && emit('send')"
-        @mention-search="emit('mentionSearch', $event)"
-      />
+    <CardContent class="min-h-0 flex-1">
+      <ScrollArea class="min-h-0 h-full">
+        <RichTextComposer
+          ref="composer"
+          v-model="body"
+          class="min-h-0 h-full overflow-y-auto"
+          :placeholder="view.placeholder"
+          :disabled="view.disabled || view.sending"
+          submit-on-enter
+          :mention-items="mentionItems"
+          :upload-image="uploadImage"
+          @submit="canSend && emit('send')"
+          @mention-search="emit('mentionSearch', $event)"
+        />
+      </ScrollArea>
     </CardContent>
 
     <p v-if="view.failed" class="px-3 text-xs text-destructive">
@@ -137,66 +150,68 @@ function runAction(id: ComposerActionId) {
       <button type="button" class="underline" @click="emit('retry')">Retry</button>
     </p>
 
-    <CardFooter class="px-2 pb-0">
+    <CardFooter>
       <TooltipProvider>
         <div class="flex w-full items-center gap-1">
-        <template v-for="action in partitioned.visible" :key="action.id">
-          <SchedulePopover
-            v-if="action.id === 'schedule'"
-            v-model:open="scheduleOpen"
-            :presets="view.schedulePresets"
-            @commit="emit('schedule', $event)"
-          >
-            <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                :aria-label="action.label"
-                :disabled="view.disabled"
-              >
-                <component :is="icons[action.id]" class="size-4" />
-              </Button>
-            </template>
-          </SchedulePopover>
-          <Tooltip v-else>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                :aria-label="action.label"
-                :disabled="view.disabled"
-                @click="runAction(action.id)"
-              >
-                <component :is="icons[action.id]" class="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ action.label }}</TooltipContent>
-          </Tooltip>
-        </template>
-
-        <DropdownMenu v-if="partitioned.overflow.length">
-          <DropdownMenuTrigger as-child>
-            <Button variant="ghost" size="icon-sm" aria-label="More" :disabled="view.disabled">
-              <EllipsisIcon class="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem
-              v-for="action in partitioned.overflow"
-              :key="action.id"
-              @select="runAction(action.id)"
+          <template v-for="action in partitioned.visible" :key="action.id">
+            <SchedulePopover
+              v-if="action.id === 'schedule'"
+              v-model:open="scheduleOpen"
+              :presets="view.schedulePresets"
+              @commit="emit('schedule', $event)"
             >
-              {{ action.label }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <template #trigger>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  class="border border-border"
+                  :aria-label="action.label"
+                  :disabled="view.disabled"
+                >
+                  <component :is="icons[action.id]" class="size-4" />
+                </Button>
+              </template>
+            </SchedulePopover>
+            <Tooltip v-else>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  class="border border-border"
+                  :aria-label="action.label"
+                  :disabled="view.disabled"
+                  @click="runAction(action.id)"
+                >
+                  <component :is="icons[action.id]" class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ action.label }}</TooltipContent>
+            </Tooltip>
+          </template>
 
-        <span class="ms-auto" />
+          <DropdownMenu v-if="partitioned.overflow.length">
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" size="icon-sm" aria-label="More" :disabled="view.disabled">
+                <EllipsisIcon class="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                v-for="action in partitioned.overflow"
+                :key="action.id"
+                @select="runAction(action.id)"
+              >
+                {{ action.label }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <Button size="sm" :disabled="!canSend" @click="emit('send')">
-          <SendIcon class="size-3.5" />
-          {{ view.sendLabel }}
-        </Button>
+          <span class="ms-auto" />
+
+          <Button size="sm" :disabled="!canSend" @click="emit('send')">
+            <SendIcon class="size-3.5" />
+            {{ view.sendLabel }}
+          </Button>
         </div>
       </TooltipProvider>
     </CardFooter>

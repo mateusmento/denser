@@ -5,6 +5,7 @@ import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/ric
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import {
   channelHeader,
+  channelIntro,
   channelMessages,
   conversationMentionItems,
   schedulePresets,
@@ -64,6 +65,14 @@ function onDelete(messageId: string) {
   toast(`Delete · ${messageId}`);
 }
 
+function onEditDescription() {
+  toast("Edit description");
+}
+
+function onAddPeople() {
+  toast("Add people");
+}
+
 function onRetry() {
   toast("Retrying…");
 }
@@ -81,10 +90,13 @@ function onAction(id: ComposerActionId) {
     <template #messages>
       <ConversationMessageList
         :messages="channelMessages"
+        :intro="channelIntro"
         @react="onReact"
         @thread="onOpenThread"
         @edit="onEdit"
         @delete="onDelete"
+        @edit-description="onEditDescription"
+        @add-people="onAddPeople"
       />
     </template>
     <template #composer>

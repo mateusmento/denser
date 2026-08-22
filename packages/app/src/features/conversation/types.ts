@@ -40,6 +40,14 @@ export type ConversationChannelHeaderView = {
   extraMemberCount?: number;
 };
 
+/** Start-of-history block (Slack “channel beginning”) — not the sticky ChannelHeader chrome. */
+export type ConversationIntroView = {
+  title: string;
+  body: string;
+  editDescriptionLabel?: string;
+  addPeopleLabel?: string;
+};
+
 export type ComposerShape = "channel" | "thread";
 
 export type ComposerActionId =

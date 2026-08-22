@@ -2,7 +2,11 @@
 import type { PrimitiveProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { Primitive } from 'reka-ui'
+import { computed } from 'vue'
 import { cn } from '@/lib/utils'
+import { bubbleContentVariants, injectBubbleContext } from '.'
+
+defineOptions({ inheritAttrs: false })
 
 interface Props extends PrimitiveProps {
   class?: HTMLAttributes['class']
@@ -11,17 +15,21 @@ interface Props extends PrimitiveProps {
 const props = withDefaults(defineProps<Props>(), {
   as: 'div',
 })
+
+const { variant } = injectBubbleContext()
+
+const contentClass = computed(() =>
+  cn(bubbleContentVariants({ variant: variant.value }), props.class),
+)
 </script>
 
 <template>
   <Primitive
+    v-bind="$attrs"
     data-slot="bubble-content"
     :as="as"
     :as-child="asChild"
-    :class="cn(
-      'rounded-3xl border border-transparent px-3 py-2.5 text-sm leading-relaxed [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3 [button,a]:focus-visible:ring-ring/30 group-data-[align=end]/bubble:self-end w-fit max-w-full min-w-0 overflow-hidden wrap-break-word [button]:text-left [button,a]:transition-colors',
-      props.class,
-    )"
+    :class="contentClass"
   >
     <slot />
   </Primitive>

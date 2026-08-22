@@ -75,7 +75,7 @@ export default tseslint.config(
     ...pluginBetterTailwindcss.configs.correctness,
     settings: {
       "better-tailwindcss": {
-        cwd: "packages/app",
+        cwd: "packages/design-system",
         entryPoint: "src/styles.css",
         detectComponentClasses: true,
       },

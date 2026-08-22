@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toast } from "@denser/design-system";
 import { defineMeta } from "sb-addon-vue-csf";
-import { channelMessages } from "../fixtures";
+import { channelIntro, channelMessages } from "../fixtures";
 import ConversationMessageList from "../presentationals/ConversationMessageList.vue";
 
 const { Story } = defineMeta({
@@ -33,10 +33,13 @@ function onDelete(messageId: string) {
     <div class="h-[28rem] w-[36rem]">
       <ConversationMessageList
         :messages="channelMessages"
+        :intro="channelIntro"
         @react="onReact"
         @thread="onThread"
         @edit="onEdit"
         @delete="onDelete"
+        @edit-description="toast('Edit description')"
+        @add-people="toast('Add people')"
       />
     </div>
   </Story>
@@ -44,6 +47,7 @@ function onDelete(messageId: string) {
     <div class="h-[28rem] w-[36rem]">
       <ConversationMessageList
         :messages="[]"
+        :intro="channelIntro"
         @react="onReact"
         @thread="onThread"
         @edit="onEdit"

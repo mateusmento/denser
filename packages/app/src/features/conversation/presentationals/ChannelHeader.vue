@@ -62,7 +62,7 @@ const emit = defineEmits<{
           <EllipsisIcon class="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" class="min-w-[11rem]">
+      <DropdownMenuContent align="end" class="min-w-44">
         <DropdownMenuItem @select="emit('notifications')">
           <BellIcon class="size-3.5" />
           Notifications

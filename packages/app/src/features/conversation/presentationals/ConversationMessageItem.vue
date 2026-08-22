@@ -1,26 +1,29 @@
 <script setup lang="ts">
+import { RichTextPreview } from "@/modules/rich-text";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Bubble,
+  BubbleContent,
   Button,
   Message,
   MessageAvatar,
   MessageContent,
   MessageFooter,
-  MessageHeader,
+  MessageHeader
 } from "@denser/design-system";
-import { MessageSquareIcon, PencilIcon, SmileIcon, TrashIcon } from "@lucide/vue";
-import { RichTextPreview } from "@/modules/rich-text";
 import type { ConversationMessageView } from "../types";
+import ConversationMessageItemHoverMenu from "./ConversationMessageItemHoverMenu.vue";
 
 withDefaults(
   defineProps<{
     message: ConversationMessageView;
     /** Channel stream: reply count + open-thread actions. Off inside an open thread. */
     threadActions?: boolean;
+    messageScrollerViewport?: (HTMLElement | null)[] | HTMLElement | null;
   }>(),
-  { threadActions: true },
+  { threadActions: true, messageScrollerViewport: undefined },
 );
 
 const emit = defineEmits<{
@@ -33,12 +36,13 @@ const emit = defineEmits<{
 
 <template>
   <Message
-    class="group/item px-1 py-0.5 sm:px-2"
+    class="group/item px-2"
+    :class="{ 'pt-1.5': !message.grouped }"
     data-slot="conversation-message-item"
     :data-grouped="message.grouped ? '' : undefined"
   >
-    <MessageAvatar v-if="!message.grouped">
-      <Avatar size="sm">
+    <MessageAvatar>
+      <Avatar v-if="!message.grouped" size="sm">
         <AvatarImage
           v-if="message.author.avatarUrl"
           :src="message.author.avatarUrl"
@@ -47,15 +51,28 @@ const emit = defineEmits<{
         <AvatarFallback>{{ message.author.initials }}</AvatarFallback>
       </Avatar>
     </MessageAvatar>
-    <div v-else class="w-8 shrink-0 self-start" aria-hidden="true" />
 
-    <MessageContent>
+    <MessageContent class="gap-1.5">
       <MessageHeader v-if="!message.grouped" class="gap-2">
         <span class="text-foreground">{{ message.author.name }}</span>
         <time class="text-muted-foreground">{{ message.createdAtLabel }}</time>
       </MessageHeader>
 
-      <RichTextPreview :doc="message.body" />
+      <Bubble variant="ghost">
+        <ConversationMessageItemHoverMenu
+          :message="message"
+          :thread-actions="threadActions"
+          :collision-boundary="messageScrollerViewport"
+          @react="emit('react', $event)"
+          @thread="emit('thread')"
+          @edit="emit('edit')"
+          @delete="emit('delete')"
+        >
+          <BubbleContent>
+            <RichTextPreview :doc="message.body" class="w-fit" />
+          </BubbleContent>
+        </ConversationMessageItemHoverMenu>
+      </Bubble>
 
       <ul v-if="message.attachments?.length" class="flex flex-wrap gap-1">
         <li
@@ -90,40 +107,5 @@ const emit = defineEmits<{
         </Button>
       </MessageFooter>
     </MessageContent>
-
-    <div
-      class="absolute end-2 top-1 hidden gap-0.5 group-focus-within/item:flex group-hover/item:flex"
-    >
-      <Button size="icon-xs" variant="ghost" aria-label="Add reaction" @click="emit('react', '👍')">
-        <SmileIcon class="size-3.5" />
-      </Button>
-      <Button
-        v-if="threadActions"
-        size="icon-xs"
-        variant="ghost"
-        aria-label="Reply in thread"
-        @click="emit('thread')"
-      >
-        <MessageSquareIcon class="size-3.5" />
-      </Button>
-      <Button
-        v-if="message.canEdit"
-        size="icon-xs"
-        variant="ghost"
-        aria-label="Edit"
-        @click="emit('edit')"
-      >
-        <PencilIcon class="size-3.5" />
-      </Button>
-      <Button
-        v-if="message.canDelete"
-        size="icon-xs"
-        variant="ghost"
-        aria-label="Delete"
-        @click="emit('delete')"
-      >
-        <TrashIcon class="size-3.5" />
-      </Button>
-    </div>
   </Message>
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { cn } from "@denser/design-system";
+import { computed, ref, watch, type HTMLAttributes } from "vue";
 
 type SuggestionRow = {
   id: string;
@@ -7,6 +8,7 @@ type SuggestionRow = {
 };
 
 const props = defineProps<{
+  class?: HTMLAttributes["class"];
   items: readonly SuggestionRow[];
   command: (item: SuggestionRow) => void;
 }>();
@@ -54,7 +56,12 @@ defineExpose({ onKeyDown });
 
 <template>
   <div
-    class="z-50 min-w-48 overflow-x-hidden overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+    :class="cn(
+      'z-50 min-w-48 p-1 overflow-x-hidden overflow-y-auto',
+      'rounded-md border border-border shadow-md ',
+      'bg-popover/60 backdrop-blur-lg text-popover-foreground',
+      props.class
+    )"
     data-slot="rich-text-suggestion-menu"
     role="listbox"
   >

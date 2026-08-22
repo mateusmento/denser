@@ -1,23 +1,72 @@
+import type { ComputedRef } from 'vue'
 import type { VariantProps } from 'class-variance-authority'
 import { cva } from 'class-variance-authority'
+import { createContext } from 'reka-ui'
+import { cn } from '@/lib/utils'
 
 export { default as Bubble } from './Bubble.vue'
 export { default as BubbleContent } from './BubbleContent.vue'
 export { default as BubbleGroup } from './BubbleGroup.vue'
 export { default as BubbleReactions } from './BubbleReactions.vue'
 
+/** Layout / positioning on the Bubble root. */
 export const bubbleVariants = cva(
-  'gap-1 data-[align=end]:self-end max-w-[80%] data-[variant=ghost]:max-w-full group-data-[align=end]/message:self-end group/bubble relative flex w-fit min-w-0 flex-col',
+  cn([
+    'gap-1 data-[align=end]:self-end max-w-[80%] data-[variant=ghost]:max-w-full',
+    'group-data-[align=end]/message:self-end group/bubble relative flex w-fit min-w-0 flex-col',
+  ]),
+)
+
+/** Paint / interaction on BubbleContent (variant from Bubble context). */
+export const bubbleContentVariants = cva(
+  cn([
+    'rounded-xl rounded-tl-none border border-transparent px-2.5 py-0.5 text-sm leading-relaxed',
+    'transition-[border-color,background-color,box-shadow] duration-[150ms,150ms,50ms]',
+    '[button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3',
+    '[button,a]:focus-visible:ring-ring/30 group-data-[align=end]/bubble:self-end',
+    'w-fit max-w-full min-w-0 overflow-hidden wrap-break-word [button]:text-left [button,a]:transition-colors',
+  ]),
   {
     variants: {
       variant: {
-        default: '*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80',
-        secondary: '*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]',
-        muted: '*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]',
-        tinted: '*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]',
-        outline: '*:data-[slot=bubble-content]:bg-background *:data-[slot=bubble-content]:border-border [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30',
-        ghost: '*:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50 border-none',
-        destructive: '*:data-[slot=bubble-content]:bg-destructive/10 dark:*:data-[slot=bubble-content]:bg-destructive/20 *:data-[slot=bubble-content]:text-destructive [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30',
+        default: cn([
+          'bg-primary text-primary-foreground',
+          '[&:is(button,a):hover]:bg-primary/80',
+        ]),
+        secondary: cn([
+          'bg-secondary text-secondary-foreground',
+          '[&:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]',
+        ]),
+        muted: cn([
+          'bg-muted',
+          '[&:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]',
+        ]),
+        tinted: cn([
+          'bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)]',
+          'dark:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)]',
+          'text-foreground',
+          '[&:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)]',
+          'dark:[&:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]',
+        ]),
+        outline: cn([
+          'bg-background border-border',
+          '[&:is(button,a):hover]:bg-muted',
+          '[&:is(button,a):hover]:text-foreground',
+          'dark:[&:is(button,a):hover]:bg-input/30',
+        ]),
+        ghost: cn([
+          'bg-transparent hover:bg-secondary',
+          'hover:shadow-[0_1px_2px_var(--color-mist-950)]',
+          'border-transparent hover:border-border',
+          '[&:is(button,a):hover]:text-foreground',
+          'dark:[&:is(button,a):hover]:bg-muted/50',
+        ]),
+        destructive: cn([
+          'bg-destructive/10 dark:bg-destructive/20',
+          'text-destructive',
+          '[&:is(button,a):hover]:bg-destructive/20',
+          'dark:[&:is(button,a):hover]:bg-destructive/30',
+        ]),
       },
     },
     defaultVariants: {
@@ -25,10 +74,22 @@ export const bubbleVariants = cva(
     },
   },
 )
-export type BubbleVariants = VariantProps<typeof bubbleVariants>
+export type BubbleContentVariants = VariantProps<typeof bubbleContentVariants>
+export type BubbleVariants = BubbleContentVariants
+export type BubbleVariant = NonNullable<BubbleContentVariants['variant']>
+
+export interface BubbleContext {
+  variant: ComputedRef<BubbleVariant>
+}
+
+export const [injectBubbleContext, provideBubbleContext]
+  = createContext<BubbleContext>('Bubble')
 
 export const bubbleReactionsVariants = cva(
-  'rounded-full ring-3 ring-card bg-muted shrink-0 gap-1 px-1.5 py-0.5 has-[button]:p-0 text-sm absolute z-10 flex w-fit items-center justify-center',
+  cn([
+    'rounded-full ring-3 ring-card bg-muted shrink-0 gap-1 px-1.5 py-0.5 has-[button]:p-0 text-sm absolute z-10',
+    'flex w-fit items-center justify-center',
+  ]),
   {
     variants: {
       side: {

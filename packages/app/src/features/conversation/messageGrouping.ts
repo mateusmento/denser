@@ -2,6 +2,12 @@ import type { ConversationMessageView } from "./types";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
+export type ConversationDayGroup = {
+  id: string;
+  label: string;
+  messages: ConversationMessageView[];
+};
+
 export type ConversationListItem =
   | { kind: "day"; id: string; label: string }
   | { kind: "message"; message: ConversationMessageView };
@@ -21,22 +27,39 @@ export function withGroupedChrome(
   });
 }
 
-export function conversationListItems(
+export function conversationDayGroups(
   messages: readonly ConversationMessageView[],
-): ConversationListItem[] {
+): ConversationDayGroup[] {
   const grouped = withGroupedChrome(messages);
-  const items: ConversationListItem[] = [];
-  let lastDay: string | undefined;
+  const groups: ConversationDayGroup[] = [];
 
   for (const message of grouped) {
     const day = dayKey(message.createdAt);
-    if (day !== lastDay) {
-      items.push({ kind: "day", id: `day-${day}`, label: dayLabel(message.createdAt) });
-      lastDay = day;
+    const current = groups.at(-1);
+    if (!current || current.id !== `day-${day}`) {
+      groups.push({
+        id: `day-${day}`,
+        label: dayLabel(message.createdAt),
+        messages: [message],
+      });
+      continue;
     }
-    items.push({ kind: "message", message });
+    current.messages.push(message);
   }
 
+  return groups;
+}
+
+export function conversationListItems(
+  messages: readonly ConversationMessageView[],
+): ConversationListItem[] {
+  const items: ConversationListItem[] = [];
+  for (const group of conversationDayGroups(messages)) {
+    items.push({ kind: "day", id: group.id, label: group.label });
+    for (const message of group.messages) {
+      items.push({ kind: "message", message });
+    }
+  }
   return items;
 }
 

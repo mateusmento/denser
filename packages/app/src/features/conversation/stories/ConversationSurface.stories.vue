@@ -6,6 +6,7 @@ import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/ric
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import {
   channelHeader,
+  channelIntro,
   channelMessages,
   conversationMentionItems,
   schedulePresets,
@@ -92,6 +93,7 @@ function onAction(id: ComposerActionId) {
         <template #messages>
           <ConversationMessageList
             :messages="channelMessages"
+            :intro="channelIntro"
             @react="onReact"
             @thread="onOpenThread"
             @edit="onEdit"
@@ -102,6 +104,7 @@ function onAction(id: ComposerActionId) {
           <MessageComposer
             v-model="channelDraft"
             :view="channelComposer"
+            class="rounded-2xl"
             :mention-items="mentionItems"
             @mention-search="onMentionSearch"
             @send="onChannelSend"
@@ -122,6 +125,7 @@ function onAction(id: ComposerActionId) {
         <template #messages>
           <ConversationMessageList
             :messages="channelMessages"
+            :intro="channelIntro"
             @react="onReact"
             @thread="onOpenThread"
             @edit="onEdit"
@@ -169,6 +173,7 @@ function onAction(id: ComposerActionId) {
         <template #messages>
           <ConversationMessageList
             :messages="[]"
+            :intro="channelIntro"
             @react="onReact"
             @thread="onOpenThread"
             @edit="onEdit"
@@ -199,6 +204,7 @@ function onAction(id: ComposerActionId) {
         <template #messages>
           <ConversationMessageList
             :messages="channelMessages"
+            :intro="channelIntro"
             @react="onReact"
             @thread="onOpenThread"
             @edit="onEdit"

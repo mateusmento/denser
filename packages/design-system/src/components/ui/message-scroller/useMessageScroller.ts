@@ -127,11 +127,10 @@ function getRowGap(element: HTMLElement | null): number {
 
 function getMessageChildren(
   content: HTMLElement,
-  spacer: HTMLElement | null,
+  _spacer: HTMLElement | null,
 ): HTMLElement[] {
-  return Array.from(content.children).filter(
-    (child): child is HTMLElement =>
-      child instanceof HTMLElement && child !== spacer,
+  return Array.from(
+    content.querySelectorAll<HTMLElement>('[data-slot="message-scroller-item"]'),
   )
 }
 

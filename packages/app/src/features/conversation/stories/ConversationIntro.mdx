@@ -1,0 +1,10 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as ConversationIntroStories from "./ConversationIntro.stories.vue";
+
+<Meta of={ConversationIntroStories} />
+
+# ConversationIntro
+
+Start-of-history channel intro (Slack “channel beginning”). Spec: `docs/ui-surfaces/conversation.md`. Distinct from sticky `ChannelHeader` chrome.
+
+<Canvas of={ConversationIntroStories.Default} />

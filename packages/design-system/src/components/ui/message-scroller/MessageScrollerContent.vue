@@ -34,7 +34,7 @@ onMounted(() => {
 
   if (typeof MutationObserver !== 'undefined') {
     mutationObserver = new MutationObserver(() => handleContentChange())
-    mutationObserver.observe(content, { childList: true })
+    mutationObserver.observe(content, { childList: true, subtree: true })
   }
 
   if (typeof ResizeObserver !== 'undefined') {

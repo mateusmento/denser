@@ -44,6 +44,7 @@ Shared app shell (nav sidebar, space switcher) stays outside this surface; Conve
 | Sub-component                                   | Role                                                                                                | Spec depth                   |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
 | **ChannelHeader**                               | Title, topic/description (if any), member/presence affordances, channel menu                        | Below                        |
+| **ConversationIntro**                           | Start-of-history “channel beginning”: title, intro copy, edit description, add people               | Light                        |
 | **MessageScroller** (`ConversationMessageList`) | Windowed list (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                        |
 | **MessageItem**                                 | Author, timestamp, rich body, attachments/embeds, reactions, hover/focus actions                    | Below                        |
 | **MessageGroup**                                | Consecutive messages from same author (collapsed chrome)                                            | Light                        |

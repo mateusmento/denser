@@ -1,0 +1,10 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as MessageContextMenuStories from "./MessageContextMenu.stories.vue";
+
+<Meta of={MessageContextMenuStories} />
+
+# MessageContextMenu
+
+Right-click menu for a channel message: copy (selection or whole body), edit, delete. Default slot is the trigger (`as-child`).
+
+<Canvas of={MessageContextMenuStories.Default} />

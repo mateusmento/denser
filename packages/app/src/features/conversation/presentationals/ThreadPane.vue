@@ -39,24 +39,20 @@ const emit = defineEmits<{
     <header class="flex h-surface-header shrink-0 items-center gap-2 px-3">
       <div class="min-w-0 flex-1">
         <p class="text-sm font-medium">Thread</p>
-        <p class="truncate text-xs text-muted-foreground">
-          {{ thread.parent.author.name }}
-        </p>
       </div>
       <Button variant="ghost" size="icon-sm" aria-label="Close thread" @click="emit('close')">
         <XIcon class="size-4" />
       </Button>
     </header>
 
-    <div class="shrink-0 border-b border-border px-1 py-2">
-      <ConversationMessageItem
-        :message="thread.parent"
-        :thread-actions="false"
-        @react="emit('react', thread.parent.id, $event)"
-        @edit="emit('edit', thread.parent.id)"
-        @delete="emit('delete', thread.parent.id)"
-      />
-    </div>
+    <ConversationMessageItem
+      class="shrink-0 mb-2"
+      :message="thread.parent"
+      :thread-actions="false"
+      @react="emit('react', thread.parent.id, $event)"
+      @edit="emit('edit', thread.parent.id)"
+      @delete="emit('delete', thread.parent.id)"
+    />
 
     <div class="min-h-0 flex-1">
       <ConversationMessageList
@@ -69,10 +65,11 @@ const emit = defineEmits<{
       />
     </div>
 
-    <div class="box-border flex h-surface-footer shrink-0 flex-col px-2 py-3">
+    <div class="box-border flex basis-surface-footer shrink-0 flex-col p-2">
       <MessageComposer
         v-model="draft"
         :view="composer"
+        class="rounded-xl"
         :mention-items="mentionItems"
         :upload-image="uploadImage"
         @mention-search="emit('mentionSearch', $event)"

@@ -10,14 +10,22 @@
       aria-label="Conversation"
       data-slot="conversation-column"
     >
-      <div class="flex h-surface-header shrink-0 items-center">
+      <div class="flex min-h-surface-header shrink-0 items-center pb-2 -mx-3 border-b border-border">
         <slot name="header" />
       </div>
-      <div class="relative min-h-0 flex-1">
+      <div class="relative min-h-0 flex-1 -mx-3">
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 z-2 h-5 bg-linear-to-b from-background via-35% to-transparent"
+          aria-hidden="true"
+        />
+        <div
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-2 h-10 bg-linear-to-t from-background via-background/50 via-35% to-transparent"
+          aria-hidden="true"
+        />
         <slot name="messages" />
       </div>
       <div
-        class="box-border flex h-surface-footer shrink-0 flex-col px-1 py-3 sm:px-2"
+        class="box-border z-3 flex basis-surface-footer shrink-0 flex-col max-h-96"
         data-slot="conversation-footer"
       >
         <slot name="composer" />
