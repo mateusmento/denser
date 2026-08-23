@@ -8,7 +8,7 @@ import {
   MessageScrollerViewport,
   StickyMarker,
 } from "@denser/design-system";
-import { computed, shallowRef, useTemplateRef, watch } from "vue";
+import { computed, shallowRef, useSlots, useTemplateRef, watch } from "vue";
 import { conversationDayGroups } from "../messageGrouping";
 import type { ConversationIntroView, ConversationMessageView } from "../types";
 import ConversationIntro from "./ConversationIntro.vue";
@@ -18,7 +18,7 @@ import ConversationMessageGroup from "./ConversationMessageGroup.vue";
 const props = withDefaults(
   defineProps<{
     messages: readonly ConversationMessageView[];
-    /** Start-of-history intro; omit in threads. */
+    /** Start-of-history intro; omit in threads (prefer `#intro` slot for custom chrome). */
     intro?: ConversationIntroView;
     emptyLabel?: string;
     /** Forwarded to each message; off inside an open thread (no nested threads). */
@@ -41,18 +41,34 @@ const emit = defineEmits<{
   addPeople: [];
 }>();
 
-const dayGroups = computed(() => conversationDayGroups(props.messages));
-const hasContent = computed(() => dayGroups.value.length > 0 || Boolean(props.intro));
+defineSlots<{
+  /** Rendered at the top of the scroll content (channel intro or thread parent). */
+  intro: (props: {
+    collisionBoundary: HTMLElement | null;
+  }) => unknown;
+}>();
 
-const viewport = useTemplateRef<{ viewportElement?: HTMLElement | null }>("viewport");
+const slots = useSlots();
+const dayGroups = computed(() => conversationDayGroups(props.messages));
+const hasContent = computed(
+  () => dayGroups.value.length > 0 || Boolean(props.intro) || Boolean(slots.intro),
+);
+
+const viewport = useTemplateRef<{ viewportElement?: unknown }>("viewport");
 /** Resolved scroll node for HoverCard collision (tracks MessageScrollerViewport’s exposed ref). */
 const collisionBoundary = shallowRef<HTMLElement | null>(null);
 
+function unwrapViewportElement(exposed: unknown): HTMLElement | null {
+  if (exposed instanceof HTMLElement) return exposed;
+  if (exposed && typeof exposed === "object" && "value" in exposed) {
+    const value = (exposed as { value: unknown }).value;
+    if (value instanceof HTMLElement) return value;
+  }
+  return null;
+}
+
 watch(
-  () => {
-    const exposed = viewport.value?.viewportElement;
-    return exposed instanceof HTMLElement ? exposed : null;
-  },
+  () => unwrapViewportElement(viewport.value?.viewportElement),
   (el) => {
     collisionBoundary.value = el;
   },
@@ -65,13 +81,15 @@ watch(
     <MessageScroller data-slot="conversation-timeline">
       <MessageScrollerViewport ref="viewport">
         <MessageScrollerContent v-if="hasContent" class="gap-1 pt-0 pb-12">
-          <ConversationIntro
-            v-if="intro"
-            :intro="intro"
-            class="pt-14"
-            @edit-description="emit('editDescription')"
-            @add-people="emit('addPeople')"
-          />
+          <slot name="intro" :collision-boundary="collisionBoundary">
+            <ConversationIntro
+              v-if="intro"
+              :intro="intro"
+              class="pt-14"
+              @edit-description="emit('editDescription')"
+              @add-people="emit('addPeople')"
+            />
+          </slot>
           <StickyMarker
             v-for="day in dayGroups"
             :key="day.id"

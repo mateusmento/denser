@@ -51,7 +51,7 @@ export const channelMessages: ConversationMessageView[] = [
     createdAt: "2026-08-10T14:06:00.000Z",
     createdAtLabel: "2:06 PM",
     reactions: [{ emoji: "👍", count: 2, mine: true }],
-    replyCount: 2,
+    replyCount: 20,
   }),
   message({
     id: "m3",
@@ -451,6 +451,8 @@ export const channelMessages: ConversationMessageView[] = [
 ];
 
 export const threadReplyMessages: ConversationMessageView[] = [
+  // —— Mon Aug 10 ——
+  // Ava burst
   message({
     id: "t1",
     author: ava,
@@ -460,9 +462,142 @@ export const threadReplyMessages: ConversationMessageView[] = [
   }),
   message({
     id: "t2",
-    author: jon,
-    text: "Agreed — inline retry, not a toast.",
+    author: ava,
+    text: "Also need conflict handling if two tabs schedule the same draft.",
     createdAt: "2026-08-10T14:11:00.000Z",
     createdAtLabel: "2:11 PM",
+  }),
+  message({
+    id: "t3",
+    author: ava,
+    text: "Ship criteria: retry works offline→online, no duplicate sends.",
+    createdAt: "2026-08-10T14:12:30.000Z",
+    createdAtLabel: "2:12 PM",
+  }),
+  // Jon burst
+  message({
+    id: "t4",
+    author: jon,
+    text: "Agreed — inline retry, not a toast.",
+    createdAt: "2026-08-10T14:14:00.000Z",
+    createdAtLabel: "2:14 PM",
+  }),
+  message({
+    id: "t5",
+    author: jon,
+    text: "409 merge-retry same as channel edits — I’ll wire that.",
+    createdAt: "2026-08-10T14:15:00.000Z",
+    createdAtLabel: "2:15 PM",
+  }),
+  message({
+    id: "t6",
+    author: jon,
+    text: "Yes — muted caption under the composer, only when a schedule exists.",
+    createdAt: "2026-08-10T14:16:20.000Z",
+    createdAtLabel: "2:16 PM",
+  }),
+  message({
+    id: "t7",
+    author: jon,
+    text: "I’ll add a Storybook case with a long thread so we can stress the scroller.",
+    createdAt: "2026-08-10T14:17:00.000Z",
+    createdAtLabel: "2:17 PM",
+  }),
+  // Mia burst
+  message({
+    id: "t8",
+    author: mia,
+    text: "Copy for the failure state: “Couldn’t schedule — draft kept.”",
+    createdAt: "2026-08-10T14:31:00.000Z",
+    createdAtLabel: "2:31 PM",
+  }),
+  message({
+    id: "t9",
+    author: mia,
+    text: "Can we surface the last good send time under the composer?",
+    createdAt: "2026-08-10T14:32:00.000Z",
+    createdAtLabel: "2:32 PM",
+  }),
+  message({
+    id: "t10",
+    author: mia,
+    text: "Thread pane should keep the parent sticky while replies scroll.",
+    createdAt: "2026-08-10T14:33:30.000Z",
+    createdAtLabel: "2:33 PM",
+  }),
+
+  // —— Tue Aug 11 ——
+  // Ava burst
+  message({
+    id: "t11",
+    author: ava,
+    text: "Morning check: schedule retry landed in the draft branch.",
+    createdAt: "2026-08-11T09:05:00.000Z",
+    createdAtLabel: "9:05 AM",
+  }),
+  message({
+    id: "t12",
+    author: ava,
+    text: "Day chips in threads should use card fill, not channel background.",
+    createdAt: "2026-08-11T09:06:00.000Z",
+    createdAtLabel: "9:06 AM",
+  }),
+  message({
+    id: "t13",
+    author: ava,
+    text: "Closing the loop: schedule + retry + thread scroll are Friday blockers.",
+    createdAt: "2026-08-11T09:07:30.000Z",
+    createdAtLabel: "9:07 AM",
+  }),
+  // Jon burst
+  message({
+    id: "t14",
+    author: jon,
+    text: "Verified on a slow 3G throttle — draft survives, one send.",
+    createdAt: "2026-08-11T09:28:00.000Z",
+    createdAtLabel: "9:28 AM",
+  }),
+  message({
+    id: "t15",
+    author: jon,
+    text: "While you’re there — jump-to-latest in the thread scroller needs the same edge fade as channel.",
+    createdAt: "2026-08-11T09:29:00.000Z",
+    createdAtLabel: "9:29 AM",
+  }),
+  message({
+    id: "t16",
+    author: jon,
+    text: "One more reply so we can scroll past a second sticky day while the menu is open.",
+    createdAt: "2026-08-11T09:30:20.000Z",
+    createdAtLabel: "9:30 AM",
+  }),
+  message({
+    id: "t17",
+    author: jon,
+    text: "Sounds good — ping me if the parent + composer steal too much height.",
+    createdAt: "2026-08-11T09:31:00.000Z",
+    createdAtLabel: "9:31 AM",
+  }),
+  // Mia burst
+  message({
+    id: "t18",
+    author: mia,
+    text: "Empty-thread composer still looks cramped; I’ll nudge padding.",
+    createdAt: "2026-08-11T10:20:00.000Z",
+    createdAtLabel: "10:20 AM",
+  }),
+  message({
+    id: "t19",
+    author: mia,
+    text: "Noted — ThreadPane already passes dayClass for card fill.",
+    createdAt: "2026-08-11T10:21:00.000Z",
+    createdAtLabel: "10:21 AM",
+  }),
+  message({
+    id: "t20",
+    author: mia,
+    text: "I’ll own thread scroll QA in Storybook before standup.",
+    createdAt: "2026-08-11T10:22:30.000Z",
+    createdAtLabel: "10:22 AM",
   }),
 ];

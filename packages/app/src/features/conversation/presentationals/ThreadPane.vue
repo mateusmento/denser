@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button } from "@denser/design-system";
+import { Button, MessageScrollerItem } from "@denser/design-system";
 import { XIcon } from "@lucide/vue";
 import type { JSONContent, MentionCandidate } from "@/modules/rich-text";
 import type {
@@ -46,20 +46,6 @@ const emit = defineEmits<{
       </Button>
     </header>
 
-    <ConversationMessageGroup
-      class="mb-2 shrink-0"
-      :author="thread.parent.author"
-      :created-at-label="thread.parent.createdAtLabel"
-    >
-      <ConversationMessage
-        :message="thread.parent"
-        :thread-actions="false"
-        @react="emit('react', thread.parent.id, $event)"
-        @edit="emit('edit', thread.parent.id)"
-        @delete="emit('delete', thread.parent.id)"
-      />
-    </ConversationMessageGroup>
-
     <div class="min-h-0 flex-1">
       <ConversationTimeline
         :messages="thread.messages"
@@ -68,7 +54,26 @@ const emit = defineEmits<{
         @react="(messageId, emoji) => emit('react', messageId, emoji)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
-      />
+      >
+        <template #intro="introSlot">
+          <MessageScrollerItem :message-id="thread.parent.id" class="px-0">
+            <ConversationMessageGroup
+              class="pb-2 pt-3"
+              :author="thread.parent.author"
+              :created-at-label="thread.parent.createdAtLabel"
+            >
+              <ConversationMessage
+                :message="thread.parent"
+                :thread-actions="false"
+                :collision-boundary="introSlot.collisionBoundary"
+                @react="emit('react', thread.parent.id, $event)"
+                @edit="emit('edit', thread.parent.id)"
+                @delete="emit('delete', thread.parent.id)"
+              />
+            </ConversationMessageGroup>
+          </MessageScrollerItem>
+        </template>
+      </ConversationTimeline>
     </div>
 
     <div class="box-border flex basis-surface-footer shrink-0 flex-col p-2">

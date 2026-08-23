@@ -31,7 +31,7 @@ const SIDE_GAP = 10;
  * then applies INSET_TOP (negative = above the bubble, e.g. -24).
  * INSET_RIGHT is the gap from the bubble’s right edge to the card’s right edge.
  */
-const INSET_TOP = 6;
+const INSET_TOP = 8;
 const INSET_RIGHT = 24;
 const EDGE_PADDING = 8;
 const FALLBACK_MENU_WIDTH = 140;
@@ -213,25 +213,14 @@ function menuPastBubbleEdge(): boolean {
   return m.top >= h.bottom - 1 || m.bottom <= h.top + 1;
 }
 
-/** Inset mode: menu (anchored to the bubble) has crossed the scroller edge. */
-function menuPastScrollEdge(): boolean {
-  const boundary = boundaryEl.value;
-  const menu = menuRef.value;
-  if (!boundary || !menu) return false;
-
-  const b = boundary.getBoundingClientRect();
-  const m = menu.getBoundingClientRect();
-  if (m.width === 0 && m.height === 0) return false;
-  return m.top < b.top || m.bottom > b.bottom || m.left < b.left || m.right > b.right;
-}
-
 function canShowHoverMenu(): boolean {
   return triggerInsideBoundary();
 }
 
 function shouldDismissHoverMenu(): boolean {
   if (!triggerInsideBoundary()) return true;
-  if (isInset.value) return menuPastScrollEdge();
+  // Inset is clamped inside the scroller in updatePosition — only dismiss when the bubble leaves.
+  if (isInset.value) return false;
   return menuPastBubbleEdge();
 }
 
@@ -246,14 +235,30 @@ async function updatePosition() {
   if (!host || !menu || !open.value) return;
 
   if (isInset.value) {
-    // Bottom of card → bubble top + INSET_TOP; right of card → bubble right − INSET_RIGHT.
+    // Prefer above the bubble; clamp into the scroller so top-of-thread parents keep a menu.
     const h = host.getBoundingClientRect();
+    const b = boundaryEl.value?.getBoundingClientRect();
     const mw = menu.offsetWidth;
     const mh = menu.offsetHeight;
+
+    let top = h.top + INSET_TOP - mh;
+    let left = h.right - mw - INSET_RIGHT;
+
+    if (b) {
+      const minTop = b.top + EDGE_PADDING;
+      const maxTop = b.bottom - EDGE_PADDING - mh;
+      if (top < minTop) {
+        // Not enough room above — sit just below the bubble’s top edge instead.
+        top = Math.min(h.top + INSET_TOP, maxTop);
+      }
+      top = Math.min(Math.max(top, minTop), Math.max(minTop, maxTop));
+      left = Math.min(Math.max(left, b.left + EDGE_PADDING), b.right - EDGE_PADDING - mw);
+    }
+
     floatingStyle.value = {
       position: "fixed",
-      top: `${h.top + INSET_TOP - mh}px`,
-      left: `${h.right - mw - INSET_RIGHT}px`,
+      top: `${top}px`,
+      left: `${left}px`,
       width: "max-content",
     };
     return;
@@ -304,11 +309,11 @@ async function updatePosition() {
         data-slot="message-hover-menu"
         :style="floatingStyle"
         :class="cn(
-          'z-50 flex w-fit gap-1',
+          'z-50 flex w-fit gap-1 **:[button]:rounded-lg',
           isInset
             ? [
                 'rounded-xl border border-border bg-secondary p-0.5 text-secondary-foreground',
-                'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10 **:[button]:rounded-lg',
+                'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10',
               ]
             : 'bg-transparent',
         )"
