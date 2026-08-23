@@ -15,11 +15,11 @@
       </div>
       <div class="relative min-h-0 flex-1 -mx-3">
         <div
-          class="pointer-events-none absolute inset-x-0 top-0 z-2 h-5 bg-linear-to-b from-background via-35% to-transparent"
+          class="pointer-events-none absolute inset-x-px top-0 z-2 h-5 bg-linear-to-b from-background via-35% to-transparent"
           aria-hidden="true"
         />
         <div
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-2 h-10 bg-linear-to-t from-background via-background/50 via-35% to-transparent"
+          class="pointer-events-none absolute inset-x-px bottom-0 z-2 h-10 bg-linear-to-t from-background via-background/50 via-35% to-transparent"
           aria-hidden="true"
         />
         <div class="relative z-0 size-full min-h-0">

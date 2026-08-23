@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useMessageScrollerContextMaybe } from "@denser/design-system";
 import { autoUpdate, computePosition, offset, shift } from "@floating-ui/dom";
 import { SmileIcon, MessageSquareIcon, PencilIcon, TrashIcon } from "@lucide/vue";
-import { useEventListener } from "@vueuse/core";
+import { useEventListener, useResizeObserver } from "@vueuse/core";
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import type { ConversationMessageView } from "../types";
 
@@ -38,7 +38,8 @@ const FALLBACK_MENU_WIDTH = 140;
 
 const open = ref(false);
 /**
- * Locked for the lifetime of an open session (chosen on open, never flipped on scroll):
+ * Chosen from available row width (bubble + menu vs scroller).
+ * Re-resolved on layout/resize while open (e.g. thread pane), not driven by scroll shift.
  * - `right` — outside the bubble when the row has room; shifts/sticks at the scroller edge
  * - `inset` — top-right of the bubble (bottom of card anchored to bubble top); fixed relative to the bubble
  */
@@ -72,11 +73,16 @@ useEventListener(
   "scroll",
   () => {
     if (!open.value) return;
-    // Do not re-resolve placement on scroll — mode is locked for this open session.
-    void updatePosition().then(dismissIfNeeded);
+    void syncPosition();
   },
   { passive: true },
 );
+
+// Thread pane / column reflow shrinks the scroller — re-check right vs inset.
+useResizeObserver(boundaryEl, () => {
+  if (!open.value) return;
+  void syncPosition();
+});
 
 watch(open, async (isOpen) => {
   stopAutoUpdate?.();
@@ -93,8 +99,9 @@ watch(open, async (isOpen) => {
   const menu = menuRef.value;
   if (!host || !menu) return;
 
+  // autoUpdate also fires on element/ancestor resize (thread pane, bubble reflow).
   stopAutoUpdate = autoUpdate(host, menu, () => {
-    void updatePosition().then(dismissIfNeeded);
+    void syncPosition();
   });
 });
 
@@ -121,11 +128,22 @@ function clearTimers() {
 function scheduleOpen() {
   clearTimers();
   openTimer = setTimeout(() => {
-    // Choose mode once at open — never switch while the menu is showing.
     placement.value = resolvePlacement();
     if (!canShowHoverMenu()) return;
     open.value = true;
   }, OPEN_DELAY_MS);
+}
+
+/** Re-check right vs inset from current widths, then reposition (and dismiss if needed). */
+async function syncPosition() {
+  if (!open.value) return;
+  const next = resolvePlacement();
+  const modeChanged = next !== placement.value;
+  placement.value = next;
+  // Inset chrome changes menu size — wait a frame before measuring.
+  if (modeChanged) await nextTick();
+  await updatePosition();
+  dismissIfNeeded();
 }
 
 function scheduleClose() {
