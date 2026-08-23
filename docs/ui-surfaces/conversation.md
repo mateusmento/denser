@@ -45,14 +45,14 @@ Shared app shell (nav sidebar, space switcher) stays outside this surface; Conve
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
 | **ChannelHeader**                               | Title, topic/description (if any), member/presence affordances, channel menu                        | Below                        |
 | **ConversationIntro**                           | Start-of-history “channel beginning”: title, intro copy, edit description, add people               | Light                        |
-| **MessageScroller** (`ConversationMessageList`) | Windowed list (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                        |
-| **MessageItem**                                 | Author, timestamp, rich body, attachments/embeds, reactions, hover/focus actions                    | Below                        |
-| **MessageGroup**                                | Consecutive messages from same author (collapsed chrome)                                            | Light                        |
-| **ThreadPane**                                  | Parent summary + thread scroller + MessageComposer (thread)                                         | Below                        |
+| **Timeline** (`ConversationTimeline`)           | Windowed history (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                     |
+| **Message** (`ConversationMessage`)             | Rich body, attachments/embeds, reactions, hover/context menus (DS `Message` is layout only)         | Below                        |
+| **MessageGroup** (`ConversationMessageGroup`)   | Same-author, near-in-time cluster: avatar + name/time once, slotted messages (≠ DS `MessageGroup`)  | Light                        |
+| **ThreadPane**                                  | Parent summary + thread timeline + MessageComposer (thread)                                         | Below                        |
 | **MessageComposer**                             | Channel / thread chrome over the shared editor                                                      | [Detailed](#messagecomposer) |
 | **PermissionEmpty**                             | Replaces MessageComposer when user cannot post                                                      | States                       |
 
-Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, etc.) are implementation detail; this doc names **product** sub-components.
+Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Message` / `MessageGroup` layout, etc.) are implementation detail; this doc names **product** sub-components.
 
 ---
 
@@ -60,16 +60,16 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, etc.) 
 
 | Feature                      | Where it lives                                   | Notes                                                              |
 | ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| Read channel history         | MessageScroller                                  | Cursor/window load; stable order                                   |
-| Jump to latest / unread      | Scroller + header or floating control            | TBD exact chrome                                                   |
+| Read channel history         | Timeline                                         | Cursor/window load; stable order                                   |
+| Jump to latest / unread      | Timeline + header or floating control            | TBD exact chrome                                                   |
 | Post rich message            | MessageComposer (channel)                        | Send Layer 1                                                       |
 | Format selection             | MessageComposer → RichTextSelectionMenu / slash  | [Standard formatting](./rich-text-composer.md#standard-formatting) |
 | Mention / image / attachment | MessageComposer action row                       |                                                                    |
 | Code block / poll            | MessageComposer action row                       | Poll phased                                                        |
 | Screen recording / schedule  | MessageComposer action row                       | Phased; schedule → SchedulePopover                                 |
-| React to message             | MessageItem                                      |                                                                    |
-| Edit / delete own message    | MessageItem actions                              | Permission rules in feature spec                                   |
-| Open / reply in thread       | MessageItem → ThreadPane + composer thread shape |                                                                    |
+| React to message             | Message                                          |                                                                    |
+| Edit / delete own message    | Message actions                                  | Permission rules in feature spec                                   |
+| Open / reply in thread       | Message → ThreadPane + composer thread shape     |                                                                    |
 | Presence (viewing / typing)  | Header and/or scroller                           | TBD v1                                                             |
 | Search in channel            | Header or ambient                                | Likely Layer 2/3                                                   |
 
@@ -182,7 +182,7 @@ Same engine; shape selects chrome and insert set.
 | No permission    | Replaced by PermissionEmpty                                              |
 | Offline          | Queue or block (TBD)                                                     |
 
-MessageItem bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`), never `v-html` of a string.
+Message bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`), never `v-html` of a string.
 
 ### Decision-rule notes
 

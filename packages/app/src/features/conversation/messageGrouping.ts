@@ -1,67 +1,16 @@
-import type { ConversationMessageView } from "./types";
+import type {
+  ConversationMessageGroupView,
+  ConversationMessageView,
+  ConversationPersonView,
+} from "./types";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
 export type ConversationDayGroup = {
   id: string;
   label: string;
-  messages: ConversationMessageView[];
+  messageGroups: ConversationMessageGroupView[];
 };
-
-export type ConversationListItem =
-  | { kind: "day"; id: string; label: string }
-  | { kind: "message"; message: ConversationMessageView };
-
-export function withGroupedChrome(
-  messages: readonly ConversationMessageView[],
-): ConversationMessageView[] {
-  return messages.map((message, index) => {
-    const previous = messages[index - 1];
-    const grouped = Boolean(
-      previous &&
-      previous.author.id === message.author.id &&
-      Math.abs(Date.parse(message.createdAt) - Date.parse(previous.createdAt)) < GROUP_WINDOW_MS &&
-      dayKey(previous.createdAt) === dayKey(message.createdAt),
-    );
-    return { ...message, grouped };
-  });
-}
-
-export function conversationDayGroups(
-  messages: readonly ConversationMessageView[],
-): ConversationDayGroup[] {
-  const grouped = withGroupedChrome(messages);
-  const groups: ConversationDayGroup[] = [];
-
-  for (const message of grouped) {
-    const day = dayKey(message.createdAt);
-    const current = groups.at(-1);
-    if (!current || current.id !== `day-${day}`) {
-      groups.push({
-        id: `day-${day}`,
-        label: dayLabel(message.createdAt),
-        messages: [message],
-      });
-      continue;
-    }
-    current.messages.push(message);
-  }
-
-  return groups;
-}
-
-export function conversationListItems(
-  messages: readonly ConversationMessageView[],
-): ConversationListItem[] {
-  const items: ConversationListItem[] = [];
-  for (const group of conversationDayGroups(messages)) {
-    items.push({ kind: "day", id: group.id, label: group.label });
-    for (const message of group.messages) {
-      items.push({ kind: "message", message });
-    }
-  }
-  return items;
-}
 
 function dayKey(iso: string): string {
   return iso.slice(0, 10);
@@ -74,4 +23,69 @@ function dayLabel(iso: string): string {
     month: "short",
     day: "numeric",
   }).format(date);
+}
+
+function continuesGroup(
+  previous: ConversationMessageView,
+  next: ConversationMessageView,
+): boolean {
+  return (
+    previous.author.id === next.author.id &&
+    Math.abs(Date.parse(next.createdAt) - Date.parse(previous.createdAt)) < GROUP_WINDOW_MS &&
+    dayKey(previous.createdAt) === dayKey(next.createdAt)
+  );
+}
+
+/** Cluster consecutive same-author messages within the grouping window. */
+export function conversationMessageGroups(
+  messages: readonly ConversationMessageView[],
+): ConversationMessageGroupView[] {
+  const groups: Array<{
+    id: string;
+    author: ConversationPersonView;
+    createdAtLabel: string;
+    messages: ConversationMessageView[];
+  }> = [];
+
+  for (const message of messages) {
+    const current = groups.at(-1);
+    const last = current?.messages.at(-1);
+    if (current && last && continuesGroup(last, message)) {
+      current.messages.push(message);
+      continue;
+    }
+    groups.push({
+      id: `group-${message.id}`,
+      author: message.author,
+      createdAtLabel: message.createdAtLabel,
+      messages: [message],
+    });
+  }
+
+  return groups;
+}
+
+/** Day buckets containing same-author message groups (for sticky day chips). */
+export function conversationDayGroups(
+  messages: readonly ConversationMessageView[],
+): ConversationDayGroup[] {
+  const days: ConversationDayGroup[] = [];
+
+  for (const group of conversationMessageGroups(messages)) {
+    const first = group.messages[0];
+    if (!first) continue;
+    const day = dayKey(first.createdAt);
+    const current = days.at(-1);
+    if (!current || current.id !== `day-${day}`) {
+      days.push({
+        id: `day-${day}`,
+        label: dayLabel(first.createdAt),
+        messageGroups: [group],
+      });
+      continue;
+    }
+    current.messageGroups.push(group);
+  }
+
+  return days;
 }

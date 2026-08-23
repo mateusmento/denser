@@ -2,11 +2,11 @@
 import { toast } from "@denser/design-system";
 import { defineMeta } from "sb-addon-vue-csf";
 import { channelIntro, channelMessages } from "../fixtures";
-import ConversationMessageList from "../presentationals/ConversationMessageList.vue";
+import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 
 const { Story } = defineMeta({
-  title: "features/conversation/ConversationMessageList",
-  component: ConversationMessageList,
+  title: "features/conversation/ConversationTimeline",
+  component: ConversationTimeline,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
 });
@@ -31,7 +31,7 @@ function onDelete(messageId: string) {
 <template>
   <Story as-child name="History">
     <div class="h-[28rem] w-[36rem]">
-      <ConversationMessageList
+      <ConversationTimeline
         :messages="channelMessages"
         :intro="channelIntro"
         @react="onReact"
@@ -45,7 +45,7 @@ function onDelete(messageId: string) {
   </Story>
   <Story as-child name="Empty">
     <div class="h-[28rem] w-[36rem]">
-      <ConversationMessageList
+      <ConversationTimeline
         :messages="[]"
         :intro="channelIntro"
         @react="onReact"

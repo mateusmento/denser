@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 import type { ScrollAreaRootProps } from 'reka-ui'
-import { onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import {
   ScrollAreaCorner,
   ScrollAreaRoot,
@@ -31,7 +31,10 @@ const {
   userScrollIntent,
 } = useMessageScrollerContext()
 
-const viewportComp = useTemplateRef<{ viewportElement?: HTMLElement }>('viewport')
+const rootComp = useTemplateRef<{ $el?: HTMLElement } | HTMLElement>('root')
+const viewportComp = useTemplateRef<{ viewportElement?: HTMLElement | { value: HTMLElement | null } }>('viewport')
+/** Concrete scroll node — parents / context can depend on this reactively. */
+const viewportElement = shallowRef<HTMLElement | null>(null)
 
 watch(() => props.preserveScrollOnPrepend, setPreserveScrollOnPrepend, { immediate: true })
 
@@ -40,17 +43,48 @@ function onKeyDown(event: KeyboardEvent) {
     userScrollIntent()
 }
 
-function resolveViewportElement(): HTMLElement | null {
-  const exposed = viewportComp.value?.viewportElement
-  return exposed instanceof HTMLElement ? exposed : null
+function rootDom(): Element | null {
+  const raw = rootComp.value
+  if (!raw) return null
+  if (raw instanceof Element) return raw
+  const el = raw.$el
+  return el instanceof Element ? el : null
 }
+
+function resolveViewportElement(): HTMLElement | null {
+  // Reka exposes `viewportElement` as a Ref; unwrap defensively (proxy auto-unwrap
+  // is not always applied when reading from useTemplateRef in script).
+  const raw = viewportComp.value?.viewportElement as unknown
+  const exposed =
+    raw && typeof raw === 'object' && raw !== null && 'value' in raw
+      ? (raw as { value: unknown }).value
+      : raw
+  if (exposed instanceof HTMLElement)
+    return exposed
+
+  // Fallback: query the marked scroll node — don't rely on expose quirks alone.
+  const node = rootDom()?.querySelector('[data-reka-scroll-area-viewport]')
+  return node instanceof HTMLElement ? node : null
+}
+
+function bindViewportElement() {
+  const el = resolveViewportElement()
+  viewportElement.value = el
+  setViewportElement(el)
+  return el
+}
+
+defineExpose({
+  viewportElement,
+})
 
 let resizeObserver: ResizeObserver | null = null
 let resizeFrame = 0
 
-onMounted(() => {
-  const viewport = resolveViewportElement()
-  setViewportElement(viewport)
+onMounted(async () => {
+  bindViewportElement()
+  await nextTick()
+  const viewport = bindViewportElement()
   if (!viewport || typeof ResizeObserver === 'undefined')
     return
   resizeObserver = new ResizeObserver(() => {
@@ -64,12 +98,14 @@ onBeforeUnmount(() => {
   window.cancelAnimationFrame(resizeFrame)
   resizeObserver?.disconnect()
   resizeObserver = null
+  viewportElement.value = null
   setViewportElement(null)
 })
 </script>
 
 <template>
   <ScrollAreaRoot
+    ref="root"
     data-slot="message-scroller-viewport"
     :type="type"
     :data-scrollable="scrollableAttr"

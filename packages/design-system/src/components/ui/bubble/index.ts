@@ -20,7 +20,7 @@ export const bubbleVariants = cva(
 /** Paint / interaction on BubbleContent (variant from Bubble context). */
 export const bubbleContentVariants = cva(
   cn([
-    'rounded-xl rounded-tl-none border border-transparent px-2.5 py-0.5 text-sm leading-relaxed',
+    'rounded-xl rounded-tl-none border border-transparent px-2.5 py-0 text-sm leading-relaxed',
     'transition-[border-color,background-color,box-shadow] duration-[150ms,150ms,50ms]',
     '[button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3',
     '[button,a]:focus-visible:ring-ring/30 group-data-[align=end]/bubble:self-end',
@@ -55,8 +55,9 @@ export const bubbleContentVariants = cva(
           'dark:[&:is(button,a):hover]:bg-input/30',
         ]),
         ghost: cn([
-          'bg-transparent hover:bg-secondary',
-          'hover:shadow-[0_1px_2px_var(--color-mist-950)]',
+          'bg-transparent dark:hover:bg-secondary hover:bg-mist-50',
+          'hover:shadow-[0_1px_2px_var(--color-mist-200)]',
+          'dark:hover:shadow-[0_1px_2px_var(--color-mist-950)]',
           'border-transparent hover:border-border',
           '[&:is(button,a):hover]:text-foreground',
           'dark:[&:is(button,a):hover]:bg-muted/50',

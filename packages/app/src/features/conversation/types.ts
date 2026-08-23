@@ -24,12 +24,19 @@ export type ConversationMessageView = {
   body: JSONContent;
   createdAt: string;
   createdAtLabel: string;
-  grouped: boolean;
   reactions: readonly ConversationReactionView[];
   replyCount: number;
   attachments?: readonly ConversationAttachmentView[];
   canEdit?: boolean;
   canDelete?: boolean;
+};
+
+/** Same-author, near-in-time cluster for timeline chrome (avatar + header once). */
+export type ConversationMessageGroupView = {
+  id: string;
+  author: ConversationPersonView;
+  createdAtLabel: string;
+  messages: readonly ConversationMessageView[];
 };
 
 export type ConversationChannelHeaderView = {

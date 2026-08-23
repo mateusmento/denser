@@ -8,7 +8,8 @@
 /* CVA/utility classes live in this package; app Storybook CWD would not scan them. */
 @source "./**/*.{vue,ts}";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(:root.dark, :root.dark *));
+@custom-variant light (&:where(:root:not(.dark), :root:not(.dark) *));
 
 @property --card-edge-end {
   syntax: "<color>";
@@ -29,13 +30,14 @@
   --primary-foreground: var(--color-white);
   --secondary: var(--color-mist-200);
   --secondary-foreground: var(--color-mist-600);
-  --muted: var(--color-mist-100);
+  --muted: var(--color-mist-200);
   --muted-foreground: var(--color-mist-500);
   --accent: oklch(0.957 0.015 277.851);
   --accent: oklch(68.656% 0.1209 277.941);
+  --accent-foreground: oklch(48.928% 0.18242 277.284);
   --accent-foreground: var(--color-mist-50);
   --destructive: var(--color-red-600);
-  --border: var(--color-mist-200);
+  --border: var(--color-mist-300);
   --input: var(--color-mist-200);
   --ring: oklch(0.567 0.159 275.206);
   --radius: 0.625rem;
@@ -168,6 +170,11 @@ html.dark,
   --radius-xl: calc(var(--radius) + 1rem / 4);
   --radius-2xl: calc(var(--radius) + 1rem / 2); */
 
+  --color-mist-150: color-mix(in oklch, var(--color-mist-100) 50%, var(--color-mist-200));
+  --color-mist-250: color-mix(in oklch, var(--color-mist-200) 50%, var(--color-mist-300));
+  --color-mist-350: color-mix(in oklch, var(--color-mist-300) 50%, var(--color-mist-400));
+  --color-mist-450: color-mix(in oklch, var(--color-mist-400) 50%, var(--color-mist-500));
+  --color-mist-550: color-mix(in oklch, var(--color-mist-500) 50%, var(--color-mist-600));
   --color-mist-650: color-mix(in oklch, var(--color-mist-600) 50%, var(--color-mist-700));
   --color-mist-750: color-mix(in oklch, var(--color-mist-700) 50%, var(--color-mist-800));
   --color-mist-850: color-mix(in oklch, var(--color-mist-800) 50%, var(--color-mist-900));

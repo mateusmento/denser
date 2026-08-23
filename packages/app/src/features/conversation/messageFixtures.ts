@@ -28,7 +28,6 @@ export function message(partial: MessageFixture): ConversationMessageView {
   const { text, body, ...rest } = partial;
   return {
     body: body ?? paragraphDoc(text ?? ""),
-    grouped: false,
     reactions: [],
     replyCount: 0,
     ...rest,
@@ -116,6 +115,60 @@ export const channelMessages: ConversationMessageView[] = [
             { type: "text", text: ". Anything marked " },
             { type: "text", marks: [{ type: "strike" }], text: "nice-to-have" },
             { type: "text", text: " waits." },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "Empty-state checklist — " },
+            { type: "mention", attrs: { id: "u-ava", label: "Ava Chen" } },
+            { type: "text", text: " can you review?" },
+          ],
+        },
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Channel with zero messages" }],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Thread with only the parent" }],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    { type: "text", text: "Composer " },
+                    { type: "text", marks: [{ type: "bold" }], text: "disabled" },
+                    { type: "text", text: " when offline" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: "codeBlock",
+          attrs: { language: "typescript" },
+          content: [
+            {
+              type: "text",
+              text: 'emptyLabel ?? "No messages yet. Say hello."',
+            },
           ],
         },
       ],

@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
 import { ref } from "vue";
-import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import {
   channelHeader,
@@ -11,12 +11,12 @@ import {
   schedulePresets,
   threadView,
 } from "../fixtures";
-import type { ComposerActionId, ScheduleCommitPayload } from "../types";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
-import ConversationMessageList from "../presentationals/ConversationMessageList.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
+import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
+import type { ComposerActionId, ScheduleCommitPayload } from "../types";
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
@@ -88,7 +88,7 @@ function onAction(id: ComposerActionId) {
       <ChannelHeader :channel="channelHeader" />
     </template>
     <template #messages>
-      <ConversationMessageList
+      <ConversationTimeline
         :messages="channelMessages"
         :intro="channelIntro"
         @react="onReact"

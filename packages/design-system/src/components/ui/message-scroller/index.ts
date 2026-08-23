@@ -17,6 +17,7 @@ export type {
 
 export {
   useMessageScroller,
+  useMessageScrollerContextMaybe,
   useMessageScrollerScrollable,
   useMessageScrollerVisibility,
 } from './useMessageScroller'

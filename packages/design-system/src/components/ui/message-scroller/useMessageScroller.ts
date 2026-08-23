@@ -359,6 +359,8 @@ export interface MessageScrollerContext {
   scrollable: Readonly<ShallowRef<MessageScrollerScrollable>>
   scrollableAttr: ComputedRef<string | undefined>
   visibility: Readonly<ShallowRef<MessageScrollerVisibilityState>>
+  /** Scroll viewport DOM node (`[data-reka-scroll-area-viewport]`). */
+  viewportElement: Readonly<ShallowRef<HTMLElement | null>>
   acquireVisibility: () => void
   releaseVisibility: () => void
   handleContentChange: () => void
@@ -417,6 +419,7 @@ function createEngine(props: MessageScrollerProviderProps) {
   const autoscrolling = shallowRef(false)
   const scrollable = shallowRef<MessageScrollerScrollable>(EMPTY_SCROLLABLE)
   const visibility = shallowRef<MessageScrollerVisibilityState>(EMPTY_VISIBILITY)
+  const viewportElement = shallowRef<HTMLElement | null>(null)
   const scrollableAttr = computed(() => {
     const attr = [scrollable.value.start && 'start', scrollable.value.end && 'end']
       .filter(Boolean)
@@ -891,6 +894,7 @@ function createEngine(props: MessageScrollerProviderProps) {
 
   function setViewportElement(element: HTMLElement | null) {
     viewport = element
+    viewportElement.value = element
     // A visibility consumer may have subscribed before the viewport mounted,
     // in which case observeVisibility() bailed out. Retry now it exists.
     if (element)
@@ -950,6 +954,7 @@ function createEngine(props: MessageScrollerProviderProps) {
     scrollable,
     scrollableAttr,
     visibility,
+    viewportElement,
     acquireVisibility,
     releaseVisibility,
     handleContentChange,
@@ -1003,6 +1008,11 @@ export function useMessageScrollerContext(): MessageScrollerContext {
   if (!context)
     throw new Error('useMessageScroller must be used within a MessageScroller.')
   return context
+}
+
+/** Like useMessageScrollerContext, but returns null outside a provider (e.g. isolated stories). */
+export function useMessageScrollerContextMaybe(): MessageScrollerContext | null {
+  return inject(CONTEXT_KEY, null)
 }
 
 export function useMessageScrollerRegister(): RegisterMessage {

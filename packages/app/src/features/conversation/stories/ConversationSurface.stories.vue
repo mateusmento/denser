@@ -14,7 +14,7 @@ import {
 } from "../fixtures";
 import type { ComposerActionId, ScheduleCommitPayload } from "../types";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
-import ConversationMessageList from "../presentationals/ConversationMessageList.vue";
+import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import PermissionEmpty from "../presentationals/PermissionEmpty.vue";
@@ -91,7 +91,7 @@ function onAction(id: ComposerActionId) {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList
+          <ConversationTimeline
             :messages="channelMessages"
             :intro="channelIntro"
             @react="onReact"
@@ -123,7 +123,7 @@ function onAction(id: ComposerActionId) {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList
+          <ConversationTimeline
             :messages="channelMessages"
             :intro="channelIntro"
             @react="onReact"
@@ -171,7 +171,7 @@ function onAction(id: ComposerActionId) {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList
+          <ConversationTimeline
             :messages="[]"
             :intro="channelIntro"
             @react="onReact"
@@ -202,7 +202,7 @@ function onAction(id: ComposerActionId) {
           <ChannelHeader :channel="channelHeader" />
         </template>
         <template #messages>
-          <ConversationMessageList
+          <ConversationTimeline
             :messages="channelMessages"
             :intro="channelIntro"
             @react="onReact"

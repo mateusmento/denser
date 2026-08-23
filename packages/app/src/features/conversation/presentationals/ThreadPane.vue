@@ -8,8 +8,9 @@ import type {
   MessageComposerView,
   ScheduleCommitPayload,
 } from "../types";
-import ConversationMessageItem from "./ConversationMessageItem.vue";
-import ConversationMessageList from "./ConversationMessageList.vue";
+import ConversationMessage from "./ConversationMessage.vue";
+import ConversationMessageGroup from "./ConversationMessageGroup.vue";
+import ConversationTimeline from "./ConversationTimeline.vue";
 import MessageComposer from "./MessageComposer.vue";
 
 const draft = defineModel<JSONContent>({ required: true });
@@ -45,17 +46,22 @@ const emit = defineEmits<{
       </Button>
     </header>
 
-    <ConversationMessageItem
-      class="shrink-0 mb-2"
-      :message="thread.parent"
-      :thread-actions="false"
-      @react="emit('react', thread.parent.id, $event)"
-      @edit="emit('edit', thread.parent.id)"
-      @delete="emit('delete', thread.parent.id)"
-    />
+    <ConversationMessageGroup
+      class="mb-2 shrink-0"
+      :author="thread.parent.author"
+      :created-at-label="thread.parent.createdAtLabel"
+    >
+      <ConversationMessage
+        :message="thread.parent"
+        :thread-actions="false"
+        @react="emit('react', thread.parent.id, $event)"
+        @edit="emit('edit', thread.parent.id)"
+        @delete="emit('delete', thread.parent.id)"
+      />
+    </ConversationMessageGroup>
 
     <div class="min-h-0 flex-1">
-      <ConversationMessageList
+      <ConversationTimeline
         :messages="thread.messages"
         :thread-actions="false"
         day-class="bg-card/90"

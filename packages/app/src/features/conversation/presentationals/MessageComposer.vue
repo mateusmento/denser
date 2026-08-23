@@ -118,10 +118,14 @@ function runAction(id: ComposerActionId) {
     size="sm"
     :class="cn(
       'h-full min-h-0 gap-1 rounded-2xl',
-      'border border-secondary transition-[box-shadow,--card-edge-end] duration-[150ms,250ms]',
-      'dark:card-edge card-edge-start-mist-700 card-edge-middle-[var(--color-mist-800)_45%] card-edge-end-mist-950',
-      'bg-linear-to-b from-muted via-muted via-25% to-muted/65',
-      'focus-within:shadow-[0_0_3px_var(--color-primary)]',
+      'border transition-[box-shadow,--card-edge-end,--tw-gradient-to] duration-[150ms,250ms,200ms]',
+      'light:border-mist-300',
+      'dark:card-edge dark:card-edge-start-mist-700 dark:card-edge-middle-[var(--color-mist-800)_45%] dark:card-edge-end-mist-950',
+      'bg-linear-to-b',
+      'light:from-mist-50 light:via-mist-50 light:via-55% light:focus-within:to-mist-150',
+      'dark:from-muted dark:via-muted dark:via-35% dark:to-muted/45',
+      'light:focus-within:shadow-[0_1px_3px_var(--color-mist-300)]',
+      'dark:focus-within:shadow-[0_0_3px_var(--color-primary)]',
       'focus-within:card-edge-end-primary',
       props.class
     )"
@@ -162,9 +166,8 @@ function runAction(id: ComposerActionId) {
             >
               <template #trigger>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="icon"
-                  class="border border-border"
                   :aria-label="action.label"
                   :disabled="view.disabled"
                 >
@@ -175,9 +178,8 @@ function runAction(id: ComposerActionId) {
             <Tooltip v-else>
               <TooltipTrigger as-child>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="icon"
-                  class="border border-border"
                   :aria-label="action.label"
                   :disabled="view.disabled"
                   @click="runAction(action.id)"
