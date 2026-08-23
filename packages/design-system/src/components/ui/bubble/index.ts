@@ -57,12 +57,12 @@ export const bubbleContentVariants = cva(
         ghost: cn([
           // `data-highlighted`: keep hover paint while a teleported hover menu is open
           'bg-transparent dark:hover:bg-secondary hover:bg-mist-50',
-          'dark:data-[highlighted]:bg-secondary data-[highlighted]:bg-mist-50',
+          'dark:data-highlighted:bg-secondary data-highlighted:bg-mist-50',
           'hover:shadow-[0_1px_2px_var(--color-mist-200)]',
-          'data-[highlighted]:shadow-[0_1px_2px_var(--color-mist-200)]',
+          'data-highlighted:shadow-[0_1px_2px_var(--color-mist-200)]',
           'dark:hover:shadow-[0_1px_2px_var(--color-mist-950)]',
-          'dark:data-[highlighted]:shadow-[0_1px_2px_var(--color-mist-950)]',
-          'border-transparent hover:border-border data-[highlighted]:border-border',
+          'dark:data-highlighted:shadow-[0_1px_2px_var(--color-mist-950)]',
+          'border border-transparent hover:border-border data-highlighted:border-border',
           '[&:is(button,a):hover]:text-foreground',
           'dark:[&:is(button,a):hover]:bg-muted/50',
         ]),

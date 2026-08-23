@@ -58,7 +58,7 @@ const emit = defineEmits<{
         <template #intro="introSlot">
           <MessageScrollerItem :message-id="thread.parent.id" class="px-0">
             <ConversationMessageGroup
-              class="pb-2 pt-3"
+              class="pb-2 pt-4"
               :author="thread.parent.author"
               :created-at-label="thread.parent.createdAtLabel"
             >
