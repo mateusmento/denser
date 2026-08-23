@@ -111,7 +111,9 @@ onBeforeUnmount(() => {
     :data-scrollable="scrollableAttr"
     :data-autoscrolling="autoscrolling ? '' : undefined"
     :class="cn(
-      'relative size-full min-h-0 min-w-0 overscroll-contain',
+      // Stream stacking plate: sticky day z-index cannot escape to fight
+      // jump-button / surface fades (see ConversationSurface z-0 + fade z-2).
+      'relative isolate size-full min-h-0 min-w-0 overscroll-contain',
       'data-autoscrolling:**:data-[slot=scroll-area-scrollbar]:opacity-0',
       props.class,
     )"

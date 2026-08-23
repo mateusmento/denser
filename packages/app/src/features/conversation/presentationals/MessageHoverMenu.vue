@@ -274,7 +274,8 @@ async function updatePosition() {
     @pointerenter="onHostEnter"
     @pointerleave="onHostLeave"
   >
-    <slot />
+    <!-- `highlighted` tracks menu open so BubbleContent can keep hover paint while the pointer is on the teleported toolbar -->
+    <slot :highlighted="open" />
 
     <Teleport to="body">
       <div

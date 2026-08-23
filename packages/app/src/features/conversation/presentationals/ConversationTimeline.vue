@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import {
-  cn,
   MessageScroller,
   MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
-  Separator,
+  StickyMarker,
 } from "@denser/design-system";
 import { computed, shallowRef, useTemplateRef, watch } from "vue";
 import { conversationDayGroups } from "../messageGrouping";
@@ -29,7 +28,7 @@ const props = withDefaults(
   }>(),
   {
     threadActions: true,
-    dayClass: "bg-background/90",
+    dayClass: "bg-background",
   },
 );
 
@@ -73,28 +72,14 @@ watch(
             @edit-description="emit('editDescription')"
             @add-people="emit('addPeople')"
           />
-          <section
+          <StickyMarker
             v-for="day in dayGroups"
             :key="day.id"
-            class="relative flex flex-col gap-1.5"
+            :class="dayClass"
           >
-            <div
-              class="pointer-events-none absolute inset-x-0 top-0 z-0 flex h-8 items-center"
-              aria-hidden="true"
-            >
-              <Separator class="w-full" />
-            </div>
-            <div class="sticky top-0 z-10 flex justify-center py-1">
-              <div
-                :class="cn(
-                  'relative w-fit border border-border rounded-full px-3 py-1 whitespace-nowrap',
-                  'hover:bg-muted text-center text-xs text-muted-foreground backdrop-blur-sm cursor-pointer',
-                  dayClass,
-                )"
-              >
-                {{ day.label }}
-              </div>
-            </div>
+            <template #label>
+              {{ day.label }}
+            </template>
             <ConversationMessageGroup
               v-for="group in day.messageGroups"
               :key="group.id"
@@ -118,7 +103,7 @@ watch(
                 />
               </MessageScrollerItem>
             </ConversationMessageGroup>
-          </section>
+          </StickyMarker>
         </MessageScrollerContent>
         <p v-else class="px-3 py-8 text-center text-sm text-muted-foreground">
           {{ emptyLabel ?? "No messages yet. Say hello." }}

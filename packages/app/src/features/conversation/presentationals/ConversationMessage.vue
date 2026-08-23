@@ -46,9 +46,11 @@ const emit = defineEmits<{
           @edit="emit('edit')"
           @delete="emit('delete')"
         >
-          <BubbleContent>
-            <RichTextPreview :doc="message.body" class="w-fit" />
-          </BubbleContent>
+          <template #default="{ highlighted }">
+            <BubbleContent :data-highlighted="highlighted ? '' : undefined">
+              <RichTextPreview :doc="message.body" class="w-fit" />
+            </BubbleContent>
+          </template>
         </MessageHoverMenu>
       </Bubble>
     </MessageContextMenu>

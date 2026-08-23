@@ -22,7 +22,9 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-2 h-10 bg-linear-to-t from-background via-background/50 via-35% to-transparent"
           aria-hidden="true"
         />
-        <slot name="messages" />
+        <div class="relative z-0 size-full min-h-0">
+          <slot name="messages" />
+        </div>
       </div>
       <div
         class="box-border z-3 flex basis-surface-footer shrink-0 flex-col max-h-96"
