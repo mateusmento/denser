@@ -1,26 +1,61 @@
-import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
+import type { ArtifactId, SpaceId, SpaceRole, UserId } from "@denser/contracts";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
 
-export async function isMemberOfSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
+export async function getDirectMembershipRole(
+  userId: UserId,
+  spaceId: SpaceId,
+): Promise<SpaceRole | null> {
   const membership = await db.query.spaceMembership.findFirst({
     where: and(eq(spaceMembership.userId, userId), eq(spaceMembership.spaceId, spaceId)),
-    columns: { spaceId: true },
+    columns: { role: true },
   });
-  return membership !== undefined;
+  return membership?.role ?? null;
+}
+
+export async function isMemberOfSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
+  return (await getDirectMembershipRole(userId, spaceId)) !== null;
 }
 
 export async function canAccessSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
+  const row = await db.query.space.findFirst({
+    where: eq(space.id, spaceId),
+    columns: { id: true, parentSpaceId: true, visibility: true },
+  });
+  if (!row) return false;
+
+  if (row.parentSpaceId === null) {
+    return isMemberOfSpace(userId, spaceId);
+  }
+
+  if (!(await canAccessSpace(userId, row.parentSpaceId))) {
+    return false;
+  }
+
+  if (row.visibility === "public") {
+    return true;
+  }
+
+  return isMemberOfSpace(userId, spaceId);
+}
+
+export async function canManageSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
   const row = await db.query.space.findFirst({
     where: eq(space.id, spaceId),
     columns: { id: true, rootSpaceId: true },
   });
   if (!row) return false;
 
-  const tenantSpaceId = row.rootSpaceId ?? row.id;
-  return isMemberOfSpace(userId, tenantSpaceId);
+  const rootSpaceId = row.rootSpaceId ?? row.id;
+  const rootRole = await getDirectMembershipRole(userId, rootSpaceId);
+  if (rootRole === "owner" || rootRole === "admin") {
+    return true;
+  }
+
+  const directRole = await getDirectMembershipRole(userId, spaceId);
+  return directRole === "admin";
 }
 
 export async function canAccessArtifact(
@@ -30,10 +65,7 @@ export async function canAccessArtifact(
   if (row.spaceId === null) {
     return row.createdBy === userId;
   }
-  if (row.rootSpaceId === null) {
-    return false;
-  }
-  return isMemberOfSpace(userId, row.rootSpaceId);
+  return canAccessSpace(userId, row.spaceId);
 }
 
 export async function getAccessibleRootSpaceIds(userId: UserId): Promise<SpaceId[]> {
@@ -67,5 +99,17 @@ export async function requireArtifactAccess(
   });
   if (!row) return null;
   if (!(await canAccessArtifact(userId, row))) return null;
+  return row;
+}
+
+export async function requireSpaceManagement(
+  userId: UserId,
+  spaceId: SpaceId,
+): Promise<typeof space.$inferSelect | null> {
+  const row = await db.query.space.findFirst({
+    where: eq(space.id, spaceId),
+  });
+  if (!row) return null;
+  if (!(await canManageSpace(userId, spaceId))) return null;
   return row;
 }

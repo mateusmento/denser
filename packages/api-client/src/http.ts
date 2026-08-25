@@ -1,4 +1,6 @@
 import {
+  AddSpaceMemberInput,
+  AddSpaceMemberResponse,
   CreateDocumentInput,
   CreateDocumentResponse,
   CreateSpaceInput,
@@ -8,10 +10,13 @@ import {
   HomeResponse,
   PatchDocumentInput,
   PatchDocumentResponse,
+  PatchSpaceInput,
+  PatchSpaceResponse,
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SpaceDetailResponse,
   type ArtifactId,
   type SpaceId,
+  type UserId,
 } from "@denser/contracts";
 import { HealthResponse, MeResponse, Session, type SignInInput } from "@denser/contracts";
 import { connectSocket, type DenserSocket } from "./socket.js";
@@ -151,6 +156,40 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("get space failed", res.status, body);
     return SpaceDetailResponse.parse(body);
+  }
+
+  async patchSpace(spaceId: SpaceId, input: PatchSpaceInput): Promise<PatchSpaceResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("patch space failed", res.status, body);
+    return PatchSpaceResponse.parse(body);
+  }
+
+  async addSpaceMember(
+    spaceId: SpaceId,
+    input: AddSpaceMemberInput,
+  ): Promise<AddSpaceMemberResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}/members`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("add space member failed", res.status, body);
+    return AddSpaceMemberResponse.parse(body);
+  }
+
+  async removeSpaceMember(spaceId: SpaceId, memberUserId: UserId): Promise<void> {
+    const res = await this.request(`/api/spaces/${spaceId}/members/${memberUserId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      throw new ApiError("remove space member failed", res.status, await this.parseJson(res));
+    }
   }
 
   async createDocument(input: CreateDocumentInput = {}): Promise<CreateDocumentResponse> {

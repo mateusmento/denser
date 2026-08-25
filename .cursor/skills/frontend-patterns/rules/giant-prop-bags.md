@@ -13,7 +13,8 @@ The component (or leaf) **does render** a wide flat dump of related fields — s
 Fires when **either** holds:
 
 1. **~8+ related fields** for one section the component renders (heuristic, not a hard law), **or**
-2. A **repeated async cluster** at any size — e.g. `items` + `loading` + `hasMore` + `error` / `loadingMore` — instead of a shared type
+2. A **repeated async cluster** at any size — e.g. `items` + `loading` + `hasMore` + `error` / `loadingMore` — instead of a shared type, **or**
+3. **Emit fan-out** — many sibling emits on one component where several only configure a nested wired subtree (often paired with extra props like `membersView` that the shell does not render itself)
 
 ```ts
 // ❌ Flat dump the presentational actually renders
@@ -25,7 +26,7 @@ defineProps<{
 }>()
 ```
 
-**Sibling smell:** if the bag is piped through layers that **do not** render those fields (only so a deep leaf can), that is **giant prop bags as drill fuel** under [`forwarding-props`](forwarding-props.md) → slot / flatten the pipe. Same surface (“too many props”), different predicate: *does this component use the fields?*
+**Sibling smell:** if the bag is piped through layers that **do not** render those fields (only so a deep leaf can), that is **giant prop bags as drill fuel** under [`forwarding-props`](forwarding-props.md) → slot / flatten the pipe. Same surface (“too many props”), different predicate: *does this component use the fields?* **Emit fan-out** with a slotted wired child → slot the region ([`presentational-container-seam`](presentational-container-seam.md)) and keep view-model slices to what the shell renders.
 
 ## Rule
 
@@ -49,6 +50,20 @@ defineProps<{ list: PaginatedListView<IUser> }>()
 ```
 
 ```ts
+// ✅ Presentational slice — fields the surface renders
+type SpaceContentView = {
+  space: SpaceSummary
+  childSpaces: readonly SpaceSummary[]
+  artifacts: readonly ArtifactSummary[]
+}
+
+defineProps<{ view: SpaceSurfaceView; content?: SpaceContentView }>()
+// membership/settings commands stay on SpaceMembersPanel — filled via #members slot
+```
+
+If a region is still a **wired feature subtree** the shell should not configure by props, open a slot ([`presentational-container-seam`](presentational-container-seam.md)) — do not grow the slice or emit list to smuggle container wiring.
+
+```ts
 // Container maps domain → slice
 const list = computed(() =>
   toPaginatedListView({
@@ -57,8 +72,6 @@ const list = computed(() =>
   }),
 )
 ```
-
-If a region is still a **wired feature subtree** the shell should not configure by props, open a slot ([`presentational-container-seam`](presentational-container-seam.md)) — do not grow the slice to smuggle container wiring.
 
 ## When not
 

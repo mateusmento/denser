@@ -5,6 +5,8 @@ import { user } from "./auth.js";
 
 export const spaceRoleEnum = pgEnum("space_role", ["owner", "admin", "member"]);
 
+export const spaceVisibilityEnum = pgEnum("space_visibility", ["public", "private"]);
+
 export const space = pgTable(
   "space",
   {
@@ -12,6 +14,7 @@ export const space = pgTable(
     title: text("title").notNull(),
     parentSpaceId: uuid("parent_space_id").$type<SpaceId>(),
     rootSpaceId: uuid("root_space_id").$type<SpaceId>(),
+    visibility: spaceVisibilityEnum("visibility").notNull().default("public"),
     createdBy: uuid("created_by")
       .$type<UserId>()
       .notNull()
@@ -32,6 +35,10 @@ export const space = pgTable(
         (${table.parentSpaceId} IS NULL AND ${table.rootSpaceId} IS NULL) OR
         (${table.parentSpaceId} IS NOT NULL AND ${table.rootSpaceId} IS NOT NULL)
       )`,
+    ),
+    check(
+      "space_root_is_private",
+      sql`((${table.parentSpaceId} IS NOT NULL) OR (${table.visibility} = 'private'))`,
     ),
   ],
 );

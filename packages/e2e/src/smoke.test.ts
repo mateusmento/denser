@@ -87,11 +87,47 @@ describe("domain api", () => {
     const acme = await client.getSpace(SEED_SPACE_ACME);
 
     expect(acme.space.title).toBe("Acme");
+    expect(acme.space.visibility).toBe("private");
+    expect(acme.canManage).toBe(true);
+    expect(acme.members.some((member) => member.username === "alice")).toBe(true);
     expect(acme.childSpaces.map((space) => space.title)).toContain("Engineering");
 
     const engineering = await client.getSpace(SEED_SPACE_ENGINEERING);
+    expect(engineering.space.visibility).toBe("public");
     expect(engineering.artifacts.map((artifact) => artifact.title)).toContain(
       "Onboarding notes (edited)",
     );
+  });
+
+  it("gates root spaces behind membership and shares public nested folders", async () => {
+    const bobClient = await harness.createAuthedClient("bob");
+
+    await expect(bobClient.getSpace(SEED_SPACE_ACME)).rejects.toMatchObject({ status: 404 });
+
+    const aliceClient = await harness.createAuthedClient("alice");
+    await aliceClient.addSpaceMember(SEED_SPACE_ACME, { username: "bob", role: "member" });
+
+    const acmeForBob = await bobClient.getSpace(SEED_SPACE_ACME);
+    expect(acmeForBob.members.some((member) => member.username === "bob")).toBe(true);
+
+    const engineeringForBob = await bobClient.getSpace(SEED_SPACE_ENGINEERING);
+    expect(engineeringForBob.space.visibility).toBe("public");
+  });
+
+  it("requires explicit membership for private nested spaces", async () => {
+    const aliceClient = await harness.createAuthedClient("alice");
+    const bobClient = await harness.createAuthedClient("bob");
+
+    const { space: privateRoom } = await aliceClient.createSpace({
+      title: "Leadership",
+      parentSpaceId: SEED_SPACE_ACME,
+      visibility: "private",
+    });
+
+    await expect(bobClient.getSpace(privateRoom.id)).rejects.toMatchObject({ status: 404 });
+
+    await aliceClient.addSpaceMember(privateRoom.id, { username: "bob", role: "member" });
+    const roomForBob = await bobClient.getSpace(privateRoom.id);
+    expect(roomForBob.space.visibility).toBe("private");
   });
 });

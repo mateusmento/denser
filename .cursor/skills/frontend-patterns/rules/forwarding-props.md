@@ -19,7 +19,37 @@ Also matches when:
 
 - Adding wiring forces new props/events through one or more layers that only forward them
 - **Event re-emission chains** — middle layers only `@foo="$emit('foo')"` (or rename) without using the event
+- **Emit fan-out** — a presentational declares **many sibling emits** (often 6+) where a subset only serve a **slotted wired subtree**; the shell re-emits membership/settings commands it never handles
 - **Giant prop bags as drill fuel** — a wide bag (often 8+ fields, or a flat store dump) is piped through layers that do not render those fields, only so a deep leaf can. If the component **does** render that dump, see [`giant-prop-bags`](giant-prop-bags.md) instead (view-model slice).
+
+```vue
+<!-- ❌ Emit fan-out — shell re-emits membership commands for a nested panel it embeds -->
+<!-- SpaceSurface.vue -->
+<template>
+  <SpaceMembersPanel
+    :view="membersView"
+    @add-member="emit('addMember')"
+    @remove-member="emit('removeMember', $event)"
+    @update-visibility="emit('updateVisibility', $event)"
+  />
+</template>
+
+<!-- SpaceContainer.vue -->
+<SpaceSurface … @add-member="onAddMember" @remove-member="onRemoveMember" … />
+
+<!-- ✅ Slot the wired region; container composes the panel beside sync -->
+<!-- SpaceSurface.vue -->
+<template>
+  <slot name="members" />
+</template>
+
+<!-- SpaceContainer.vue -->
+<SpaceSurface …>
+  <template #members>
+    <SpaceMembersPanel :view="membersView" @add-member="onAddMember" … />
+  </template>
+</SpaceSurface>
+```
 
 ```vue
 <!-- ❌ Event re-emission chain — intermediaries never handle the event -->

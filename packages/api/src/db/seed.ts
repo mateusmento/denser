@@ -174,11 +174,12 @@ async function seedWorkspaceDemo(aliceId: UserId): Promise<void> {
     .values({
       id: SEED_SPACE_ACME,
       title: "Acme",
+      visibility: "private",
       createdBy: aliceId,
     })
     .onConflictDoUpdate({
       target: space.id,
-      set: { title: "Acme", createdBy: aliceId, updatedAt: new Date() },
+      set: { title: "Acme", visibility: "private", createdBy: aliceId, updatedAt: new Date() },
     });
 
   await db
@@ -200,6 +201,7 @@ async function seedWorkspaceDemo(aliceId: UserId): Promise<void> {
       title: "Engineering",
       parentSpaceId: SEED_SPACE_ACME,
       rootSpaceId: SEED_SPACE_ACME,
+      visibility: "public",
       createdBy: aliceId,
     })
     .onConflictDoUpdate({
@@ -208,6 +210,7 @@ async function seedWorkspaceDemo(aliceId: UserId): Promise<void> {
         title: "Engineering",
         parentSpaceId: SEED_SPACE_ACME,
         rootSpaceId: SEED_SPACE_ACME,
+        visibility: "public",
         createdBy: aliceId,
         updatedAt: new Date(),
       },

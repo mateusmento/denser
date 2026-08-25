@@ -1,4 +1,4 @@
-import type { SpaceId, UserId } from "@denser/contracts";
+import type { SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
@@ -34,6 +34,7 @@ export async function insertRootSpace(input: {
     .insert(space)
     .values({
       title: input.title,
+      visibility: "private",
       createdBy: input.createdBy,
     })
     .returning();
@@ -50,6 +51,7 @@ export async function insertNestedSpace(input: {
   parentSpaceId: SpaceId;
   rootSpaceId: SpaceId;
   createdBy: UserId;
+  visibility?: SpaceVisibility;
 }): Promise<SpaceRow> {
   const [created] = await db
     .insert(space)
@@ -57,6 +59,7 @@ export async function insertNestedSpace(input: {
       title: input.title,
       parentSpaceId: input.parentSpaceId,
       rootSpaceId: input.rootSpaceId,
+      visibility: input.visibility ?? "public",
       createdBy: input.createdBy,
     })
     .returning();
@@ -66,6 +69,19 @@ export async function insertNestedSpace(input: {
   }
 
   return created;
+}
+
+export async function updateSpaceVisibility(
+  spaceId: SpaceId,
+  visibility: SpaceVisibility,
+): Promise<SpaceRow | undefined> {
+  const [updated] = await db
+    .update(space)
+    .set({ visibility, updatedAt: new Date() })
+    .where(eq(space.id, spaceId))
+    .returning();
+
+  return updated;
 }
 
 export async function insertOwnerMembership(input: {

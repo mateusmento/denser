@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SpaceId } from "@denser/contracts";
+import type { SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { prompt } from "@/lib/dialog";
@@ -9,14 +9,13 @@ import SpaceSurface from "../presentationals/SpaceSurface.vue";
 const route = useRoute();
 const spaceId = computed(() => route.params.spaceId as SpaceId | undefined);
 
-const { view, detail, reload, createSpace, createDocument, openSpace, openDocument } =
-  useSpaceSync(spaceId);
+const { view, content, reload, createSpace, createDocument } = useSpaceSync(spaceId);
 
 async function onCreateSpace() {
   const title = await prompt({
     title: "New space",
     label: "Space name",
-    placeholder: detail.value?.space.title ?? "Untitled",
+    placeholder: content.value?.space.title ?? "Untitled",
     confirmLabel: "Create",
   });
   if (!title?.trim()) return;
@@ -27,11 +26,9 @@ async function onCreateSpace() {
 <template>
   <SpaceSurface
     :view="view"
-    :detail="detail"
+    :content="content"
     @retry="reload"
     @create-space="onCreateSpace"
     @create-document="createDocument"
-    @open-space="openSpace"
-    @open-document="openDocument"
   />
 </template>
