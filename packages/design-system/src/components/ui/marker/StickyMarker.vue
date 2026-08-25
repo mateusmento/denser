@@ -25,7 +25,7 @@ const props = defineProps<{
       <div
         :class="cn(
           'relative w-fit border border-border rounded-full px-3 py-1 whitespace-nowrap',
-          'hover:bg-muted text-center text-xs text-muted-foreground backdrop-blur-sm cursor-pointer',
+          'hover:bg-muted text-center text-xs text-muted-foreground cursor-pointer',
           props.class,
         )"
       >

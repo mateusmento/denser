@@ -6,7 +6,17 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@denser/design-system";
-import { CopyIcon, PencilIcon, TrashIcon } from "@lucide/vue";
+import {
+  BookmarkIcon,
+  CopyIcon,
+  ForwardIcon,
+  LinkIcon,
+  MessageSquareIcon,
+  PencilIcon,
+  QuoteIcon,
+  SmileIcon,
+  TrashIcon,
+} from "@lucide/vue";
 import { ref } from "vue";
 import {
   resolveMessageClipboardPayload,
@@ -15,11 +25,22 @@ import {
 } from "../messageCopyText";
 import type { ConversationMessageView } from "../types";
 
-const props = defineProps<{
-  message: ConversationMessageView;
-}>();
+const props = withDefaults(
+  defineProps<{
+    message: ConversationMessageView;
+    /** Off inside an open thread (no nested threads). */
+    threadActions?: boolean;
+  }>(),
+  { threadActions: true },
+);
 
 const emit = defineEmits<{
+  react: [emoji: string];
+  copyLink: [];
+  bookmark: [];
+  forward: [];
+  quote: [];
+  thread: [];
   edit: [];
   delete: [];
 }>();
@@ -43,13 +64,41 @@ async function onCopy() {
       <slot />
     </ContextMenuTrigger>
     <ContextMenuContent>
+      <ContextMenuItem @select="emit('react', '👍')">
+        <SmileIcon />
+        React to message
+      </ContextMenuItem>
+      <ContextMenuItem v-if="threadActions" @select="emit('thread')">
+        <MessageSquareIcon />
+        Reply in thread
+      </ContextMenuItem>
+      <template v-if="message.canEdit !== false">
+        <ContextMenuSeparator />
+        <ContextMenuItem @select="emit('edit')">
+          <PencilIcon />
+          Edit
+        </ContextMenuItem>
+      </template>
+      <ContextMenuSeparator />
       <ContextMenuItem @select="onCopy">
         <CopyIcon />
         Copy
       </ContextMenuItem>
-      <ContextMenuItem v-if="message.canEdit !== false" @select="emit('edit')">
-        <PencilIcon />
-        Edit
+      <ContextMenuItem @select="emit('copyLink')">
+        <LinkIcon />
+        Copy link
+      </ContextMenuItem>
+      <ContextMenuItem @select="emit('bookmark')">
+        <BookmarkIcon />
+        Bookmark
+      </ContextMenuItem>
+      <ContextMenuItem @select="emit('forward')">
+        <ForwardIcon />
+        Forward message
+      </ContextMenuItem>
+      <ContextMenuItem @select="emit('quote')">
+        <QuoteIcon />
+        Quote message
       </ContextMenuItem>
       <template v-if="message.canDelete !== false">
         <ContextMenuSeparator />

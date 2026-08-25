@@ -30,6 +30,10 @@ const emit = defineEmits<{
   action: [id: ComposerActionId];
   mentionSearch: [query: string];
   react: [messageId: string, emoji: string];
+  copyLink: [messageId: string];
+  bookmark: [messageId: string];
+  forward: [messageId: string];
+  quote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
 }>();
@@ -41,7 +45,12 @@ const emit = defineEmits<{
       <div class="min-w-0 flex-1">
         <p class="text-sm font-medium">Thread</p>
       </div>
-      <Button variant="ghost" size="icon-sm" aria-label="Close thread" @click="emit('close')">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Close thread"
+        @click="emit('close')"
+      >
         <XIcon class="size-4" />
       </Button>
     </header>
@@ -50,8 +59,12 @@ const emit = defineEmits<{
       <ConversationTimeline
         :messages="thread.messages"
         :thread-actions="false"
-        day-class="bg-card/90"
+        day-class="bg-muted/90 light:bg-mist-50/90"
         @react="(messageId, emoji) => emit('react', messageId, emoji)"
+        @copy-link="emit('copyLink', $event)"
+        @bookmark="emit('bookmark', $event)"
+        @forward="emit('forward', $event)"
+        @quote="emit('quote', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
       >
@@ -67,6 +80,10 @@ const emit = defineEmits<{
                 :thread-actions="false"
                 :collision-boundary="introSlot.collisionBoundary"
                 @react="emit('react', thread.parent.id, $event)"
+                @copy-link="emit('copyLink', thread.parent.id)"
+                @bookmark="emit('bookmark', thread.parent.id)"
+                @forward="emit('forward', thread.parent.id)"
+                @quote="emit('quote', thread.parent.id)"
                 @edit="emit('edit', thread.parent.id)"
                 @delete="emit('delete', thread.parent.id)"
               />
@@ -76,7 +93,7 @@ const emit = defineEmits<{
       </ConversationTimeline>
     </div>
 
-    <div class="box-border flex basis-surface-footer shrink-0 flex-col p-2">
+    <div class="box-border flex basis-surface-footer shrink-0 flex-col p-2 pt-0">
       <MessageComposer
         v-model="draft"
         :view="composer"

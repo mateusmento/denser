@@ -35,6 +35,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   react: [messageId: string, emoji: string];
   thread: [messageId: string];
+  copyLink: [messageId: string];
+  bookmark: [messageId: string];
+  forward: [messageId: string];
+  quote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
   editDescription: [];
@@ -116,6 +120,10 @@ watch(
                   :collision-boundary="collisionBoundary"
                   @react="emit('react', message.id, $event)"
                   @thread="emit('thread', message.id)"
+                  @copy-link="emit('copyLink', message.id)"
+                  @bookmark="emit('bookmark', message.id)"
+                  @forward="emit('forward', message.id)"
+                  @quote="emit('quote', message.id)"
                   @edit="emit('edit', message.id)"
                   @delete="emit('delete', message.id)"
                 />

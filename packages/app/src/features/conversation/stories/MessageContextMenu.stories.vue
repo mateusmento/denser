@@ -22,6 +22,12 @@ const message = channelMessages[4] ?? channelMessages[0]!;
       <ConversationMessageGroup :author="message.author" :created-at-label="message.createdAtLabel">
         <ConversationMessage
           :message="message"
+          @react="toast(`React · ${$event}`)"
+          @thread="toast(`Thread · ${message.id}`)"
+          @copy-link="toast(`Copy link · ${message.id}`)"
+          @bookmark="toast(`Bookmark · ${message.id}`)"
+          @forward="toast(`Forward · ${message.id}`)"
+          @quote="toast(`Quote · ${message.id}`)"
           @edit="toast(`Edit · ${message.id}`)"
           @delete="toast(`Delete · ${message.id}`)"
         />

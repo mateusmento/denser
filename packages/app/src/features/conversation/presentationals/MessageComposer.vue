@@ -122,7 +122,7 @@ function runAction(id: ComposerActionId) {
       'light:border-mist-300',
       'dark:card-edge dark:card-edge-start-mist-700 dark:card-edge-middle-[var(--color-mist-800)_45%] dark:card-edge-end-mist-950',
       'bg-linear-to-b',
-      'light:from-mist-50 light:via-mist-50 light:via-55% light:focus-within:to-mist-150',
+      'light:from-mist-50 light:via-mist-50 light:via-55% light:to-mist-50 light:focus-within:to-mist-100',
       'dark:from-muted dark:via-muted dark:via-35% dark:to-muted/45',
       'light:focus-within:shadow-[0_1px_3px_var(--color-mist-300)]',
       'dark:focus-within:shadow-[0_0_3px_var(--color-primary)]',

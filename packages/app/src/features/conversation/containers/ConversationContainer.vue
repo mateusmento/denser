@@ -65,6 +65,22 @@ function onDelete(messageId: string) {
   toast(`Delete · ${messageId}`);
 }
 
+function onCopyLink(messageId: string) {
+  toast(`Copy link · ${messageId}`);
+}
+
+function onBookmark(messageId: string) {
+  toast(`Bookmark · ${messageId}`);
+}
+
+function onForward(messageId: string) {
+  toast(`Forward · ${messageId}`);
+}
+
+function onQuote(messageId: string) {
+  toast(`Quote · ${messageId}`);
+}
+
 function onEditDescription() {
   toast("Edit description");
 }
@@ -93,6 +109,10 @@ function onAction(id: ComposerActionId) {
         :intro="channelIntro"
         @react="onReact"
         @thread="onOpenThread"
+        @copy-link="onCopyLink"
+        @bookmark="onBookmark"
+        @forward="onForward"
+        @quote="onQuote"
         @edit="onEdit"
         @delete="onDelete"
         @edit-description="onEditDescription"
@@ -124,6 +144,10 @@ function onAction(id: ComposerActionId) {
         @schedule="onThreadSchedule"
         @action="onAction"
         @react="onReact"
+        @copy-link="onCopyLink"
+        @bookmark="onBookmark"
+        @forward="onForward"
+        @quote="onQuote"
         @edit="onEdit"
         @delete="onDelete"
       />

@@ -1,4 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { cn } from '@denser/design-system';
+
+</script>
 
 <template>
   <div
@@ -36,7 +39,10 @@
 
     <aside
       v-if="$slots.thread"
-      class="flex w-full max-w-md flex-col overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-black/5 sm:w-[22rem] dark:ring-white/10"
+      :class="cn(
+        'flex w-full max-w-md flex-col overflow-hidden rounded-2xl sm:w-[22rem]',
+        'bg-card shadow-sm ring-1 ring-black/5 text-card-foreground dark:ring-white/10'
+        )"
       aria-label="Thread"
       data-slot="conversation-thread"
     >

@@ -17,7 +17,7 @@ const conversationTo = { name: "conversation" as const, params: { channelId: "la
       <nav class="flex items-center gap-1" aria-label="Surfaces">
         <RouterLink v-slot="{ isActive, navigate, href }" :to="documentTo" custom>
           <Button
-            variant="ghost"
+            :variant="isActive ? 'default' : 'ghost'"
             size="sm"
             :class="isActive ? 'bg-accent text-accent-foreground' : undefined"
             as-child
@@ -27,7 +27,7 @@ const conversationTo = { name: "conversation" as const, params: { channelId: "la
         </RouterLink>
         <RouterLink v-slot="{ isActive, navigate, href }" :to="conversationTo" custom>
           <Button
-            variant="ghost"
+          :variant="isActive ? 'default' : 'ghost'"
             size="sm"
             :class="isActive ? 'bg-accent text-accent-foreground' : undefined"
             as-child

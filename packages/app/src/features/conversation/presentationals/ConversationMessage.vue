@@ -24,6 +24,10 @@ withDefaults(
 const emit = defineEmits<{
   react: [emoji: string];
   thread: [];
+  copyLink: [];
+  bookmark: [];
+  forward: [];
+  quote: [];
   edit: [];
   delete: [];
 }>();
@@ -33,6 +37,13 @@ const emit = defineEmits<{
   <div data-slot="conversation-message" class="flex min-w-0 flex-col gap-1.5">
     <MessageContextMenu
       :message="message"
+      :thread-actions="threadActions"
+      @react="emit('react', $event)"
+      @thread="emit('thread')"
+      @copy-link="emit('copyLink')"
+      @bookmark="emit('bookmark')"
+      @forward="emit('forward')"
+      @quote="emit('quote')"
       @edit="emit('edit')"
       @delete="emit('delete')"
     >

@@ -21,16 +21,17 @@
   color-scheme: light;
   --background: var(--color-white);
   --foreground: var(--color-mist-950);
-  --card: var(--color-white);
-  --card-foreground: var(--color-mist-950);
+  --card: var(--color-mist-100);
+  --card-foreground: var(--color-mist-750);
   --popover: var(--color-white);
   --popover-foreground: var(--color-mist-950);
-  /* --primary: oklch(0.567 0.159 275.206); */
-  --primary: oklch(51.3% 0.23078 274.631);
+  --primary: oklch(0.567 0.159 275.206);
+  /* --primary: oklch(55.508% 0.20892 277.169); */
+  --primary: oklch(53.364% 0.20062 277.184);
   --primary-foreground: var(--color-white);
   --secondary: var(--color-mist-200);
   --secondary-foreground: var(--color-mist-600);
-  --muted: var(--color-mist-200);
+  --muted: var(--color-mist-100);
   --muted-foreground: var(--color-mist-500);
   --accent: oklch(0.957 0.015 277.851);
   --accent: oklch(68.656% 0.1209 277.941);

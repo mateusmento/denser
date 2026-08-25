@@ -310,22 +310,18 @@ async function updatePosition() {
         :style="floatingStyle"
         :class="cn(
           'z-50 flex w-fit gap-1 **:[button]:rounded-lg',
-          isInset
-            ? [
-                'rounded-xl border border-border bg-secondary p-0.5 text-secondary-foreground',
-                'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10',
-              ]
-            : 'bg-transparent',
+          'rounded-xl border border-border bg-secondary p-0.5 text-secondary-foreground',
+          'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10',
         )"
         @pointerenter="onMenuEnter"
         @pointerleave="onMenuLeave"
       >
-        <Button size="icon" variant="ghost" aria-label="Add reaction" @click="emit('react', '👍')">
+        <Button size="icon-sm" variant="ghost" aria-label="Add reaction" @click="emit('react', '👍')">
           <SmileIcon class="size-3.5" />
         </Button>
         <Button
           v-if="threadActions"
-          size="icon"
+          size="icon-sm"
           variant="ghost"
           aria-label="Reply in thread"
           @click="emit('thread')"
@@ -334,7 +330,7 @@ async function updatePosition() {
         </Button>
         <Button
           v-if="message.canEdit"
-          size="icon"
+          size="icon-sm"
           variant="ghost"
           aria-label="Edit"
           @click="emit('edit')"
@@ -343,7 +339,7 @@ async function updatePosition() {
         </Button>
         <Button
           v-if="message.canDelete"
-          size="icon"
+          size="icon-sm"
           variant="ghost"
           aria-label="Delete"
           @click="emit('delete')"
