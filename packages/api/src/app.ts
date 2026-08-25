@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./auth/index.js";
+import { apiRoutes } from "./routes/api.js";
 
 const appOrigin = process.env.APP_ORIGIN ?? "http://localhost:5173";
 
@@ -16,7 +17,7 @@ app.use(
   cors({
     origin: appOrigin,
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["POST", "GET", "OPTIONS"],
+    allowMethods: ["POST", "GET", "PATCH", "OPTIONS"],
     credentials: true,
   }),
 );
@@ -45,3 +46,5 @@ app.get("/api/me", (c) => {
     },
   });
 });
+
+app.route("/api", apiRoutes);

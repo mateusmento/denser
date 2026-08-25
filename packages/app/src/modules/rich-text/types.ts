@@ -23,6 +23,11 @@ export function emptyDoc(): JSONContent {
   return { type: "doc", content: [{ type: "paragraph" }] };
 }
 
+/** Plain JSON copy — safe for reactive TanStack DB / Vue proxy trees. */
+export function cloneDoc(body: JSONContent): JSONContent {
+  return JSON.parse(JSON.stringify(body)) as JSONContent;
+}
+
 export function paragraphDoc(text: string): JSONContent {
   return {
     type: "doc",

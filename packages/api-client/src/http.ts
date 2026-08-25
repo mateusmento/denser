@@ -1,3 +1,18 @@
+import {
+  CreateDocumentInput,
+  CreateDocumentResponse,
+  CreateSpaceInput,
+  CreateSpaceResponse,
+  DocumentConflictResponse,
+  GetDocumentResponse,
+  HomeResponse,
+  PatchDocumentInput,
+  PatchDocumentResponse,
+  SEED_ARTIFACT_ONBOARDING_NOTES,
+  SpaceDetailResponse,
+  type ArtifactId,
+  type SpaceId,
+} from "@denser/contracts";
 import { HealthResponse, MeResponse, Session, type SignInInput } from "@denser/contracts";
 import { connectSocket, type DenserSocket } from "./socket.js";
 
@@ -18,6 +33,18 @@ export class ApiError extends Error {
     this.body = body;
   }
 }
+
+export class ApiConflictError extends ApiError {
+  readonly conflict: DocumentConflictResponse;
+
+  constructor(body: DocumentConflictResponse) {
+    super("conflict", 409, body);
+    this.name = "ApiConflictError";
+    this.conflict = body;
+  }
+}
+
+export { SEED_ARTIFACT_ONBOARDING_NOTES };
 
 export class ApiClient {
   readonly baseUrl: string;
@@ -92,6 +119,73 @@ export class ApiClient {
     if (!res.ok) {
       throw new ApiError("sign-in failed", res.status, await this.parseJson(res));
     }
+  }
+
+  async signOut(): Promise<void> {
+    const res = await this.request("/api/auth/sign-out", { method: "POST" });
+    if (!res.ok) {
+      throw new ApiError("sign-out failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async home(): Promise<HomeResponse> {
+    const res = await this.request("/api/home");
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("home failed", res.status, body);
+    return HomeResponse.parse(body);
+  }
+
+  async createSpace(input: CreateSpaceInput): Promise<CreateSpaceResponse> {
+    const res = await this.request("/api/spaces", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("create space failed", res.status, body);
+    return CreateSpaceResponse.parse(body);
+  }
+
+  async getSpace(spaceId: SpaceId): Promise<SpaceDetailResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get space failed", res.status, body);
+    return SpaceDetailResponse.parse(body);
+  }
+
+  async createDocument(input: CreateDocumentInput = {}): Promise<CreateDocumentResponse> {
+    const res = await this.request("/api/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("create document failed", res.status, body);
+    return CreateDocumentResponse.parse(body);
+  }
+
+  async getDocument(artifactId: ArtifactId): Promise<GetDocumentResponse> {
+    const res = await this.request(`/api/documents/${artifactId}`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get document failed", res.status, body);
+    return GetDocumentResponse.parse(body);
+  }
+
+  async patchDocument(
+    artifactId: ArtifactId,
+    input: PatchDocumentInput,
+  ): Promise<PatchDocumentResponse> {
+    const res = await this.request(`/api/documents/${artifactId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (res.status === 409) {
+      throw new ApiConflictError(DocumentConflictResponse.parse(body));
+    }
+    if (!res.ok) throw new ApiError("patch document failed", res.status, body);
+    return PatchDocumentResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

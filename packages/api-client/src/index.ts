@@ -1,4 +1,5 @@
-export { ApiClient, ApiError, createApiClient, type ApiClientOptions } from "./http.js";
+export { ApiClient, ApiConflictError, ApiError, createApiClient, type ApiClientOptions } from "./http.js";
+export { SEED_ARTIFACT_ONBOARDING_NOTES } from "./http.js";
 export {
   connectSocket,
   createSocketClient,

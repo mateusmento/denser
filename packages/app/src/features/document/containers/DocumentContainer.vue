@@ -1,49 +1,32 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import type { ArtifactId } from "@denser/contracts";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import type { MentionCandidate } from "@/modules/rich-text";
+import { documentMentionItems } from "../fixtures";
 import {
-  documentMentionItems,
-  emptyDraft,
-  readyDocumentView,
-  seededDraft,
-} from "../fixtures";
+  createDocumentDraftState,
+  useDocumentSync,
+} from "../composables/useDocumentSync";
 import DocumentSurface from "../presentationals/DocumentSurface.vue";
-import type { DocumentDraftView } from "../types";
 
 const route = useRoute();
+const artifactId = computed(() => route.params.documentId as ArtifactId | undefined);
 
-const draft = ref<DocumentDraftView>(cloneDraft("onboarding"));
+const { draft, dirty } = createDocumentDraftState();
+const { surfaceView, bindDraft, reload } = useDocumentSync(artifactId);
 
-const view = reactive({
-  ...readyDocumentView,
-  mentionItems: [] as MentionCandidate[],
-});
+bindDraft(draft, dirty);
 
-watch(
-  () => route.params.documentId,
-  (documentId) => {
-    const id = typeof documentId === "string" ? documentId : "onboarding";
-    draft.value = cloneDraft(id);
-    view.header = headerForDocument(id);
-  },
-  { immediate: true },
-);
+const mentionItems = ref<MentionCandidate[]>([]);
 
-function cloneDraft(id: string): DocumentDraftView {
-  const source = id === "new" ? emptyDraft : seededDraft;
-  return { ...source, body: structuredClone(source.body) };
-}
-
-function headerForDocument(id: string) {
-  if (id === "new") {
-    return { title: "Untitled", spaceLabel: readyDocumentView.header.spaceLabel };
-  }
-  return { ...readyDocumentView.header };
-}
+const view = computed(() => ({
+  ...surfaceView.value,
+  mentionItems: mentionItems.value,
+}));
 
 function onMentionSearch(query: string) {
-  view.mentionItems = documentMentionItems(query);
+  mentionItems.value = documentMentionItems(query);
 }
 
 async function uploadImage(file: File) {
@@ -56,6 +39,7 @@ async function uploadImage(file: File) {
     v-model="draft"
     :view="view"
     :upload-image="uploadImage"
+    @retry="reload"
     @mention-search="onMentionSearch"
   />
 </template>

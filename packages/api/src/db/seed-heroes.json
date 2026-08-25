@@ -1,9 +1,11 @@
 [
   {
+    "id": "00000000-0000-4000-8000-000000000001",
     "username": "alice",
     "displayName": "Alice Chen"
   },
   {
+    "id": "00000000-0000-4000-8000-000000000002",
     "username": "bob",
     "displayName": "Bob Rivera"
   }

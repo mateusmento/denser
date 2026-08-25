@@ -9,6 +9,7 @@ import { createApiClient, type ApiClient } from "@denser/api-client";
 
 const repoRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const apiPkg = path.join(repoRoot, "packages/api");
+const tsxBin = path.join(apiPkg, "node_modules", ".bin", "tsx");
 
 const SEED_PASSWORD = "password";
 const AUTH_SECRET = "e2e-auth-secret-not-for-production-32b";
@@ -22,7 +23,7 @@ export type E2eHarness = {
 
 async function runApiScript(script: string, env: NodeJS.ProcessEnv): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn("pnpm", ["exec", "tsx", `src/db/${script}.ts`], {
+    const child = spawn(tsxBin, [`src/db/${script}.ts`], {
       cwd: apiPkg,
       env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -77,7 +78,7 @@ export async function startHarness(): Promise<E2eHarness> {
   await runApiScript("migrate", env);
   await runApiScript("seed", env);
 
-  const apiProcess: ChildProcess = spawn("pnpm", ["exec", "tsx", "src/index.ts"], {
+  const apiProcess: ChildProcess = spawn(tsxBin, ["src/index.ts"], {
     cwd: apiPkg,
     env,
     stdio: ["ignore", "pipe", "pipe"],
