@@ -80,7 +80,7 @@ html.dark,
   --foreground: var(--color-mist-50);
   --card: var(--color-mist-850);
   --card-foreground: var(--color-mist-50);
-  --popover: var(--color-mist-950);
+  --popover: var(--color-mist-900);
   --popover-foreground: var(--color-mist-50);
   --primary: oklch(53.364% 0.20062 277.184);
   --primary-foreground: var(--color-white);
