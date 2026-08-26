@@ -389,6 +389,9 @@ importers:
       lowlight:
         specifier: 3.3.0
         version: 3.3.0
+      remeda:
+        specifier: ^2.21.0
+        version: 2.44.0
       vue:
         specifier: ^3.5.41
         version: 3.5.41(typescript@5.9.3)
@@ -5718,6 +5721,10 @@ packages:
     resolution: {integrity: sha512-nJGZbwcha8AcP2wbnjodfzsciTKBqp1mIzepC9Pi2xDI/YK3++ej3vpJOSPyxqrkq1Oorj4K+BdJkbVCV6x6ag==}
     peerDependencies:
       vue: '>= 3.4.0'
+
+  remeda@2.44.0:
+    resolution: {integrity: sha512-skNJFQ89qM8Tty8lgcH75UC/lP2FOrGwzszRuoKpS1RfEpbacHQFltIR/A5zUULdylzYQf2LVpXim6s0DMGnng==}
+    engines: {node: '>=18.0.0'}
 
   remove-accents@0.5.0:
     resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
@@ -11704,6 +11711,8 @@ snapshots:
       vue: 3.5.41(typescript@5.9.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
+
+  remeda@2.44.0: {}
 
   remove-accents@0.5.0: {}
 
