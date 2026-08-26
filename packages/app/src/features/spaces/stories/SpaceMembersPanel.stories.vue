@@ -63,4 +63,8 @@ const nestedView: SpaceMembersView = {
       @update-visibility="action('updateVisibility')($event)"
     />
   </Story>
+
+  <Story as-child name="Loading">
+    <SpaceMembersPanel loading />
+  </Story>
 </template>

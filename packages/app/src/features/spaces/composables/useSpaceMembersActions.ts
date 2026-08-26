@@ -1,20 +1,18 @@
 import type { SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
+import type { ComputedRef } from "vue";
 import { confirm, prompt } from "@/lib/dialog";
-import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
-import { useSpaceSync } from "./useSpaceSync";
+import type { SpaceContentView, SpaceMembersView } from "../types";
 
-export function useSpaceMembersActions(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
-  const id = toReadonlyRef(spaceId);
+type SpaceMembersSync = {
+  membersView: ComputedRef<SpaceMembersView | undefined>;
+  content: ComputedRef<SpaceContentView | undefined>;
+  reload: () => unknown;
+  addMember: (username: string) => Promise<unknown>;
+  removeMember: (memberUserId: UserId) => Promise<unknown>;
+  updateVisibility: (visibility: SpaceVisibility) => Promise<unknown>;
+};
 
-  const {
-    membersView,
-    content,
-    reload,
-    addMember,
-    removeMember,
-    updateVisibility,
-  } = useSpaceSync(id);
-
+export function useSpaceMembersActions(sync: SpaceMembersSync) {
   async function onAddMember() {
     const username = await prompt({
       title: "Add member",
@@ -23,35 +21,34 @@ export function useSpaceMembersActions(spaceId: ReadonlyRefOrGetter<SpaceId | un
       confirmLabel: "Add",
     });
     if (!username?.trim()) return;
-    await addMember(username.trim());
+    await sync.addMember(username.trim());
   }
 
   async function onRemoveMember(userId: UserId) {
-    const members = membersView.value?.members ?? [];
+    const members = sync.membersView.value?.members ?? [];
     const member = members.find((row) => row.userId === userId);
     const label = member?.name ?? "this member";
     const ok = await confirm(`Remove ${label}?`, "They will lose access to this space.");
     if (!ok) return;
-    await removeMember(userId);
+    await sync.removeMember(userId);
   }
 
   async function onUpdateVisibility(visibility: SpaceVisibility) {
-    if (content.value?.space.visibility === visibility) return;
+    if (sync.content.value?.space.visibility === visibility) return;
     if (visibility === "private") {
       const ok = await confirm(
         "Make this space private?",
         "Root members will be copied in so nobody is locked out.",
       );
       if (!ok) {
-        await reload();
+        await sync.reload();
         return;
       }
     }
-    await updateVisibility(visibility);
+    await sync.updateVisibility(visibility);
   }
 
   return {
-    membersView,
     onAddMember,
     onRemoveMember,
     onUpdateVisibility,

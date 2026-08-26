@@ -15,7 +15,23 @@ if (!url) {
   throw new Error("DATABASE_URL is required");
 }
 
-const client = postgres(url, { max: 1 });
+const DRIZZLE_MIGRATION_BOOTSTRAP_NOTICES = [
+  'schema "drizzle" already exists, skipping',
+  'relation "__drizzle_migrations" already exists, skipping',
+] as const;
+
+function isDrizzleMigrationBootstrapNotice(notice: { message?: string }) {
+  const message = notice.message ?? "";
+  return DRIZZLE_MIGRATION_BOOTSTRAP_NOTICES.some((text) => message.includes(text));
+}
+
+const client = postgres(url, {
+  max: 1,
+  onnotice: (notice) => {
+    if (isDrizzleMigrationBootstrapNotice(notice)) return;
+    console.warn(notice);
+  },
+});
 const db = drizzle(client);
 
 await migrate(db, { migrationsFolder: new URL("../../drizzle", import.meta.url).pathname });
