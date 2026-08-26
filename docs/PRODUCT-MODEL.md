@@ -4,6 +4,8 @@ Rather than being composed of separate applications, Denser is composed of a sma
 
 This document describes Denser from the perspective of its ontology.
 
+> **v1 filing direction:** For spaces, artifacts, conversations, tabs, and DMs, prefer [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) and [FEATURE-SPECS.md](./FEATURE-SPECS.md) where this ontology conflicts with the filing model.
+
 ---
 
 # Objects

@@ -23,7 +23,7 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 
 | Surface                                      | Density     | Job                                 | Spec                                         |
 | -------------------------------------------- | ----------- | ----------------------------------- | -------------------------------------------- |
-| App shell (sidebar, top bar, space switcher) | Calm chrome | Navigate Spaces / Artifacts / Views | [shell.md](./ui-surfaces/shell.md) (nav TBD) |
+| App shell (sidebar, tab bar, space switcher) | Calm chrome | Navigate spaces, tabs, DMs, artifacts | [shell.md](./ui-surfaces/shell.md) |
 | Theme                                        | Calm        | Light / dark / system               | [theme.md](./ui-surfaces/theme.md)           |
 | Toast                                        | Calm        | Transient non-blocking feedback     | [toast.md](./ui-surfaces/toast.md)           |
 | Command palette                              | Ambient     | Accelerator + safety net            | TBD                                          |
@@ -33,9 +33,10 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 | Surface        | Density      | Job                             | Spec                                             |
 | -------------- | ------------ | ------------------------------- | ------------------------------------------------ |
 | Document       | Calm         | Read / write primary artifact   | [document.md](./ui-surfaces/document.md)         |
-| Conversation   | Calm–medium  | Persistent discussion           | [conversation.md](./ui-surfaces/conversation.md) |
-| Backlog / list | Dense        | Scan, rank, bulk-act            | TBD                                              |
-| Board          | Dense        | Workflow by status              | TBD                                              |
+| Conversation   | Calm–medium  | Persistent discussion (artifact tab or DM) | [conversation.md](./ui-surfaces/conversation.md) |
+| This Space     | Calm         | Browse child spaces + regular artifacts  | [shell.md](./ui-surfaces/shell.md) (tab content)   |
+| Backlog / list | Dense        | Space **view** tab — scan, rank, bulk-act | Deferred (space view, not artifact)              |
+| Board          | Dense        | Space **view** tab — workflow by status   | Deferred (space view, not artifact)              |
 | Map            | Medium–dense | Spatial organize / model        | TBD                                              |
 | Personal home  | Calm         | Root Spaces & Artifacts landing | TBD                                              |
 
@@ -56,3 +57,4 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 | 2026-08-11 | App shell spec: Theme + Toast ownership (`ui-surfaces/shell.md`).                             |
 | 2026-08-11 | Split Theme, Toast, rich-text composer, and Document into their own surface specs.            |
 | 2026-08-11 | Rich-text composer is shared infrastructure; Views derive DocumentComposer / MessageComposer. |
+| 2026-08-26 | This Space tab; backlog/board as space views; shell tab bar + DM nav per ARTIFACTS-AND-SPACES. |

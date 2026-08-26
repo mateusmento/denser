@@ -4,6 +4,8 @@ Denser is built around a small set of fundamental concepts. Rather than thinking
 
 These classifications provide a shared vocabulary for designing new capabilities while keeping the product coherent.
 
+> **v1 filing direction:** For spaces, artifacts, conversations (regular/direct), tabs, and DMs, prefer [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md). Conversation is an **Artifact kind** in v1.
+
 ---
 
 # Objects

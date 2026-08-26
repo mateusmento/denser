@@ -1,9 +1,9 @@
 # Conversation
 
-**Status:** Draft  
-**Kind:** Capability UI (channel / conversation surface)  
+**Status:** Active (UI prototype; domain rules in [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md))  
+**Kind:** Capability UI (conversation artifact surface)  
 **Density:** Calm–medium ([VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md))  
-**Feature spec:** [FEATURE-SPECS.md — Conversation](../FEATURE-SPECS.md#conversation-draft)  
+**Feature spec:** [FEATURE-SPECS.md — Conversation](../FEATURE-SPECS.md#conversation)  
 **Guideline:** [UI-SURFACE-SPEC-GUIDELINE.md](./UI-SURFACE-SPEC-GUIDELINE.md)  
 **Presentational (Vue):** `packages/app/src/features/conversation/presentationals/` (Storybook `pnpm storybook:app` → `features/conversation/*`; stories in `features/conversation/stories/`). No shell chrome on this surface.  
 **Composer:** **MessageComposer** — derived from [rich-text-composer.md](./rich-text-composer.md) (engine only; this file owns send chrome).
@@ -12,7 +12,16 @@
 
 ## Intent
 
-Persistent discussion among people who can access the channel: read history, react, reply in threads, and author rich messages without leaving the flow.
+Persistent discussion among people who can access the conversation: read history, react, reply in threads, and author rich messages without leaving the flow.
+
+The surface binds to a **Conversation artifact** opened as a **space tab** (regular) or from **Direct messages** (direct). There is **one default view** — no view-mode picker on this tab.
+
+| Kind | Where opened | Listing | Access |
+| ---- | ------------ | ------- | ------ |
+| **Regular** | Space tab, This Space | This Space gallery | Space ACL (v1) |
+| **Direct (DM)** | Direct messages nav | DM sidebar only | `conversation_member` |
+
+Notification and header chrome may differ by kind (channel-style vs DM-style); the message surface is the same.
 
 The surface should feel **calm by default** (message stream dominates) while keeping **posting essentials** on screen. Power inserts stay reachable; container width drives how many action-row controls are visible, not whether they exist.
 
@@ -81,7 +90,7 @@ UI consumes the Conversation feature model; it does not invent a second schema. 
 
 | UI need             | Source objects / fields                                                          |
 | ------------------- | -------------------------------------------------------------------------------- |
-| Channel title, id   | Channel                                                                          |
+| Conversation title, id, kind | Conversation artifact (`regular` \| `direct`)                           |
 | Message list        | Message (`id`, `author_id`, `body`, timestamps, `thread_id`, attachments/embeds) |
 | Author display      | User (avatar, display name) via author id                                        |
 | Reactions           | Reaction aggregates per message                                                  |
@@ -89,7 +98,7 @@ UI consumes the Conversation feature model; it does not invent a second schema. 
 | Composer draft      | Local UI state until send/schedule succeeds                                      |
 | Schedule            | ScheduledMessage (when phased)                                                   |
 | Poll embed          | Poll (when phased)                                                               |
-| Can read / can post | Membership / permission                                                          |
+| Can read / can post | Space ACL (regular) or conversation_member (direct)                              |
 
 Realtime: apply `message.*` / `reaction.*` (and schedule events if any) into the same replica the scroller reads — no divergent client cache. Details: feature spec.
 
@@ -212,9 +221,9 @@ Message bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`), n
 - Thread: split pane vs drawer vs full replace on small viewports?
 - Message grouping rules and timestamp density.
 - Typing indicators and presence in v1?
-- Channel vs Artifact under [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md) (product model — affects header/navigation, not only data).
 - Attachment-only / image-only send allowed?
-- Poll, recording, recurrence: which ship in first Conversation cut?
+- Poll, recording, recurrence: which ship in first messaging cut?
+- DM header: show optional creation-context space label?
 
 ---
 
@@ -226,3 +235,4 @@ Message bodies use **RichTextPreview** (`RichTextSubtree` over `JSONContent`), n
 | 2026-08-11 | Lock TipTap; thread keeps P1 inserts; sticky day separators.                        |
 | 2026-08-11 | Composer chrome moved to `rich-text-composer.md`; Theme/Toast are sibling surfaces. |
 | 2026-08-11 | MessageComposer owned here again; shared file is engine infrastructure only.        |
+| 2026-08-26 | Conversation artifact model; regular vs direct kinds; single view per tab.          |
