@@ -36,13 +36,6 @@ async function onSignOut() {
         data-slot="app-shell-header"
       >
         <SidebarTrigger />
-        <nav class="flex items-center gap-1" aria-label="Surfaces">
-          <Button variant="ghost" size="sm" as-child>
-            <RouterLink :to="{ name: 'conversation', params: { channelId: 'launch' } }">
-              Conversation
-            </RouterLink>
-          </Button>
-        </nav>
         <div class="ms-auto flex items-center gap-2">
           <span v-if="user?.name" class="hidden text-xs text-muted-foreground sm:inline">
             {{ user.name }}

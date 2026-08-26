@@ -156,6 +156,26 @@ describe("domain api", () => {
     await expect(client.getDocument(copy.id)).rejects.toMatchObject({ status: 404 });
   });
 
+  it("creates, loads, patches, and deletes a conversation", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { conversation: created } = await client.createConversation({ title: "Standup" });
+
+    expect(created.kind).toBe("conversation");
+    expect(created.title).toBe("Standup");
+
+    const { conversation: loaded } = await client.getConversation(created.id);
+    expect(loaded.id).toBe(created.id);
+
+    const patched = await client.patchConversation(created.id, {
+      title: "Daily standup",
+      version: loaded.version,
+    });
+    expect(patched.conversation.title).toBe("Daily standup");
+
+    await client.deleteConversation(created.id);
+    await expect(client.getConversation(created.id)).rejects.toMatchObject({ status: 404 });
+  });
+
   it("deletes a nested space", async () => {
     const client = await harness.createAuthedClient("alice");
     const { space: copy } = await client.createSpace({

@@ -11,10 +11,11 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@denser/design-system";
-import { HomeIcon, PlusIcon } from "@lucide/vue";
+import { HomeIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
+import { WorkspaceCreateMenu } from "@/modules/workspace";
 import type {
-  WorkspaceNavDocumentAction,
+  WorkspaceNavArtifactAction,
   WorkspaceNavLink,
   WorkspaceNavSpaceAction,
   WorkspaceNavView,
@@ -28,11 +29,10 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  createSpace: [];
-  createDocument: [];
+  create: [action: "space" | "document" | "conversation", scopeSpaceId?: string | null];
   retry: [];
   spaceAction: [action: WorkspaceNavSpaceAction, link: WorkspaceNavLink];
-  documentAction: [action: WorkspaceNavDocumentAction, link: WorkspaceNavLink];
+  artifactAction: [action: WorkspaceNavArtifactAction, link: WorkspaceNavLink];
   renameSubmit: [link: WorkspaceNavLink, title: string];
   renameCancel: [link: WorkspaceNavLink];
 }>();
@@ -59,7 +59,7 @@ const emit = defineEmits<{
 
     <template v-if="view.state === 'loading'">
       <SidebarGroup>
-        <SidebarGroupLabel>Spaces</SidebarGroupLabel>
+        <SidebarGroupLabel>Home</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="index in 2" :key="index">
@@ -87,84 +87,53 @@ const emit = defineEmits<{
 
     <template v-else>
       <SidebarGroup>
-        <SidebarGroupLabel>Spaces</SidebarGroupLabel>
-        <SidebarGroupAction title="New space" @click="emit('createSpace')">
-          <PlusIcon />
+        <SidebarGroupLabel>{{ view.homeSection.label }}</SidebarGroupLabel>
+        <SidebarGroupAction title="Create">
+          <WorkspaceCreateMenu
+            variant="sidebar"
+            @create="emit('create', $event, view.homeSection.scopeSpaceId)"
+          />
         </SidebarGroupAction>
         <SidebarGroupContent>
           <SidebarMenu>
             <WorkspaceNavMenuItem
-              v-for="space in view.rootSpaces"
-              :key="space.id"
-              kind="space"
-              :link="space"
-              :is-renaming="renamingItemId === space.id"
-              @space-action="(action, link) => emit('spaceAction', action, link)"
-              @document-action="(action, link) => emit('documentAction', action, link)"
-              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
-              @rename-cancel="(link) => emit('renameCancel', link)"
+              v-for="link in view.homeSection.items"
+              :key="link.id"
+              :link="link"
+              :is-renaming="renamingItemId === link.id"
+              @space-action="(action, item) => emit('spaceAction', action, item)"
+              @artifact-action="(action, item) => emit('artifactAction', action, item)"
+              @rename-submit="(item, title) => emit('renameSubmit', item, title)"
+              @rename-cancel="(item) => emit('renameCancel', item)"
             />
-            <SidebarMenuItem v-if="!view.rootSpaces.length">
-              <p class="px-2 py-1 text-xs text-muted-foreground">No spaces yet</p>
+            <SidebarMenuItem v-if="!view.homeSection.items.length">
+              <p class="px-2 py-1 text-xs text-muted-foreground">Nothing here yet</p>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
 
-      <SidebarGroup>
-        <SidebarGroupLabel>Documents</SidebarGroupLabel>
-        <SidebarGroupAction title="New document" @click="emit('createDocument')">
-          <PlusIcon />
+      <SidebarGroup v-if="view.inSpaceSection">
+        <SidebarGroupLabel>{{ view.inSpaceSection.label }}</SidebarGroupLabel>
+        <SidebarGroupAction title="Create">
+          <WorkspaceCreateMenu
+            variant="sidebar"
+            @create="emit('create', $event, view.inSpaceSection.scopeSpaceId)"
+          />
         </SidebarGroupAction>
         <SidebarGroupContent>
           <SidebarMenu>
             <WorkspaceNavMenuItem
-              v-for="document in view.rootDocuments"
-              :key="document.id"
-              kind="document"
-              :link="document"
-              :is-renaming="renamingItemId === document.id"
-              @space-action="(action, link) => emit('spaceAction', action, link)"
-              @document-action="(action, link) => emit('documentAction', action, link)"
-              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
-              @rename-cancel="(link) => emit('renameCancel', link)"
+              v-for="link in view.inSpaceSection.items"
+              :key="link.id"
+              :link="link"
+              :is-renaming="renamingItemId === link.id"
+              @space-action="(action, item) => emit('spaceAction', action, item)"
+              @artifact-action="(action, item) => emit('artifactAction', action, item)"
+              @rename-submit="(item, title) => emit('renameSubmit', item, title)"
+              @rename-cancel="(item) => emit('renameCancel', item)"
             />
-            <SidebarMenuItem v-if="!view.rootDocuments.length">
-              <p class="px-2 py-1 text-xs text-muted-foreground">No root documents</p>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarGroup v-if="view.context">
-        <SidebarGroupLabel>In {{ view.context.title }}</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <WorkspaceNavMenuItem
-              v-for="space in view.context.spaces"
-              :key="space.id"
-              kind="space"
-              :link="space"
-              :is-renaming="renamingItemId === space.id"
-              @space-action="(action, link) => emit('spaceAction', action, link)"
-              @document-action="(action, link) => emit('documentAction', action, link)"
-              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
-              @rename-cancel="(link) => emit('renameCancel', link)"
-            />
-            <WorkspaceNavMenuItem
-              v-for="document in view.context.documents"
-              :key="document.id"
-              kind="document"
-              :link="document"
-              :is-renaming="renamingItemId === document.id"
-              @space-action="(action, link) => emit('spaceAction', action, link)"
-              @document-action="(action, link) => emit('documentAction', action, link)"
-              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
-              @rename-cancel="(link) => emit('renameCancel', link)"
-            />
-            <SidebarMenuItem
-              v-if="!view.context.spaces.length && !view.context.documents.length"
-            >
+            <SidebarMenuItem v-if="!view.inSpaceSection.items.length">
               <p class="px-2 py-1 text-xs text-muted-foreground">Empty</p>
             </SidebarMenuItem>
           </SidebarMenu>

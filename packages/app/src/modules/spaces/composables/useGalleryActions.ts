@@ -8,7 +8,7 @@ import { useWorkspaceCommandPrompts } from "./useWorkspaceCommandPrompts";
 
 type GalleryCommands = {
   openSpace: (spaceId: string) => Promise<unknown>;
-  openDocument: (artifactId: string) => Promise<unknown>;
+  openArtifact: (artifact: Pick<SpaceGalleryArtifact, "id" | "kind">) => Promise<unknown>;
   renameSpace: (
     space: Pick<SpaceGallerySpace, "id" | "title" | "parentSpaceId">,
     title: string,
@@ -23,7 +23,7 @@ type GalleryCommands = {
   deleteArtifact: (
     artifact: Pick<SpaceGalleryArtifact, "id" | "title" | "spaceId">,
   ) => Promise<void>;
-  duplicateArtifact: (artifact: Pick<SpaceGalleryArtifact, "id">) => Promise<void>;
+  duplicateArtifact: (artifact: Pick<SpaceGalleryArtifact, "id" | "kind">) => Promise<void>;
 };
 
 type GallerySettings = {
@@ -59,7 +59,7 @@ export function useGalleryActions(commands: GalleryCommands, settings: GallerySe
     artifact: SpaceGalleryArtifact,
   ) {
     if (action === "open") {
-      await commands.openDocument(artifact.id);
+      await commands.openArtifact(artifact);
       return;
     }
     if (action === "rename") {
@@ -68,6 +68,7 @@ export function useGalleryActions(commands: GalleryCommands, settings: GallerySe
       return;
     }
     if (action === "duplicate") {
+      if (artifact.kind === "conversation") return;
       await commands.duplicateArtifact(artifact);
       return;
     }

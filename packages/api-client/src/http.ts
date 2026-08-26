@@ -1,12 +1,18 @@
 import {
   AddSpaceMemberInput,
   AddSpaceMemberResponse,
+  ConversationConflictResponse,
+  CreateConversationInput,
+  CreateConversationResponse,
   CreateDocumentInput,
   CreateDocumentResponse,
   CreateSpaceInput,
   CreateSpaceResponse,
   DocumentConflictResponse,
+  GetConversationResponse,
   GetDocumentResponse,
+  PatchConversationInput,
+  PatchConversationResponse,
   HomeResponse,
   PatchDocumentInput,
   PatchDocumentResponse,
@@ -45,6 +51,16 @@ export class ApiConflictError extends ApiError {
   constructor(body: DocumentConflictResponse) {
     super("conflict", 409, body);
     this.name = "ApiConflictError";
+    this.conflict = body;
+  }
+}
+
+export class ApiConversationConflictError extends ApiError {
+  readonly conflict: ConversationConflictResponse;
+
+  constructor(body: ConversationConflictResponse) {
+    super("conflict", 409, body);
+    this.name = "ApiConversationConflictError";
     this.conflict = body;
   }
 }
@@ -249,6 +265,50 @@ export class ApiClient {
     const res = await this.request(`/api/documents/${artifactId}`, { method: "DELETE" });
     if (!res.ok) {
       throw new ApiError("delete document failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async createConversation(
+    input: CreateConversationInput = {},
+  ): Promise<CreateConversationResponse> {
+    const res = await this.request("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("create conversation failed", res.status, body);
+    return CreateConversationResponse.parse(body);
+  }
+
+  async getConversation(artifactId: ArtifactId): Promise<GetConversationResponse> {
+    const res = await this.request(`/api/conversations/${artifactId}`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get conversation failed", res.status, body);
+    return GetConversationResponse.parse(body);
+  }
+
+  async patchConversation(
+    artifactId: ArtifactId,
+    input: PatchConversationInput,
+  ): Promise<PatchConversationResponse> {
+    const res = await this.request(`/api/conversations/${artifactId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (res.status === 409) {
+      throw new ApiConversationConflictError(ConversationConflictResponse.parse(body));
+    }
+    if (!res.ok) throw new ApiError("patch conversation failed", res.status, body);
+    return PatchConversationResponse.parse(body);
+  }
+
+  async deleteConversation(artifactId: ArtifactId): Promise<void> {
+    const res = await this.request(`/api/conversations/${artifactId}`, { method: "DELETE" });
+    if (!res.ok) {
+      throw new ApiError("delete conversation failed", res.status, await this.parseJson(res));
     }
   }
 

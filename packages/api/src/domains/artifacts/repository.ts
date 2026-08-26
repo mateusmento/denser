@@ -49,6 +49,30 @@ export async function insertDocumentArtifact(input: {
   return created;
 }
 
+export async function insertConversationArtifact(input: {
+  title: string;
+  spaceId: SpaceId | null;
+  rootSpaceId: SpaceId | null;
+  createdBy: UserId;
+}): Promise<ArtifactRow> {
+  const [created] = await db
+    .insert(artifact)
+    .values({
+      kind: "conversation",
+      title: input.title,
+      spaceId: input.spaceId,
+      rootSpaceId: input.rootSpaceId,
+      createdBy: input.createdBy,
+    })
+    .returning();
+
+  if (!created) {
+    throw new Error("Failed to create conversation artifact");
+  }
+
+  return created;
+}
+
 export async function updateArtifactWithVersion(input: {
   artifactId: ArtifactId;
   expectedVersion: number;

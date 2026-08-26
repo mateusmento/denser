@@ -1,0 +1,20 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as DocumentEditorStories from "./DocumentEditor.stories.vue";
+
+<Meta of={DocumentEditorStories} />
+
+# DocumentEditor
+
+Title + body region for documents: loading skeleton, error/retry, forbidden, and edit-ready states. Wired by `DocumentEditorContainer`; composed inside `DocumentSurface` (with or without a header slot).
+
+<Canvas of={DocumentEditorStories.Ready} />
+
+<Canvas of={DocumentEditorStories.EmptyNew} />
+
+<Canvas of={DocumentEditorStories.ReadOnly} />
+
+<Canvas of={DocumentEditorStories.Loading} />
+
+<Canvas of={DocumentEditorStories.Error} />
+
+<Canvas of={DocumentEditorStories.Forbidden} />

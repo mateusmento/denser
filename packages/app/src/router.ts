@@ -30,7 +30,7 @@ export const router = createRouter({
           props: true,
         },
         {
-          path: "conversations/:channelId",
+          path: "conversations/:conversationId",
           name: "conversation",
           component: ConversationView,
           props: true,

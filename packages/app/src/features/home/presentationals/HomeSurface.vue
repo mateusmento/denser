@@ -7,6 +7,7 @@ import {
   type SpaceGallerySpace,
   type SpaceGallerySpaceAction,
 } from "@/modules/spaces";
+import { WorkspaceCreateMenu } from "@/modules/workspace";
 import type { HomeContentView, HomeSurfaceView } from "../types";
 
 defineProps<{
@@ -15,8 +16,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  createSpace: [];
-  createDocument: [];
+  create: [action: "space" | "document" | "conversation"];
   retry: [];
   openSpace: [spaceId: string];
   openArtifact: [artifactId: string];
@@ -50,12 +50,9 @@ const emit = defineEmits<{
       <div class="col-start-2 flex flex-wrap items-start justify-between gap-4 px-6">
         <div class="min-w-0 space-y-2">
           <h1 class="text-2xl font-semibold tracking-tight">Home</h1>
-          <p class="text-sm text-muted-foreground">Your root spaces and documents.</p>
+          <p class="text-sm text-muted-foreground">Your root spaces and artifacts.</p>
         </div>
-        <div class="flex gap-2">
-          <Button variant="outline" size="sm" @click="emit('createSpace')">New space</Button>
-          <Button size="sm" @click="emit('createDocument')">New document</Button>
-        </div>
+        <WorkspaceCreateMenu @create="emit('create', $event)" />
       </div>
 
       <div class="col-start-2 row-start-2 px-6">

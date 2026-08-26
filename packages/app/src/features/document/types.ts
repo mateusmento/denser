@@ -7,17 +7,25 @@ export type DocumentHeaderView = {
   spaceLabel?: string;
 };
 
-export type DocumentSurfaceView = {
+export type DocumentEditorView = {
   state: DocumentSurfaceState;
   canEdit: boolean;
-  header: DocumentHeaderView;
   titlePlaceholder: string;
   bodyPlaceholder: string;
   errorMessage?: string;
   mentionItems?: readonly MentionCandidate[];
 };
 
+export type DocumentSurfaceView = DocumentEditorView & {
+  header: DocumentHeaderView;
+};
+
 export type DocumentDraftView = {
   title: string;
   body: JSONContent;
 };
+
+export function toDocumentEditorView(view: DocumentSurfaceView): DocumentEditorView {
+  const { header: _header, ...editor } = view;
+  return editor;
+}

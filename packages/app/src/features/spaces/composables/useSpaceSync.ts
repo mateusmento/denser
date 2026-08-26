@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
-import { openNewDocumentRoute } from "@/features/document/lib/routes";
 import { artifactsCollection, spacesCollection, upsertInCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
@@ -46,11 +45,9 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     await invalidateSpaceProjections(queryClient, target);
   };
 
-  const createDocument = () => openNewDocumentRoute(router, id.value);
-
   const createSpaceMutation = useMutation({
-    mutationFn: (title: string) =>
-      apiClient.createSpace({ title, parentSpaceId: id.value! }),
+    mutationFn: ({ title, parentSpaceId }: { title: string; parentSpaceId: SpaceId }) =>
+      apiClient.createSpace({ title, parentSpaceId }),
     onSuccess: async ({ space }) => {
       await invalidateSpace();
       await router.push({ name: "space", params: { spaceId: space.id } });
@@ -163,8 +160,11 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     generalView,
     membersView,
     reload: () => spaceQuery.refetch(),
-    createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
-    createDocument,
+    createSpace: (title: string, parentSpaceId?: SpaceId | null) =>
+      createSpaceMutation.mutateAsync({
+        title,
+        parentSpaceId: parentSpaceId ?? id.value!,
+      }),
     addMember: (username: string) => addMemberMutation.mutateAsync(username),
     removeMember: (memberUserId: UserId) => removeMemberMutation.mutateAsync(memberUserId),
     updateGeneral: (input: { title: string; icon: SpaceIcon }) =>
@@ -173,7 +173,5 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
       patchVisibilityMutation.mutateAsync(visibility),
     openSpace: (nextSpaceId: string) =>
       router.push({ name: "space", params: { spaceId: nextSpaceId } }),
-    openDocument: (artifactId: string) =>
-      router.push({ name: "document", params: { documentId: artifactId } }),
   };
 }

@@ -29,7 +29,7 @@ export type SpaceVisibility = z.infer<typeof SpaceVisibility>;
 export const AssignableSpaceRole = z.enum(["admin", "member"]);
 export type AssignableSpaceRole = z.infer<typeof AssignableSpaceRole>;
 
-export const ArtifactKind = z.enum(["document"]);
+export const ArtifactKind = z.enum(["document", "conversation"]);
 export type ArtifactKind = z.infer<typeof ArtifactKind>;
 
 export const DEFAULT_SPACE_ICON = "folder" as const;
@@ -170,3 +170,41 @@ export const DocumentConflictResponse = z.object({
   document: DocumentView,
 });
 export type DocumentConflictResponse = z.infer<typeof DocumentConflictResponse>;
+
+export const ConversationView = ArtifactSummary;
+export type ConversationView = z.infer<typeof ConversationView>;
+
+export const CreateConversationInput = z.object({
+  title: z.string().trim().max(200).optional(),
+  spaceId: SpaceId.optional(),
+  /** Accepted for create+send; persisted when messaging ships. */
+  initialMessage: TipTapDoc.optional(),
+});
+export type CreateConversationInput = z.infer<typeof CreateConversationInput>;
+
+export const CreateConversationResponse = z.object({
+  conversation: ConversationView,
+});
+export type CreateConversationResponse = z.infer<typeof CreateConversationResponse>;
+
+export const PatchConversationInput = z.object({
+  title: z.string().trim().max(200).optional(),
+  version: z.number().int().positive(),
+});
+export type PatchConversationInput = z.infer<typeof PatchConversationInput>;
+
+export const GetConversationResponse = z.object({
+  conversation: ConversationView,
+});
+export type GetConversationResponse = z.infer<typeof GetConversationResponse>;
+
+export const PatchConversationResponse = z.object({
+  conversation: ConversationView,
+});
+export type PatchConversationResponse = z.infer<typeof PatchConversationResponse>;
+
+export const ConversationConflictResponse = z.object({
+  error: z.literal("conflict"),
+  conversation: ConversationView,
+});
+export type ConversationConflictResponse = z.infer<typeof ConversationConflictResponse>;

@@ -5,20 +5,10 @@ import * as DocumentSurfaceStories from "./DocumentSurface.stories.vue";
 
 # DocumentSurface
 
-The document **canvas**: header, in-flow title, and body. Spec: `docs/ui-surfaces/document.md`.
+Layout shell for documents: optional `#header` slot and a scrollable default slot for the editor. Containers fill the header with `DocumentHeaderContainer` and the body with `DocumentEditorContainer`.
 
-This page is **Docs** (`viewMode: "docs"`). It inlines every story below in **one** scrolling document. Canvas (`viewMode: "story"`) shows a single story in the preview iframe.
+Editor states (loading, error, ready, …) live on **DocumentEditor** — see that story group for the full matrix.
 
-If each story used `h-svh` here, this page would be six viewports tall — Ready, then EmptyNew, then ReadOnly, and so on, each as tall as the docs window. The preview decorator therefore caps Docs at `40rem` and only fills the iframe on Canvas (`fullHeight`).
+<Canvas of={DocumentSurfaceStories.WithHeader} />
 
-<Canvas of={DocumentSurfaceStories.Ready} />
-
-<Canvas of={DocumentSurfaceStories.EmptyNew} />
-
-<Canvas of={DocumentSurfaceStories.ReadOnly} />
-
-<Canvas of={DocumentSurfaceStories.Loading} />
-
-<Canvas of={DocumentSurfaceStories.Error} />
-
-<Canvas of={DocumentSurfaceStories.Forbidden} />
+<Canvas of={DocumentSurfaceStories.PeekShell} />

@@ -4,7 +4,7 @@ import { check, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "d
 import { user } from "./auth.js";
 import { space } from "./space.js";
 
-export const artifactKindEnum = pgEnum("artifact_kind", ["document"]);
+export const artifactKindEnum = pgEnum("artifact_kind", ["document", "conversation"]);
 
 export const artifact = pgTable(
   "artifact",

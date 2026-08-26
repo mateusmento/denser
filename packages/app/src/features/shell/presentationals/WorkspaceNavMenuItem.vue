@@ -11,25 +11,27 @@ import {
   SidebarMenuItem,
   cn,
 } from "@denser/design-system";
-import { CheckIcon, FileTextIcon, XIcon } from "@lucide/vue";
+import { CheckIcon, FileTextIcon, MessageSquareIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 import { resolveSpaceIcon } from "@/modules/spaces";
-import { documentDisplayTitle } from "@/features/document/lib/document-content";
-import type { WorkspaceNavDocumentAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
+import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import type { WorkspaceNavArtifactAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
 
 const props = defineProps<{
   link: WorkspaceNavLink;
-  kind: "space" | "document";
   isRenaming?: boolean;
 }>();
 
 const emit = defineEmits<{
   spaceAction: [action: WorkspaceNavSpaceAction, link: WorkspaceNavLink];
-  documentAction: [action: WorkspaceNavDocumentAction, link: WorkspaceNavLink];
+  artifactAction: [action: WorkspaceNavArtifactAction, link: WorkspaceNavLink];
   renameSubmit: [link: WorkspaceNavLink, title: string];
   renameCancel: [link: WorkspaceNavLink];
 }>();
+
+const isSpace = computed(() => props.link.to.name === "space");
+const isArtifact = computed(() => !isSpace.value);
 
 const renameDraft = ref(props.link.label);
 const renameEditable = ref(false);
@@ -51,15 +53,16 @@ watch(
 );
 
 const displayLabel = computed(() =>
-  props.kind === "document" ? documentDisplayTitle(props.link.label) : props.link.label,
+  isArtifact.value ? artifactDisplayTitle(props.link.label) : props.link.label,
 );
 
-const displayIcon = computed(() =>
-  props.kind === "space" ? resolveSpaceIcon(props.link.icon) : FileTextIcon,
-);
+const displayIcon = computed(() => {
+  if (isSpace.value) return resolveSpaceIcon(props.link.icon);
+  return props.link.artifactKind === "conversation" ? MessageSquareIcon : FileTextIcon;
+});
 
 const renamePlaceholder = computed(() =>
-  props.kind === "space" ? "Space name" : "Document name",
+  isSpace.value ? "Space name" : props.link.artifactKind === "conversation" ? "Conversation name" : "Document name",
 );
 
 const renameButtonClass = cn(
@@ -70,8 +73,8 @@ function onSpaceAction(action: WorkspaceNavSpaceAction) {
   emit("spaceAction", action, props.link);
 }
 
-function onDocumentAction(action: WorkspaceNavDocumentAction) {
-  emit("documentAction", action, props.link);
+function onArtifactAction(action: WorkspaceNavArtifactAction) {
+  emit("artifactAction", action, props.link);
 }
 
 function onRenameSubmit(title: string) {
@@ -80,7 +83,7 @@ function onRenameSubmit(title: string) {
 
 function confirmRename() {
   const trimmed = renameDraft.value.trim();
-  if (props.kind === "space" && !trimmed) return;
+  if (isSpace.value && !trimmed) return;
   onRenameSubmit(trimmed);
 }
 
@@ -152,7 +155,7 @@ function cancelRename() {
     </ContextMenuTrigger>
 
     <ContextMenuContent>
-      <template v-if="kind === 'space'">
+      <template v-if="isSpace">
         <ContextMenuItem @select="onSpaceAction('open')">Open</ContextMenuItem>
         <ContextMenuItem @select="onSpaceAction('rename')">Rename</ContextMenuItem>
         <ContextMenuItem @select="onSpaceAction('openSettings')">Space settings</ContextMenuItem>
@@ -163,11 +166,16 @@ function cancelRename() {
       </template>
 
       <template v-else>
-        <ContextMenuItem @select="onDocumentAction('open')">Open</ContextMenuItem>
-        <ContextMenuItem @select="onDocumentAction('rename')">Rename</ContextMenuItem>
-        <ContextMenuItem @select="onDocumentAction('duplicate')">Duplicate</ContextMenuItem>
+        <ContextMenuItem @select="onArtifactAction('open')">Open</ContextMenuItem>
+        <ContextMenuItem @select="onArtifactAction('rename')">Rename</ContextMenuItem>
+        <ContextMenuItem
+          v-if="link.artifactKind === 'document'"
+          @select="onArtifactAction('duplicate')"
+        >
+          Duplicate
+        </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem variant="destructive" @select="onDocumentAction('delete')">
+        <ContextMenuItem variant="destructive" @select="onArtifactAction('delete')">
           Delete
         </ContextMenuItem>
       </template>

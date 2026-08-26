@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SpaceId } from "@denser/contracts";
+import type { ArtifactId, SpaceId } from "@denser/contracts";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import {
@@ -8,7 +8,7 @@ import {
   useSpaceCommands,
   useSpaceSettingsHost,
 } from "@/modules/spaces";
-import { prompt } from "@/lib/dialog";
+import { useWorkspaceCreateActions } from "@/modules/workspace";
 import { useSpaceSync } from "../composables/useSpaceSync";
 import SpaceSettingsContainer from "./SpaceSettingsContainer.vue";
 import SpaceSurface from "../presentationals/SpaceSurface.vue";
@@ -16,16 +16,18 @@ import SpaceSurface from "../presentationals/SpaceSurface.vue";
 const route = useRoute();
 const spaceId = computed(() => route.params.spaceId as SpaceId | undefined);
 
-const { view, content, backLink, reload, createSpace, createDocument, openSpace, openDocument } =
-  useSpaceSync(spaceId);
+const { view, content, backLink, reload, createSpace, openSpace } = useSpaceSync(spaceId);
 const spaceCommands = useSpaceCommands();
 const artifactCommands = useArtifactCommands();
 const { settingsOpen, settingsSpaceId, settingsTitle, openSettings } = useSpaceSettingsHost();
+const { onCreate } = useWorkspaceCreateActions((title, parentSpaceId) =>
+  createSpace(title, parentSpaceId ?? spaceId.value),
+);
 
 const { onSpaceAction, onArtifactAction } = useGalleryActions(
   {
     openSpace,
-    openDocument,
+    openArtifact: artifactCommands.openArtifact,
     renameSpace: spaceCommands.renameSpace,
     deleteSpace: spaceCommands.deleteSpace,
     renameArtifact: artifactCommands.renameArtifact,
@@ -34,17 +36,6 @@ const { onSpaceAction, onArtifactAction } = useGalleryActions(
   },
   { openSettings },
 );
-
-async function onCreateSpace() {
-  const title = await prompt({
-    title: "New space",
-    label: "Space name",
-    placeholder: content.value?.space.title ?? "Untitled",
-    confirmLabel: "Create",
-  });
-  if (!title?.trim()) return;
-  await createSpace(title.trim());
-}
 </script>
 
 <template>
@@ -53,10 +44,9 @@ async function onCreateSpace() {
     :content="content"
     :back-link="backLink"
     @retry="reload"
-    @create-space="onCreateSpace"
-    @create-document="createDocument"
+    @create="onCreate($event, spaceId)"
     @open-space="openSpace"
-    @open-artifact="openDocument"
+    @open-artifact="(id) => artifactCommands.openArtifact({ id: id as ArtifactId, kind: content?.artifacts.find((a) => a.id === id)?.kind ?? 'document' })"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
   />

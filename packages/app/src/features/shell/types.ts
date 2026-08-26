@@ -2,29 +2,34 @@ import type { SpaceIcon } from "@denser/contracts";
 
 export type WorkspaceNavSpaceAction = "open" | "rename" | "openSettings" | "delete";
 
-export type WorkspaceNavDocumentAction = "open" | "rename" | "duplicate" | "delete";
+export type WorkspaceNavArtifactAction = "open" | "rename" | "duplicate" | "delete";
+
+export type WorkspaceNavArtifactKind = "document" | "conversation";
 
 export type WorkspaceNavLink = {
   id: string;
   label: string;
   icon?: SpaceIcon | null;
+  artifactKind?: WorkspaceNavArtifactKind;
   to: {
-    name: "home" | "space" | "document";
-    params?: { spaceId?: string; documentId?: string };
+    name: "home" | "space" | "document" | "conversation";
+    params?: { spaceId?: string; documentId?: string; conversationId?: string };
   };
   isActive: boolean;
 };
 
-export type WorkspaceNavContext = {
-  title: string;
-  spaces: readonly WorkspaceNavLink[];
-  documents: readonly WorkspaceNavLink[];
+export type WorkspaceNavSection = {
+  label: string;
+  items: readonly WorkspaceNavLink[];
+  scopeSpaceId?: string | null;
 };
 
 export type WorkspaceNavView = {
   state: "loading" | "ready" | "error";
   errorMessage?: string;
-  rootSpaces: readonly WorkspaceNavLink[];
-  rootDocuments: readonly WorkspaceNavLink[];
-  context?: WorkspaceNavContext;
+  homeSection: WorkspaceNavSection;
+  inSpaceSection?: WorkspaceNavSection;
 };
+
+/** @deprecated Use WorkspaceNavArtifactAction */
+export type WorkspaceNavDocumentAction = WorkspaceNavArtifactAction;

@@ -35,7 +35,7 @@ const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3";
         </div>
       </section>
       <section class="space-y-3">
-        <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Documents</h2>
+        <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Artifacts</h2>
         <div :class="gridClass">
           <Skeleton
             v-for="index in 3"
@@ -62,7 +62,7 @@ const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3";
       </section>
 
       <section v-if="artifacts.length" class="space-y-3">
-        <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Documents</h2>
+        <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Artifacts</h2>
         <div :class="gridClass">
           <SpaceArtifactTile
             v-for="artifact in artifacts"
@@ -79,7 +79,7 @@ const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3";
         v-if="!childSpaces.length && !artifacts.length"
         class="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground"
       >
-        This space is empty. Create a nested space or document to get started.
+        This space is empty. Create a nested space or artifact to get started.
       </p>
     </template>
   </div>

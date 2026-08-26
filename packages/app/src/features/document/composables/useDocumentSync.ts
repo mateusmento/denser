@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
 import { computed, ref, watch, type Ref } from "vue";
 import { useRouter } from "vue-router";
+import { omit } from "remeda";
 import { apiClient } from "@/lib/api";
 import {
   buildDocumentPatch,
@@ -19,8 +20,9 @@ import { isEmptyDocumentDraft } from "../lib/document-content";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 
 export type DocumentSyncOptions = {
-  isCompose: ReadonlyRefOrGetter<boolean>;
-  composeSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined>;
+  peekSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined | null>;
+  mode?: "route" | "peek";
+  onPeekCreated?: (id: ArtifactId) => void;
 };
 
 export function useDocumentSync(
@@ -28,8 +30,10 @@ export function useDocumentSync(
   options?: DocumentSyncOptions,
 ) {
   const id = toReadonlyRef(artifactId);
-  const isCompose = toReadonlyRef(options?.isCompose ?? (() => false));
-  const composeSpaceId = toReadonlyRef(options?.composeSpaceId ?? (() => undefined));
+  const peekSpaceId = toReadonlyRef(options?.peekSpaceId ?? (() => undefined));
+  const mode = options?.mode ?? "route";
+  const isPeek = mode === "peek";
+  const isCompose = computed(() => isPeek && id.value == null);
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -67,8 +71,7 @@ export function useDocumentSync(
         ...(input.spaceId ? { spaceId: input.spaceId } : {}),
       });
       upsertInCollection(documentsCollection, document);
-      const { body: _body, ...artifact } = document;
-      upsertInCollection(artifactsCollection, artifact);
+      upsertInCollection(artifactsCollection, omit(document, ["body"]));
       return document;
     },
     onSuccess: async (document) => {
@@ -76,6 +79,10 @@ export function useDocumentSync(
       await queryClient.invalidateQueries({ queryKey: queryKeys.home() });
       if (document.spaceId) {
         await queryClient.invalidateQueries({ queryKey: queryKeys.space(document.spaceId) });
+      }
+      if (isPeek) {
+        options?.onPeekCreated?.(document.id);
+        return;
       }
       await router.replace({ name: "document", params: { documentId: document.id } });
     },
@@ -132,7 +139,7 @@ export function useDocumentSync(
         canEdit: true,
         header: {
           title: "",
-          spaceLabel: composeSpaceId.value ? "In space" : undefined,
+          spaceLabel: peekSpaceId.value ? "In space" : undefined,
         },
         titlePlaceholder: "Untitled",
         bodyPlaceholder: "Start writing…",
@@ -205,7 +212,7 @@ export function useDocumentSync(
     }
 
     watch(
-      () => [isCompose.value, composeSpaceId.value] as const,
+      () => [isCompose.value, peekSpaceId.value] as const,
       ([compose, spaceId], previous) => {
         if (!compose) return;
         const [prevCompose, prevSpaceId] = previous ?? [false, undefined];
@@ -282,7 +289,7 @@ export function useDocumentSync(
           await createMutation.mutateAsync({
             title: draft.value.title,
             body: draft.value.body as TipTapDoc,
-            spaceId: composeSpaceId.value,
+            spaceId: peekSpaceId.value ?? undefined,
           });
           dirty.value = { title: false, body: false };
         } finally {

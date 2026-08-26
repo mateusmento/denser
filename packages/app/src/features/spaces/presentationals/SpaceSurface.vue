@@ -10,6 +10,7 @@ import { Badge, Button, Skeleton } from "@denser/design-system";
 import { ChevronLeftIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 import { SpaceGallery } from "@/modules/spaces";
+import { WorkspaceCreateMenu } from "@/modules/workspace";
 
 defineProps<{
   view: SpaceSurfaceView;
@@ -18,8 +19,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  createSpace: [];
-  createDocument: [];
+  create: [action: "space" | "document" | "conversation"];
   retry: [];
   openSpace: [spaceId: string];
   openArtifact: [artifactId: string];
@@ -59,10 +59,7 @@ const emit = defineEmits<{
           </div>
           <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>
         </div>
-        <div class="flex gap-2">
-          <Button variant="outline" size="sm" @click="emit('createSpace')">New space</Button>
-          <Button size="sm" @click="emit('createDocument')">New document</Button>
-        </div>
+        <WorkspaceCreateMenu @create="emit('create', $event)" />
       </div>
 
       <SpaceGallery

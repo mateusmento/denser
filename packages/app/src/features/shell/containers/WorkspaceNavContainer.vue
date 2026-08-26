@@ -7,34 +7,20 @@ import {
   useSpaceSettingsHost,
   useWorkspaceCommandPrompts,
 } from "@/modules/spaces";
+import { useWorkspaceCreateActions } from "@/modules/workspace";
 import SpaceSettingsContainer from "@/features/spaces/containers/SpaceSettingsContainer.vue";
-import { prompt } from "@/lib/dialog";
 import { useWorkspaceNavSync } from "../composables/useWorkspaceNavSync";
-import type { WorkspaceNavDocumentAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
+import type { WorkspaceNavArtifactAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
 import WorkspaceNav from "../presentationals/WorkspaceNav.vue";
 
-const { view, isHomeActive, reload, createSpace, createDocument } = useWorkspaceNavSync();
+const { view, isHomeActive, reload, createSpace } = useWorkspaceNavSync();
 const { openSpace, renameSpace, deleteSpace } = useSpaceCommands();
-const { openDocument, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
+const { openArtifact, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
 const prompts = useWorkspaceCommandPrompts();
 const { settingsOpen, settingsSpaceId, settingsTitle, openSettings } = useSpaceSettingsHost();
+const { onCreate } = useWorkspaceCreateActions(createSpace);
 
 const renamingItemId = ref<string | null>(null);
-
-async function onCreateSpace() {
-  const title = await prompt({
-    title: "New space",
-    label: "Space name",
-    placeholder: "Acme",
-    confirmLabel: "Create",
-  });
-  if (!title?.trim()) return;
-  await createSpace(title.trim());
-}
-
-async function onCreateDocument() {
-  await createDocument();
-}
 
 function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) {
   if (action === "openSettings") {
@@ -61,9 +47,12 @@ function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) 
   }
 }
 
-function onDocumentAction(action: WorkspaceNavDocumentAction, link: WorkspaceNavLink) {
+function onArtifactAction(action: WorkspaceNavArtifactAction, link: WorkspaceNavLink) {
   if (action === "open") {
-    void openDocument(link.id as ArtifactId);
+    void openArtifact({
+      id: link.id as ArtifactId,
+      kind: link.artifactKind ?? "document",
+    });
     return;
   }
 
@@ -73,14 +62,18 @@ function onDocumentAction(action: WorkspaceNavDocumentAction, link: WorkspaceNav
   }
 
   if (action === "duplicate") {
-    void duplicateArtifact({ id: link.id as ArtifactId });
+    void duplicateArtifact({ id: link.id as ArtifactId, kind: "document" });
     return;
   }
 
   if (action === "delete") {
     void (async () => {
       if (await prompts.confirmArtifactDelete({ title: link.label })) {
-        await deleteArtifact({ id: link.id as ArtifactId, title: link.label });
+        await deleteArtifact({
+          id: link.id as ArtifactId,
+          title: link.label,
+          kind: link.artifactKind ?? "document",
+        });
       }
     })();
   }
@@ -89,8 +82,15 @@ function onDocumentAction(action: WorkspaceNavDocumentAction, link: WorkspaceNav
 async function onRenameSubmit(link: WorkspaceNavLink, title: string) {
   renamingItemId.value = null;
 
-  if (link.to.name === "document") {
-    await renameArtifact({ id: link.id as ArtifactId, title: link.label }, title);
+  if (link.to.name === "document" || link.to.name === "conversation") {
+    await renameArtifact(
+      {
+        id: link.id as ArtifactId,
+        title: link.label,
+        kind: link.artifactKind ?? "document",
+      },
+      title,
+    );
     return;
   }
 
@@ -108,10 +108,9 @@ function onRenameCancel(_link: WorkspaceNavLink) {
     :is-home-active="isHomeActive"
     :renaming-item-id="renamingItemId"
     @retry="reload"
-    @create-space="onCreateSpace"
-    @create-document="onCreateDocument"
+    @create="(action, scopeSpaceId) => onCreate(action, scopeSpaceId as SpaceId | null)"
     @space-action="onSpaceAction"
-    @document-action="onDocumentAction"
+    @artifact-action="onArtifactAction"
     @rename-submit="onRenameSubmit"
     @rename-cancel="onRenameCancel"
   />

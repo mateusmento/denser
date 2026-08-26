@@ -1,22 +1,31 @@
 <script setup lang="ts">
+import type { ArtifactId } from "@denser/contracts";
 import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
+import { useConversationSync } from "../composables/useConversationSync";
 import {
-  channelHeader,
   channelIntro,
   channelMessages,
   conversationMentionItems,
   schedulePresets,
   threadView,
 } from "../fixtures";
-import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
+import TitleEditor from "@/features/document/presentationals/TitleEditor.vue";
 import type { ComposerActionId, ScheduleCommitPayload } from "../types";
+
+const route = useRoute();
+const conversationId = computed(() => route.params.conversationId as ArtifactId);
+
+const conversationTitle = ref("");
+const conversationSync = useConversationSync(conversationId);
+conversationSync.bindComposeTitle(conversationTitle);
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
@@ -30,7 +39,8 @@ function onMentionSearch(query: string) {
   mentionItems.value = conversationMentionItems(query);
 }
 
-function onChannelSend() {
+async function onChannelSend() {
+  await conversationSync.sendInitialMessage(channelDraft.value);
   channelDraft.value = emptyDoc();
 }
 
@@ -101,7 +111,9 @@ function onAction(id: ComposerActionId) {
 <template>
   <ConversationSurface>
     <template #header>
-      <ChannelHeader :channel="channelHeader" />
+      <div class="flex h-full w-full items-center px-2">
+        <TitleEditor v-model="conversationTitle" placeholder="Untitled" editable />
+      </div>
     </template>
     <template #messages>
       <ConversationTimeline

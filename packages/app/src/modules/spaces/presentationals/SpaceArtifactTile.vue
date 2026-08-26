@@ -10,17 +10,21 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@denser/design-system";
-import { FileTextIcon } from "@lucide/vue";
+import { FileTextIcon, MessageSquareIcon } from "@lucide/vue";
 import { computed } from "vue";
 import type { SpaceGalleryArtifactAction } from "@/modules/spaces/types";
-import { documentDisplayTitle } from "@/features/document/lib/document-content";
+import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 
 const props = defineProps<{
   title: string;
   kind: ArtifactKind;
 }>();
 
-const displayTitle = computed(() => documentDisplayTitle(props.title));
+const displayTitle = computed(() => artifactDisplayTitle(props.title));
+
+const tileIcon = computed(() =>
+  props.kind === "conversation" ? MessageSquareIcon : FileTextIcon,
+);
 
 const emit = defineEmits<{
   open: [];
@@ -57,7 +61,7 @@ function onAction(action: SpaceGalleryArtifactAction) {
         >
           <CardContent class="flex h-full flex-col text-muted-foreground group-hover:text-secondary-foreground">
             <div class="flex flex-1 items-center justify-center">
-              <FileTextIcon class="size-9" aria-hidden="true" />
+              <component :is="tileIcon" class="size-9" aria-hidden="true" />
             </div>
             <p class="truncate text-sm font-medium">{{ displayTitle }}</p>
           </CardContent>
@@ -68,8 +72,10 @@ function onAction(action: SpaceGalleryArtifactAction) {
     <ContextMenuContent>
       <ContextMenuItem @select="onAction('open')">Open</ContextMenuItem>
       <ContextMenuItem @select="onAction('rename')">Rename</ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem @select="onAction('duplicate')">Duplicate</ContextMenuItem>
+      <template v-if="kind === 'document'">
+        <ContextMenuSeparator />
+        <ContextMenuItem @select="onAction('duplicate')">Duplicate</ContextMenuItem>
+      </template>
       <ContextMenuSeparator />
       <ContextMenuItem variant="destructive" @select="onAction('delete')">
         Delete

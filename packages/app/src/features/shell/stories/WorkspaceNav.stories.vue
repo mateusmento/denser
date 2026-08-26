@@ -24,26 +24,30 @@ const { Story } = defineMeta({
 
 const readyView: WorkspaceNavView = {
   state: "ready",
-  rootSpaces: [
-    {
-      id: SEED_SPACE_ACME,
-      label: "Acme",
-      icon: "briefcase",
-      to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
-      isActive: true,
-    },
-  ],
-  rootDocuments: [
-    {
-      id: SEED_ARTIFACT_PERSONAL_NOTES,
-      label: "Personal notes",
-      to: { name: "document", params: { documentId: SEED_ARTIFACT_PERSONAL_NOTES } },
-      isActive: false,
-    },
-  ],
-  context: {
-    title: "Acme",
-    spaces: [
+  homeSection: {
+    label: "Home",
+    scopeSpaceId: null,
+    items: [
+      {
+        id: SEED_SPACE_ACME,
+        label: "Acme",
+        icon: "briefcase",
+        to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
+        isActive: true,
+      },
+      {
+        id: SEED_ARTIFACT_PERSONAL_NOTES,
+        label: "Personal notes",
+        artifactKind: "document",
+        to: { name: "document", params: { documentId: SEED_ARTIFACT_PERSONAL_NOTES } },
+        isActive: false,
+      },
+    ],
+  },
+  inSpaceSection: {
+    label: "In Acme",
+    scopeSpaceId: SEED_SPACE_ACME,
+    items: [
       {
         id: SEED_SPACE_ENGINEERING,
         label: "Engineering",
@@ -52,7 +56,6 @@ const readyView: WorkspaceNavView = {
         isActive: false,
       },
     ],
-    documents: [],
   },
 };
 </script>
@@ -69,11 +72,10 @@ const readyView: WorkspaceNavView = {
         <WorkspaceNav
           :view="readyView"
           :is-home-active="false"
-          @create-space="action('createSpace')()"
-          @create-document="action('createDocument')()"
+          @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"
           @space-action="(kind, link) => action('spaceAction')(kind, link)"
-          @document-action="(kind, link) => action('documentAction')(kind, link)"
+          @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
         />
       </Sidebar>
       <SidebarInset class="p-6">

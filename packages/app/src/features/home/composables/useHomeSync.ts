@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
-import { openNewDocumentRoute } from "@/features/document/lib/routes";
 import { useLiveSpacesInWindow } from "@/modules/spaces";
 import { artifactsCollection, spacesCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
@@ -49,9 +48,6 @@ export function useHomeSync() {
     artifacts,
     reload: () => homeQuery.refetch(),
     createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
-    createDocument: () => openNewDocumentRoute(router),
     openSpace: (spaceId: string) => router.push({ name: "space", params: { spaceId } }),
-    openDocument: (artifactId: string) =>
-      router.push({ name: "document", params: { documentId: artifactId } }),
   };
 }

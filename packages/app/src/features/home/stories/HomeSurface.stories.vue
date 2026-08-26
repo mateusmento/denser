@@ -38,8 +38,7 @@ const content: HomeContentView = {
     <HomeSurface
       :view="readyView"
       :content="content"
-      @create-space="action('createSpace')()"
-      @create-document="action('createDocument')()"
+      @create="action('create')($event)"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
       @space-action="(kind, space) => action('spaceAction')(kind, space)"
