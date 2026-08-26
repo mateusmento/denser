@@ -7,7 +7,7 @@ export function useSpaceGeneralActions(spaceId: ReadonlyRefOrGetter<SpaceId | un
 
   const { generalView, updateGeneral } = useSpaceSync(id);
 
-  async function onSave(input: { title: string; icon: SpaceIcon | null }) {
+  async function onSave(input: { title: string; icon: SpaceIcon }) {
     await updateGeneral(input);
   }
 

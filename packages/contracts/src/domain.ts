@@ -32,8 +32,10 @@ export type AssignableSpaceRole = z.infer<typeof AssignableSpaceRole>;
 export const ArtifactKind = z.enum(["document"]);
 export type ArtifactKind = z.infer<typeof ArtifactKind>;
 
+export const DEFAULT_SPACE_ICON = "folder" as const;
+
 export const SpaceIcon = z.enum([
-  "folder",
+  DEFAULT_SPACE_ICON,
   "briefcase",
   "rocket",
   "heart",

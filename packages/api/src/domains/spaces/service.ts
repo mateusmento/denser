@@ -1,10 +1,11 @@
-import type {
-  AddSpaceMemberInput,
-  CreateSpaceInput,
-  PatchSpaceInput,
-  SpaceIcon,
-  SpaceId,
-  UserId,
+import {
+  DEFAULT_SPACE_ICON,
+  type AddSpaceMemberInput,
+  type CreateSpaceInput,
+  type PatchSpaceInput,
+  type SpaceIcon,
+  type SpaceId,
+  type UserId,
 } from "@denser/contracts";
 import {
   canAccessSpace,
@@ -186,7 +187,7 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
 
   const updated = await updateSpace(spaceId, {
     ...(input.title !== undefined ? { title: input.title } : {}),
-    ...(input.icon !== undefined ? { icon: input.icon } : {}),
+    ...(input.icon !== undefined ? { icon: input.icon ?? DEFAULT_SPACE_ICON } : {}),
     ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
   });
 

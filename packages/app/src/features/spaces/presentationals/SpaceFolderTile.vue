@@ -66,6 +66,7 @@ function onAction(action: SpaceGallerySpaceAction) {
     <ContextMenuContent>
       <ContextMenuItem @select="onAction('open')">Open</ContextMenuItem>
       <ContextMenuItem @select="onAction('rename')">Rename</ContextMenuItem>
+      <ContextMenuItem @select="onAction('openSettings')">Space settings</ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem variant="destructive" @select="onAction('delete')">Delete</ContextMenuItem>
     </ContextMenuContent>

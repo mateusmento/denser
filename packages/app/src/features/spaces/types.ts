@@ -49,7 +49,7 @@ export type SpaceMembersView = {
 
 export type SpaceGallerySpace = Pick<SpaceSummary, "id" | "title" | "icon" | "parentSpaceId">;
 
-export type SpaceGallerySpaceAction = "open" | "rename" | "delete";
+export type SpaceGallerySpaceAction = "open" | "rename" | "openSettings" | "delete";
 
 export type SpaceGalleryArtifact = Pick<ArtifactSummary, "id" | "title" | "kind" | "version" | "spaceId">;
 

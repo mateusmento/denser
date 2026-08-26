@@ -2,7 +2,7 @@
 import type { SpaceIcon } from "@denser/contracts";
 import { Button, Input, Label, cn } from "@denser/design-system";
 import { computed, ref, watch } from "vue";
-import { SPACE_ICON_OPTIONS } from "../lib/space-icons";
+import { SPACE_ICON_OPTIONS, DEFAULT_SPACE_ICON } from "../lib/space-icons";
 import type { SpaceGeneralView } from "../types";
 
 const props = defineProps<{
@@ -10,27 +10,29 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  save: [input: { title: string; icon: SpaceIcon | null }];
+  save: [input: { title: string; icon: SpaceIcon }];
 }>();
 
 const title = ref(props.view.title);
-const icon = ref<SpaceIcon | null>(props.view.icon);
+const icon = ref<SpaceIcon>(props.view.icon ?? DEFAULT_SPACE_ICON);
 
 watch(
   () => props.view,
   (view) => {
     title.value = view.title;
-    icon.value = view.icon;
+    icon.value = view.icon ?? DEFAULT_SPACE_ICON;
   },
   { deep: true },
 );
 
 const isDirty = computed(
-  () => title.value.trim() !== props.view.title || icon.value !== props.view.icon,
+  () =>
+    title.value.trim() !== props.view.title ||
+    icon.value !== (props.view.icon ?? DEFAULT_SPACE_ICON),
 );
 
 function selectIcon(next: SpaceIcon) {
-  icon.value = icon.value === next ? null : next;
+  icon.value = icon.value === next ? DEFAULT_SPACE_ICON : next;
 }
 
 function onSave() {
@@ -81,7 +83,7 @@ function onSave() {
           <span>{{ option.label }}</span>
         </button>
       </div>
-      <p class="text-xs text-muted-foreground">Select an icon, or tap again to use the default folder.</p>
+      <p class="text-xs text-muted-foreground">Select an icon, or tap again to reset to the folder.</p>
     </div>
 
     <Button

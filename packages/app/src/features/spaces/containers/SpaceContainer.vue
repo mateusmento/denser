@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { SpaceId } from "@denser/contracts";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { prompt } from "@/lib/dialog";
 import { useArtifactCommands } from "../composables/useArtifactCommands";
 import { useSpaceCommands } from "../composables/useSpaceCommands";
 import { useSpaceSync } from "../composables/useSpaceSync";
+import SpaceSettingsContainer from "./SpaceSettingsContainer.vue";
 import type {
   SpaceGalleryArtifact,
   SpaceGalleryArtifactAction,
@@ -22,6 +23,10 @@ const { view, content, backLink, reload, createSpace, createDocument, openSpace,
 const { renameSpaceWithDialog, deleteSpace } = useSpaceCommands();
 const { renameArtifactWithDialog, duplicateArtifact, deleteArtifact } = useArtifactCommands();
 
+const settingsOpen = ref(false);
+const settingsSpaceId = ref<SpaceId | null>(null);
+const settingsTitle = ref("");
+
 async function onCreateSpace() {
   const title = await prompt({
     title: "New space",
@@ -34,6 +39,12 @@ async function onCreateSpace() {
 }
 
 async function onSpaceAction(action: SpaceGallerySpaceAction, space: SpaceGallerySpace) {
+  if (action === "openSettings") {
+    settingsSpaceId.value = space.id;
+    settingsTitle.value = space.title;
+    settingsOpen.value = true;
+    return;
+  }
   if (action === "open") {
     await openSpace(space.id);
     return;
@@ -78,5 +89,12 @@ async function onArtifactAction(action: SpaceGalleryArtifactAction, artifact: Sp
     @open-artifact="openDocument"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
+  />
+
+  <SpaceSettingsContainer
+    v-if="settingsSpaceId"
+    v-model:open="settingsOpen"
+    :space-id="settingsSpaceId"
+    :title="settingsTitle"
   />
 </template>

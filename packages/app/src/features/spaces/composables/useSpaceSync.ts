@@ -166,7 +166,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     createDocument,
     addMember: (username: string) => addMemberMutation.mutateAsync(username),
     removeMember: (memberUserId: UserId) => removeMemberMutation.mutateAsync(memberUserId),
-    updateGeneral: (input: { title: string; icon: SpaceIcon | null }) =>
+    updateGeneral: (input: { title: string; icon: SpaceIcon }) =>
       patchGeneralMutation.mutateAsync(input),
     updateVisibility: (visibility: SpaceVisibility) =>
       patchVisibilityMutation.mutateAsync(visibility),

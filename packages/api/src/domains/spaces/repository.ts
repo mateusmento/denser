@@ -1,4 +1,4 @@
-import type { SpaceIcon, SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
+import { DEFAULT_SPACE_ICON, type SpaceIcon, type SpaceId, type SpaceVisibility, type UserId } from "@denser/contracts";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
@@ -34,6 +34,7 @@ export async function insertRootSpace(input: {
     .insert(space)
     .values({
       title: input.title,
+      icon: DEFAULT_SPACE_ICON,
       visibility: "private",
       createdBy: input.createdBy,
     })
@@ -57,6 +58,7 @@ export async function insertNestedSpace(input: {
     .insert(space)
     .values({
       title: input.title,
+      icon: DEFAULT_SPACE_ICON,
       parentSpaceId: input.parentSpaceId,
       rootSpaceId: input.rootSpaceId,
       visibility: input.visibility ?? "public",

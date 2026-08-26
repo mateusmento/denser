@@ -1,4 +1,4 @@
-import type { SpaceId, UserId } from "@denser/contracts";
+import { DEFAULT_SPACE_ICON, type SpaceId, type UserId } from "@denser/contracts";
 import { sql } from "drizzle-orm";
 import { check, index, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth.js";
@@ -15,7 +15,7 @@ export const space = pgTable(
     parentSpaceId: uuid("parent_space_id").$type<SpaceId>(),
     rootSpaceId: uuid("root_space_id").$type<SpaceId>(),
     visibility: spaceVisibilityEnum("visibility").notNull().default("public"),
-    icon: text("icon"),
+    icon: text("icon").default(DEFAULT_SPACE_ICON),
     createdBy: uuid("created_by")
       .$type<UserId>()
       .notNull()

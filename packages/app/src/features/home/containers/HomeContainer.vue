@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import type { SpaceId } from "@denser/contracts";
+import { computed, ref } from "vue";
 import { useArtifactCommands } from "@/features/spaces/composables/useArtifactCommands";
+import SpaceSettingsContainer from "@/features/spaces/containers/SpaceSettingsContainer.vue";
 import { useSpaceCommands } from "@/features/spaces/composables/useSpaceCommands";
 import type { SpaceGalleryArtifact, SpaceGalleryArtifactAction, SpaceGallerySpace, SpaceGallerySpaceAction } from "@/features/spaces/types";
 import { prompt } from "@/lib/dialog";
@@ -11,6 +13,10 @@ const { view, spaces, artifacts, reload, createSpace, createDocument, openSpace,
   useHomeSync();
 const { renameSpaceWithDialog, deleteSpace } = useSpaceCommands();
 const { renameArtifactWithDialog, duplicateArtifact, deleteArtifact } = useArtifactCommands();
+
+const settingsOpen = ref(false);
+const settingsSpaceId = ref<SpaceId | null>(null);
+const settingsTitle = ref("");
 
 const content = computed(() => {
   if (view.value.state !== "ready") return undefined;
@@ -32,6 +38,12 @@ async function onCreateSpace() {
 }
 
 async function onSpaceAction(action: SpaceGallerySpaceAction, space: SpaceGallerySpace) {
+  if (action === "openSettings") {
+    settingsSpaceId.value = space.id;
+    settingsTitle.value = space.title;
+    settingsOpen.value = true;
+    return;
+  }
   if (action === "open") {
     await openSpace(space.id);
     return;
@@ -75,5 +87,12 @@ async function onArtifactAction(action: SpaceGalleryArtifactAction, artifact: Sp
     @open-artifact="openDocument"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
+  />
+
+  <SpaceSettingsContainer
+    v-if="settingsSpaceId"
+    v-model:open="settingsOpen"
+    :space-id="settingsSpaceId"
+    :title="settingsTitle"
   />
 </template>

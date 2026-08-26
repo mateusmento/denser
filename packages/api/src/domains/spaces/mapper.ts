@@ -1,4 +1,4 @@
-import { SpaceIcon, type SpaceMember, type SpaceSummary } from "@denser/contracts";
+import { SpaceIcon, DEFAULT_SPACE_ICON, type SpaceMember, type SpaceSummary } from "@denser/contracts";
 import type { space } from "../../db/schema/space.js";
 import type { SpaceMemberRow } from "./membership-repository.js";
 
@@ -6,11 +6,16 @@ function toIso(value: Date): string {
   return value.toISOString();
 }
 
+function toSpaceIcon(value: string | null | undefined): SpaceIcon {
+  const parsed = SpaceIcon.safeParse(value);
+  return parsed.success ? parsed.data : DEFAULT_SPACE_ICON;
+}
+
 export function toSpaceSummary(row: typeof space.$inferSelect): SpaceSummary {
   return {
     id: row.id,
     title: row.title,
-    icon: row.icon ? (SpaceIcon.safeParse(row.icon).success ? (row.icon as SpaceIcon) : null) : null,
+    icon: toSpaceIcon(row.icon),
     parentSpaceId: row.parentSpaceId,
     rootSpaceId: row.rootSpaceId,
     visibility: row.visibility,
