@@ -66,7 +66,7 @@ const renamePlaceholder = computed(() =>
 );
 
 const renameButtonClass = cn(
-  "gap-2 ring-2 ring-ring ring-offset-2 ring-offset-sidebar bg-",
+  "gap-2 ring-2 ring-ring ring-offset-2 ring-offset-sidebar",
 );
 
 function onSpaceAction(action: WorkspaceNavSpaceAction) {
@@ -105,6 +105,7 @@ function cancelRename() {
         <SidebarMenuButton
           v-if="isRenaming"
           as="div"
+          size="sm"
           :is-active="link.isActive"
           :class="renameButtonClass"
           data-active="true"
@@ -145,7 +146,7 @@ function cancelRename() {
           </div>
         </SidebarMenuButton>
 
-        <SidebarMenuButton v-else as-child :is-active="link.isActive" :tooltip="displayLabel">
+        <SidebarMenuButton v-else as-child :is-active="link.isActive" :tooltip="displayLabel" size="sm">
           <RouterLink :to="link.to">
             <component :is="displayIcon" />
             <span>{{ displayLabel }}</span>

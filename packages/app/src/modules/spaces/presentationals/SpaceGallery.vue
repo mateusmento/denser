@@ -22,7 +22,7 @@ const emit = defineEmits<{
   artifactAction: [action: SpaceGalleryArtifactAction, artifact: SpaceGalleryArtifact];
 }>();
 
-const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3";
+const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3";
 </script>
 
 <template>

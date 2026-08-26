@@ -44,7 +44,7 @@ const emit = defineEmits<{
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton as-child :is-active="isHomeActive" tooltip="Home">
+            <SidebarMenuButton as-child :is-active="isHomeActive" tooltip="Home" size="sm">
               <RouterLink to="/">
                 <HomeIcon />
                 <span>Home</span>

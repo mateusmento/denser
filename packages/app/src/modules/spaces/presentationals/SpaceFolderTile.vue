@@ -36,7 +36,7 @@ function onAction(action: SpaceGallerySpaceAction) {
         data-slot="space-folder-tile"
         :class="
           cn(
-            'group w-full rounded-[min(var(--radius-4xl),24px)] text-left',
+            'group w-full rounded-xl text-left',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )
         "
@@ -46,7 +46,7 @@ function onAction(action: SpaceGallerySpaceAction) {
           size="sm"
           :class="
             cn(
-              'aspect-9/3 w-full border-border transition-colors rounded-2xl cursor-pointer',
+              'h-10 sm:h-12 w-full border-border transition-colors rounded-xl cursor-pointer',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
             )
           "
@@ -54,7 +54,7 @@ function onAction(action: SpaceGallerySpaceAction) {
           <CardContent class="flex h-full items-center gap-3 text-muted-foreground group-hover:text-secondary-foreground">
             <component
               :is="resolveSpaceIcon(icon)"
-              class="size-8 shrink-0"
+              class="size-4 shrink-0"
               aria-hidden="true"
             />
             <p class="min-w-0 truncate text-sm font-medium">{{ title }}</p>

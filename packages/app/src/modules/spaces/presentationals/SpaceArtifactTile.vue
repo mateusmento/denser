@@ -44,7 +44,7 @@ function onAction(action: SpaceGalleryArtifactAction) {
         data-slot="space-artifact-tile"
         :class="
           cn(
-            'group w-full rounded-[min(var(--radius-4xl),24px)] text-left',
+            'group w-full rounded-xl text-left',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )
         "
@@ -54,14 +54,14 @@ function onAction(action: SpaceGalleryArtifactAction) {
           size="sm"
           :class="
             cn(
-              'aspect-square w-full border-border transition-colors rounded-2xl cursor-pointer',
+              'aspect-square w-full border-border transition-colors rounded-xl cursor-pointer',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
             )
           "
         >
           <CardContent class="flex h-full flex-col text-muted-foreground group-hover:text-secondary-foreground">
             <div class="flex flex-1 items-center justify-center">
-              <component :is="tileIcon" class="size-9" aria-hidden="true" />
+              <component :is="tileIcon" class="size-6" aria-hidden="true" />
             </div>
             <p class="truncate text-sm font-medium">{{ displayTitle }}</p>
           </CardContent>
