@@ -4,7 +4,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
 import { openNewDocumentRoute } from "@/features/document/lib/routes";
-import { useLiveSpacesInWindow } from "@/features/spaces/lib/live-spaces";
+import { useLiveSpacesInWindow } from "@/modules/spaces";
 import { artifactsCollection, spacesCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 

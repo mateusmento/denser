@@ -7,9 +7,10 @@ import { openNewDocumentRoute } from "@/features/document/lib/routes";
 import { artifactsCollection, spacesCollection, upsertInCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
-import { useLiveSpace, useLiveSpacesInWindow } from "../lib/live-spaces";
-import { applySpacePatch, invalidateSpaceProjections } from "../lib/sync-space-patch";
-import type { SpaceBackLink, SpaceContentView, SpaceGeneralView, SpaceMembersView } from "../types";
+import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
+import { applySpacePatch, invalidateSpaceProjections } from "@/modules/spaces";
+import type { SpaceGeneralView } from "@/modules/spaces";
+import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
 
 export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
   const id = toReadonlyRef(spaceId);

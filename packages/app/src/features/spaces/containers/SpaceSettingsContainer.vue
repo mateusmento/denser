@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { SpaceId } from "@denser/contracts";
 import { computed, ref } from "vue";
+import { SpaceGeneralPanel } from "@/modules/spaces";
 import { useSpaceSync } from "../composables/useSpaceSync";
-import SpaceGeneralContainer from "./SpaceGeneralContainer.vue";
 import SpaceMembersContainer from "./SpaceMembersContainer.vue";
 import SpaceSettingsDialog from "../presentationals/SpaceSettingsDialog.vue";
 import type { SpaceSettingsSection } from "../types";
@@ -15,7 +15,7 @@ const props = defineProps<{
 }>();
 
 const spaceId = computed(() => props.spaceId);
-const { content } = useSpaceSync(spaceId);
+const { content, generalView, updateGeneral } = useSpaceSync(spaceId);
 
 const activeSection = ref<SpaceSettingsSection>("general");
 
@@ -29,7 +29,12 @@ const dialogTitle = computed(() => content.value?.space.title ?? props.title);
     :active-section="activeSection"
     @update:active-section="activeSection = $event"
   >
-    <SpaceGeneralContainer v-if="activeSection === 'general'" :space-id="spaceId" />
+    <SpaceGeneralPanel
+      v-if="activeSection === 'general'"
+      :view="generalView"
+      :loading="!generalView"
+      @save="updateGeneral"
+    />
     <SpaceMembersContainer v-else-if="activeSection === 'members'" :space-id="spaceId" />
   </SpaceSettingsDialog>
 </template>

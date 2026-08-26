@@ -10,7 +10,7 @@ import { action } from "storybook/actions";
 import SpaceGallery from "../presentationals/SpaceGallery.vue";
 
 const { Story } = defineMeta({
-  title: "features/spaces/SpaceGallery",
+  title: "modules/spaces/SpaceGallery",
   component: SpaceGallery,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
@@ -58,6 +58,8 @@ const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({
       :artifacts="artifacts"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
+      @space-action="(kind, space) => action('spaceAction')(kind, space)"
+      @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
     />
   </Story>
 
@@ -67,6 +69,8 @@ const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({
       :artifacts="[]"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
+      @space-action="(kind, space) => action('spaceAction')(kind, space)"
+      @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
     />
   </Story>
 
@@ -80,6 +84,8 @@ const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({
       :artifacts="manyArtifacts"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
+      @space-action="(kind, space) => action('spaceAction')(kind, space)"
+      @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
     />
   </Story>
 </template>

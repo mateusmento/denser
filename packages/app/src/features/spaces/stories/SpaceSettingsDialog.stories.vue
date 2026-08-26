@@ -5,11 +5,13 @@ import {
   SEED_USER_BOB,
 } from "@denser/contracts";
 import { Button } from "@denser/design-system";
+import { SpaceGeneralPanel } from "@/modules/spaces";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import SpaceMembersPanel from "../presentationals/SpaceMembersPanel.vue";
 import SpaceSettingsDialog from "../presentationals/SpaceSettingsDialog.vue";
 import type { SpaceMembersView, SpaceSettingsSection } from "../types";
+import type { SpaceGeneralView } from "@/modules/spaces";
 
 const { Story } = defineMeta({
   title: "features/spaces/SpaceSettingsDialog",
@@ -47,9 +49,27 @@ const membersView: SpaceMembersView = {
   isAddingMember: false,
   removingMemberId: null,
 };
+
+const generalView: SpaceGeneralView = {
+  title: "Acme",
+  icon: "briefcase",
+  canManage: true,
+  isSaving: false,
+};
 </script>
 
 <template>
+  <Story as-child name="General">
+    <Button @click="open = true">Open settings</Button>
+    <SpaceSettingsDialog
+      v-model:open="open"
+      title="Acme"
+      active-section="general"
+    >
+      <SpaceGeneralPanel :view="generalView" @save="action('save')($event)" />
+    </SpaceSettingsDialog>
+  </Story>
+
   <Story as-child name="Members">
     <Button @click="open = true">Open settings</Button>
     <SpaceSettingsDialog

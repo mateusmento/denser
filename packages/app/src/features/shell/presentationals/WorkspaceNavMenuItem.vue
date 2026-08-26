@@ -14,7 +14,7 @@ import {
 import { CheckIcon, FileTextIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
-import { resolveSpaceIcon } from "@/features/spaces/lib/space-icons";
+import { resolveSpaceIcon } from "@/modules/spaces";
 import { documentDisplayTitle } from "@/features/document/lib/document-content";
 import type { WorkspaceNavDocumentAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
 

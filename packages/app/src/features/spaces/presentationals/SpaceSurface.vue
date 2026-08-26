@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import type { SpaceBackLink, SpaceContentView, SpaceSurfaceView } from "../types";
+import type {
+  SpaceGalleryArtifact,
+  SpaceGalleryArtifactAction,
+  SpaceGallerySpace,
+  SpaceGallerySpaceAction,
+} from "@/modules/spaces";
 import { Badge, Button, Skeleton } from "@denser/design-system";
 import { ChevronLeftIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
-import type { SpaceBackLink, SpaceContentView, SpaceGalleryArtifact, SpaceGalleryArtifactAction, SpaceGallerySpace, SpaceGallerySpaceAction, SpaceSurfaceView } from "../types";
-import SpaceGallery from "./SpaceGallery.vue";
+import { SpaceGallery } from "@/modules/spaces";
 
 defineProps<{
   view: SpaceSurfaceView;

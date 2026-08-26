@@ -1,4 +1,4 @@
-import type { SpaceGalleryArtifact, SpaceGallerySpace } from "@/features/spaces/types";
+import type { SpaceGalleryArtifact, SpaceGallerySpace } from "@/modules/spaces";
 
 export type HomeSurfaceState = "loading" | "ready" | "error";
 

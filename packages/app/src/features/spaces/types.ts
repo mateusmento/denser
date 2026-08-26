@@ -1,4 +1,4 @@
-import type { ArtifactSummary, SpaceIcon, SpaceMember, SpaceSummary } from "@denser/contracts";
+import type { ArtifactSummary, SpaceMember, SpaceSummary } from "@denser/contracts";
 
 export type SpaceSurfaceState = "loading" | "ready" | "error" | "forbidden";
 
@@ -30,13 +30,6 @@ export type SpaceDetailView = SpaceContentView & {
 
 export type SpaceSettingsSection = "general" | "members";
 
-export type SpaceGeneralView = {
-  title: string;
-  icon: SpaceIcon | null;
-  canManage: boolean;
-  isSaving: boolean;
-};
-
 export type SpaceMembersView = {
   members: readonly SpaceMember[];
   canManage: boolean;
@@ -46,11 +39,3 @@ export type SpaceMembersView = {
   isAddingMember: boolean;
   removingMemberId: string | null;
 };
-
-export type SpaceGallerySpace = Pick<SpaceSummary, "id" | "title" | "icon" | "parentSpaceId">;
-
-export type SpaceGallerySpaceAction = "open" | "rename" | "openSettings" | "delete";
-
-export type SpaceGalleryArtifact = Pick<ArtifactSummary, "id" | "title" | "kind" | "version" | "spaceId">;
-
-export type SpaceGalleryArtifactAction = "open" | "rename" | "duplicate" | "delete";

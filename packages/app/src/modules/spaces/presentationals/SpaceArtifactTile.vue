@@ -12,7 +12,7 @@ import {
 } from "@denser/design-system";
 import { FileTextIcon } from "@lucide/vue";
 import { computed } from "vue";
-import type { SpaceGalleryArtifactAction } from "../types";
+import type { SpaceGalleryArtifactAction } from "@/modules/spaces/types";
 import { documentDisplayTitle } from "@/features/document/lib/document-content";
 
 const props = defineProps<{

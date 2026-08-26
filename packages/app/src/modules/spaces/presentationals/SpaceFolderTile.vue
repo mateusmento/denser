@@ -10,8 +10,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@denser/design-system";
-import { resolveSpaceIcon } from "../lib/space-icons";
-import type { SpaceGallerySpaceAction } from "../types";
+import { resolveSpaceIcon } from "@/modules/spaces/lib/space-icons";
+import type { SpaceGallerySpaceAction } from "@/modules/spaces/types";
 
 defineProps<{
   title: string;

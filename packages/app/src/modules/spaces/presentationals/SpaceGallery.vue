@@ -7,7 +7,7 @@ import type {
   SpaceGalleryArtifactAction,
   SpaceGallerySpace,
   SpaceGallerySpaceAction,
-} from "../types";
+} from "@/modules/spaces/types";
 
 defineProps<{
   childSpaces: readonly SpaceGallerySpace[];

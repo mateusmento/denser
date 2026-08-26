@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Button, Skeleton } from "@denser/design-system";
-import SpaceGallery from "@/features/spaces/presentationals/SpaceGallery.vue";
-import type { ArtifactSummary } from "@denser/contracts";
-import type { SpaceGalleryArtifact, SpaceGalleryArtifactAction, SpaceGallerySpace, SpaceGallerySpaceAction } from "@/features/spaces/types";
+import {
+  SpaceGallery,
+  type SpaceGalleryArtifact,
+  type SpaceGalleryArtifactAction,
+  type SpaceGallerySpace,
+  type SpaceGallerySpaceAction,
+} from "@/modules/spaces";
 import type { HomeContentView, HomeSurfaceView } from "../types";
 
 defineProps<{

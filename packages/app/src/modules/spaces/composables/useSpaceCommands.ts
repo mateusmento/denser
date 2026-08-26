@@ -1,9 +1,8 @@
-import { apiClient } from "@/lib/api";
-import { removeFromCollection, spacesCollection } from "@/lib/db";
-import { confirm, prompt } from "@/lib/dialog";
 import type { SpaceId, SpaceSummary } from "@denser/contracts";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useRoute, useRouter } from "vue-router";
+import { apiClient } from "@/lib/api";
+import { removeFromCollection, spacesCollection } from "@/lib/db";
 import { applySpacePatch, invalidateSpaceProjections } from "../lib/sync-space-patch";
 
 type SpaceRef = Pick<SpaceSummary, "id" | "title" | "parentSpaceId">;
@@ -23,20 +22,6 @@ export function useSpaceCommands() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const route = useRoute();
-
-  async function renameSpaceWithDialog(
-    space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
-  ) {
-    const target = resolveSpaceRef(space);
-    const title = await prompt({
-      title: "Rename space",
-      label: "Name",
-      defaultValue: target.title,
-      confirmLabel: "Save",
-    });
-    if (!title?.trim() || title.trim() === target.title) return;
-    await renameSpace(target, title.trim());
-  }
 
   async function renameSpace(
     space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
@@ -58,13 +43,6 @@ export function useSpaceCommands() {
     space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
   ) {
     const target = resolveSpaceRef(space);
-    const confirmed = await confirm({
-      title: `Delete “${target.title}”?`,
-      description: "This space and everything inside it will be permanently deleted.",
-      confirmLabel: "Delete",
-      destructive: true,
-    });
-    if (!confirmed) return;
 
     await apiClient.deleteSpace(target.id);
     removeFromCollection(spacesCollection, target.id);
@@ -83,7 +61,6 @@ export function useSpaceCommands() {
   return {
     openSpace,
     renameSpace,
-    renameSpaceWithDialog,
     deleteSpace,
   };
 }

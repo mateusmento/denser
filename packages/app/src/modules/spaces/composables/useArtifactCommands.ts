@@ -3,9 +3,7 @@ import { ApiConflictError } from "@denser/api-client";
 import type { QueryClient } from "@tanstack/vue-query";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useRoute, useRouter } from "vue-router";
-import { documentDisplayTitle } from "@/features/document/lib/document-content";
 import { apiClient } from "@/lib/api";
-import { confirm, prompt } from "@/lib/dialog";
 import {
   artifactsCollection,
   documentsCollection,
@@ -67,21 +65,6 @@ export function useArtifactCommands() {
   const router = useRouter();
   const route = useRoute();
 
-  async function renameArtifactWithDialog(
-    artifact: Pick<ArtifactSummary, "id" | "title"> &
-      Partial<Pick<ArtifactSummary, "version" | "spaceId">>,
-  ) {
-    const target = resolveArtifactRef(artifact);
-    const title = await prompt({
-      title: "Rename document",
-      label: "Name",
-      defaultValue: target.title,
-      confirmLabel: "Save",
-    });
-    if (!title?.trim() || title.trim() === target.title) return;
-    await renameArtifact(target, title.trim());
-  }
-
   async function renameArtifact(
     artifact: Pick<ArtifactSummary, "id" | "title"> &
       Partial<Pick<ArtifactSummary, "version" | "spaceId">>,
@@ -128,13 +111,6 @@ export function useArtifactCommands() {
       Partial<Pick<ArtifactSummary, "spaceId">>,
   ) {
     const target = resolveArtifactRef(artifact);
-    const confirmed = await confirm({
-      title: `Delete “${documentDisplayTitle(target.title)}”?`,
-      description: "This document will be permanently deleted.",
-      confirmLabel: "Delete",
-      destructive: true,
-    });
-    if (!confirmed) return;
 
     await apiClient.deleteDocument(target.id);
     removeFromCollection(artifactsCollection, target.id);
@@ -154,7 +130,6 @@ export function useArtifactCommands() {
   return {
     openDocument,
     renameArtifact,
-    renameArtifactWithDialog,
     duplicateArtifact,
     deleteArtifact,
   };

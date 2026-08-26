@@ -42,6 +42,8 @@ const content: HomeContentView = {
       @create-document="action('createDocument')()"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
+      @space-action="(kind, space) => action('spaceAction')(kind, space)"
+      @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
       @retry="action('retry')()"
     />
   </Story>

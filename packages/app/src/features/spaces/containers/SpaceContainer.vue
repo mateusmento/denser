@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import type { SpaceId } from "@denser/contracts";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
+import {
+  useArtifactCommands,
+  useGalleryActions,
+  useSpaceCommands,
+  useSpaceSettingsHost,
+} from "@/modules/spaces";
 import { prompt } from "@/lib/dialog";
-import { useArtifactCommands } from "../composables/useArtifactCommands";
-import { useSpaceCommands } from "../composables/useSpaceCommands";
 import { useSpaceSync } from "../composables/useSpaceSync";
 import SpaceSettingsContainer from "./SpaceSettingsContainer.vue";
-import type {
-  SpaceGalleryArtifact,
-  SpaceGalleryArtifactAction,
-  SpaceGallerySpace,
-  SpaceGallerySpaceAction,
-} from "../types";
 import SpaceSurface from "../presentationals/SpaceSurface.vue";
 
 const route = useRoute();
@@ -20,12 +18,22 @@ const spaceId = computed(() => route.params.spaceId as SpaceId | undefined);
 
 const { view, content, backLink, reload, createSpace, createDocument, openSpace, openDocument } =
   useSpaceSync(spaceId);
-const { renameSpaceWithDialog, deleteSpace } = useSpaceCommands();
-const { renameArtifactWithDialog, duplicateArtifact, deleteArtifact } = useArtifactCommands();
+const spaceCommands = useSpaceCommands();
+const artifactCommands = useArtifactCommands();
+const { settingsOpen, settingsSpaceId, settingsTitle, openSettings } = useSpaceSettingsHost();
 
-const settingsOpen = ref(false);
-const settingsSpaceId = ref<SpaceId | null>(null);
-const settingsTitle = ref("");
+const { onSpaceAction, onArtifactAction } = useGalleryActions(
+  {
+    openSpace,
+    openDocument,
+    renameSpace: spaceCommands.renameSpace,
+    deleteSpace: spaceCommands.deleteSpace,
+    renameArtifact: artifactCommands.renameArtifact,
+    deleteArtifact: artifactCommands.deleteArtifact,
+    duplicateArtifact: artifactCommands.duplicateArtifact,
+  },
+  { openSettings },
+);
 
 async function onCreateSpace() {
   const title = await prompt({
@@ -36,44 +44,6 @@ async function onCreateSpace() {
   });
   if (!title?.trim()) return;
   await createSpace(title.trim());
-}
-
-async function onSpaceAction(action: SpaceGallerySpaceAction, space: SpaceGallerySpace) {
-  if (action === "openSettings") {
-    settingsSpaceId.value = space.id;
-    settingsTitle.value = space.title;
-    settingsOpen.value = true;
-    return;
-  }
-  if (action === "open") {
-    await openSpace(space.id);
-    return;
-  }
-  if (action === "rename") {
-    await renameSpaceWithDialog(space);
-    return;
-  }
-  if (action === "delete") {
-    await deleteSpace(space);
-  }
-}
-
-async function onArtifactAction(action: SpaceGalleryArtifactAction, artifact: SpaceGalleryArtifact) {
-  if (action === "open") {
-    await openDocument(artifact.id);
-    return;
-  }
-  if (action === "rename") {
-    await renameArtifactWithDialog(artifact);
-    return;
-  }
-  if (action === "duplicate") {
-    await duplicateArtifact(artifact);
-    return;
-  }
-  if (action === "delete") {
-    await deleteArtifact(artifact);
-  }
 }
 </script>
 

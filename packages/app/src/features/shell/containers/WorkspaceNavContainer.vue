@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import type { ArtifactId, SpaceId } from "@denser/contracts";
 import { ref } from "vue";
-import { useArtifactCommands } from "@/features/spaces/composables/useArtifactCommands";
+import {
+  useArtifactCommands,
+  useSpaceCommands,
+  useSpaceSettingsHost,
+  useWorkspaceCommandPrompts,
+} from "@/modules/spaces";
 import SpaceSettingsContainer from "@/features/spaces/containers/SpaceSettingsContainer.vue";
-import { useSpaceCommands } from "@/features/spaces/composables/useSpaceCommands";
 import { prompt } from "@/lib/dialog";
 import { useWorkspaceNavSync } from "../composables/useWorkspaceNavSync";
 import type { WorkspaceNavDocumentAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
@@ -12,10 +16,9 @@ import WorkspaceNav from "../presentationals/WorkspaceNav.vue";
 const { view, isHomeActive, reload, createSpace, createDocument } = useWorkspaceNavSync();
 const { openSpace, renameSpace, deleteSpace } = useSpaceCommands();
 const { openDocument, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
+const prompts = useWorkspaceCommandPrompts();
+const { settingsOpen, settingsSpaceId, settingsTitle, openSettings } = useSpaceSettingsHost();
 
-const settingsOpen = ref(false);
-const settingsSpaceId = ref<SpaceId | null>(null);
-const settingsTitle = ref("");
 const renamingItemId = ref<string | null>(null);
 
 async function onCreateSpace() {
@@ -35,9 +38,7 @@ async function onCreateDocument() {
 
 function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) {
   if (action === "openSettings") {
-    settingsSpaceId.value = link.id as SpaceId;
-    settingsTitle.value = link.label;
-    settingsOpen.value = true;
+    openSettings({ id: link.id as SpaceId, title: link.label });
     return;
   }
 
@@ -52,7 +53,11 @@ function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) 
   }
 
   if (action === "delete") {
-    void deleteSpace({ id: link.id as SpaceId, title: link.label });
+    void (async () => {
+      if (await prompts.confirmSpaceDelete({ title: link.label })) {
+        await deleteSpace({ id: link.id as SpaceId, title: link.label, parentSpaceId: null });
+      }
+    })();
   }
 }
 
@@ -73,7 +78,11 @@ function onDocumentAction(action: WorkspaceNavDocumentAction, link: WorkspaceNav
   }
 
   if (action === "delete") {
-    void deleteArtifact({ id: link.id as ArtifactId, title: link.label });
+    void (async () => {
+      if (await prompts.confirmArtifactDelete({ title: link.label })) {
+        await deleteArtifact({ id: link.id as ArtifactId, title: link.label });
+      }
+    })();
   }
 }
 
