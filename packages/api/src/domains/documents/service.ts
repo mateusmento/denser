@@ -14,7 +14,7 @@ import { toDocumentView } from "./mapper.js";
 import * as documentRepository from "./repository.js";
 
 export async function createDocument(userId: UserId, input: CreateDocumentInput) {
-  const title = input.title ?? "Untitled";
+  const title = input.title ?? "";
   const body: TipTapDoc = input.body ?? EMPTY_TIPTAP_DOC;
 
   let spaceId: SpaceId | null = null;
@@ -117,4 +117,46 @@ export async function patchDocument(
   }
 
   return { ok: true as const, document: toDocumentView(updatedArtifact, updatedDocument) };
+}
+
+export async function duplicateDocument(userId: UserId, artifactId: ArtifactId) {
+  const artifactRow = await requireArtifactAccess(userId, artifactId);
+  if (!artifactRow || artifactRow.kind !== "document") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const documentRow = await documentRepository.findDocumentBody(artifactRow.id);
+  if (!documentRow) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const copyTitle = `${artifactRow.title} copy`;
+  const body = structuredClone(documentRow.body as TipTapDoc);
+
+  const copiedArtifact = await artifactRepository.insertDocumentArtifact({
+    title: copyTitle,
+    spaceId: artifactRow.spaceId,
+    rootSpaceId: artifactRow.rootSpaceId,
+    createdBy: userId,
+  });
+
+  const copiedDocument = await documentRepository.insertDocumentBody({
+    artifactId: copiedArtifact.id,
+    body,
+  });
+
+  return { ok: true as const, document: toDocumentView(copiedArtifact, copiedDocument) };
+}
+
+export async function deleteDocument(
+  userId: UserId,
+  artifactId: ArtifactId,
+): Promise<{ ok: true } | { ok: false; reason: "not_found" }> {
+  const artifactRow = await requireArtifactAccess(userId, artifactId);
+  if (!artifactRow || artifactRow.kind !== "document") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  await artifactRepository.deleteArtifactById(artifactId);
+  return { ok: true as const };
 }

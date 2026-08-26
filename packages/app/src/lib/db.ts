@@ -43,3 +43,12 @@ export function upsertMany<T extends { id: string }>(
     upsertInCollection(collection, item);
   }
 }
+
+export function removeFromCollection<T extends { id: string }>(
+  collection: Collection<T, T["id"]>,
+  id: T["id"],
+): void {
+  if (collection.has(id)) {
+    collection.delete(id);
+  }
+}

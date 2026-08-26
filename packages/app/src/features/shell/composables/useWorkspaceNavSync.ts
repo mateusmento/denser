@@ -1,8 +1,10 @@
-import type { ArtifactId, SpaceId } from "@denser/contracts";
+import type { ArtifactId, SpaceId, SpaceSummary } from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
+import { isNewDocumentRoute, openNewDocumentRoute } from "@/features/document/lib/routes";
+import { useLiveSpace, useLiveSpacesInWindow } from "@/features/spaces/lib/live-spaces";
 import {
   artifactsCollection,
   documentsCollection,
@@ -13,11 +15,15 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import type { WorkspaceNavLink, WorkspaceNavView } from "../types";
 
-function spaceLink(spaceId: SpaceId, title: string, isActive: boolean): WorkspaceNavLink {
+function spaceLink(
+  space: Pick<SpaceSummary, "id" | "title" | "icon">,
+  isActive: boolean,
+): WorkspaceNavLink {
   return {
-    id: spaceId,
-    label: title,
-    to: { name: "space", params: { spaceId } },
+    id: space.id,
+    label: space.title,
+    icon: space.icon,
+    to: { name: "space", params: { spaceId: space.id } },
     isActive,
   };
 }
@@ -37,7 +43,10 @@ export function useWorkspaceNavSync() {
   const queryClient = useQueryClient();
 
   const activeSpaceId = computed(() => route.params.spaceId as SpaceId | undefined);
-  const activeDocumentId = computed(() => route.params.documentId as ArtifactId | undefined);
+  const activeDocumentId = computed(() => {
+    const documentId = route.params.documentId as string | undefined;
+    return isNewDocumentRoute(documentId) ? undefined : (documentId as ArtifactId | undefined);
+  });
   const isHomeActive = computed(() => route.name === "home");
 
   const homeQuery = useQuery({
@@ -90,6 +99,15 @@ export function useWorkspaceNavSync() {
     () => routeSpaceQuery.data.value ?? documentSpaceQuery.data.value ?? null,
   );
 
+  const liveRootSpaces = useLiveSpacesInWindow(
+    computed(() => homeQuery.data.value?.spaces ?? []),
+  );
+  const liveContextChildSpaces = useLiveSpacesInWindow(
+    computed(() => contextDetail.value?.childSpaces ?? []),
+  );
+  const contextSpaceId = computed(() => contextDetail.value?.space.id);
+  const liveContextSpace = useLiveSpace(contextSpaceId);
+
   const view = computed((): WorkspaceNavView => {
     if (homeQuery.isLoading.value) {
       return { state: "loading", rootSpaces: [], rootDocuments: [] };
@@ -107,9 +125,7 @@ export function useWorkspaceNavSync() {
     const activeSpace = activeSpaceId.value;
     const activeDoc = activeDocumentId.value;
 
-    const rootSpaces = home.spaces.map((space) =>
-      spaceLink(space.id, space.title, activeSpace === space.id),
-    );
+    const rootSpaces = liveRootSpaces.value.map((space) => spaceLink(space, activeSpace === space.id));
 
     const rootDocuments = home.artifacts.map((artifact) =>
       documentLink(artifact.id, artifact.title, activeDoc === artifact.id),
@@ -118,9 +134,9 @@ export function useWorkspaceNavSync() {
     const detail = contextDetail.value;
     const context = detail
       ? {
-          title: detail.space.title,
-          spaces: detail.childSpaces.map((space) =>
-            spaceLink(space.id, space.title, activeSpace === space.id),
+          title: (liveContextSpace.value ?? detail.space).title,
+          spaces: liveContextChildSpaces.value.map((space) =>
+            spaceLink(space, activeSpace === space.id),
           ),
           documents: detail.artifacts.map((artifact) =>
             documentLink(artifact.id, artifact.title, activeDoc === artifact.id),
@@ -159,24 +175,13 @@ export function useWorkspaceNavSync() {
     },
   });
 
-  const createDocumentMutation = useMutation({
-    mutationFn: () => {
-      const spaceId = activeSpaceId.value ?? documentSpaceId.value;
-      return apiClient.createDocument(
-        spaceId ? { title: "Untitled", spaceId } : { title: "Untitled" },
-      );
-    },
-    onSuccess: async ({ document }) => {
-      reload();
-      await router.push({ name: "document", params: { documentId: document.id } });
-    },
-  });
+  const createDocument = () => openNewDocumentRoute(router);
 
   return {
     view,
     isHomeActive,
     reload,
     createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
-    createDocument: () => createDocumentMutation.mutateAsync(),
+    createDocument,
   };
 }

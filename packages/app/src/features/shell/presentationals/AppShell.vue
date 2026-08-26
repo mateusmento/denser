@@ -20,9 +20,11 @@ async function onSignOut() {
 </script>
 
 <template>
-  <SidebarProvider>
+  <SidebarProvider class="h-full">
     <Sidebar>
-      <SidebarHeader class="border-b border-sidebar-border px-3 py-2">
+      <SidebarHeader
+        class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+      >
         <RouterLink to="/" class="text-sm font-semibold tracking-tight">Denser</RouterLink>
       </SidebarHeader>
       <slot name="sidebar" />

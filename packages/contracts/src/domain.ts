@@ -32,9 +32,22 @@ export type AssignableSpaceRole = z.infer<typeof AssignableSpaceRole>;
 export const ArtifactKind = z.enum(["document"]);
 export type ArtifactKind = z.infer<typeof ArtifactKind>;
 
+export const SpaceIcon = z.enum([
+  "folder",
+  "briefcase",
+  "rocket",
+  "heart",
+  "star",
+  "code",
+  "users",
+  "book",
+]);
+export type SpaceIcon = z.infer<typeof SpaceIcon>;
+
 export const SpaceSummary = z.object({
   id: SpaceId,
   title: z.string(),
+  icon: SpaceIcon.nullable(),
   parentSpaceId: SpaceId.nullable(),
   rootSpaceId: SpaceId.nullable(),
   visibility: SpaceVisibility,
@@ -98,6 +111,8 @@ export const AddSpaceMemberResponse = z.object({
 export type AddSpaceMemberResponse = z.infer<typeof AddSpaceMemberResponse>;
 
 export const PatchSpaceInput = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  icon: SpaceIcon.nullable().optional(),
   visibility: SpaceVisibility.optional(),
 });
 export type PatchSpaceInput = z.infer<typeof PatchSpaceInput>;
@@ -120,7 +135,7 @@ export const CreateSpaceResponse = z.object({
 export type CreateSpaceResponse = z.infer<typeof CreateSpaceResponse>;
 
 export const CreateDocumentInput = z.object({
-  title: z.string().trim().min(1).max(200).optional(),
+  title: z.string().trim().max(200).optional(),
   spaceId: SpaceId.optional(),
   body: TipTapDoc.optional(),
 });
@@ -132,7 +147,7 @@ export const CreateDocumentResponse = z.object({
 export type CreateDocumentResponse = z.infer<typeof CreateDocumentResponse>;
 
 export const PatchDocumentInput = z.object({
-  title: z.string().trim().min(1).max(200).optional(),
+  title: z.string().trim().max(200).optional(),
   body: TipTapDoc.optional(),
   version: z.number().int().positive(),
 });

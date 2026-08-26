@@ -1,4 +1,4 @@
-import type { SpaceMember, SpaceSummary } from "@denser/contracts";
+import { SpaceIcon, type SpaceMember, type SpaceSummary } from "@denser/contracts";
 import type { space } from "../../db/schema/space.js";
 import type { SpaceMemberRow } from "./membership-repository.js";
 
@@ -10,6 +10,7 @@ export function toSpaceSummary(row: typeof space.$inferSelect): SpaceSummary {
   return {
     id: row.id,
     title: row.title,
+    icon: row.icon ? (SpaceIcon.safeParse(row.icon).success ? (row.icon as SpaceIcon) : null) : null,
     parentSpaceId: row.parentSpaceId,
     rootSpaceId: row.rootSpaceId,
     visibility: row.visibility,

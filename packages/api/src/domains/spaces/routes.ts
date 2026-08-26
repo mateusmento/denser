@@ -9,6 +9,7 @@ import { Hono } from "hono";
 import {
   addSpaceMember,
   createSpace,
+  deleteSpace,
   deleteSpaceMember,
   getSpaceDetail,
   patchSpace,
@@ -48,6 +49,20 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
       members: result.members,
       canManage: result.canManage,
     });
+  })
+  .delete("/spaces/:spaceId", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const spaceId = c.req.param("spaceId") as SpaceId;
+    const result = await deleteSpace(userId, spaceId);
+
+    if (!result.ok) {
+      if (result.reason === "forbidden") {
+        return c.json({ error: "Forbidden" }, 403);
+      }
+      return c.json({ error: "Space not found" }, 404);
+    }
+
+    return c.body(null, 204);
   })
   .patch("/spaces/:spaceId", zValidator("json", PatchSpaceInput), async (c) => {
     const userId = c.get("user").id as UserId;

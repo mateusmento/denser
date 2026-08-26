@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { SpaceContentView, SpaceSurfaceView } from "../types";
+import type { SpaceBackLink, SpaceContentView, SpaceSurfaceView } from "../types";
 import {
+  SEED_ARTIFACT_ONBOARDING_NOTES,
   SEED_SPACE_ACME,
+  SEED_SPACE_ENGINEERING,
   SEED_USER_ALICE,
 } from "@denser/contracts";
 import { defineMeta } from "sb-addon-vue-csf";
@@ -25,6 +27,7 @@ const content: SpaceContentView = {
   space: {
     id: SEED_SPACE_ACME,
     title: "Acme",
+    icon: "briefcase" as const,
     parentSpaceId: null,
     rootSpaceId: SEED_SPACE_ACME,
     visibility: "private",
@@ -32,8 +35,46 @@ const content: SpaceContentView = {
     createdAt: now,
     updatedAt: now,
   },
+  childSpaces: [
+    {
+      id: SEED_SPACE_ENGINEERING,
+      title: "Engineering",
+      icon: "code" as const,
+      parentSpaceId: SEED_SPACE_ACME,
+      rootSpaceId: SEED_SPACE_ACME,
+      visibility: "public",
+      createdBy: SEED_USER_ALICE,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  artifacts: [
+    {
+      id: SEED_ARTIFACT_ONBOARDING_NOTES,
+      title: "Onboarding notes",
+      kind: "document",
+      spaceId: SEED_SPACE_ACME,
+      rootSpaceId: SEED_SPACE_ACME,
+      createdBy: SEED_USER_ALICE,
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+};
+
+const rootBackLink: SpaceBackLink = { label: "Home", to: { name: "home" } };
+
+const nestedContent: SpaceContentView = {
+  ...content,
+  space: content.childSpaces[0]!,
   childSpaces: [],
   artifacts: [],
+};
+
+const nestedBackLink: SpaceBackLink = {
+  label: "Acme",
+  to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
 };
 </script>
 
@@ -42,8 +83,23 @@ const content: SpaceContentView = {
     <SpaceSurface
       :view="readyView"
       :content="content"
+      :back-link="rootBackLink"
       @create-space="action('createSpace')()"
       @create-document="action('createDocument')()"
+      @open-space="action('openSpace')($event)"
+      @open-artifact="action('openArtifact')($event)"
+      @retry="action('retry')()"
+    />
+  </Story>
+  <Story as-child name="Nested">
+    <SpaceSurface
+      :view="readyView"
+      :content="nestedContent"
+      :back-link="nestedBackLink"
+      @create-space="action('createSpace')()"
+      @create-document="action('createDocument')()"
+      @open-space="action('openSpace')($event)"
+      @open-artifact="action('openArtifact')($event)"
       @retry="action('retry')()"
     />
   </Story>

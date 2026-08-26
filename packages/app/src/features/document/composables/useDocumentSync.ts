@@ -1,28 +1,41 @@
-import type { ArtifactId, TipTapDoc } from "@denser/contracts";
+import type { ArtifactId, SpaceId, TipTapDoc } from "@denser/contracts";
 import { ApiConflictError, ApiError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
 import { computed, ref, watch, type Ref } from "vue";
+import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
 import {
   buildDocumentPatch,
   mergeDocumentConflict,
   type DocumentDirtyFields,
 } from "@/lib/conflict";
-import { documentsCollection, upsertInCollection } from "@/lib/db";
+import { artifactsCollection, documentsCollection, upsertInCollection } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import type { DocumentDraftView, DocumentSurfaceView } from "../types";
+import { isEmptyDocumentDraft } from "../lib/document-content";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 
-export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | undefined>) {
+export type DocumentSyncOptions = {
+  isCompose: ReadonlyRefOrGetter<boolean>;
+  composeSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined>;
+};
+
+export function useDocumentSync(
+  artifactId: ReadonlyRefOrGetter<ArtifactId | undefined>,
+  options?: DocumentSyncOptions,
+) {
   const id = toReadonlyRef(artifactId);
+  const isCompose = toReadonlyRef(options?.isCompose ?? (() => false));
+  const composeSpaceId = toReadonlyRef(options?.composeSpaceId ?? (() => undefined));
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const documentQuery = useQuery({
     queryKey: computed(() => queryKeys.document(id.value ?? "")),
-    enabled: computed(() => id.value != null),
+    enabled: computed(() => id.value != null && !isCompose.value),
     queryFn: async () => {
       const { document } = await apiClient.getDocument(id.value!);
       upsertInCollection(documentsCollection, document);
@@ -32,18 +45,44 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
 
   const liveDocument = useLiveQuery(
     (q) =>
-      id.value
+      id.value && !isCompose.value
         ? q
             .from({ documents: documentsCollection })
             .where(({ documents }) => eq(documents.id, id.value!))
         : undefined,
-    [id],
+    [id, isCompose],
   );
 
   const canonical = computed(() => liveDocument.data.value?.[0] ?? documentQuery.data.value);
 
   const saveError = ref<string | undefined>();
   const isSaving = ref(false);
+  const isCreating = ref(false);
+
+  const createMutation = useMutation({
+    mutationFn: async (input: { title: string; body: TipTapDoc; spaceId?: SpaceId }) => {
+      const { document } = await apiClient.createDocument({
+        title: input.title,
+        body: input.body,
+        ...(input.spaceId ? { spaceId: input.spaceId } : {}),
+      });
+      upsertInCollection(documentsCollection, document);
+      const { body: _body, ...artifact } = document;
+      upsertInCollection(artifactsCollection, artifact);
+      return document;
+    },
+    onSuccess: async (document) => {
+      saveError.value = undefined;
+      await queryClient.invalidateQueries({ queryKey: queryKeys.home() });
+      if (document.spaceId) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.space(document.spaceId) });
+      }
+      await router.replace({ name: "document", params: { documentId: document.id } });
+    },
+    onError: () => {
+      saveError.value = "Couldn’t create document.";
+    },
+  });
 
   const patchMutation = useMutation({
     mutationFn: async (input: {
@@ -87,11 +126,25 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
   });
 
   const view = computed((): DocumentSurfaceView => {
+    if (isCompose.value) {
+      return {
+        state: "ready",
+        canEdit: true,
+        header: {
+          title: "",
+          spaceLabel: composeSpaceId.value ? "In space" : undefined,
+        },
+        titlePlaceholder: "Untitled",
+        bodyPlaceholder: "Start writing…",
+        errorMessage: saveError.value,
+      };
+    }
+
     if (!id.value) {
       return {
         state: "error",
         canEdit: false,
-        header: { title: "Untitled" },
+        header: { title: "" },
         titlePlaceholder: "Untitled",
         bodyPlaceholder: "Start writing…",
         errorMessage: "Missing document id.",
@@ -132,7 +185,7 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
       state: "ready",
       canEdit: true,
       header: {
-        title: doc?.title ?? "Untitled",
+        title: doc?.title ?? "",
         spaceLabel: doc?.spaceId ? "In space" : undefined,
       },
       titlePlaceholder: "Untitled",
@@ -142,16 +195,56 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
   });
 
   function bindDraft(draft: Ref<DocumentDraftView>, dirty: Ref<DocumentDirtyFields>) {
+    let syncing = false;
+
+    function resetDraftToEmpty() {
+      syncing = true;
+      draft.value = { title: "", body: emptyDoc() };
+      dirty.value = { title: false, body: false };
+      syncing = false;
+    }
+
     watch(
-      canonical,
-      (doc) => {
-        if (!doc) return;
-        if (dirty.value.title || dirty.value.body) return;
+      () => [isCompose.value, composeSpaceId.value] as const,
+      ([compose, spaceId], previous) => {
+        if (!compose) return;
+        const [prevCompose, prevSpaceId] = previous ?? [false, undefined];
+        if (prevCompose === compose && prevSpaceId === spaceId) return;
+        saveError.value = undefined;
+        isCreating.value = false;
+        resetDraftToEmpty();
+      },
+    );
+
+    watch(
+      id,
+      (nextId, prevId) => {
+        if (!nextId || isCompose.value || nextId === prevId) return;
+        dirty.value = { title: false, body: false };
+        const doc = canonical.value;
+        if (!doc || doc.id !== nextId) return;
+        syncing = true;
         draft.value = {
           title: doc.title,
           body: cloneDoc(doc.body as JSONContent),
         };
         dirty.value = { title: false, body: false };
+        syncing = false;
+      },
+    );
+
+    watch(
+      canonical,
+      (doc) => {
+        if (!doc || isCompose.value) return;
+        if (dirty.value.title || dirty.value.body) return;
+        syncing = true;
+        draft.value = {
+          title: doc.title,
+          body: cloneDoc(doc.body as JSONContent),
+        };
+        dirty.value = { title: false, body: false };
+        syncing = false;
       },
       { immediate: true },
     );
@@ -159,6 +252,7 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
     watch(
       () => draft.value.title,
       () => {
+        if (syncing) return;
         dirty.value.title = true;
         scheduleSave(draft, dirty);
       },
@@ -167,6 +261,7 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
     watch(
       () => draft.value.body,
       () => {
+        if (syncing) return;
         dirty.value.body = true;
         scheduleSave(draft, dirty);
       },
@@ -176,8 +271,30 @@ export function useDocumentSync(artifactId: ReadonlyRefOrGetter<ArtifactId | und
 
   const scheduleSave = useDebounceFn(
     async (draft: Ref<DocumentDraftView>, dirty: Ref<DocumentDirtyFields>) => {
+      if (!dirty.value.title && !dirty.value.body) return;
+      if (isEmptyDocumentDraft(draft.value)) return;
+
+      if (isCompose.value) {
+        if (isCreating.value) return;
+        isCreating.value = true;
+        isSaving.value = true;
+        try {
+          await createMutation.mutateAsync({
+            title: draft.value.title,
+            body: draft.value.body as TipTapDoc,
+            spaceId: composeSpaceId.value,
+          });
+          dirty.value = { title: false, body: false };
+        } finally {
+          isCreating.value = false;
+          isSaving.value = false;
+        }
+        return;
+      }
+
       const doc = canonical.value;
-      if (!doc || (!dirty.value.title && !dirty.value.body)) return;
+      if (!doc) return;
+      if (isEmptyDocumentDraft(draft.value) && isEmptyDocumentDraft(doc)) return;
 
       const patch = buildDocumentPatch(
         { title: draft.value.title, body: draft.value.body as TipTapDoc },

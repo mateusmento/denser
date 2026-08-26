@@ -2,6 +2,7 @@ import type {
   AddSpaceMemberInput,
   CreateSpaceInput,
   PatchSpaceInput,
+  SpaceIcon,
   SpaceId,
   UserId,
 } from "@denser/contracts";
@@ -25,12 +26,14 @@ import {
   removeSpaceMember,
 } from "./membership-repository.js";
 import {
+  deleteSpaceById,
+  findSpaceById,
   insertNestedSpace,
   insertOwnerMembership,
   insertRootSpace,
   listChildSpaces,
   listRootSpacesByIds,
-  updateSpaceVisibility,
+  updateSpace,
   type SpaceRow,
 } from "./repository.js";
 
@@ -161,23 +164,34 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
     return { ok: false as const, reason: "forbidden" as const };
   }
 
-  if (input.visibility === undefined) {
+  const hasTitle = input.title !== undefined;
+  const hasIcon = input.icon !== undefined;
+  const hasVisibility = input.visibility !== undefined;
+
+  if (!hasTitle && !hasIcon && !hasVisibility) {
     return { ok: true as const, space: toSpaceSummary(spaceRow) };
   }
 
-  if (spaceRow.parentSpaceId === null) {
-    return { ok: false as const, reason: "invalid_visibility" as const };
+  if (input.visibility !== undefined) {
+    if (spaceRow.parentSpaceId === null) {
+      return { ok: false as const, reason: "invalid_visibility" as const };
+    }
+
+    const previousVisibility = spaceRow.visibility;
+    if (previousVisibility === "public" && input.visibility === "private") {
+      const rootSpaceId = spaceRow.rootSpaceId ?? spaceRow.id;
+      await copyRootMembersToSpace(rootSpaceId, spaceId);
+    }
   }
 
-  const previousVisibility = spaceRow.visibility;
-  const updated = await updateSpaceVisibility(spaceId, input.visibility);
+  const updated = await updateSpace(spaceId, {
+    ...(input.title !== undefined ? { title: input.title } : {}),
+    ...(input.icon !== undefined ? { icon: input.icon } : {}),
+    ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
+  });
+
   if (!updated) {
     return { ok: false as const, reason: "not_found" as const };
-  }
-
-  if (previousVisibility === "public" && input.visibility === "private") {
-    const rootSpaceId = spaceRow.rootSpaceId ?? spaceRow.id;
-    await copyRootMembersToSpace(rootSpaceId, spaceId);
   }
 
   return { ok: true as const, space: toSpaceSummary(updated) };
@@ -187,6 +201,36 @@ export async function listHomeRootSpaces(userId: UserId) {
   const rootSpaceIds = await getAccessibleRootSpaceIds(userId);
   const rows = await listRootSpacesByIds(rootSpaceIds);
   return rows.map(toSpaceSummary);
+}
+
+export async function deleteSpace(
+  userId: UserId,
+  spaceId: SpaceId,
+): Promise<{ ok: true } | { ok: false; reason: "forbidden" }> {
+  const spaceRow = await requireSpaceManagement(userId, spaceId);
+  if (!spaceRow) {
+    return { ok: false as const, reason: "forbidden" as const };
+  }
+
+  const childRows = await listChildSpaces(spaceId);
+  for (const child of childRows) {
+    if (!(await canManageSpace(userId, child.id))) {
+      return { ok: false as const, reason: "forbidden" as const };
+    }
+  }
+
+  for (const child of childRows) {
+    const result: { ok: true } | { ok: false; reason: "forbidden" } = await deleteSpace(
+      userId,
+      child.id,
+    );
+    if (!result.ok) {
+      return result;
+    }
+  }
+
+  await deleteSpaceById(spaceId);
+  return { ok: true as const };
 }
 
 export function resolveTenantRootSpaceId(row: SpaceRow): SpaceId {

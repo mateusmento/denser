@@ -1,12 +1,15 @@
-import type { SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
+import type { PatchSpaceInput, SpaceIcon, SpaceId, SpaceSummary, SpaceVisibility, UserId } from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
+import { openNewDocumentRoute } from "@/features/document/lib/routes";
 import { artifactsCollection, spacesCollection, upsertInCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
-import type { SpaceContentView, SpaceMembersView } from "../types";
+import { useLiveSpace, useLiveSpacesInWindow } from "../lib/live-spaces";
+import { applySpacePatch, invalidateSpaceProjections } from "../lib/sync-space-patch";
+import type { SpaceBackLink, SpaceContentView, SpaceGeneralView, SpaceMembersView } from "../types";
 
 export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
   const id = toReadonlyRef(spaceId);
@@ -26,21 +29,23 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     },
   });
 
-  const invalidateSpace = async () => {
-    if (!id.value) return;
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.space(id.value) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.home() }),
-    ]);
+  const liveSpace = useLiveSpace(id);
+  const liveChildSpaces = useLiveSpacesInWindow(
+    computed(() => spaceQuery.data.value?.childSpaces ?? []),
+  );
+  const parentSpaceId = computed(
+    () => liveSpace.value?.parentSpaceId ?? spaceQuery.data.value?.space.parentSpaceId ?? undefined,
+  );
+  const liveParent = useLiveSpace(parentSpaceId);
+
+  const invalidateSpace = async (space?: Pick<SpaceSummary, "id" | "parentSpaceId">) => {
+    if (!id.value && !space) return;
+    const target =
+      space ?? { id: id.value!, parentSpaceId: content.value?.space.parentSpaceId ?? null };
+    await invalidateSpaceProjections(queryClient, target);
   };
 
-  const createDocumentMutation = useMutation({
-    mutationFn: () => apiClient.createDocument({ title: "Untitled", spaceId: id.value! }),
-    onSuccess: async ({ document }) => {
-      await invalidateSpace();
-      await router.push({ name: "document", params: { documentId: document.id } });
-    },
-  });
+  const createDocument = () => openNewDocumentRoute(router, id.value);
 
   const createSpaceMutation = useMutation({
     mutationFn: (title: string) =>
@@ -54,7 +59,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   const addMemberMutation = useMutation({
     mutationFn: (username: string) =>
       apiClient.addSpaceMember(id.value!, { username, role: "member" }),
-    onSuccess: invalidateSpace,
+    onSuccess: () => invalidateSpace(),
   });
 
   const removeMemberMutation = useMutation({
@@ -65,13 +70,24 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     onSettled: () => {
       removingMemberId.value = null;
     },
-    onSuccess: invalidateSpace,
+    onSuccess: () => invalidateSpace(),
+  });
+
+  const patchGeneralMutation = useMutation({
+    mutationFn: (input: Pick<PatchSpaceInput, "title" | "icon">) =>
+      apiClient.patchSpace(id.value!, input),
+    onSuccess: async ({ space }) => {
+      applySpacePatch(space);
+    },
   });
 
   const patchVisibilityMutation = useMutation({
     mutationFn: (visibility: SpaceVisibility) =>
       apiClient.patchSpace(id.value!, { visibility }),
-    onSuccess: invalidateSpace,
+    onSuccess: async ({ space }) => {
+      applySpacePatch(space);
+      await invalidateSpaceProjections(queryClient, space);
+    },
   });
 
   const view = computed(() => {
@@ -88,21 +104,50 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   const content = computed((): SpaceContentView | undefined => {
     const data = spaceQuery.data.value;
     if (!data) return undefined;
+    const space = liveSpace.value ?? data.space;
     return {
-      space: data.space,
-      childSpaces: data.childSpaces,
+      space,
+      childSpaces: liveChildSpaces.value,
       artifacts: data.artifacts,
+    };
+  });
+
+  const backLink = computed((): SpaceBackLink | undefined => {
+    const space = liveSpace.value ?? spaceQuery.data.value?.space;
+    if (!space) return undefined;
+
+    if (space.parentSpaceId) {
+      const parent = liveParent.value;
+      return {
+        label: parent?.title ?? "Back",
+        to: { name: "space", params: { spaceId: space.parentSpaceId } },
+      };
+    }
+
+    return { label: "Home", to: { name: "home" } };
+  });
+
+  const generalView = computed((): SpaceGeneralView | undefined => {
+    const data = spaceQuery.data.value;
+    if (!data) return undefined;
+    const space = liveSpace.value ?? data.space;
+    return {
+      title: space.title,
+      icon: space.icon,
+      canManage: data.canManage,
+      isSaving: patchGeneralMutation.isPending.value,
     };
   });
 
   const membersView = computed((): SpaceMembersView | undefined => {
     const data = spaceQuery.data.value;
     if (!data) return undefined;
+    const space = liveSpace.value ?? data.space;
     return {
       members: data.members,
       canManage: data.canManage,
-      isNested: data.space.parentSpaceId != null,
-      visibility: data.space.visibility,
+      isNested: space.parentSpaceId != null,
+      visibility: space.visibility,
       isUpdatingVisibility: patchVisibilityMutation.isPending.value,
       isAddingMember: addMemberMutation.isPending.value,
       removingMemberId: removingMemberId.value,
@@ -112,13 +157,17 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   return {
     view,
     content,
+    backLink,
     detail,
+    generalView,
     membersView,
     reload: () => spaceQuery.refetch(),
     createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
-    createDocument: () => createDocumentMutation.mutateAsync(),
+    createDocument,
     addMember: (username: string) => addMemberMutation.mutateAsync(username),
     removeMember: (memberUserId: UserId) => removeMemberMutation.mutateAsync(memberUserId),
+    updateGeneral: (input: { title: string; icon: SpaceIcon | null }) =>
+      patchGeneralMutation.mutateAsync(input),
     updateVisibility: (visibility: SpaceVisibility) =>
       patchVisibilityMutation.mutateAsync(visibility),
     openSpace: (nextSpaceId: string) =>

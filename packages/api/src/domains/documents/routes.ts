@@ -2,7 +2,7 @@ import type { ArtifactId, UserId } from "@denser/contracts";
 import { CreateDocumentInput, PatchDocumentInput } from "@denser/contracts";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { createDocument, getDocument, patchDocument } from "./service.js";
+import { createDocument, deleteDocument, duplicateDocument, getDocument, patchDocument } from "./service.js";
 
 type Variables = {
   user: { id: string; name: string; email: string };
@@ -30,6 +30,17 @@ export const documentRoutes = new Hono<{ Variables: Variables }>()
 
     return c.json({ document: result.document });
   })
+  .post("/documents/:artifactId/duplicate", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const artifactId = c.req.param("artifactId") as ArtifactId;
+    const result = await duplicateDocument(userId, artifactId);
+
+    if (!result.ok) {
+      return c.json({ error: "Document not found" }, 404);
+    }
+
+    return c.json({ document: result.document }, 201);
+  })
   .patch("/documents/:artifactId", zValidator("json", PatchDocumentInput), async (c) => {
     const userId = c.get("user").id as UserId;
     const artifactId = c.req.param("artifactId") as ArtifactId;
@@ -44,4 +55,15 @@ export const documentRoutes = new Hono<{ Variables: Variables }>()
     }
 
     return c.json({ document: result.document });
+  })
+  .delete("/documents/:artifactId", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const artifactId = c.req.param("artifactId") as ArtifactId;
+    const result = await deleteDocument(userId, artifactId);
+
+    if (!result.ok) {
+      return c.json({ error: "Document not found" }, 404);
+    }
+
+    return c.body(null, 204);
   });

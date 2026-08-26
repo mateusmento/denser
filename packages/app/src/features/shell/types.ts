@@ -1,3 +1,5 @@
+import type { SpaceIcon } from "@denser/contracts";
+
 export type WorkspaceNavSpaceAction = "open" | "rename" | "openSettings" | "delete";
 
 export type WorkspaceNavDocumentAction = "open" | "rename" | "duplicate" | "delete";
@@ -5,6 +7,7 @@ export type WorkspaceNavDocumentAction = "open" | "rename" | "duplicate" | "dele
 export type WorkspaceNavLink = {
   id: string;
   label: string;
+  icon?: SpaceIcon | null;
   to: {
     name: "home" | "space" | "document";
     params?: { spaceId?: string; documentId?: string };

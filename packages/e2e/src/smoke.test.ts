@@ -130,4 +130,45 @@ describe("domain api", () => {
     const roomForBob = await bobClient.getSpace(privateRoom.id);
     expect(roomForBob.space.visibility).toBe("private");
   });
+
+  it("deletes a document", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { document: created } = await client.createDocument({ title: "Delete me" });
+
+    await client.deleteDocument(created.id);
+    await expect(client.getDocument(created.id)).rejects.toMatchObject({ status: 404 });
+
+    const home = await client.home();
+    expect(home.artifacts.map((artifact) => artifact.id)).not.toContain(created.id);
+  });
+
+  it("duplicates and deletes a document", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { document: source } = await client.getDocument(SEED_ARTIFACT_ONBOARDING_NOTES);
+    const { document: copy } = await client.duplicateDocument(SEED_ARTIFACT_ONBOARDING_NOTES);
+
+    expect(copy.id).not.toBe(source.id);
+    expect(copy.title).toBe(`${source.title} copy`);
+    expect(copy.spaceId).toBe(source.spaceId);
+    expect(copy.body).toEqual(source.body);
+
+    await client.deleteDocument(copy.id);
+    await expect(client.getDocument(copy.id)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("deletes a nested space", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { space: copy } = await client.createSpace({
+      title: "Engineering copy",
+      parentSpaceId: SEED_SPACE_ACME,
+    });
+
+    const acme = await client.getSpace(SEED_SPACE_ACME);
+    expect(acme.childSpaces.map((space) => space.id)).toContain(copy.id);
+
+    await client.deleteSpace(copy.id);
+
+    const acmeAfterDelete = await client.getSpace(SEED_SPACE_ACME);
+    expect(acmeAfterDelete.childSpaces.map((space) => space.id)).not.toContain(copy.id);
+  });
 });

@@ -127,7 +127,11 @@ export class ApiClient {
   }
 
   async signOut(): Promise<void> {
-    const res = await this.request("/api/auth/sign-out", { method: "POST" });
+    const res = await this.request("/api/auth/sign-out", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
     if (!res.ok) {
       throw new ApiError("sign-out failed", res.status, await this.parseJson(res));
     }
@@ -167,6 +171,20 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("patch space failed", res.status, body);
     return PatchSpaceResponse.parse(body);
+  }
+
+  async duplicateDocument(artifactId: ArtifactId): Promise<CreateDocumentResponse> {
+    const res = await this.request(`/api/documents/${artifactId}/duplicate`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("duplicate document failed", res.status, body);
+    return CreateDocumentResponse.parse(body);
+  }
+
+  async deleteSpace(spaceId: SpaceId): Promise<void> {
+    const res = await this.request(`/api/spaces/${spaceId}`, { method: "DELETE" });
+    if (!res.ok) {
+      throw new ApiError("delete space failed", res.status, await this.parseJson(res));
+    }
   }
 
   async addSpaceMember(
@@ -225,6 +243,13 @@ export class ApiClient {
     }
     if (!res.ok) throw new ApiError("patch document failed", res.status, body);
     return PatchDocumentResponse.parse(body);
+  }
+
+  async deleteDocument(artifactId: ArtifactId): Promise<void> {
+    const res = await this.request(`/api/documents/${artifactId}`, { method: "DELETE" });
+    if (!res.ok) {
+      throw new ApiError("delete document failed", res.status, await this.parseJson(res));
+    }
   }
 
   async connectRealtime(): Promise<DenserSocket> {

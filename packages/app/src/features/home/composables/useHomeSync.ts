@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
+import { openNewDocumentRoute } from "@/features/document/lib/routes";
+import { useLiveSpacesInWindow } from "@/features/spaces/lib/live-spaces";
 import { artifactsCollection, spacesCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -28,14 +30,6 @@ export function useHomeSync() {
     },
   });
 
-  const createDocumentMutation = useMutation({
-    mutationFn: () => apiClient.createDocument({ title: "Untitled" }),
-    onSuccess: async ({ document }) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.home() });
-      await router.push({ name: "document", params: { documentId: document.id } });
-    },
-  });
-
   const view = computed(() => {
     if (homeQuery.isLoading.value) return { state: "loading" as const };
     if (homeQuery.isError.value) {
@@ -44,7 +38,9 @@ export function useHomeSync() {
     return { state: "ready" as const };
   });
 
-  const spaces = computed(() => homeQuery.data.value?.spaces ?? ([] as SpaceSummary[]));
+  const spaces = useLiveSpacesInWindow(
+    computed(() => homeQuery.data.value?.spaces ?? ([] as SpaceSummary[])),
+  );
   const artifacts = computed(() => homeQuery.data.value?.artifacts ?? ([] as ArtifactSummary[]));
 
   return {
@@ -53,7 +49,7 @@ export function useHomeSync() {
     artifacts,
     reload: () => homeQuery.refetch(),
     createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
-    createDocument: () => createDocumentMutation.mutateAsync(),
+    createDocument: () => openNewDocumentRoute(router),
     openSpace: (spaceId: string) => router.push({ name: "space", params: { spaceId } }),
     openDocument: (artifactId: string) =>
       router.push({ name: "document", params: { documentId: artifactId } }),

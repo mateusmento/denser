@@ -1,4 +1,4 @@
-import type { SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
+import type { SpaceIcon, SpaceId, SpaceVisibility, UserId } from "@denser/contracts";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
@@ -71,16 +71,20 @@ export async function insertNestedSpace(input: {
   return created;
 }
 
-export async function updateSpaceVisibility(
+export async function updateSpace(
   spaceId: SpaceId,
-  visibility: SpaceVisibility,
+  patch: {
+    title?: string;
+    icon?: SpaceIcon | null;
+    visibility?: SpaceVisibility;
+  },
 ): Promise<SpaceRow | undefined> {
-  const [updated] = await db
-    .update(space)
-    .set({ visibility, updatedAt: new Date() })
-    .where(eq(space.id, spaceId))
-    .returning();
+  const values: Partial<typeof space.$inferInsert> = { updatedAt: new Date() };
+  if (patch.title !== undefined) values.title = patch.title;
+  if (patch.icon !== undefined) values.icon = patch.icon;
+  if (patch.visibility !== undefined) values.visibility = patch.visibility;
 
+  const [updated] = await db.update(space).set(values).where(eq(space.id, spaceId)).returning();
   return updated;
 }
 
@@ -93,4 +97,8 @@ export async function insertOwnerMembership(input: {
     userId: input.userId,
     role: "owner",
   });
+}
+
+export async function deleteSpaceById(spaceId: SpaceId): Promise<void> {
+  await db.delete(space).where(eq(space.id, spaceId));
 }

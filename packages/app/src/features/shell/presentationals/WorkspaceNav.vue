@@ -11,7 +11,7 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@denser/design-system";
-import { FileTextIcon, FolderIcon, HomeIcon, PlusIcon } from "@lucide/vue";
+import { HomeIcon, PlusIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 import type {
   WorkspaceNavDocumentAction,
@@ -24,6 +24,7 @@ import WorkspaceNavMenuItem from "./WorkspaceNavMenuItem.vue";
 defineProps<{
   view: WorkspaceNavView;
   isHomeActive: boolean;
+  renamingItemId?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -32,6 +33,8 @@ const emit = defineEmits<{
   retry: [];
   spaceAction: [action: WorkspaceNavSpaceAction, link: WorkspaceNavLink];
   documentAction: [action: WorkspaceNavDocumentAction, link: WorkspaceNavLink];
+  renameSubmit: [link: WorkspaceNavLink, title: string];
+  renameCancel: [link: WorkspaceNavLink];
 }>();
 </script>
 
@@ -95,9 +98,11 @@ const emit = defineEmits<{
               :key="space.id"
               kind="space"
               :link="space"
-              :icon="FolderIcon"
+              :is-renaming="renamingItemId === space.id"
               @space-action="(action, link) => emit('spaceAction', action, link)"
               @document-action="(action, link) => emit('documentAction', action, link)"
+              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
+              @rename-cancel="(link) => emit('renameCancel', link)"
             />
             <SidebarMenuItem v-if="!view.rootSpaces.length">
               <p class="px-2 py-1 text-xs text-muted-foreground">No spaces yet</p>
@@ -118,9 +123,11 @@ const emit = defineEmits<{
               :key="document.id"
               kind="document"
               :link="document"
-              :icon="FileTextIcon"
+              :is-renaming="renamingItemId === document.id"
               @space-action="(action, link) => emit('spaceAction', action, link)"
               @document-action="(action, link) => emit('documentAction', action, link)"
+              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
+              @rename-cancel="(link) => emit('renameCancel', link)"
             />
             <SidebarMenuItem v-if="!view.rootDocuments.length">
               <p class="px-2 py-1 text-xs text-muted-foreground">No root documents</p>
@@ -138,18 +145,22 @@ const emit = defineEmits<{
               :key="space.id"
               kind="space"
               :link="space"
-              :icon="FolderIcon"
+              :is-renaming="renamingItemId === space.id"
               @space-action="(action, link) => emit('spaceAction', action, link)"
               @document-action="(action, link) => emit('documentAction', action, link)"
+              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
+              @rename-cancel="(link) => emit('renameCancel', link)"
             />
             <WorkspaceNavMenuItem
               v-for="document in view.context.documents"
               :key="document.id"
               kind="document"
               :link="document"
-              :icon="FileTextIcon"
+              :is-renaming="renamingItemId === document.id"
               @space-action="(action, link) => emit('spaceAction', action, link)"
               @document-action="(action, link) => emit('documentAction', action, link)"
+              @rename-submit="(link, title) => emit('renameSubmit', link, title)"
+              @rename-cancel="(link) => emit('renameCancel', link)"
             />
             <SidebarMenuItem
               v-if="!view.context.spaces.length && !view.context.documents.length"

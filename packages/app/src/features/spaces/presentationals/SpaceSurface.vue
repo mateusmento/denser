@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import { Badge, Button, Skeleton } from "@denser/design-system";
-import type { SpaceContentView, SpaceSurfaceView } from "../types";
+import { ChevronLeftIcon } from "@lucide/vue";
+import { RouterLink } from "vue-router";
+import type { SpaceBackLink, SpaceContentView, SpaceGalleryArtifact, SpaceGalleryArtifactAction, SpaceGallerySpace, SpaceGallerySpaceAction, SpaceSurfaceView } from "../types";
+import SpaceGallery from "./SpaceGallery.vue";
 
 defineProps<{
   view: SpaceSurfaceView;
   content?: SpaceContentView;
+  backLink?: SpaceBackLink;
 }>();
 
 const emit = defineEmits<{
   createSpace: [];
   createDocument: [];
   retry: [];
+  openSpace: [spaceId: string];
+  openArtifact: [artifactId: string];
+  spaceAction: [action: SpaceGallerySpaceAction, space: SpaceGallerySpace];
+  artifactAction: [action: SpaceGalleryArtifactAction, artifact: SpaceGalleryArtifact];
 }>();
 </script>
 
 <template>
-  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8" data-slot="space-surface">
+  <div
+    class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8"
+    data-slot="space-surface"
+  >
     <template v-if="view.state === 'loading'">
-      <Skeleton class="h-8 w-1/2" />
-      <Skeleton class="h-24 w-full" />
+      <Skeleton class="h-8 w-1/3" />
+      <SpaceGallery :child-spaces="[]" :artifacts="[]" loading />
     </template>
 
     <template v-else-if="view.state === 'error'">
@@ -27,22 +38,35 @@ const emit = defineEmits<{
     </template>
 
     <template v-else-if="content">
+      <Button v-if="backLink" variant="secondary" size="sm" class="w-fit" as-child>
+        <RouterLink :to="backLink.to">
+          <ChevronLeftIcon class="size-4" />
+          {{ backLink.label }}
+        </RouterLink>
+      </Button>
+
       <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-2">
+        <div class="min-w-0 space-y-2">
           <div class="flex flex-wrap items-center gap-2">
-            <p v-if="content.space.rootSpaceId" class="text-xs text-muted-foreground">Space</p>
+            <p v-if="content.space.parentSpaceId" class="text-xs text-muted-foreground">Space</p>
             <Badge variant="outline">{{ content.space.visibility }}</Badge>
           </div>
           <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>
-          <p class="text-sm text-muted-foreground">
-            Nested spaces and documents live in the sidebar.
-          </p>
         </div>
         <div class="flex gap-2">
           <Button variant="outline" size="sm" @click="emit('createSpace')">New space</Button>
           <Button size="sm" @click="emit('createDocument')">New document</Button>
         </div>
       </div>
+
+      <SpaceGallery
+        :child-spaces="content.childSpaces"
+        :artifacts="content.artifacts"
+        @open-space="emit('openSpace', $event)"
+        @open-artifact="emit('openArtifact', $event)"
+        @space-action="(action, space) => emit('spaceAction', action, space)"
+        @artifact-action="(action, artifact) => emit('artifactAction', action, artifact)"
+      />
     </template>
   </div>
 </template>

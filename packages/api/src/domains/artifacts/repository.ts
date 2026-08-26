@@ -66,3 +66,7 @@ export async function updateArtifactWithVersion(input: {
 
   return updated ?? null;
 }
+
+export async function deleteArtifactById(artifactId: ArtifactId): Promise<void> {
+  await db.delete(artifact).where(eq(artifact.id, artifactId));
+}

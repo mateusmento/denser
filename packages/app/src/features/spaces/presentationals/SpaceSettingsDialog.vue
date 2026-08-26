@@ -13,7 +13,10 @@ const emit = defineEmits<{
   "update:activeSection": [section: SpaceSettingsSection];
 }>();
 
-const navItems = [{ id: "members" as const, label: "Members" }];
+const navItems = [
+  { id: "general" as const, label: "General" },
+  { id: "members" as const, label: "Members" },
+];
 
 function selectSection(section: SpaceSettingsSection) {
   emit("update:activeSection", section);
@@ -30,7 +33,7 @@ function selectSection(section: SpaceSettingsSection) {
 
       <div class="flex min-h-0 flex-1">
         <nav
-          class="flex w-44 shrink-0 flex-col gap-1 border-r border-border bg-muted/70 p-3 sm:w-52"
+          class="flex w-44 shrink-0 flex-col gap-1 border-r border-border bg-muted/70 p-3 py-4 sm:w-52"
           aria-label="Space settings"
         >
           <p class="truncate px-2 pb-2 text-xs font-medium text-muted-foreground">

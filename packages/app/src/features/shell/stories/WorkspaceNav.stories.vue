@@ -28,6 +28,7 @@ const readyView: WorkspaceNavView = {
     {
       id: SEED_SPACE_ACME,
       label: "Acme",
+      icon: "briefcase",
       to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
       isActive: true,
     },
@@ -46,6 +47,7 @@ const readyView: WorkspaceNavView = {
       {
         id: SEED_SPACE_ENGINEERING,
         label: "Engineering",
+        icon: "code",
         to: { name: "space", params: { spaceId: SEED_SPACE_ENGINEERING } },
         isActive: false,
       },
@@ -59,7 +61,9 @@ const readyView: WorkspaceNavView = {
   <Story as-child name="Ready">
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader class="border-b border-sidebar-border px-3 py-2">
+        <SidebarHeader
+          class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+        >
           <span class="text-sm font-semibold">Denser</span>
         </SidebarHeader>
         <WorkspaceNav

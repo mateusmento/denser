@@ -15,6 +15,7 @@ export const space = pgTable(
     parentSpaceId: uuid("parent_space_id").$type<SpaceId>(),
     rootSpaceId: uuid("root_space_id").$type<SpaceId>(),
     visibility: spaceVisibilityEnum("visibility").notNull().default("public"),
+    icon: text("icon"),
     createdBy: uuid("created_by")
       .$type<UserId>()
       .notNull()
