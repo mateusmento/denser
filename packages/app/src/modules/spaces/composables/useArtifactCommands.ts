@@ -8,6 +8,8 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { ApiConflictError, ApiConversationConflictError } from "@denser/api-client";
 import type { ArtifactId, ArtifactKind, ArtifactSummary } from "@denser/contracts";
+import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
+import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import type { QueryClient } from "@tanstack/vue-query";
 import { useQueryClient } from "@tanstack/vue-query";
 import { omit } from "remeda";
@@ -78,6 +80,8 @@ export function useArtifactCommands() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const route = useRoute();
+  const spaceTabs = useSpaceTabsStore();
+  const { activeTabHostId, setActiveTabHost } = useActiveTabHost();
 
   async function renameArtifact(
     artifact: Pick<ArtifactSummary, "id" | "title"> &
@@ -125,6 +129,21 @@ export function useArtifactCommands() {
   }
 
   async function openArtifact(artifact: Pick<ArtifactSummary, "id" | "kind">) {
+    const cached = artifactsCollection.get(artifact.id);
+    const spaceId = cached?.spaceId ?? null;
+    const host = activeTabHostId.value ?? spaceId;
+
+    if (host && artifact.kind === "document") {
+      setActiveTabHost(host);
+      spaceTabs.addArtifactTab(host, { id: artifact.id, kind: artifact.kind });
+    } else if (host && artifact.kind === "conversation") {
+      const { conversation } = await apiClient.getConversation(artifact.id);
+      if (conversation.conversationKind === "regular") {
+        setActiveTabHost(host);
+        spaceTabs.addArtifactTab(host, { id: artifact.id, kind: "conversation" });
+      }
+    }
+
     if (artifact.kind === "conversation") {
       await router.push({ name: "conversation", params: { conversationId: artifact.id } });
       return;
@@ -160,6 +179,7 @@ export function useArtifactCommands() {
     }
 
     removeFromCollection(artifactsCollection, target.id);
+    spaceTabs.removeArtifactTabEverywhere(target.id);
     await invalidateArtifactProjections(queryClient, target);
 
     const activeDocumentId = route.params.documentId as ArtifactId | undefined;

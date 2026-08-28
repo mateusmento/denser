@@ -6,6 +6,11 @@ export type WorkspaceCreateScope = {
 
 export type ArtifactPeekState =
   | { open: false }
-  | { open: true; kind: ArtifactKind; spaceId?: SpaceId | null };
+  | {
+      open: true;
+      kind: ArtifactKind;
+      spaceId?: SpaceId | null;
+      navigateOnCreate?: boolean;
+    };
 
 export type WorkspaceCreateAction = "space" | "document" | "conversation";

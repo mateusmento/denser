@@ -4,6 +4,8 @@ import {
   ConversationConflictResponse,
   CreateConversationInput,
   CreateConversationResponse,
+  CreateDirectConversationInput,
+  CreateDirectConversationResponse,
   CreateDocumentInput,
   CreateDocumentResponse,
   CreateSpaceInput,
@@ -11,6 +13,7 @@ import {
   DocumentConflictResponse,
   GetConversationResponse,
   GetDocumentResponse,
+  ListDirectConversationsResponse,
   PatchConversationInput,
   PatchConversationResponse,
   HomeResponse,
@@ -310,6 +313,26 @@ export class ApiClient {
     if (!res.ok) {
       throw new ApiError("delete conversation failed", res.status, await this.parseJson(res));
     }
+  }
+
+  async listDirectConversations(rootSpaceId: SpaceId): Promise<ListDirectConversationsResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/direct-conversations`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list direct conversations failed", res.status, body);
+    return ListDirectConversationsResponse.parse(body);
+  }
+
+  async createOrOpenDirectConversation(
+    input: CreateDirectConversationInput,
+  ): Promise<CreateDirectConversationResponse> {
+    const res = await this.request("/api/direct-conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("create direct conversation failed", res.status, body);
+    return CreateDirectConversationResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

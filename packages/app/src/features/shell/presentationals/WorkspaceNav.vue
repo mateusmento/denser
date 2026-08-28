@@ -11,7 +11,7 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@denser/design-system";
-import { HomeIcon } from "@lucide/vue";
+import { HomeIcon, PlusIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 import { WorkspaceCreateMenu } from "@/modules/workspace";
 import type {
@@ -30,6 +30,7 @@ defineProps<{
 
 const emit = defineEmits<{
   create: [action: "space" | "document" | "conversation", scopeSpaceId?: string | null];
+  createDirectMessage: [rootSpaceId: string];
   retry: [];
   spaceAction: [action: WorkspaceNavSpaceAction, link: WorkspaceNavLink];
   artifactAction: [action: WorkspaceNavArtifactAction, link: WorkspaceNavLink];
@@ -135,6 +136,33 @@ const emit = defineEmits<{
             />
             <SidebarMenuItem v-if="!view.inSpaceSection.items.length">
               <p class="px-2 py-1 text-xs text-muted-foreground">Empty</p>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup v-if="view.directMessagesSection">
+        <SidebarGroupLabel>{{ view.directMessagesSection.label }}</SidebarGroupLabel>
+        <SidebarGroupAction
+          title="New direct message"
+          @click="emit('createDirectMessage', view.directMessagesSection.scopeSpaceId!)"
+        >
+          <PlusIcon />
+        </SidebarGroupAction>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <WorkspaceNavMenuItem
+              v-for="link in view.directMessagesSection.items"
+              :key="link.id"
+              :link="link"
+              :is-renaming="renamingItemId === link.id"
+              @space-action="(action, item) => emit('spaceAction', action, item)"
+              @artifact-action="(action, item) => emit('artifactAction', action, item)"
+              @rename-submit="(item, title) => emit('renameSubmit', item, title)"
+              @rename-cancel="(item) => emit('renameCancel', item)"
+            />
+            <SidebarMenuItem v-if="!view.directMessagesSection.items.length">
+              <p class="px-2 py-1 text-xs text-muted-foreground">No direct messages yet</p>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>

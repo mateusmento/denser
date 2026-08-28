@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
+import * as conversationRepository from "../conversations/repository.js";
 
 export async function getDirectMembershipRole(
   userId: UserId,
@@ -60,8 +61,15 @@ export async function canManageSpace(userId: UserId, spaceId: SpaceId): Promise<
 
 export async function canAccessArtifact(
   userId: UserId,
-  row: Pick<typeof artifact.$inferSelect, "spaceId" | "rootSpaceId" | "createdBy">,
+  row: Pick<typeof artifact.$inferSelect, "id" | "kind" | "spaceId" | "rootSpaceId" | "createdBy">,
 ): Promise<boolean> {
+  if (row.kind === "conversation") {
+    const conversationRow = await conversationRepository.findConversationByArtifactId(row.id);
+    if (conversationRow?.conversationKind === "direct") {
+      return conversationRepository.isConversationMember(userId, row.id);
+    }
+  }
+
   if (row.spaceId === null) {
     return row.createdBy === userId;
   }

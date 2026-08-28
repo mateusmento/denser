@@ -15,6 +15,8 @@ import { artifactsCollection, documentsCollection, upsertInCollection } from "@/
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
+import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
+import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import type { DocumentDraftView, DocumentSurfaceView } from "../types";
 import { isEmptyDocumentDraft } from "../lib/document-content";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
@@ -23,6 +25,8 @@ export type DocumentSyncOptions = {
   peekSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined | null>;
   mode?: "route" | "peek";
   onPeekCreated?: (id: ArtifactId) => void;
+  navigateOnCreate?: boolean;
+  onPeekComplete?: () => void;
 };
 
 export function useDocumentSync(
@@ -82,6 +86,16 @@ export function useDocumentSync(
       }
       if (isPeek) {
         options?.onPeekCreated?.(document.id);
+        if (options?.navigateOnCreate && document.spaceId) {
+          const { activeTabHostId } = useActiveTabHost();
+          const host = activeTabHostId.value ?? document.spaceId;
+          useSpaceTabsStore().addArtifactTab(host, {
+            id: document.id,
+            kind: "document",
+          });
+          await router.push({ name: "document", params: { documentId: document.id } });
+          options.onPeekComplete?.();
+        }
         return;
       }
       await router.replace({ name: "document", params: { documentId: document.id } });

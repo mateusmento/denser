@@ -1,11 +1,17 @@
-import type { ArtifactId, UserId } from "@denser/contracts";
-import { CreateConversationInput, PatchConversationInput } from "@denser/contracts";
+import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
+import {
+  CreateConversationInput,
+  CreateDirectConversationInput,
+  PatchConversationInput,
+} from "@denser/contracts";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
   createConversation,
+  createOrOpenDirectConversation,
   deleteConversation,
   getConversation,
+  listDirectConversations,
   patchConversation,
 } from "./service.js";
 
@@ -23,6 +29,42 @@ export const conversationRoutes = new Hono<{ Variables: Variables }>()
     }
 
     return c.json({ conversation: result.conversation }, 201);
+  })
+  .get("/root-spaces/:rootSpaceId/direct-conversations", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const rootSpaceId = c.req.param("rootSpaceId") as SpaceId;
+    const result = await listDirectConversations(userId, rootSpaceId);
+
+    if (!result.ok) {
+      return c.json({ error: "Root space not found" }, 404);
+    }
+
+    return c.json({ conversations: result.conversations });
+  })
+  .post("/direct-conversations", zValidator("json", CreateDirectConversationInput), async (c) => {
+    const userId = c.get("user").id as UserId;
+    const result = await createOrOpenDirectConversation(userId, c.req.valid("json"));
+
+    if (result.reason === "invalid_members" || result.reason === "user_not_found") {
+      return c.json(
+        {
+          error:
+            result.reason === "user_not_found"
+              ? "User not found"
+              : "Participants must belong to this workspace",
+        },
+        400,
+      );
+    }
+
+    if (!result.ok) {
+      return c.json({ error: "Not found" }, 404);
+    }
+
+    return c.json(
+      { conversation: result.conversation, created: result.created },
+      result.created ? 201 : 200,
+    );
   })
   .get("/conversations/:conversationId", async (c) => {
     const userId = c.get("user").id as UserId;

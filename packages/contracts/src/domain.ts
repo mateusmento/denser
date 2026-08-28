@@ -171,7 +171,12 @@ export const DocumentConflictResponse = z.object({
 });
 export type DocumentConflictResponse = z.infer<typeof DocumentConflictResponse>;
 
-export const ConversationView = ArtifactSummary;
+export const ConversationKind = z.enum(["regular", "direct"]);
+export type ConversationKind = z.infer<typeof ConversationKind>;
+
+export const ConversationView = ArtifactSummary.extend({
+  conversationKind: ConversationKind,
+});
 export type ConversationView = z.infer<typeof ConversationView>;
 
 export const CreateConversationInput = z.object({
@@ -181,6 +186,35 @@ export const CreateConversationInput = z.object({
   initialMessage: TipTapDoc.optional(),
 });
 export type CreateConversationInput = z.infer<typeof CreateConversationInput>;
+
+export const CreateDirectConversationInput = z
+  .object({
+    rootSpaceId: SpaceId,
+    /** Other participants by id; the creator is added server-side. */
+    memberUserIds: z.array(UserId).min(1).optional(),
+    /** Other participants by username; resolved within the root space roster. */
+    memberUsernames: z.array(z.string().trim().min(1)).min(1).optional(),
+    /** Optional nested-space context where the DM was started. */
+    spaceId: SpaceId.optional(),
+    title: z.string().trim().max(200).optional(),
+  })
+  .refine(
+    (value) =>
+      (value.memberUserIds?.length ?? 0) > 0 || (value.memberUsernames?.length ?? 0) > 0,
+    { message: "Provide memberUserIds or memberUsernames" },
+  );
+export type CreateDirectConversationInput = z.infer<typeof CreateDirectConversationInput>;
+
+export const ListDirectConversationsResponse = z.object({
+  conversations: z.array(ConversationView),
+});
+export type ListDirectConversationsResponse = z.infer<typeof ListDirectConversationsResponse>;
+
+export const CreateDirectConversationResponse = z.object({
+  conversation: ConversationView,
+  created: z.boolean(),
+});
+export type CreateDirectConversationResponse = z.infer<typeof CreateDirectConversationResponse>;
 
 export const CreateConversationResponse = z.object({
   conversation: ConversationView,

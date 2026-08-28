@@ -1,4 +1,6 @@
 import type { SpaceId, SpaceSummary } from "@denser/contracts";
+import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
+import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useRoute, useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
@@ -22,6 +24,8 @@ export function useSpaceCommands() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const route = useRoute();
+  const spaceTabs = useSpaceTabsStore();
+  const { activeTabHostId, setActiveTabHost } = useActiveTabHost();
 
   async function renameSpace(
     space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
@@ -36,6 +40,16 @@ export function useSpaceCommands() {
   }
 
   async function openSpace(spaceId: SpaceId) {
+    const currentRouteSpace = route.params.spaceId as SpaceId | undefined;
+    const host = activeTabHostId.value ?? currentRouteSpace;
+
+    if (host && host !== spaceId) {
+      setActiveTabHost(host);
+      spaceTabs.addChildSpaceTab(host, spaceId);
+    } else {
+      setActiveTabHost(spaceId);
+    }
+
     await router.push({ name: "space", params: { spaceId } });
   }
 
@@ -46,6 +60,7 @@ export function useSpaceCommands() {
 
     await apiClient.deleteSpace(target.id);
     removeFromCollection(spacesCollection, target.id);
+    spaceTabs.removeSpaceTabEverywhere(target.id);
     await invalidateSpaceProjections(queryClient, target);
 
     const activeSpaceId = route.params.spaceId as SpaceId | undefined;

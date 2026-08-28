@@ -1,5 +1,5 @@
 import type { SpaceId, SpaceRole, UserId } from "@denser/contracts";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { user } from "../../db/schema/auth.js";
 import { spaceMembership } from "../../db/schema/space.js";
@@ -40,10 +40,13 @@ export async function listSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow
 }
 
 export async function findUserByUsername(username: string): Promise<{ id: UserId } | undefined> {
-  return db.query.user.findFirst({
-    where: eq(user.username, username),
-    columns: { id: true },
-  });
+  const rows = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(sql`lower(${user.username}) = lower(${username})`)
+    .limit(1);
+
+  return rows[0];
 }
 
 export async function insertSpaceMember(input: {

@@ -65,6 +65,8 @@ const conversationTitle = ref("");
 const conversationSync = useConversationSync(conversationArtifactId, {
   mode: "peek",
   peekSpaceId: spaceId,
+  navigateOnCreate: props.peek.navigateOnCreate,
+  onPeekComplete: () => emit("close"),
   onPeekCreated: (id) => {
     conversationArtifactId.value = id;
   },
@@ -97,6 +99,8 @@ async function onChannelSend() {
         v-if="peek.kind === 'document'"
         :key="documentPeekKey"
         :space-id="spaceId"
+        :navigate-on-create="peek.navigateOnCreate"
+        @complete="emit('close')"
       />
 
       <ConversationSurface v-else>

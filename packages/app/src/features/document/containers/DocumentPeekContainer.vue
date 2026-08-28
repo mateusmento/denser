@@ -14,6 +14,11 @@ import { toReadonlyRef } from "@/lib/vue";
 
 const props = defineProps<{
   spaceId?: SpaceId | null;
+  navigateOnCreate?: boolean;
+}>();
+
+const emit = defineEmits<{
+  complete: [];
 }>();
 
 const artifactId = ref<ArtifactId | undefined>();
@@ -23,6 +28,8 @@ const { draft, dirty } = createDocumentDraftState();
 const { surfaceView, bindDraft, reload } = useDocumentSync(artifactId, {
   mode: "peek",
   peekSpaceId,
+  navigateOnCreate: props.navigateOnCreate,
+  onPeekComplete: () => emit("complete"),
   onPeekCreated: (id) => {
     artifactId.value = id;
   },

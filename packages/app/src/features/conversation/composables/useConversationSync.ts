@@ -10,6 +10,8 @@ import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
+import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import type { JSONContent } from "@/modules/rich-text";
 import type { ConversationChannelHeaderView } from "../types";
 
@@ -17,6 +19,8 @@ export type ConversationSyncOptions = {
   peekSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined | null>;
   mode?: "route" | "peek";
   onPeekCreated?: (id: ArtifactId) => void;
+  navigateOnCreate?: boolean;
+  onPeekComplete?: () => void;
 };
 
 export function useConversationSync(
@@ -82,6 +86,19 @@ export function useConversationSync(
       }
       if (isPeek) {
         options?.onPeekCreated?.(conversation.id);
+        if (options?.navigateOnCreate && conversation.spaceId) {
+          const { activeTabHostId } = useActiveTabHost();
+          const host = activeTabHostId.value ?? conversation.spaceId;
+          useSpaceTabsStore().addArtifactTab(host, {
+            id: conversation.id,
+            kind: "conversation",
+          });
+          await router.push({
+            name: "conversation",
+            params: { conversationId: conversation.id },
+          });
+          options.onPeekComplete?.();
+        }
         return;
       }
       await router.replace({

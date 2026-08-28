@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { account, session, user } from "./auth.js";
 import { artifact } from "./artifact.js";
+import { conversation, conversationMember } from "./conversation.js";
 import { document } from "./document.js";
 import { space, spaceMembership } from "./space.js";
 
@@ -38,7 +39,7 @@ export const spaceMembershipRelations = relations(spaceMembership, ({ one }) => 
   }),
 }));
 
-export const artifactRelations = relations(artifact, ({ one }) => ({
+export const artifactRelations = relations(artifact, ({ one, many }) => ({
   space: one(space, {
     fields: [artifact.spaceId],
     references: [space.id],
@@ -50,6 +51,29 @@ export const artifactRelations = relations(artifact, ({ one }) => ({
   document: one(document, {
     fields: [artifact.id],
     references: [document.artifactId],
+  }),
+  conversation: one(conversation, {
+    fields: [artifact.id],
+    references: [conversation.artifactId],
+  }),
+  conversationMembers: many(conversationMember),
+}));
+
+export const conversationRelations = relations(conversation, ({ one }) => ({
+  artifact: one(artifact, {
+    fields: [conversation.artifactId],
+    references: [artifact.id],
+  }),
+}));
+
+export const conversationMemberRelations = relations(conversationMember, ({ one }) => ({
+  conversation: one(artifact, {
+    fields: [conversationMember.conversationArtifactId],
+    references: [artifact.id],
+  }),
+  user: one(user, {
+    fields: [conversationMember.userId],
+    references: [user.id],
   }),
 }));
 

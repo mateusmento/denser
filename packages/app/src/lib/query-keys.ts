@@ -4,4 +4,5 @@ export const queryKeys = {
   space: (spaceId: string) => ["space", spaceId] as const,
   document: (artifactId: string) => ["document", artifactId] as const,
   conversation: (artifactId: string) => ["conversation", artifactId] as const,
+  directMessages: (rootSpaceId: string) => ["directMessages", rootSpaceId] as const,
 };

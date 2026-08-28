@@ -13,7 +13,7 @@ import { useWorkspaceNavSync } from "../composables/useWorkspaceNavSync";
 import type { WorkspaceNavArtifactAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
 import WorkspaceNav from "../presentationals/WorkspaceNav.vue";
 
-const { view, isHomeActive, reload, createSpace } = useWorkspaceNavSync();
+const { view, isHomeActive, reload, createSpace, createDirectMessage } = useWorkspaceNavSync();
 const { openSpace, renameSpace, deleteSpace } = useSpaceCommands();
 const { openArtifact, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
 const prompts = useWorkspaceCommandPrompts();
@@ -100,6 +100,14 @@ async function onRenameSubmit(link: WorkspaceNavLink, title: string) {
 function onRenameCancel(_link: WorkspaceNavLink) {
   renamingItemId.value = null;
 }
+
+async function onCreateDirectMessage(rootSpaceId: string) {
+  const username = await prompts.promptDirectMessageUsername();
+  if (!username) return;
+
+  const scopeSpaceId = view.value.inSpaceSection?.scopeSpaceId ?? undefined;
+  await createDirectMessage(rootSpaceId as SpaceId, username, scopeSpaceId as SpaceId | undefined);
+}
 </script>
 
 <template>
@@ -109,6 +117,7 @@ function onRenameCancel(_link: WorkspaceNavLink) {
     :renaming-item-id="renamingItemId"
     @retry="reload"
     @create="(action, scopeSpaceId) => onCreate(action, scopeSpaceId as SpaceId | null)"
+    @create-direct-message="onCreateDirectMessage"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
     @rename-submit="onRenameSubmit"

@@ -1,7 +1,8 @@
 import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, or } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
+import { conversation } from "../../db/schema/conversation.js";
 
 export type ArtifactRow = typeof artifact.$inferSelect;
 
@@ -18,11 +19,25 @@ export async function listRootArtifactsByOwner(userId: UserId): Promise<Artifact
 }
 
 export async function listArtifactsInSpace(spaceId: SpaceId): Promise<ArtifactRow[]> {
+  return listRegularArtifactsInSpace(spaceId);
+}
+
+export async function listRegularArtifactsInSpace(spaceId: SpaceId): Promise<ArtifactRow[]> {
   return db
-    .select()
+    .select({ artifact })
     .from(artifact)
-    .where(eq(artifact.spaceId, spaceId))
-    .orderBy(desc(artifact.updatedAt));
+    .leftJoin(conversation, eq(conversation.artifactId, artifact.id))
+    .where(
+      and(
+        eq(artifact.spaceId, spaceId),
+        or(
+          ne(artifact.kind, "conversation"),
+          eq(conversation.conversationKind, "regular"),
+        ),
+      ),
+    )
+    .orderBy(desc(artifact.updatedAt))
+    .then((rows) => rows.map((row) => row.artifact));
 }
 
 export async function insertDocumentArtifact(input: {

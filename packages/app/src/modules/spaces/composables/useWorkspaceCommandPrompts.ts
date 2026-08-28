@@ -51,10 +51,21 @@ export function useWorkspaceCommandPrompts() {
     });
   }
 
+  async function promptDirectMessageUsername(): Promise<string | null> {
+    const username = await prompt({
+      title: "New direct message",
+      label: "Username",
+      confirmLabel: "Open",
+    });
+    const trimmed = username?.trim();
+    return trimmed || null;
+  }
+
   return {
     promptSpaceRename,
     promptArtifactRename,
     confirmSpaceDelete,
     confirmArtifactDelete,
+    promptDirectMessageUsername,
   };
 }

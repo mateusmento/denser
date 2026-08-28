@@ -29,6 +29,8 @@ export type WorkspaceNavView = {
   errorMessage?: string;
   homeSection: WorkspaceNavSection;
   inSpaceSection?: WorkspaceNavSection;
+  directMessagesSection?: WorkspaceNavSection;
+  activeRootSpaceId?: string | null;
 };
 
 /** @deprecated Use WorkspaceNavArtifactAction */

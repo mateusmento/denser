@@ -60,6 +60,15 @@ function sectionItems(
   ];
 }
 
+function directMessageLinks(
+  conversations: readonly Pick<ArtifactSummary, "id" | "title" | "kind">[],
+  activeArtifactId: ArtifactId | undefined,
+): WorkspaceNavLink[] {
+  return conversations.map((conversation) =>
+    artifactLink(conversation, activeArtifactId === conversation.id),
+  );
+}
+
 export function useWorkspaceNavSync() {
   const route = useRoute();
   const router = useRouter();
@@ -148,6 +157,31 @@ export function useWorkspaceNavSync() {
   const contextSpaceId = computed(() => contextDetail.value?.space.id);
   const liveContextSpace = useLiveSpace(contextSpaceId);
 
+  const activeRootSpaceId = computed((): SpaceId | null => {
+    if (contextDetail.value) {
+      const space = contextDetail.value.space;
+      return space.rootSpaceId ?? space.id;
+    }
+    if (conversationQuery.data.value?.rootSpaceId) {
+      return conversationQuery.data.value.rootSpaceId;
+    }
+    const homeSpaces = homeQuery.data.value?.spaces ?? [];
+    if (homeSpaces.length === 1) {
+      return homeSpaces[0]!.id;
+    }
+    return null;
+  });
+
+  const directMessagesQuery = useQuery({
+    queryKey: computed(() => queryKeys.directMessages(activeRootSpaceId.value ?? "")),
+    enabled: computed(() => activeRootSpaceId.value != null),
+    queryFn: async () => {
+      const { conversations } = await apiClient.listDirectConversations(activeRootSpaceId.value!);
+      upsertMany(artifactsCollection, conversations);
+      return conversations;
+    },
+  });
+
   const view = computed((): WorkspaceNavView => {
     const emptyHomeSection = {
       label: "Home",
@@ -190,10 +224,28 @@ export function useWorkspaceNavSync() {
         }
       : undefined;
 
+    const rootSpaceId = activeRootSpaceId.value;
+    const directMessagesSection =
+      rootSpaceId && directMessagesQuery.data.value
+        ? {
+            label: "Direct messages",
+            items: directMessageLinks(directMessagesQuery.data.value, activeArtifact),
+            scopeSpaceId: rootSpaceId,
+          }
+        : rootSpaceId && directMessagesQuery.isLoading.value
+          ? {
+              label: "Direct messages",
+              items: [] as WorkspaceNavLink[],
+              scopeSpaceId: rootSpaceId,
+            }
+          : undefined;
+
     return {
       state: "ready",
       homeSection,
       inSpaceSection,
+      directMessagesSection,
+      activeRootSpaceId: rootSpaceId,
     };
   });
 
@@ -204,6 +256,11 @@ export function useWorkspaceNavSync() {
     }
     if (artifactSpaceId.value) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.space(artifactSpaceId.value) });
+    }
+    if (activeRootSpaceId.value) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.directMessages(activeRootSpaceId.value),
+      });
     }
   };
 
@@ -216,11 +273,34 @@ export function useWorkspaceNavSync() {
     },
   });
 
+  const createDirectMessageMutation = useMutation({
+    mutationFn: ({
+      rootSpaceId,
+      username,
+      spaceId,
+    }: {
+      rootSpaceId: SpaceId;
+      username: string;
+      spaceId?: SpaceId;
+    }) =>
+      apiClient.createOrOpenDirectConversation({
+        rootSpaceId,
+        memberUsernames: [username],
+        spaceId,
+      }),
+    onSuccess: async ({ conversation }) => {
+      reload();
+      await router.push({ name: "conversation", params: { conversationId: conversation.id } });
+    },
+  });
+
   return {
     view,
     isHomeActive,
     reload,
     createSpace: (title: string, parentSpaceId?: SpaceId | null) =>
       createSpaceMutation.mutateAsync({ title, parentSpaceId }),
+    createDirectMessage: (rootSpaceId: SpaceId, username: string, spaceId?: SpaceId) =>
+      createDirectMessageMutation.mutateAsync({ rootSpaceId, username, spaceId }),
   };
 }
