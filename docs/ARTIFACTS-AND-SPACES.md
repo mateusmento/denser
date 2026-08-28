@@ -25,9 +25,11 @@ Shell fields (conceptual):
 
 A **membership, visibility, and ownership boundary**. Spaces nest. A Space can contain **child Spaces** and **Artifacts** as siblings (directory + files metaphor). Spaces are **not** Artifacts.
 
-Spaces are distinguished by **visibility** only (`public` / `private` on nested spaces; root is always private).
+A **root space** is a Space with no parent. Visibility decides whether that root is a personal **folder** or a **workspace** — there is no separate Folder type.
 
-Folders are **deferred**; nesting Spaces covers organization for now.
+**Public** means no membership gate: nested public spaces inherit access from the parent; a public root is visible only to **`createdBy`** (nothing to inherit). **Private** turns membership on: nested private spaces still require parent access, then an explicit member list; a private root is a workspace (invites, DMs, tenant `root_space_id`).
+
+**Private → public is not a feature.** Public → private is a one-way promotion (folder → sealed room or personal folder → workspace).
 
 ### Space tabs
 
@@ -44,7 +46,7 @@ The **`+`** on the tab bar adds tabs (new conversation, pin document, pin child 
 
 ### Personal home
 
-**Not a Space.** The blank landing for a logged-in user: all **root** Spaces and **root** Artifacts they own (and root Spaces they belong to). Nested Spaces/Artifacts stay under their parents so home does not become a dump.
+**Not a Space.** The blank landing for a logged-in user: **public** root spaces they created, **private** root spaces they belong to, and **root** Artifacts they own. Nested Spaces/Artifacts stay under their parents so home does not become a dump.
 
 ---
 
@@ -52,7 +54,7 @@ The **`+`** on the tab bar adds tabs (new conversation, pin document, pin child 
 
 | Item            | Parent                 | Home?                              |
 | --------------- | ---------------------- | ---------------------------------- |
-| Root Space      | none                   | Yes, if user owns or is a member   |
+| Root Space      | none                   | Yes, if public and `createdBy` the user, or private and the user is a member |
 | Nested Space    | another Space          | No — only under parent             |
 | Root Artifact   | none (`space_id` null) | Yes, if user owns it               |
 | Nested Artifact | a Space                | No — only when browsing that Space |
@@ -63,13 +65,21 @@ Persist **`root_space_id`** alongside **`space_id`** on rows that live in a Spac
 
 ## Visibility
 
-| Space      | Visibility             | Membership                                     | Behavior                                                     |
-| ---------- | ---------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
-| **Root**   | **Always private**     | Explicit                                       | Never public; lives at personal-home root                    |
-| **Nested** | **Public by default**  | Inherited from parent ∪ optional explicit adds | Acts like a folder                                           |
-| **Nested** | **Private** (optional) | Explicit list only                             | Sealed room; no casual move of Artifacts across its boundary |
+| Space | Visibility | Access | Behavior |
+| ----- | ---------- | ------ | -------- |
+| **Root** (no parent) | **Public** (default on create) | `createdBy` only; no membership rows | Personal folder on Home. Organize artifacts without a workspace. |
+| **Root** | **Private** | Explicit members | Workspace / tenant. Invites, DMs, home-button name. |
+| **Nested** | **Public** (default) | Inherit parent access | Folder inside a space. Optional extra member rows do not grant access. |
+| **Nested** | **Private** | Parent access **and** explicit members | Sealed room. |
 
-When flipping nested **public → private**, **copy current members** into an explicit list so nobody is locked out.
+Create-as-private nested: the creator becomes **owner** (not a copy of the whole root roster).
+
+**Public → private:**
+
+- Nested: copy the **root workspace** roster in as members so nobody already in the tree is locked out; if the creator is still missing, insert them as owner.
+- Root: insert **owner** membership for `createdBy` (same as creating a private root today). Direct messages and workspace chrome apply after this.
+
+**Private → public:** rejected. A workspace or sealed room cannot be turned back into a folder.
 
 ---
 
@@ -84,7 +94,7 @@ When flipping nested **public → private**, **copy current members** into an ex
 
 | Role       | Where            | Notes                                                                                                                                                                                                                                                                                                                              |
 | ---------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Owner**  | Root Spaces only | Can do everything Admin can; unique root powers (e.g. delete root Space). **Break-glass** over the whole tree under that root: control/recovery (membership, visibility, delete nested Spaces) — **not** ambient Member read of every private child. Private nested content still needs membership or a deliberate Owner override. |
+| **Owner**  | Private roots; creator of a new private nested space | Can do everything Admin can; unique **workspace** powers (e.g. delete that private root). **Break-glass** over the whole tree under that root: control/recovery (membership, visibility, delete nested Spaces) — **not** ambient Member read of every private child. Private nested content still needs membership or a deliberate Owner override. |
 | **Admin**  | Root and nested  | Day-to-day control; on nested Spaces may delete that Space. Cannot delete a **root** Space.                                                                                                                                                                                                                                        |
 | **Member** | Root and nested  | Participate per action grants (create content, etc., as configured).                                                                                                                                                                                                                                                               |
 
@@ -119,7 +129,7 @@ Permissions are **role-based plus action grants** (granular). Exact action matri
 
 ### DMs are global within a root space
 
-A **root space** is the workspace / tenant boundary (same as `root_space_id` on the space tree). Within one root space:
+A **root space** is a Space with no parent. A **workspace** (tenant / DM boundary, same as `root_space_id` on the tree) is a **private** root space. Within one workspace:
 
 - At most **one** DM conversation per distinct member set, regardless of which nested space the user was in when they opened it.
 - **Dedupe key:** `(root_space_id, sort(member_user_ids))`.
@@ -127,7 +137,7 @@ A **root space** is the workspace / tenant boundary (same as `root_space_id` on 
 - **Participants** must be members of that **root space** (v1: any member of the workspace; optional later tightening to “people in this nested space”).
 - **`space_id` on a DM** is optional **context only** (where the DM was started). It does **not** affect dedupe, listing, or access.
 
-Users in multiple root spaces get **separate DM inboxes** per workspace (same as multiple Slack workspaces).
+Users in multiple **workspaces** (private roots) get **separate DM inboxes** per workspace (same as multiple Slack workspaces). Public Home folders have no DM inbox until promoted to private.
 
 ### Messaging (phased)
 
@@ -151,9 +161,10 @@ Defer: custom properties, board/calendar enablement, relationships, comments-as-
 
 ### Navigation (shell)
 
-- **Personal home** — root spaces and root artifacts the user can access.
+- **Personal home** — public roots the user created, private roots they belong to, and root artifacts they own.
+- **Home sidebar section** — shown on Personal home, on **public** root folders (and their content), and on root artifacts. Hidden inside a **private** root workspace tree.
 - **In {space}** — flat sidebar under the active space: child spaces, then artifacts (documents + regular conversations only).
-- **Direct messages** — DM conversations for the **current root space** where the user is a member.
+- **Direct messages** — DM conversations for the **current private root** (workspace) where the user is a member. Not listed for public Home folders.
 - **Main column** — space **tab bar** + active tab content (This Space, artifact surface, or later space views).
 
 ### First-run feel
@@ -167,7 +178,10 @@ Blank personal home with light base UI and a create affordance — not an opinio
 - Polymorphic base Artifact customized into Map vs Document vs Conversation via capabilities.
 - Treating Conversation / Sprint / Workflow as Artifact kinds derived from one engine.
 - Personal home as a normal Space row users manage like any other (conceptually it is special).
+- A separate Folder type — public spaces (root or nested) are the folders.
+- **Private → public** visibility (workspaces and sealed rooms stay private).
 - Flattening all memberships into home.
+- Direct messages on a **public** root (DMs exist only after that root is a private workspace).
 - Sharing root Artifacts without a Space.
 - Listing **direct** conversations in This Space / space artifact galleries.
 - **View-mode pickers** on document or conversation artifact tabs (single default surface each).
@@ -186,3 +200,11 @@ Blank personal home with light base UI and a create affordance — not an opinio
 - Space tab persistence (per-user vs shared)
 - Private channels (regular conversations with explicit member lists beyond space ACL)
 - Backlog / board space-view tabs and their filter model
+
+---
+
+## Changelog
+
+| Date       | Change |
+| ---------- | ------ |
+| 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |

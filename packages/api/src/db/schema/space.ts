@@ -37,10 +37,6 @@ export const space = pgTable(
         (${table.parentSpaceId} IS NOT NULL AND ${table.rootSpaceId} IS NOT NULL)
       )`,
     ),
-    check(
-      "space_root_is_private",
-      sql`((${table.parentSpaceId} IS NOT NULL) OR (${table.visibility} = 'private'))`,
-    ),
   ],
 );
 

@@ -22,31 +22,30 @@ const { Story } = defineMeta({
   parameters: { layout: "fullscreen" },
 });
 
-const homeButton = { label: "Acme", showBackHint: true };
+const homeSection = {
+  label: "Home",
+  scopeSpaceId: null,
+  items: [
+    {
+      id: SEED_SPACE_ACME,
+      label: "Acme",
+      icon: "briefcase" as const,
+      to: { name: "space" as const, params: { spaceId: SEED_SPACE_ACME } },
+      isActive: false,
+    },
+    {
+      id: SEED_ARTIFACT_PERSONAL_NOTES,
+      label: "Personal notes",
+      artifactKind: "document" as const,
+      to: { name: "document" as const, params: { documentId: SEED_ARTIFACT_PERSONAL_NOTES } },
+      isActive: false,
+    },
+  ],
+};
 
-const readyView: WorkspaceNavView = {
+const inWorkspaceView: WorkspaceNavView = {
   state: "ready",
-  homeButton,
-  homeSection: {
-    label: "Home",
-    scopeSpaceId: null,
-    items: [
-      {
-        id: SEED_SPACE_ACME,
-        label: "Acme",
-        icon: "briefcase",
-        to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
-        isActive: true,
-      },
-      {
-        id: SEED_ARTIFACT_PERSONAL_NOTES,
-        label: "Personal notes",
-        artifactKind: "document",
-        to: { name: "document", params: { documentId: SEED_ARTIFACT_PERSONAL_NOTES } },
-        isActive: false,
-      },
-    ],
-  },
+  homeButton: { label: "Acme", showBackHint: true },
   inSpaceSection: {
     label: "In Acme",
     scopeSpaceId: SEED_SPACE_ACME,
@@ -59,6 +58,18 @@ const readyView: WorkspaceNavView = {
         isActive: false,
       },
     ],
+  },
+  activeRootSpaceId: SEED_SPACE_ACME,
+};
+
+const onHomeView: WorkspaceNavView = {
+  state: "ready",
+  homeButton: { label: "Home", showBackHint: false },
+  homeSection: {
+    ...homeSection,
+    items: homeSection.items.map((item) =>
+      item.id === SEED_SPACE_ACME ? { ...item, isActive: true } : item,
+    ),
   },
 };
 </script>
@@ -73,7 +84,7 @@ const readyView: WorkspaceNavView = {
           <span class="text-sm font-semibold">Denser</span>
         </SidebarHeader>
         <WorkspaceNav
-          :view="readyView"
+          :view="inWorkspaceView"
           :is-home-active="false"
           @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"
@@ -96,7 +107,7 @@ const readyView: WorkspaceNavView = {
           <span class="text-sm font-semibold">Denser</span>
         </SidebarHeader>
         <WorkspaceNav
-          :view="{ ...readyView, homeButton: { label: 'Home', showBackHint: false }, inSpaceSection: undefined }"
+          :view="onHomeView"
           :is-home-active="true"
           @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"

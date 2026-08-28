@@ -28,13 +28,13 @@ Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPAC
 
 | Section | Contents |
 | ------- | -------- |
-| **Home** | Root spaces and root artifacts the user can access (personal home). |
+| **Home** | Shown on Personal home, public root folders, and root artifacts: public roots the user created, private roots they belong to, and root artifacts. Hidden inside a **private** workspace tree. |
 | **In {space}** | When a space is active: nested child spaces, then artifacts (**documents + regular conversations** only). |
-| **Direct messages** | **Direct** conversation artifacts for the **current root space** where the user is a member. Flat list — not nested under folders. Not duplicated in In {space}. |
+| **Direct messages** | **Direct** conversation artifacts for the **current private root** (workspace) where the user is a member. Not shown for public Home folders. Flat list — not nested under folders. Not duplicated in In {space}. |
 
-DMs are **global within the root space** (one thread per member set per workspace). Switching nested spaces does not change the DM list.
+DMs are **global within the workspace** (one thread per member set per private root). Switching nested spaces does not change the DM list.
 
-Space switcher: selects which **root space tree** is active (workspace boundary).
+The home button shows the current **workspace** name (private root) with a back-to-home hint; on Personal home and public folders it stays Home.
 
 ---
 
@@ -67,3 +67,4 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 | 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome.       |
 | 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD. |
 | 2026-08-26 | Sidebar IA (Home / In space / Direct messages); space tab bar; link to domain model. |
+| 2026-08-28 | Home section only outside private workspaces; DMs only on private roots. |

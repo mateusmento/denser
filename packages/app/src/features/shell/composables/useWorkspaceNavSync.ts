@@ -157,7 +157,7 @@ export function useWorkspaceNavSync() {
   const contextSpaceId = computed(() => contextDetail.value?.space.id);
   const liveContextSpace = useLiveSpace(contextSpaceId);
 
-  const activeRootSpaceId = computed((): SpaceId | null => {
+  const workspaceRootId = computed((): SpaceId | null => {
     if (contextDetail.value) {
       const space = contextDetail.value.space;
       return space.rootSpaceId ?? space.id;
@@ -168,35 +168,46 @@ export function useWorkspaceNavSync() {
     if (documentQuery.data.value?.rootSpaceId) {
       return documentQuery.data.value.rootSpaceId;
     }
-    const homeSpaces = homeQuery.data.value?.spaces ?? [];
-    if (homeSpaces.length === 1) {
-      return homeSpaces[0]!.id;
-    }
     return null;
   });
 
-  const liveActiveRootSpace = useLiveSpace(
-    computed(() => activeRootSpaceId.value ?? undefined),
+  const liveWorkspaceRoot = useLiveSpace(
+    computed(() => workspaceRootId.value ?? undefined),
   );
 
-  const homeButton = computed((): WorkspaceNavHomeButton => {
-    const rootId = activeRootSpaceId.value;
+  const inPrivateWorkspace = computed(() => {
+    const rootId = workspaceRootId.value;
     const contextSpace = liveContextSpace.value ?? contextDetail.value?.space;
-    const contextIsRoot = contextSpace != null && contextSpace.rootSpaceId == null;
+    const root =
+      liveWorkspaceRoot.value ??
+      liveRootSpaces.value.find((space) => space.id === rootId) ??
+      (contextSpace != null && contextSpace.parentSpaceId == null ? contextSpace : undefined);
+    return root != null && root.parentSpaceId == null && root.visibility === "private";
+  });
+
+  const homeButton = computed((): WorkspaceNavHomeButton => {
+    if (!inPrivateWorkspace.value) return { label: "Home", showBackHint: false };
+
+    const rootId = workspaceRootId.value;
+    const contextSpace = liveContextSpace.value ?? contextDetail.value?.space;
     const title =
-      liveActiveRootSpace.value?.title ??
+      liveWorkspaceRoot.value?.title ??
       liveRootSpaces.value.find((space) => space.id === rootId)?.title ??
-      (contextIsRoot && contextSpace.id === rootId ? contextSpace.title : undefined);
+      (contextSpace != null &&
+      contextSpace.parentSpaceId == null &&
+      contextSpace.id === rootId
+        ? contextSpace.title
+        : undefined);
 
     if (!title) return { label: "Home", showBackHint: false };
     return { label: title, showBackHint: !isHomeActive.value };
   });
 
   const directMessagesQuery = useQuery({
-    queryKey: computed(() => queryKeys.directMessages(activeRootSpaceId.value ?? "")),
-    enabled: computed(() => activeRootSpaceId.value != null),
+    queryKey: computed(() => queryKeys.directMessages(workspaceRootId.value ?? "")),
+    enabled: computed(() => inPrivateWorkspace.value && workspaceRootId.value != null),
     queryFn: async () => {
-      const { conversations } = await apiClient.listDirectConversations(activeRootSpaceId.value!);
+      const { conversations } = await apiClient.listDirectConversations(workspaceRootId.value!);
       upsertMany(artifactsCollection, conversations);
       return conversations;
     },
@@ -225,11 +236,13 @@ export function useWorkspaceNavSync() {
     const activeSpace = activeSpaceId.value;
     const activeArtifact = activeArtifactId.value;
 
-    const homeSection = {
-      label: "Home",
-      items: sectionItems(liveRootSpaces.value, home.artifacts, activeSpace, activeArtifact),
-      scopeSpaceId: null,
-    };
+    const homeSection = inPrivateWorkspace.value
+      ? undefined
+      : {
+          label: "Home",
+          items: sectionItems(liveRootSpaces.value, home.artifacts, activeSpace, activeArtifact),
+          scopeSpaceId: null,
+        };
 
     const detail = contextDetail.value;
     const inSpaceSection = detail
@@ -245,7 +258,7 @@ export function useWorkspaceNavSync() {
         }
       : undefined;
 
-    const rootSpaceId = activeRootSpaceId.value;
+    const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
     const directMessagesSection =
       rootSpaceId && directMessagesQuery.data.value
         ? {
@@ -279,9 +292,9 @@ export function useWorkspaceNavSync() {
     if (artifactSpaceId.value) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.space(artifactSpaceId.value) });
     }
-    if (activeRootSpaceId.value) {
+    if (workspaceRootId.value) {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.directMessages(activeRootSpaceId.value),
+        queryKey: queryKeys.directMessages(workspaceRootId.value),
       });
     }
   };

@@ -70,7 +70,7 @@ export async function createOrOpenDirectConversation(
   input: CreateDirectConversationInput,
 ) {
   const rootSpace = await requireSpaceAccess(userId, input.rootSpaceId);
-  if (!rootSpace || rootSpace.parentSpaceId !== null) {
+  if (!rootSpace || rootSpace.parentSpaceId !== null || rootSpace.visibility !== "private") {
     return { ok: false as const, reason: "not_found" as const };
   }
 
@@ -143,7 +143,7 @@ export async function createOrOpenDirectConversation(
 
 export async function listDirectConversations(userId: UserId, rootSpaceId: SpaceId) {
   const rootSpace = await requireSpaceAccess(userId, rootSpaceId);
-  if (!rootSpace || rootSpace.parentSpaceId !== null) {
+  if (!rootSpace || rootSpace.parentSpaceId !== null || rootSpace.visibility !== "private") {
     return { ok: false as const, reason: "not_found" as const };
   }
 

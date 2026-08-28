@@ -35,10 +35,14 @@ export function useSpaceMembersActions(sync: SpaceMembersSync) {
 
   async function onUpdateVisibility(visibility: SpaceVisibility) {
     if (sync.content.value?.space.visibility === visibility) return;
+    if (visibility === "public") return;
     if (visibility === "private") {
+      const nested = sync.membersView.value?.isNested ?? false;
       const ok = await confirm(
-        "Make this space private?",
-        "Root members will be copied in so nobody is locked out.",
+        nested ? "Make this space private?" : "Turn this folder into a workspace?",
+        nested
+          ? "Root members will be copied in so nobody is locked out. This cannot be undone."
+          : "You'll be the owner and can invite people. This cannot be undone.",
       );
       if (!ok) {
         await sync.reload();

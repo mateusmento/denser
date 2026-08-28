@@ -44,6 +44,16 @@ const nestedView: SpaceMembersView = {
   isNested: true,
   visibility: "public",
 };
+
+const publicRootView: SpaceMembersView = {
+  members: [],
+  canManage: true,
+  isNested: false,
+  visibility: "public",
+  isUpdatingVisibility: false,
+  isAddingMember: false,
+  removingMemberId: null,
+};
 </script>
 
 <template>
@@ -58,6 +68,15 @@ const nestedView: SpaceMembersView = {
   <Story as-child name="NestedPublic">
     <SpaceMembersPanel
       :view="nestedView"
+      @add-member="action('addMember')()"
+      @remove-member="action('removeMember')($event)"
+      @update-visibility="action('updateVisibility')($event)"
+    />
+  </Story>
+
+  <Story as-child name="PublicHomeFolder">
+    <SpaceMembersPanel
+      :view="publicRootView"
       @add-member="action('addMember')()"
       @remove-member="action('removeMember')($event)"
       @update-visibility="action('updateVisibility')($event)"

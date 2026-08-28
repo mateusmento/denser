@@ -106,7 +106,7 @@ const emit = defineEmits<{
     </template>
 
     <template v-else>
-      <SidebarGroup>
+      <SidebarGroup v-if="view.homeSection">
         <SidebarGroupLabel>{{ view.homeSection.label }}</SidebarGroupLabel>
         <SidebarGroupAction title="Create">
           <WorkspaceCreateMenu

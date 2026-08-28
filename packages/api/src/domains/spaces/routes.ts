@@ -25,9 +25,6 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
     const result = await createSpace(userId, c.req.valid("json"));
 
     if (!result.ok) {
-      if (result.reason === "invalid_visibility") {
-        return c.json({ error: "Root spaces must stay private" }, 400);
-      }
       return c.json({ error: "Space not found" }, 404);
     }
 
@@ -74,7 +71,7 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
         return c.json({ error: "Forbidden" }, 403);
       }
       if (result.reason === "invalid_visibility") {
-        return c.json({ error: "Root spaces must stay private" }, 400);
+        return c.json({ error: "Cannot make a private space public" }, 400);
       }
       return c.json({ error: "Space not found" }, 404);
     }
@@ -95,6 +92,9 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
       }
       if (result.reason === "already_member") {
         return c.json({ error: "Already a member" }, 409);
+      }
+      if (result.reason === "membership_disabled") {
+        return c.json({ error: "Membership is only available on private workspaces" }, 400);
       }
       return c.json({ error: "Space not found" }, 404);
     }

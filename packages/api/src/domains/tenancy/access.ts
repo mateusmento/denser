@@ -23,12 +23,15 @@ export async function isMemberOfSpace(userId: UserId, spaceId: SpaceId): Promise
 export async function canAccessSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
   const row = await db.query.space.findFirst({
     where: eq(space.id, spaceId),
-    columns: { id: true, parentSpaceId: true, visibility: true },
+    columns: { id: true, parentSpaceId: true, visibility: true, createdBy: true },
   });
   if (!row) return false;
 
   if (row.parentSpaceId === null) {
-    return isMemberOfSpace(userId, spaceId);
+    if (row.visibility === "private") {
+      return isMemberOfSpace(userId, spaceId);
+    }
+    return row.createdBy === userId;
   }
 
   if (!(await canAccessSpace(userId, row.parentSpaceId))) {
@@ -45,11 +48,23 @@ export async function canAccessSpace(userId: UserId, spaceId: SpaceId): Promise<
 export async function canManageSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
   const row = await db.query.space.findFirst({
     where: eq(space.id, spaceId),
-    columns: { id: true, rootSpaceId: true },
+    columns: { id: true, rootSpaceId: true, parentSpaceId: true, visibility: true, createdBy: true },
   });
   if (!row) return false;
 
   const rootSpaceId = row.rootSpaceId ?? row.id;
+  if (rootSpaceId !== row.id) {
+    const root = await db.query.space.findFirst({
+      where: eq(space.id, rootSpaceId),
+      columns: { parentSpaceId: true, visibility: true, createdBy: true },
+    });
+    if (root && root.parentSpaceId == null && root.visibility === "public" && root.createdBy === userId) {
+      return true;
+    }
+  } else if (row.visibility === "public" && row.createdBy === userId) {
+    return true;
+  }
+
   const rootRole = await getDirectMembershipRole(userId, rootSpaceId);
   if (rootRole === "owner" || rootRole === "admin") {
     return true;
@@ -77,13 +92,26 @@ export async function canAccessArtifact(
 }
 
 export async function getAccessibleRootSpaceIds(userId: UserId): Promise<SpaceId[]> {
-  const rows = await db
+  const memberRoots = await db
     .select({ spaceId: spaceMembership.spaceId })
     .from(spaceMembership)
     .innerJoin(space, eq(space.id, spaceMembership.spaceId))
-    .where(and(eq(spaceMembership.userId, userId), isNull(space.parentSpaceId)));
+    .where(
+      and(
+        eq(spaceMembership.userId, userId),
+        isNull(space.parentSpaceId),
+        eq(space.visibility, "private"),
+      ),
+    );
 
-  return rows.map((row) => row.spaceId);
+  const ownedFolders = await db
+    .select({ spaceId: space.id })
+    .from(space)
+    .where(
+      and(isNull(space.parentSpaceId), eq(space.visibility, "public"), eq(space.createdBy, userId)),
+    );
+
+  return [...memberRoots.map((row) => row.spaceId), ...ownedFolders.map((row) => row.spaceId)];
 }
 
 export async function requireSpaceAccess(

@@ -33,7 +33,7 @@ export type WorkspaceNavView = {
   state: "loading" | "ready" | "error";
   errorMessage?: string;
   homeButton: WorkspaceNavHomeButton;
-  homeSection: WorkspaceNavSection;
+  homeSection?: WorkspaceNavSection;
   inSpaceSection?: WorkspaceNavSection;
   directMessagesSection?: WorkspaceNavSection;
   activeRootSpaceId?: string | null;

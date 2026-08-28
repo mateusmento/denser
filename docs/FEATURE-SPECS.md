@@ -221,3 +221,4 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 | 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note. |
 | 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON.                                              |
 | 2026-08-26 | Conversation as Artifact kind; regular/direct kinds; DM dedupe within root space; space tabs. |
+| 2026-08-28 | Space visibility is the membership gate; private → public is not a feature. See [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md). |

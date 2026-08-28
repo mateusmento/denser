@@ -264,4 +264,47 @@ describe("domain api", () => {
     const acmeAfterDelete = await client.getSpace(SEED_SPACE_ACME);
     expect(acmeAfterDelete.childSpaces.map((space) => space.id)).not.toContain(copy.id);
   });
+
+  it("creates public home folders and forbids making private spaces public", async () => {
+    const aliceClient = await harness.createAuthedClient("alice");
+    const bobClient = await harness.createAuthedClient("bob");
+
+    const { space: folder } = await aliceClient.createSpace({ title: "Notes" });
+    expect(folder.parentSpaceId).toBeNull();
+    expect(folder.visibility).toBe("public");
+
+    const aliceHome = await aliceClient.home();
+    expect(aliceHome.spaces.map((space) => space.id)).toContain(folder.id);
+
+    const bobHome = await bobClient.home();
+    expect(bobHome.spaces.map((space) => space.id)).not.toContain(folder.id);
+    await expect(bobClient.getSpace(folder.id)).rejects.toMatchObject({ status: 404 });
+
+    const loaded = await aliceClient.getSpace(folder.id);
+    expect(loaded.members).toEqual([]);
+    expect(loaded.canManage).toBe(true);
+
+    await expect(
+      aliceClient.addSpaceMember(folder.id, { username: "bob", role: "member" }),
+    ).rejects.toMatchObject({ status: 400 });
+
+    await expect(aliceClient.listDirectConversations(folder.id)).rejects.toMatchObject({
+      status: 404,
+    });
+
+    const promoted = await aliceClient.patchSpace(folder.id, { visibility: "private" });
+    expect(promoted.space.visibility).toBe("private");
+
+    const afterPromote = await aliceClient.getSpace(folder.id);
+    expect(
+      afterPromote.members.some((member) => member.username === "alice" && member.role === "owner"),
+    ).toBe(true);
+
+    await expect(aliceClient.patchSpace(folder.id, { visibility: "public" })).rejects.toMatchObject({
+      status: 400,
+    });
+    await expect(
+      aliceClient.patchSpace(SEED_SPACE_ACME, { visibility: "public" }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
 });

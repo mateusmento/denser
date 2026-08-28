@@ -29,13 +29,14 @@ export async function listChildSpaces(parentSpaceId: SpaceId): Promise<SpaceRow[
 export async function insertRootSpace(input: {
   title: string;
   createdBy: UserId;
+  visibility?: SpaceVisibility;
 }): Promise<SpaceRow> {
   const [created] = await db
     .insert(space)
     .values({
       title: input.title,
       icon: DEFAULT_SPACE_ICON,
-      visibility: "private",
+      visibility: input.visibility ?? "public",
       createdBy: input.createdBy,
     })
     .returning();

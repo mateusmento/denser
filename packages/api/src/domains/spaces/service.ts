@@ -38,6 +38,23 @@ import {
   type SpaceRow,
 } from "./repository.js";
 
+async function enableMembership(spaceRow: SpaceRow): Promise<void> {
+  if (spaceRow.parentSpaceId === null) {
+    const existing = await findSpaceMember(spaceRow.id, spaceRow.createdBy);
+    if (!existing) {
+      await insertOwnerMembership({ spaceId: spaceRow.id, userId: spaceRow.createdBy });
+    }
+    return;
+  }
+
+  const rootSpaceId = spaceRow.rootSpaceId ?? spaceRow.id;
+  await copyRootMembersToSpace(rootSpaceId, spaceRow.id);
+  const creator = await findSpaceMember(spaceRow.id, spaceRow.createdBy);
+  if (!creator) {
+    await insertOwnerMembership({ spaceId: spaceRow.id, userId: spaceRow.createdBy });
+  }
+}
+
 export async function createSpace(userId: UserId, input: CreateSpaceInput) {
   if (input.parentSpaceId) {
     const parent = await requireSpaceAccess(userId, input.parentSpaceId);
@@ -54,15 +71,22 @@ export async function createSpace(userId: UserId, input: CreateSpaceInput) {
       visibility,
     });
 
+    if (visibility === "private") {
+      await insertOwnerMembership({ spaceId: created.id, userId });
+    }
+
     return { ok: true as const, space: toSpaceSummary(created) };
   }
 
-  if (input.visibility && input.visibility !== "private") {
-    return { ok: false as const, reason: "invalid_visibility" as const };
+  const visibility = input.visibility ?? "public";
+  const created = await insertRootSpace({
+    title: input.title,
+    createdBy: userId,
+    visibility,
+  });
+  if (visibility === "private") {
+    await insertOwnerMembership({ spaceId: created.id, userId });
   }
-
-  const created = await insertRootSpace({ title: input.title, createdBy: userId });
-  await insertOwnerMembership({ spaceId: created.id, userId });
 
   return { ok: true as const, space: toSpaceSummary(created) };
 }
@@ -113,6 +137,10 @@ export async function addSpaceMember(
   const existing = await findSpaceMember(spaceId, targetUser.id);
   if (existing) {
     return { ok: false as const, reason: "already_member" as const };
+  }
+
+  if (spaceRow.parentSpaceId === null && spaceRow.visibility === "public") {
+    return { ok: false as const, reason: "membership_disabled" as const };
   }
 
   if (spaceRow.parentSpaceId === null && input.role === "admin") {
@@ -174,14 +202,13 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
   }
 
   if (input.visibility !== undefined) {
-    if (spaceRow.parentSpaceId === null) {
+    if (spaceRow.visibility === "private" && input.visibility === "public") {
       return { ok: false as const, reason: "invalid_visibility" as const };
     }
 
     const previousVisibility = spaceRow.visibility;
     if (previousVisibility === "public" && input.visibility === "private") {
-      const rootSpaceId = spaceRow.rootSpaceId ?? spaceRow.id;
-      await copyRootMembersToSpace(rootSpaceId, spaceId);
+      await enableMembership(spaceRow);
     }
   }
 

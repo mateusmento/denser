@@ -34,11 +34,11 @@ const visibilityModel = computed({
         <div class="space-y-1">
           <h2 class="text-sm font-medium">Members</h2>
           <p class="text-xs text-muted-foreground">
-            Root spaces are private. Nested spaces are public folders unless marked private.
+            Public spaces are folders. Make a space private to turn on membership — that cannot be undone.
           </p>
         </div>
         <Button
-          v-if="view.canManage"
+          v-if="view.canManage && (view.isNested || view.visibility === 'private')"
           variant="outline"
           size="sm"
           :disabled="view.isAddingMember"
@@ -48,7 +48,7 @@ const visibilityModel = computed({
         </Button>
       </div>
 
-      <div v-if="view.isNested && view.canManage" class="space-y-2">
+      <div v-if="view.canManage && view.visibility === 'public'" class="space-y-2">
         <Label for="space-visibility">Visibility</Label>
         <NativeSelect
           id="space-visibility"
@@ -56,8 +56,8 @@ const visibilityModel = computed({
           class="w-full max-w-xs"
           :disabled="view.isUpdatingVisibility"
         >
-          <NativeSelectOption value="public">Public folder</NativeSelectOption>
-          <NativeSelectOption value="private">Private room</NativeSelectOption>
+          <NativeSelectOption value="public">{{ view.isNested ? "Public folder" : "Personal folder" }}</NativeSelectOption>
+          <NativeSelectOption value="private">{{ view.isNested ? "Private room" : "Workspace" }}</NativeSelectOption>
         </NativeSelect>
       </div>
 
