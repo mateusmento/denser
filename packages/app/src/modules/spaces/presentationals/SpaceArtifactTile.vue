@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import type { SpaceGalleryArtifactAction } from "@/modules/spaces/types";
 import type { ArtifactKind } from "@denser/contracts";
 import {
   Card,
@@ -10,10 +12,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@denser/design-system";
-import { FileTextIcon, MessageSquareIcon } from "@lucide/vue";
+import { FileTextIcon, MessageCircleIcon } from "@lucide/vue";
 import { computed } from "vue";
-import type { SpaceGalleryArtifactAction } from "@/modules/spaces/types";
-import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 
 const props = defineProps<{
   title: string;
@@ -23,7 +23,7 @@ const props = defineProps<{
 const displayTitle = computed(() => artifactDisplayTitle(props.title));
 
 const tileIcon = computed(() =>
-  props.kind === "conversation" ? MessageSquareIcon : FileTextIcon,
+  props.kind === "conversation" ? MessageCircleIcon : FileTextIcon,
 );
 
 const emit = defineEmits<{

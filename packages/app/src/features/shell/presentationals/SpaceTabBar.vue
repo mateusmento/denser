@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@denser/design-system";
-import { FileTextIcon, MessageSquareIcon, PlusIcon, XIcon } from "@lucide/vue";
+import { FileTextIcon, MessageCircleIcon, PlusIcon, XIcon } from "@lucide/vue";
 import type { SpaceSummary } from "@denser/contracts";
 import { RouterLink } from "vue-router";
 
@@ -75,7 +75,7 @@ const emit = defineEmits<{
           New document
         </DropdownMenuItem>
         <DropdownMenuItem @select="emit('add', 'conversation')">
-          <MessageSquareIcon class="size-3.5" />
+          <MessageCircleIcon class="size-3.5" />
           New conversation
         </DropdownMenuItem>
         <template v-if="childSpaces?.length">

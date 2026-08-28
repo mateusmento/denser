@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   cn,
 } from "@denser/design-system";
-import { CheckIcon, FileTextIcon, MessageSquareIcon, XIcon } from "@lucide/vue";
+import { CheckIcon, FileTextIcon, MessageCircleIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 import { resolveSpaceIcon } from "@/modules/spaces";
@@ -58,7 +58,7 @@ const displayLabel = computed(() =>
 
 const displayIcon = computed(() => {
   if (isSpace.value) return resolveSpaceIcon(props.link.icon);
-  return props.link.artifactKind === "conversation" ? MessageSquareIcon : FileTextIcon;
+  return props.link.artifactKind === "conversation" ? MessageCircleIcon : FileTextIcon;
 });
 
 const renamePlaceholder = computed(() =>

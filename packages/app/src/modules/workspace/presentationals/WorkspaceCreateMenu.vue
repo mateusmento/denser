@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@denser/design-system";
-import { FileTextIcon, FolderIcon, MessageSquareIcon, PlusIcon } from "@lucide/vue";
+import { FileTextIcon, FolderIcon, MessageCircleIcon, PlusIcon } from "@lucide/vue";
 import type { WorkspaceCreateAction } from "../types";
 
 withDefaults(
@@ -53,7 +53,7 @@ const emit = defineEmits<{
         Document
       </DropdownMenuItem>
       <DropdownMenuItem @select="emit('create', 'conversation')">
-        <MessageSquareIcon class="size-3.5" />
+        <MessageCircleIcon class="size-3.5" />
         Conversation
       </DropdownMenuItem>
     </DropdownMenuContent>

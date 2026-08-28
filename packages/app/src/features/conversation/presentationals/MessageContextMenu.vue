@@ -11,7 +11,7 @@ import {
   CopyIcon,
   ForwardIcon,
   LinkIcon,
-  MessageSquareIcon,
+  MessageCircleIcon,
   PencilIcon,
   QuoteIcon,
   SmileIcon,
@@ -69,7 +69,7 @@ async function onCopy() {
         React to message
       </ContextMenuItem>
       <ContextMenuItem v-if="threadActions" @select="emit('thread')">
-        <MessageSquareIcon />
+        <MessageCircleIcon />
         Reply in thread
       </ContextMenuItem>
       <template v-if="message.canEdit !== false">

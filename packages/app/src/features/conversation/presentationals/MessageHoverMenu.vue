@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMessageScrollerContextMaybe } from "@denser/design-system";
 import { autoUpdate, computePosition, offset, shift } from "@floating-ui/dom";
-import { SmileIcon, MessageSquareIcon, PencilIcon, TrashIcon } from "@lucide/vue";
+import { SmileIcon, MessageCircleIcon, PencilIcon, TrashIcon } from "@lucide/vue";
 import { useEventListener, useResizeObserver } from "@vueuse/core";
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import type { ConversationMessageView } from "../types";
@@ -326,7 +326,7 @@ async function updatePosition() {
           aria-label="Reply in thread"
           @click="emit('thread')"
         >
-          <MessageSquareIcon class="size-3.5" />
+          <MessageCircleIcon class="size-3.5" />
         </Button>
         <Button
           v-if="message.canEdit"

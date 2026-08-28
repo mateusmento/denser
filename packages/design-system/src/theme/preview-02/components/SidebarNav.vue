@@ -203,7 +203,7 @@ import {
                   <SidebarMenuItem>
                     <SidebarMenuButton>
                       <IconPlaceholder
-                        lucide="MessageSquareIcon"
+                        lucide="MessageCircleIcon"
                         tabler="IconMessage"
                         hugeicons="Message01Icon"
                         phosphor="ChatIcon"
