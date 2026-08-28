@@ -35,7 +35,7 @@ export function useSpaceTabBarSync() {
     queryFn: async () => apiClient.getSpace(hostSpaceId.value!),
   });
 
-  const pinChildSpaces = computed((): readonly Pick<SpaceSummary, "id" | "title">[] => {
+  const childSpaces = computed((): readonly Pick<SpaceSummary, "id" | "title">[] => {
     return spaceDetailQuery.data.value?.childSpaces ?? [];
   });
 
@@ -173,7 +173,7 @@ export function useSpaceTabBarSync() {
     openPeek(action, host, { navigateOnCreate: true });
   }
 
-  function pinChildSpace(childSpaceId: SpaceId) {
+  function openChildSpace(childSpaceId: SpaceId) {
     const host = hostSpaceId.value;
     if (!host) return;
     setActiveTabHost(host);
@@ -199,9 +199,9 @@ export function useSpaceTabBarSync() {
     tabs,
     visible,
     hostSpaceId,
-    pinChildSpaces,
+    childSpaces,
     addTab,
-    pinChildSpace,
+    openChildSpace,
     closeTab,
   };
 }

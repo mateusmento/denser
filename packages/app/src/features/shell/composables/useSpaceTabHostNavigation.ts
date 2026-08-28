@@ -4,7 +4,7 @@ import { useRoute } from "vue-router";
 import { useActiveTabHost } from "./useActiveTabHost";
 import { useSpaceTabsStore } from "./useSpaceTabsStore";
 
-/** Keeps tab-host context aligned with navigation (sidebar vs pinned child tabs). */
+/** Keeps tab-host context aligned with navigation (sidebar vs child working tabs). */
 export function useSpaceTabHostNavigation() {
   const route = useRoute();
   const { activeTabHostId, setActiveTabHost } = useActiveTabHost();
@@ -15,15 +15,20 @@ export function useSpaceTabHostNavigation() {
   watch(
     [() => route.name, routeSpaceId],
     ([name, spaceId]) => {
+      if (name === "home") {
+        setActiveTabHost(null);
+        return;
+      }
+
       if (name !== "space" || !spaceId) return;
 
       const host = activeTabHostId.value;
-      const pinnedChild =
+      const workingChildTab =
         host != null &&
         host !== spaceId &&
         spaceTabs.listTabs(host).some((tab) => tab.kind === "space" && tab.spaceId === spaceId);
 
-      if (!pinnedChild) {
+      if (!workingChildTab) {
         setActiveTabHost(spaceId);
       }
     },

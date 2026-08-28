@@ -29,3 +29,11 @@ _Avoid_: Making a private space public (not a feature)
 
 **Root artifact**:
 An artifact with no space parent (`space_id` null), owner-only, listed on Personal home.
+
+**Working tab**:
+A personal tab on a space's bar for this user only. Closable. Opening a child from `+` is a working tab.
+_Avoid_: Pin, pinned tab
+
+**Pin**:
+A shared tab on a space's bar, visible to members who can read the target. Only canManage can add or remove. Not closable. Direct conversations cannot be pins.
+_Avoid_: Working tab, calling a personal open a pin

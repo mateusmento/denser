@@ -20,7 +20,7 @@ The shell **mounts** ThemeSwitcher and Toaster. It does not re-specify their beh
 
 Get the user to a Space, Artifact, or View without competing with the content column. Calm, consistent chrome across surfaces.
 
-Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md#space-tabs)): **This Space** is always the first tab; users add artifact tabs or (later) backlog/board view tabs via **`+`**.
+Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md#space-tabs)): **This Space**, then **pins**, then **working tabs**. **`+`** adds working tabs (new document, new conversation, open child space); backlog/board view tabs come later.
 
 ---
 
@@ -53,7 +53,7 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 
 ## Open questions
 
-- Space tab persistence (per-user vs shared across space members).
+- Pin create/remove UI (`canManage`; working tabs stay per-user).
 - Space switcher placement (sidebar header vs top bar).
 - Where ThemeSwitcher lives (settings vs compact control) — decided in [theme.md](./theme.md) once shell IA is built out.
 - Direct messages: compact list vs grouped unread (Slack-like).
@@ -68,3 +68,4 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 | 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD. |
 | 2026-08-26 | Sidebar IA (Home / In space / Direct messages); space tab bar; link to domain model. |
 | 2026-08-28 | Home section only outside private workspaces; DMs only on private roots. |
+| 2026-08-28 | Tab bar: This Space → pins → working tabs. `+` opens a child as a working tab. |

@@ -5,16 +5,16 @@ import { useSpaceTabHostNavigation } from "../composables/useSpaceTabHostNavigat
 import SpaceTabBar from "../presentationals/SpaceTabBar.vue";
 
 useSpaceTabHostNavigation();
-const { tabs, visible, pinChildSpaces, addTab, pinChildSpace, closeTab } = useSpaceTabBarSync();
+const { tabs, visible, childSpaces, addTab, openChildSpace, closeTab } = useSpaceTabBarSync();
 </script>
 
 <template>
   <SpaceTabBar
     v-if="visible"
     :tabs="tabs"
-    :child-spaces="pinChildSpaces"
+    :child-spaces="childSpaces"
     @add="addTab"
-    @pin-child-space="(id) => pinChildSpace(id as SpaceId)"
+    @open-child-space="(id) => openChildSpace(id as SpaceId)"
     @close="closeTab"
   />
 </template>

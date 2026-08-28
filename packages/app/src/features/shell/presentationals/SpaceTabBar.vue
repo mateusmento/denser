@@ -26,7 +26,7 @@ defineProps<{
 
 const emit = defineEmits<{
   add: [action: "document" | "conversation"];
-  pinChildSpace: [spaceId: string];
+  openChildSpace: [spaceId: string];
   close: [tabKey: string];
 }>();
 </script>
@@ -83,7 +83,7 @@ const emit = defineEmits<{
           <DropdownMenuItem
             v-for="space in childSpaces"
             :key="space.id"
-            @select="emit('pinChildSpace', space.id)"
+            @select="emit('openChildSpace', space.id)"
           >
             Open {{ space.title }}
           </DropdownMenuItem>

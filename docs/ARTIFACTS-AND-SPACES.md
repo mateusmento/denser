@@ -38,11 +38,13 @@ Every space has a **tab bar** — the single mechanism for “what am I looking 
 | Tab kind | v1 | Role |
 | -------- | -- | ---- |
 | **This Space** | Yes | Always present (rename from “Gallery”). Browse **child spaces** and **regular artifacts** in the current space. |
-| **Artifact** | Yes | Open a **document** or **regular conversation** in-place. One fixed view per kind — no view-mode picker on document or conversation tabs. |
-| **Pinned space** | Optional | Open a child space as its own tab. |
+| **Pin** | Next | Shared shortcut to a **child space** or **regular artifact**. `canManage` only; no close; omit if the viewer cannot read the target. Direct conversations cannot be pins. |
+| **Working tab** | Yes | Personal. A **document**, **regular conversation**, or **child space** this user opened. Closable. One fixed view per artifact kind — no view-mode picker. |
 | **Space view** | Later | **Backlog** / **board** — filters and layout over the space’s content, not an artifact or child space. |
 
-The **`+`** on the tab bar adds tabs (new conversation, pin document, pin child space; backlog/board when views land). A conversation opened from a tab is the same artifact as one listed in This Space — tabs are navigation, not a second object model.
+Bar order: **This Space** → **pins** → **working tabs**.
+
+The **`+`** on the tab bar adds **working tabs** (new document, new conversation, open child space; backlog/board when views land). Opening a child from `+` stays on this host’s bar; entering a child from the sidebar or This Space makes that child the host. A conversation opened from a tab is the same artifact as one listed in This Space — tabs are navigation, not a second object model.
 
 ### Personal home
 
@@ -165,7 +167,7 @@ Defer: custom properties, board/calendar enablement, relationships, comments-as-
 - **Home sidebar section** — shown on Personal home, on **public** root folders (and their content), and on root artifacts. Hidden inside a **private** root workspace tree.
 - **In {space}** — flat sidebar under the active space: child spaces, then artifacts (documents + regular conversations only).
 - **Direct messages** — DM conversations for the **current private root** (workspace) where the user is a member. Not listed for public Home folders.
-- **Main column** — space **tab bar** + active tab content (This Space, artifact surface, or later space views).
+- **Main column** — space **tab bar** + active tab content (This Space, pin, working tab, or later space views).
 
 ### First-run feel
 
@@ -197,7 +199,7 @@ Blank personal home with light base UI and a create affordance — not an opinio
 - Property-based view enablement on Documents
 - Whether ownership lists on Artifacts appear for UX without affecting ACL
 - **`conversation_member`** schema, DM dedupe enforcement, and DM-only API paths
-- Space tab persistence (per-user vs shared)
+- Pin create/remove UI (working tabs are per-user; pins are shared)
 - Private channels (regular conversations with explicit member lists beyond space ACL)
 - Backlog / board space-view tabs and their filter model
 
@@ -208,3 +210,4 @@ Blank personal home with light base UI and a create affordance — not an opinio
 | Date       | Change |
 | ---------- | ------ |
 | 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |
+| 2026-08-28 | Tab bar: This Space → shared pins → personal working tabs. `+` opens a child as a working tab, not a pin. |

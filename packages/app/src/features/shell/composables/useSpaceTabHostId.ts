@@ -4,14 +4,13 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { resolveSpaceTabHostId } from "../lib/space-tabs";
 import { useActiveTabHost } from "./useActiveTabHost";
-import { useSpaceTabsStore } from "./useSpaceTabsStore";
 
-/** Space whose tab bar is active (gallery + pinned tabs). */
+/** Space whose tab bar is active (This Space + working tabs). */
 export function useSpaceTabHostId() {
   const route = useRoute();
   const { activeTabHostId } = useActiveTabHost();
-  const spaceTabs = useSpaceTabsStore();
 
   const routeSpaceId = computed(() => route.params.spaceId as SpaceId | undefined);
   const activeDocumentId = computed(() => route.params.documentId as ArtifactId | undefined);
@@ -38,36 +37,15 @@ export function useSpaceTabHostId() {
   });
 
   const hostSpaceId = computed((): SpaceId | undefined => {
-    const conversation = conversationQuery.data.value;
-    if (route.name === "conversation" && conversation?.conversationKind === "direct") {
-      return undefined;
-    }
-
-    const explicitHost = activeTabHostId.value;
-    if (explicitHost) {
-      return explicitHost;
-    }
-
-    if (routeSpaceId.value) return routeSpaceId.value;
-
-    if (documentQuery.data.value?.spaceId) {
-      return documentQuery.data.value.spaceId;
-    }
-
-    if (conversation?.spaceId && conversation.conversationKind === "regular") {
-      return conversation.spaceId;
-    }
-
-    return undefined;
+    return resolveSpaceTabHostId({
+      routeName: route.name,
+      routeSpaceId: routeSpaceId.value,
+      activeTabHostId: activeTabHostId.value,
+      documentSpaceId: documentQuery.data.value?.spaceId,
+      conversationSpaceId: conversationQuery.data.value?.spaceId,
+      conversationKind: conversationQuery.data.value?.conversationKind,
+    });
   });
-
-  function isPinnedChildSpaceRoute(spaceId: SpaceId): boolean {
-    const host = activeTabHostId.value;
-    if (!host || host === spaceId) return false;
-    return spaceTabs.listTabs(host).some(
-      (tab) => tab.kind === "space" && tab.spaceId === spaceId,
-    );
-  }
 
   return {
     hostSpaceId,
@@ -76,6 +54,5 @@ export function useSpaceTabHostId() {
     activeConversationId,
     documentQuery,
     conversationQuery,
-    isPinnedChildSpaceRoute,
   };
 }
