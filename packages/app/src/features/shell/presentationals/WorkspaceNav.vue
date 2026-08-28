@@ -11,7 +11,7 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@denser/design-system";
-import { HomeIcon, PlusIcon } from "@lucide/vue";
+import { ChevronLeftIcon, HomeIcon, PlusIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 import { WorkspaceCreateMenu } from "@/modules/workspace";
 import type {
@@ -45,10 +45,29 @@ const emit = defineEmits<{
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton as-child :is-active="isHomeActive" tooltip="Home" size="sm">
-              <RouterLink to="/">
+            <SidebarMenuButton
+              as-child
+              :is-active="isHomeActive"
+              :tooltip="view.homeButton.label"
+              size="sm"
+            >
+              <RouterLink
+                to="/"
+                :aria-label="
+                  view.homeButton.showBackHint
+                    ? `${view.homeButton.label}, back to home`
+                    : undefined
+                "
+              >
                 <HomeIcon />
-                <span>Home</span>
+                <span class="min-w-0 flex-1 truncate">{{ view.homeButton.label }}</span>
+                <span
+                  v-if="view.homeButton.showBackHint"
+                  class="hidden shrink-0 items-center gap-0.5 overflow-visible text-muted-foreground group-hover/menu-button:inline-flex"
+                >
+                  <ChevronLeftIcon />
+                  Back to home
+                </span>
               </RouterLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

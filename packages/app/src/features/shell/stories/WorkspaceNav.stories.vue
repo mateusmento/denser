@@ -22,8 +22,11 @@ const { Story } = defineMeta({
   parameters: { layout: "fullscreen" },
 });
 
+const homeButton = { label: "Acme", showBackHint: true };
+
 const readyView: WorkspaceNavView = {
   state: "ready",
+  homeButton,
   homeSection: {
     label: "Home",
     scopeSpaceId: null,
@@ -72,6 +75,29 @@ const readyView: WorkspaceNavView = {
         <WorkspaceNav
           :view="readyView"
           :is-home-active="false"
+          @create="(kind) => action('create')(kind)"
+          @retry="action('retry')()"
+          @space-action="(kind, link) => action('spaceAction')(kind, link)"
+          @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
+        />
+      </Sidebar>
+      <SidebarInset class="p-6">
+        <p class="text-sm text-muted-foreground">Main content</p>
+      </SidebarInset>
+    </SidebarProvider>
+  </Story>
+
+  <Story as-child name="On home">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader
+          class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+        >
+          <span class="text-sm font-semibold">Denser</span>
+        </SidebarHeader>
+        <WorkspaceNav
+          :view="{ ...readyView, homeButton: { label: 'Home', showBackHint: false }, inSpaceSection: undefined }"
+          :is-home-active="true"
           @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"
           @space-action="(kind, link) => action('spaceAction')(kind, link)"

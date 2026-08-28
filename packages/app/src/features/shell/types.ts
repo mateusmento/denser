@@ -24,9 +24,15 @@ export type WorkspaceNavSection = {
   scopeSpaceId?: string | null;
 };
 
+export type WorkspaceNavHomeButton = {
+  label: string;
+  showBackHint: boolean;
+};
+
 export type WorkspaceNavView = {
   state: "loading" | "ready" | "error";
   errorMessage?: string;
+  homeButton: WorkspaceNavHomeButton;
   homeSection: WorkspaceNavSection;
   inSpaceSection?: WorkspaceNavSection;
   directMessagesSection?: WorkspaceNavSection;

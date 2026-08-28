@@ -12,7 +12,7 @@ import {
   upsertMany,
 } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
-import type { WorkspaceNavLink, WorkspaceNavView } from "../types";
+import type { WorkspaceNavHomeButton, WorkspaceNavLink, WorkspaceNavView } from "../types";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 
 function spaceLink(
@@ -165,11 +165,31 @@ export function useWorkspaceNavSync() {
     if (conversationQuery.data.value?.rootSpaceId) {
       return conversationQuery.data.value.rootSpaceId;
     }
+    if (documentQuery.data.value?.rootSpaceId) {
+      return documentQuery.data.value.rootSpaceId;
+    }
     const homeSpaces = homeQuery.data.value?.spaces ?? [];
     if (homeSpaces.length === 1) {
       return homeSpaces[0]!.id;
     }
     return null;
+  });
+
+  const liveActiveRootSpace = useLiveSpace(
+    computed(() => activeRootSpaceId.value ?? undefined),
+  );
+
+  const homeButton = computed((): WorkspaceNavHomeButton => {
+    const rootId = activeRootSpaceId.value;
+    const contextSpace = liveContextSpace.value ?? contextDetail.value?.space;
+    const contextIsRoot = contextSpace != null && contextSpace.rootSpaceId == null;
+    const title =
+      liveActiveRootSpace.value?.title ??
+      liveRootSpaces.value.find((space) => space.id === rootId)?.title ??
+      (contextIsRoot && contextSpace.id === rootId ? contextSpace.title : undefined);
+
+    if (!title) return { label: "Home", showBackHint: false };
+    return { label: title, showBackHint: !isHomeActive.value };
   });
 
   const directMessagesQuery = useQuery({
@@ -190,12 +210,13 @@ export function useWorkspaceNavSync() {
     };
 
     if (homeQuery.isLoading.value) {
-      return { state: "loading", homeSection: emptyHomeSection };
+      return { state: "loading", homeButton: homeButton.value, homeSection: emptyHomeSection };
     }
     if (homeQuery.isError.value) {
       return {
         state: "error",
         errorMessage: "Couldn’t load workspace.",
+        homeButton: homeButton.value,
         homeSection: emptyHomeSection,
       };
     }
@@ -242,6 +263,7 @@ export function useWorkspaceNavSync() {
 
     return {
       state: "ready",
+      homeButton: homeButton.value,
       homeSection,
       inSpaceSection,
       directMessagesSection,
