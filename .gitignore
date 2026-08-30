@@ -27,3 +27,8 @@ packages/app/public/theme-dev-override.json
 
 # TS incremental
 *.tsbuildinfo
+
+# Playwright
+packages/design-system/test-results
+packages/design-system/playwright-report
+packages/design-system/blob-report

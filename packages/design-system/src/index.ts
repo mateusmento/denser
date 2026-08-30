@@ -22,6 +22,7 @@ export * from "./components/ui/command";
 export * from "./components/ui/context-menu";
 export * from "./components/ui/content-editable";
 export * from "./components/ui/dialog";
+export * from "./components/ui/dnd";
 export * from "./components/ui/drawer";
 export * from "./components/ui/dropdown-menu";
 export * from "./components/ui/empty";
