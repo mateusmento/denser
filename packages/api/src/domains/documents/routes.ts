@@ -46,8 +46,12 @@ export const documentRoutes = new Hono<{ Variables: Variables }>()
     const artifactId = c.req.param("artifactId") as ArtifactId;
     const result = await patchDocument(userId, artifactId, c.req.valid("json"));
 
-    if (result.reason === "conflict") {
+    if (!result.ok && result.reason === "conflict") {
       return c.json({ error: "conflict" as const, document: result.document }, 409);
+    }
+
+    if (!result.ok && result.reason === "invalid_transition") {
+      return c.json({ error: "Invalid stage transition" }, 400);
     }
 
     if (!result.ok) {

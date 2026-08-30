@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { SpaceIcon } from "@denser/contracts";
+import type { SpaceIcon, SprintRole } from "@denser/contracts";
 import {
+  Badge,
   Card,
   CardContent,
   cn,
@@ -10,18 +11,23 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@denser/design-system";
+import { computed } from "vue";
 import { resolveSpaceIcon } from "@/modules/spaces/lib/space-icons";
+import { sprintRoleLabel } from "@/modules/spaces/lib/sprint-role";
 import type { SpaceGallerySpaceAction } from "@/modules/spaces/types";
 
-defineProps<{
+const props = defineProps<{
   title: string;
   icon?: SpaceIcon | null;
+  sprintRole?: SprintRole | null;
 }>();
 
 const emit = defineEmits<{
   open: [];
   action: [action: SpaceGallerySpaceAction];
 }>();
+
+const roleLabel = computed(() => sprintRoleLabel(props.sprintRole));
 
 function onAction(action: SpaceGallerySpaceAction) {
   emit("action", action);
@@ -57,7 +63,10 @@ function onAction(action: SpaceGallerySpaceAction) {
               class="size-4 shrink-0"
               aria-hidden="true"
             />
-            <p class="min-w-0 truncate text-sm font-medium">{{ title }}</p>
+            <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ title }}</p>
+            <Badge v-if="roleLabel" variant="outline" class="shrink-0">
+              {{ roleLabel }}
+            </Badge>
           </CardContent>
         </Card>
       </button>

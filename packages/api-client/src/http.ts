@@ -16,6 +16,7 @@ import {
   ListDirectConversationsResponse,
   PatchConversationInput,
   PatchConversationResponse,
+  EnableSprintsResponse,
   HomeResponse,
   PatchDocumentInput,
   PatchDocumentResponse,
@@ -190,6 +191,27 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("patch space failed", res.status, body);
     return PatchSpaceResponse.parse(body);
+  }
+
+  async enableSprints(spaceId: SpaceId): Promise<EnableSprintsResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}/sprints/enable`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("enable sprints failed", res.status, body);
+    return EnableSprintsResponse.parse(body);
+  }
+
+  async startSprint(spaceId: SpaceId): Promise<EnableSprintsResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}/sprints/start`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("start sprint failed", res.status, body);
+    return EnableSprintsResponse.parse(body);
+  }
+
+  async completeSprint(spaceId: SpaceId): Promise<EnableSprintsResponse> {
+    const res = await this.request(`/api/spaces/${spaceId}/sprints/complete`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("complete sprint failed", res.status, body);
+    return EnableSprintsResponse.parse(body);
   }
 
   async duplicateDocument(artifactId: ArtifactId): Promise<CreateDocumentResponse> {

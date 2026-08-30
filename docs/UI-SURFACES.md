@@ -4,7 +4,7 @@
 
 **Audience:** Product and frontend when specifying what a screen or component must show and do.
 
-**Related:** [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), [FEATURE-SPECS.md](./FEATURE-SPECS.md), [UI-SURFACE-SPEC-GUIDELINE.md](./ui-surfaces/UI-SURFACE-SPEC-GUIDELINE.md), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md).
+**Related:** [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), [FEATURE-SPECS.md](./FEATURE-SPECS.md), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md), [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md).
 
 ---
 
@@ -35,8 +35,8 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 | Document       | Calm         | Read / write primary artifact   | [document.md](./ui-surfaces/document.md)         |
 | Conversation   | Calm–medium  | Persistent discussion (artifact tab or DM) | [conversation.md](./ui-surfaces/conversation.md) |
 | This Space     | Calm         | Browse child spaces + regular artifacts  | [shell.md](./ui-surfaces/shell.md) (tab content)   |
-| Backlog / list | Dense        | Space **view** tab — scan, rank, bulk-act | Deferred (space view, not artifact)              |
-| Board          | Dense        | Space **view** tab — workflow by status   | Deferred (space view, not artifact)              |
+| Backlog / list | Dense        | Space **view** — this space’s documents; sprint sections if sprinting is on | [backlog.md](./ui-surfaces/backlog.md) |
+| Board          | Dense        | Space **view** — workflow stages; active sprint only if sprinting is on | [board.md](./ui-surfaces/board.md)     |
 | Map            | Medium–dense | Spatial organize / model        | TBD                                              |
 | Personal home  | Calm         | Root Spaces & Artifacts landing | TBD                                              |
 
@@ -58,3 +58,6 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 | 2026-08-11 | Split Theme, Toast, rich-text composer, and Document into their own surface specs.            |
 | 2026-08-11 | Rich-text composer is shared infrastructure; Views derive DocumentComposer / MessageComposer. |
 | 2026-08-26 | This Space tab; backlog/board as space views; shell tab bar + DM nav per ARTIFACTS-AND-SPACES. |
+| 2026-08-28 | Backlog and board surface drafts; sprint clock in BACKLOG-AND-SPRINTS.md. |
+| 2026-08-29 | Backlog/board independent of sprinting; project presets. |
+| 2026-08-29 | Board/document surfaces point at workflow and document-type specs. |

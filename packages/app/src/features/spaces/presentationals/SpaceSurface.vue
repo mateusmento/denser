@@ -9,8 +9,8 @@ import type {
 import { Badge, Button, Skeleton } from "@denser/design-system";
 import { ChevronLeftIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
-import { SpaceGallery } from "@/modules/spaces";
-import { WorkspaceCreateMenu } from "@/modules/workspace";
+import { SpaceGallery, sprintRoleLabel } from "@/modules/spaces";
+import { WorkspaceCreateMenu, type WorkspaceCreateAction } from "@/modules/workspace";
 
 defineProps<{
   view: SpaceSurfaceView;
@@ -19,7 +19,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  create: [action: "space" | "document" | "conversation"];
+  create: [action: WorkspaceCreateAction];
   retry: [];
   openSpace: [spaceId: string];
   openArtifact: [artifactId: string];
@@ -55,6 +55,9 @@ const emit = defineEmits<{
         <div class="min-w-0 space-y-2">
           <div class="flex flex-wrap items-center gap-2">
             <p v-if="content.space.parentSpaceId" class="text-xs text-muted-foreground">Space</p>
+            <Badge v-if="sprintRoleLabel(content.space.sprintRole)" variant="outline">
+              {{ sprintRoleLabel(content.space.sprintRole) }}
+            </Badge>
             <Badge variant="outline">{{ content.space.visibility }}</Badge>
           </div>
           <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>

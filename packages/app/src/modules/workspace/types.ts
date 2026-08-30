@@ -13,4 +13,4 @@ export type ArtifactPeekState =
       navigateOnCreate?: boolean;
     };
 
-export type WorkspaceCreateAction = "space" | "document" | "conversation";
+export type WorkspaceCreateAction = "folder" | "project" | "scrum" | "document" | "conversation";

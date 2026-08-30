@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ArtifactId, SpaceId, UserId } from "./ids.js";
+import { ArtifactId, DocumentTypeId, SpaceId, UserId, WorkflowId, WorkflowStageId } from "./ids.js";
 
 /** Stable dev seed IDs — safe for fixtures and e2e. */
 export const SEED_USER_ALICE = "00000000-0000-4000-8000-000000000001" as UserId;
@@ -25,6 +25,21 @@ export type SpaceRole = z.infer<typeof SpaceRole>;
 
 export const SpaceVisibility = z.enum(["public", "private"]);
 export type SpaceVisibility = z.infer<typeof SpaceVisibility>;
+
+export const SpacePreset = z.enum(["folder", "project", "scrum"]);
+export type SpacePreset = z.infer<typeof SpacePreset>;
+
+export const SprintRole = z.enum(["upcoming", "active", "past"]);
+export type SprintRole = z.infer<typeof SprintRole>;
+
+export const StageKind = z.enum(["idle", "in_progress", "blocked", "settled", "cancelled"]);
+export type StageKind = z.infer<typeof StageKind>;
+
+export const DocumentTypeKey = z.enum(["issue", "spec", "doc"]);
+export type DocumentTypeKey = z.infer<typeof DocumentTypeKey>;
+
+export const SprintDurationWeeks = z.union([z.literal(1), z.literal(2), z.literal(4)]);
+export type SprintDurationWeeks = z.infer<typeof SprintDurationWeeks>;
 
 export const AssignableSpaceRole = z.enum(["admin", "member"]);
 export type AssignableSpaceRole = z.infer<typeof AssignableSpaceRole>;
@@ -54,10 +69,36 @@ export const SpaceSummary = z.object({
   rootSpaceId: SpaceId.nullable(),
   visibility: SpaceVisibility,
   createdBy: UserId,
+  showBacklog: z.boolean(),
+  showBoard: z.boolean(),
+  sprintingEnabled: z.boolean(),
+  sprintRole: SprintRole.nullable(),
+  sprintDurationWeeks: SprintDurationWeeks,
+  activeSprintId: SpaceId.nullable(),
+  upcomingSprintId: SpaceId.nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
 export type SpaceSummary = z.infer<typeof SpaceSummary>;
+
+export const DEFAULT_SPACE_PLANNING = {
+  showBacklog: false,
+  showBoard: false,
+  sprintingEnabled: false,
+  sprintRole: null,
+  sprintDurationWeeks: 2,
+  activeSprintId: null,
+  upcomingSprintId: null,
+} as const satisfies Pick<
+  SpaceSummary,
+  | "showBacklog"
+  | "showBoard"
+  | "sprintingEnabled"
+  | "sprintRole"
+  | "sprintDurationWeeks"
+  | "activeSprintId"
+  | "upcomingSprintId"
+>;
 
 export const SpaceMember = z.object({
   userId: UserId,
@@ -78,6 +119,12 @@ export const ArtifactSummary = z.object({
   version: z.number().int().positive(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  rank: z.number().int().optional(),
+  stageId: WorkflowStageId.nullable().optional(),
+  stageName: z.string().nullable().optional(),
+  stageKind: StageKind.nullable().optional(),
+  documentTypeId: DocumentTypeId.nullable().optional(),
+  documentTypeKey: DocumentTypeKey.nullable().optional(),
 });
 export type ArtifactSummary = z.infer<typeof ArtifactSummary>;
 
@@ -85,6 +132,31 @@ export const DocumentView = ArtifactSummary.extend({
   body: TipTapDoc,
 });
 export type DocumentView = z.infer<typeof DocumentView>;
+
+export const WorkflowStageView = z.object({
+  id: WorkflowStageId,
+  name: z.string(),
+  kind: StageKind,
+  sort: z.number().int(),
+  allowedSourceStageIds: z.array(WorkflowStageId),
+});
+export type WorkflowStageView = z.infer<typeof WorkflowStageView>;
+
+export const WorkflowView = z.object({
+  id: WorkflowId,
+  name: z.string(),
+  spaceId: SpaceId,
+  stages: z.array(WorkflowStageView),
+});
+export type WorkflowView = z.infer<typeof WorkflowView>;
+
+export const DocumentTypeView = z.object({
+  id: DocumentTypeId,
+  name: z.string(),
+  key: DocumentTypeKey,
+  workflowId: WorkflowId.nullable(),
+});
+export type DocumentTypeView = z.infer<typeof DocumentTypeView>;
 
 export const HomeResponse = z.object({
   spaces: z.array(SpaceSummary),
@@ -98,6 +170,8 @@ export const SpaceDetailResponse = z.object({
   artifacts: z.array(ArtifactSummary),
   members: z.array(SpaceMember),
   canManage: z.boolean(),
+  workflow: WorkflowView.nullable(),
+  documentTypes: z.array(DocumentTypeView),
 });
 export type SpaceDetailResponse = z.infer<typeof SpaceDetailResponse>;
 
@@ -128,6 +202,7 @@ export const CreateSpaceInput = z.object({
   title: z.string().trim().min(1).max(200),
   parentSpaceId: SpaceId.optional(),
   visibility: SpaceVisibility.optional(),
+  preset: SpacePreset.optional(),
 });
 export type CreateSpaceInput = z.infer<typeof CreateSpaceInput>;
 
@@ -136,10 +211,16 @@ export const CreateSpaceResponse = z.object({
 });
 export type CreateSpaceResponse = z.infer<typeof CreateSpaceResponse>;
 
+export const EnableSprintsResponse = z.object({
+  space: SpaceSummary,
+});
+export type EnableSprintsResponse = z.infer<typeof EnableSprintsResponse>;
+
 export const CreateDocumentInput = z.object({
   title: z.string().trim().max(200).optional(),
   spaceId: SpaceId.optional(),
   body: TipTapDoc.optional(),
+  documentTypeKey: DocumentTypeKey.optional(),
 });
 export type CreateDocumentInput = z.infer<typeof CreateDocumentInput>;
 
@@ -151,6 +232,9 @@ export type CreateDocumentResponse = z.infer<typeof CreateDocumentResponse>;
 export const PatchDocumentInput = z.object({
   title: z.string().trim().max(200).optional(),
   body: TipTapDoc.optional(),
+  spaceId: SpaceId.nullable().optional(),
+  rank: z.number().int().optional(),
+  stageId: WorkflowStageId.nullable().optional(),
   version: z.number().int().positive(),
 });
 export type PatchDocumentInput = z.infer<typeof PatchDocumentInput>;

@@ -308,3 +308,110 @@ describe("domain api", () => {
     ).rejects.toMatchObject({ status: 400 });
   });
 });
+
+describe("planning", () => {
+  let harness: E2eHarness;
+
+  beforeAll(async () => {
+    harness = await startHarness();
+  }, 120_000);
+
+  afterAll(async () => {
+    await harness.stop();
+  });
+
+  it("creates a Kanban project with backlog, board, and issue workflow", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { space } = await client.createSpace({ title: "Launch", preset: "project" });
+
+    expect(space.showBacklog).toBe(true);
+    expect(space.showBoard).toBe(true);
+    expect(space.sprintingEnabled).toBe(false);
+
+    const detail = await client.getSpace(space.id);
+    expect(detail.workflow?.name).toBe("Issue tracking");
+    expect(detail.workflow?.stages.map((stage) => stage.name)).toEqual([
+      "Todo",
+      "In Progress",
+      "In Review",
+      "Done",
+    ]);
+    expect(detail.documentTypes.map((type) => type.key)).toEqual(["issue", "spec", "doc"]);
+
+    const { document } = await client.createDocument({ title: "First issue", spaceId: space.id });
+    expect(document.documentTypeKey).toBe("issue");
+    expect(document.stageName).toBe("Todo");
+
+    const todo = detail.workflow!.stages.find((stage) => stage.name === "Todo")!;
+    const inReview = detail.workflow!.stages.find((stage) => stage.name === "In Review")!;
+    const done = detail.workflow!.stages.find((stage) => stage.name === "Done")!;
+
+    await expect(
+      client.patchDocument(document.id, { stageId: done.id, version: document.version }),
+    ).rejects.toMatchObject({ status: 400 });
+
+    const reviewed = await client.patchDocument(document.id, {
+      stageId: inReview.id,
+      version: document.version,
+    });
+    expect(reviewed.document.stageName).toBe("In Review");
+
+    const settled = await client.patchDocument(document.id, {
+      stageId: done.id,
+      version: reviewed.document.version,
+    });
+    expect(settled.document.stageName).toBe("Done");
+
+    const listed = await client.getSpace(space.id);
+    expect(listed.artifacts.some((artifact) => artifact.id === document.id && artifact.spaceId === space.id)).toBe(
+      true,
+    );
+    expect(todo.name).toBe("Todo");
+  });
+
+  it("starts and completes a Scrum clock and moves documents between sprint spaces", async () => {
+    const client = await harness.createAuthedClient("alice");
+    const { space } = await client.createSpace({ title: "Scrum launch", preset: "scrum" });
+
+    expect(space.sprintingEnabled).toBe(true);
+    expect(space.upcomingSprintId).toBeTruthy();
+    expect(space.activeSprintId).toBeNull();
+
+    const beforeStart = await client.getSpace(space.id);
+    const upcoming = beforeStart.childSpaces.find((child) => child.id === space.upcomingSprintId);
+    expect(upcoming?.title).toBe("Sprint 1");
+    expect(upcoming?.sprintRole).toBe("upcoming");
+
+    const { document } = await client.createDocument({
+      title: "Planned work",
+      spaceId: space.id,
+    });
+    const moved = await client.patchDocument(document.id, {
+      spaceId: upcoming!.id,
+      rank: 0,
+      version: document.version,
+    });
+    expect(moved.document.spaceId).toBe(upcoming!.id);
+
+    const started = await client.startSprint(space.id);
+    expect(started.space.activeSprintId).toBe(upcoming!.id);
+    expect(started.space.upcomingSprintId).not.toBe(upcoming!.id);
+    expect(started.space.upcomingSprintId).toBeTruthy();
+
+    const activeDetail = await client.getSpace(space.id);
+    const activeChild = activeDetail.childSpaces.find((child) => child.id === started.space.activeSprintId);
+    expect(activeChild?.sprintRole).toBe("active");
+    expect(activeDetail.artifacts.some((artifact) => artifact.id === document.id)).toBe(true);
+
+    const completed = await client.completeSprint(space.id);
+    expect(completed.space.activeSprintId).toBeNull();
+    expect(completed.space.upcomingSprintId).toBe(started.space.upcomingSprintId);
+
+    const afterComplete = await client.getSpace(space.id);
+    const past = afterComplete.childSpaces.find((child) => child.id === upcoming!.id);
+    expect(past?.sprintRole).toBe("past");
+
+    const leftover = await client.getDocument(document.id);
+    expect(leftover.document.spaceId).toBe(upcoming!.id);
+  });
+});

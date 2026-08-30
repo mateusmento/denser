@@ -2,6 +2,8 @@
 
 Grilled decisions for Denser’s core model. This supersedes the polymorphic “Object / evolving Document” framing in older ontology notes for product direction going forward.
 
+Planning (backlog, board, sprints, workflow, document types): [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md).
+
 ---
 
 ## Core nouns
@@ -40,11 +42,11 @@ Every space has a **tab bar** — the single mechanism for “what am I looking 
 | **This Space** | Yes | Always present (rename from “Gallery”). Browse **child spaces** and **regular artifacts** in the current space. |
 | **Pin** | Next | Shared shortcut to a **child space** or **regular artifact**. `canManage` only; no close; omit if the viewer cannot read the target. Direct conversations cannot be pins. |
 | **Working tab** | Yes | Personal. A **document**, **regular conversation**, or **child space** this user opened. Closable. One fixed view per artifact kind — no view-mode picker. |
-| **Space view** | Later | **Backlog** / **board** — filters and layout over the space’s content, not an artifact or child space. |
+| **Space view** | Later | **Backlog** / **board** — independent views, not artifacts. Sprinting is optional; Backlog grows sprint sections when it is on. See [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md). |
 
-Bar order: **This Space** → **pins** → **working tabs**.
+Bar order: **This Space** → **space views that are on** (Backlog, Board) → **pins** → **working tabs**.
 
-The **`+`** on the tab bar adds **working tabs** (new document, new conversation, open child space; backlog/board when views land). Opening a child from `+` stays on this host’s bar; entering a child from the sidebar or This Space makes that child the host. A conversation opened from a tab is the same artifact as one listed in This Space — tabs are navigation, not a second object model.
+The **`+`** on the tab bar adds **working tabs** (new document, new conversation, open child space). Backlog and Board are space views, not `+` items. Opening a child from `+` stays on this host’s bar; entering a child from the sidebar or This Space makes that child the host. A conversation opened from a tab is the same artifact as one listed in This Space — tabs are navigation, not a second object model.
 
 ### Personal home
 
@@ -151,9 +153,9 @@ v1 ships conversation **shell + UI** (title, route, create/rename/delete). Messa
 
 ### Create menu
 
-**Space**, **Document**, and **Conversation** (regular, in the current space).
+**Space**, **Document**, and **Conversation** (regular, in the current space). Planning presets (**New project**, **New Scrum project**, **New folder**) are specified in [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md); they still create a Space.
 
-Defer: Event, Map, Whiteboard, Meeting, Workflow, Sprint, and other kinds until filing/ACL feels right. **Direct (DM) conversations** are created from the **Direct messages** affordance, not the generic create menu in space context.
+Defer: Event, Map, Whiteboard, Meeting, Workflow as a custom editor, and other **artifact kinds** until filing/ACL feels right. **Sprint** is a child **space**, not a kind. **Direct (DM) conversations** are created from the **Direct messages** affordance, not the generic create menu in space context.
 
 ### Document
 
@@ -167,7 +169,7 @@ Defer: custom properties, board/calendar enablement, relationships, comments-as-
 - **Home sidebar section** — shown on Personal home, on **public** root folders (and their content), and on root artifacts. Hidden inside a **private** root workspace tree.
 - **In {space}** — flat sidebar under the active space: child spaces, then artifacts (documents + regular conversations only).
 - **Direct messages** — DM conversations for the **current private root** (workspace) where the user is a member. Not listed for public Home folders.
-- **Main column** — space **tab bar** + active tab content (This Space, pin, working tab, or later space views).
+- **Main column** — space **tab bar** + active tab content (This Space, space views, pin, working tab).
 
 ### First-run feel
 
@@ -201,7 +203,7 @@ Blank personal home with light base UI and a create affordance — not an opinio
 - **`conversation_member`** schema, DM dedupe enforcement, and DM-only API paths
 - Pin create/remove UI (working tabs are per-user; pins are shared)
 - Private channels (regular conversations with explicit member lists beyond space ACL)
-- Backlog / board space-view tabs and their filter model
+- Backlog / sprints / board — drafted in [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md) (not v1 shipping)
 
 ---
 
@@ -211,3 +213,5 @@ Blank personal home with light base UI and a create affordance — not an opinio
 | ---------- | ------ |
 | 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |
 | 2026-08-28 | Tab bar: This Space → shared pins → personal working tabs. `+` opens a child as a working tab, not a pin. |
+| 2026-08-28 | Backlog & sprints: child spaces + space views; see [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md). |
+| 2026-08-29 | Backlog, board, and sprinting independent; project presets. |

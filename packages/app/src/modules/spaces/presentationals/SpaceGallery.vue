@@ -55,6 +55,7 @@ const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3";
             :key="space.id"
             :title="space.title"
             :icon="space.icon"
+            :sprint-role="space.sprintRole"
             @open="emit('openSpace', space.id)"
             @action="(action) => emit('spaceAction', action, space)"
           />

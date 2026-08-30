@@ -1,4 +1,10 @@
-import { SpaceIcon, DEFAULT_SPACE_ICON, type SpaceMember, type SpaceSummary } from "@denser/contracts";
+import {
+  SpaceIcon,
+  DEFAULT_SPACE_ICON,
+  type SpaceMember,
+  type SpaceSummary,
+  type SprintDurationWeeks,
+} from "@denser/contracts";
 import type { space } from "../../db/schema/space.js";
 import type { SpaceMemberRow } from "./membership-repository.js";
 
@@ -11,6 +17,11 @@ function toSpaceIcon(value: string | null | undefined): SpaceIcon {
   return parsed.success ? parsed.data : DEFAULT_SPACE_ICON;
 }
 
+function toSprintDurationWeeks(value: number): SprintDurationWeeks {
+  if (value === 1 || value === 4) return value;
+  return 2;
+}
+
 export function toSpaceSummary(row: typeof space.$inferSelect): SpaceSummary {
   return {
     id: row.id,
@@ -20,6 +31,13 @@ export function toSpaceSummary(row: typeof space.$inferSelect): SpaceSummary {
     rootSpaceId: row.rootSpaceId,
     visibility: row.visibility,
     createdBy: row.createdBy,
+    showBacklog: row.showBacklog,
+    showBoard: row.showBoard,
+    sprintingEnabled: row.sprintingEnabled,
+    sprintRole: row.sprintRole,
+    sprintDurationWeeks: toSprintDurationWeeks(row.sprintDurationWeeks),
+    activeSprintId: row.activeSprintId,
+    upcomingSprintId: row.upcomingSprintId,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
   };

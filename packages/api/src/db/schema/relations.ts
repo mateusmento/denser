@@ -4,6 +4,7 @@ import { artifact } from "./artifact.js";
 import { conversation, conversationMember } from "./conversation.js";
 import { document } from "./document.js";
 import { space, spaceMembership } from "./space.js";
+import { documentType, workflow, workflowStage } from "./workflow.js";
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
@@ -26,6 +27,8 @@ export const spaceRelations = relations(space, ({ one, many }) => ({
   memberships: many(spaceMembership),
   childSpaces: many(space, { relationName: "space_parent" }),
   artifacts: many(artifact),
+  workflows: many(workflow),
+  documentTypes: many(documentType),
 }));
 
 export const spaceMembershipRelations = relations(spaceMembership, ({ one }) => ({
@@ -81,5 +84,40 @@ export const documentRelations = relations(document, ({ one }) => ({
   artifact: one(artifact, {
     fields: [document.artifactId],
     references: [artifact.id],
+  }),
+  documentType: one(documentType, {
+    fields: [document.documentTypeId],
+    references: [documentType.id],
+  }),
+  stage: one(workflowStage, {
+    fields: [document.stageId],
+    references: [workflowStage.id],
+  }),
+}));
+
+export const workflowRelations = relations(workflow, ({ one, many }) => ({
+  space: one(space, {
+    fields: [workflow.spaceId],
+    references: [space.id],
+  }),
+  stages: many(workflowStage),
+  documentTypes: many(documentType),
+}));
+
+export const workflowStageRelations = relations(workflowStage, ({ one }) => ({
+  workflow: one(workflow, {
+    fields: [workflowStage.workflowId],
+    references: [workflow.id],
+  }),
+}));
+
+export const documentTypeRelations = relations(documentType, ({ one }) => ({
+  space: one(space, {
+    fields: [documentType.spaceId],
+    references: [space.id],
+  }),
+  workflow: one(workflow, {
+    fields: [documentType.workflowId],
+    references: [workflow.id],
   }),
 }));

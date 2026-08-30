@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SpaceBackLink, SpaceContentView, SpaceSurfaceView } from "../types";
 import {
+  DEFAULT_SPACE_PLANNING,
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SEED_SPACE_ACME,
   SEED_SPACE_ENGINEERING,
@@ -32,6 +33,7 @@ const content: SpaceContentView = {
     rootSpaceId: SEED_SPACE_ACME,
     visibility: "private",
     createdBy: SEED_USER_ALICE,
+    ...DEFAULT_SPACE_PLANNING,
     createdAt: now,
     updatedAt: now,
   },
@@ -44,6 +46,7 @@ const content: SpaceContentView = {
       rootSpaceId: SEED_SPACE_ACME,
       visibility: "public",
       createdBy: SEED_USER_ALICE,
+      ...DEFAULT_SPACE_PLANNING,
       createdAt: now,
       updatedAt: now,
     },

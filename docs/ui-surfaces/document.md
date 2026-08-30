@@ -15,7 +15,7 @@
 
 Read and write the primary artifact: a titled rich-text page that stays quiet. Formatting and inserts appear on selection or focus. The page is the work — not a toolbar, not a dashboard.
 
-v1 is **title + body**. Custom properties, comments-as-capability, board/calendar enablement, relationships, and issue workflows stay off this surface until their own specs exist.
+v1 is **title + body**. Custom properties, comments-as-capability, board/calendar enablement, relationships, and issue workflows stay off this surface until their own specs exist. Types and extra fields: [DOCUMENT-TYPES.md](../DOCUMENT-TYPES.md). Workflow stage: [WORKFLOW.md](../WORKFLOW.md).
 
 ---
 

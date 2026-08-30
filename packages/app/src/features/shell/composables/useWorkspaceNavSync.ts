@@ -1,4 +1,4 @@
-import type { ArtifactId, ArtifactSummary, SpaceId, SpaceSummary } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, SpaceId, SpacePreset, SpaceSummary } from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -300,8 +300,20 @@ export function useWorkspaceNavSync() {
   };
 
   const createSpaceMutation = useMutation({
-    mutationFn: ({ title, parentSpaceId }: { title: string; parentSpaceId?: SpaceId | null }) =>
-      apiClient.createSpace(parentSpaceId ? { title, parentSpaceId } : { title }),
+    mutationFn: ({
+      title,
+      parentSpaceId,
+      preset,
+    }: {
+      title: string;
+      parentSpaceId?: SpaceId | null;
+      preset?: SpacePreset;
+    }) =>
+      apiClient.createSpace({
+        title,
+        ...(parentSpaceId ? { parentSpaceId } : {}),
+        ...(preset ? { preset } : {}),
+      }),
     onSuccess: async ({ space }) => {
       reload();
       await router.push({ name: "space", params: { spaceId: space.id } });
@@ -333,8 +345,8 @@ export function useWorkspaceNavSync() {
     view,
     isHomeActive,
     reload,
-    createSpace: (title: string, parentSpaceId?: SpaceId | null) =>
-      createSpaceMutation.mutateAsync({ title, parentSpaceId }),
+    createSpace: (title: string, parentSpaceId?: SpaceId | null, preset?: SpacePreset) =>
+      createSpaceMutation.mutateAsync({ title, parentSpaceId, preset }),
     createDirectMessage: (rootSpaceId: SpaceId, username: string, spaceId?: SpaceId) =>
       createDirectMessageMutation.mutateAsync({ rootSpaceId, username, spaceId }),
   };

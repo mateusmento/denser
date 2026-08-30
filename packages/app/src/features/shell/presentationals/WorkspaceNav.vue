@@ -13,7 +13,7 @@ import {
 } from "@denser/design-system";
 import { ChevronLeftIcon, HomeIcon, PlusIcon } from "@lucide/vue";
 import { RouterLink } from "vue-router";
-import { WorkspaceCreateMenu } from "@/modules/workspace";
+import { WorkspaceCreateMenu, type WorkspaceCreateAction } from "@/modules/workspace";
 import type {
   WorkspaceNavArtifactAction,
   WorkspaceNavLink,
@@ -29,7 +29,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  create: [action: "space" | "document" | "conversation", scopeSpaceId?: string | null];
+  create: [action: WorkspaceCreateAction, scopeSpaceId?: string | null];
   createDirectMessage: [rootSpaceId: string];
   retry: [];
   spaceAction: [action: WorkspaceNavSpaceAction, link: WorkspaceNavLink];

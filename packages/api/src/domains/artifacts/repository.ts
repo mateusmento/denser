@@ -1,8 +1,11 @@
-import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
-import { and, desc, eq, isNull, ne, or } from "drizzle-orm";
+import type { ArtifactId, ArtifactSummary, SpaceId, UserId } from "@denser/contracts";
+import { and, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { conversation } from "../../db/schema/conversation.js";
+import { document } from "../../db/schema/document.js";
+import { documentType, workflowStage } from "../../db/schema/workflow.js";
+import { toArtifactSummary } from "./mapper.js";
 
 export type ArtifactRow = typeof artifact.$inferSelect;
 
@@ -23,13 +26,20 @@ export async function listArtifactsInSpace(spaceId: SpaceId): Promise<ArtifactRo
 }
 
 export async function listRegularArtifactsInSpace(spaceId: SpaceId): Promise<ArtifactRow[]> {
+  return listRegularArtifactsInSpaces([spaceId]);
+}
+
+export async function listRegularArtifactsInSpaces(
+  spaceIds: readonly SpaceId[],
+): Promise<ArtifactRow[]> {
+  if (spaceIds.length === 0) return [];
   return db
     .select({ artifact })
     .from(artifact)
     .leftJoin(conversation, eq(conversation.artifactId, artifact.id))
     .where(
       and(
-        eq(artifact.spaceId, spaceId),
+        inArray(artifact.spaceId, spaceIds),
         or(
           ne(artifact.kind, "conversation"),
           eq(conversation.conversationKind, "regular"),
@@ -38,6 +48,53 @@ export async function listRegularArtifactsInSpace(spaceId: SpaceId): Promise<Art
     )
     .orderBy(desc(artifact.updatedAt))
     .then((rows) => rows.map((row) => row.artifact));
+}
+
+export async function listArtifactSummariesInSpaces(
+  spaceIds: readonly SpaceId[],
+): Promise<ArtifactSummary[]> {
+  if (spaceIds.length === 0) return [];
+  const rows = await db
+    .select({
+      artifact,
+      rank: document.rank,
+      stageId: document.stageId,
+      documentTypeId: document.documentTypeId,
+      stageName: workflowStage.name,
+      stageKind: workflowStage.kind,
+      documentTypeKey: documentType.key,
+    })
+    .from(artifact)
+    .leftJoin(conversation, eq(conversation.artifactId, artifact.id))
+    .leftJoin(document, eq(document.artifactId, artifact.id))
+    .leftJoin(workflowStage, eq(document.stageId, workflowStage.id))
+    .leftJoin(documentType, eq(document.documentTypeId, documentType.id))
+    .where(
+      and(
+        inArray(artifact.spaceId, spaceIds),
+        or(
+          ne(artifact.kind, "conversation"),
+          eq(conversation.conversationKind, "regular"),
+        ),
+      ),
+    )
+    .orderBy(desc(artifact.updatedAt));
+
+  return rows.map((row) =>
+    toArtifactSummary(
+      row.artifact,
+      row.artifact.kind === "document"
+        ? {
+            rank: row.rank ?? 0,
+            stageId: row.stageId ?? null,
+            stageName: row.stageName ?? null,
+            stageKind: row.stageKind ?? null,
+            documentTypeId: row.documentTypeId ?? null,
+            documentTypeKey: row.documentTypeKey ?? null,
+          }
+        : undefined,
+    ),
+  );
 }
 
 export async function insertDocumentArtifact(input: {
@@ -92,6 +149,8 @@ export async function updateArtifactWithVersion(input: {
   artifactId: ArtifactId;
   expectedVersion: number;
   title: string;
+  spaceId?: SpaceId | null;
+  rootSpaceId?: SpaceId | null;
 }): Promise<ArtifactRow | null> {
   const [updated] = await db
     .update(artifact)
@@ -99,6 +158,8 @@ export async function updateArtifactWithVersion(input: {
       title: input.title,
       version: input.expectedVersion + 1,
       updatedAt: new Date(),
+      ...(input.spaceId !== undefined ? { spaceId: input.spaceId } : {}),
+      ...(input.rootSpaceId !== undefined ? { rootSpaceId: input.rootSpaceId } : {}),
     })
     .where(and(eq(artifact.id, input.artifactId), eq(artifact.version, input.expectedVersion)))
     .returning();

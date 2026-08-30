@@ -8,11 +8,14 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
   addSpaceMember,
+  completeSprint,
   createSpace,
   deleteSpace,
   deleteSpaceMember,
+  enableSprints,
   getSpaceDetail,
   patchSpace,
+  startSprint,
 } from "./service.js";
 
 type Variables = {
@@ -45,6 +48,8 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
       artifacts: result.artifacts,
       members: result.members,
       canManage: result.canManage,
+      workflow: result.workflow,
+      documentTypes: result.documentTypes,
     });
   })
   .delete("/spaces/:spaceId", async (c) => {
@@ -118,4 +123,46 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
     }
 
     return c.body(null, 204);
+  });
+
+function sprintClockError(reason: string) {
+  if (reason === "forbidden") return { status: 403 as const, error: "Forbidden" };
+  if (reason === "not_project") return { status: 400 as const, error: "Cannot enable sprints on a sprint space" };
+  if (reason === "sprints_disabled") return { status: 400 as const, error: "Sprinting is not enabled" };
+  if (reason === "already_active") return { status: 409 as const, error: "A sprint is already active" };
+  if (reason === "no_upcoming") return { status: 400 as const, error: "No upcoming sprint" };
+  if (reason === "no_active") return { status: 400 as const, error: "No active sprint" };
+  return { status: 404 as const, error: "Space not found" };
+}
+
+export const spaceSprintRoutes = new Hono<{ Variables: Variables }>()
+  .post("/spaces/:spaceId/sprints/enable", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const spaceId = c.req.param("spaceId") as SpaceId;
+    const result = await enableSprints(userId, spaceId);
+    if (!result.ok) {
+      const error = sprintClockError(result.reason);
+      return c.json({ error: error.error }, error.status);
+    }
+    return c.json({ space: result.space });
+  })
+  .post("/spaces/:spaceId/sprints/start", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const spaceId = c.req.param("spaceId") as SpaceId;
+    const result = await startSprint(userId, spaceId);
+    if (!result.ok) {
+      const error = sprintClockError(result.reason);
+      return c.json({ error: error.error }, error.status);
+    }
+    return c.json({ space: result.space });
+  })
+  .post("/spaces/:spaceId/sprints/complete", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const spaceId = c.req.param("spaceId") as SpaceId;
+    const result = await completeSprint(userId, spaceId);
+    if (!result.ok) {
+      const error = sprintClockError(result.reason);
+      return c.json({ error: error.error }, error.status);
+    }
+    return c.json({ space: result.space });
   });

@@ -22,6 +22,21 @@ const childSpaces = [
     title: "Engineering",
     icon: "code" as const,
     parentSpaceId: SEED_SPACE_ACME,
+    sprintRole: null,
+  },
+  {
+    id: `${SEED_SPACE_ENGINEERING.slice(0, -1)}2` as SpaceId,
+    title: "Sprint 1",
+    icon: "folder" as const,
+    parentSpaceId: SEED_SPACE_ACME,
+    sprintRole: "active" as const,
+  },
+  {
+    id: `${SEED_SPACE_ENGINEERING.slice(0, -1)}3` as SpaceId,
+    title: "Sprint 2",
+    icon: "folder" as const,
+    parentSpaceId: SEED_SPACE_ACME,
+    sprintRole: "upcoming" as const,
   },
 ];
 
@@ -40,6 +55,7 @@ const manyFolders = Array.from({ length: 6 }, (_, index) => ({
   title: `Space ${index + 1}`,
   icon: null,
   parentSpaceId: SEED_SPACE_ACME,
+  sprintRole: null,
 }));
 
 const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({

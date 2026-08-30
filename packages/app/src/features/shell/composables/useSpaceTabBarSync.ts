@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api";
 import { artifactsCollection, spacesCollection } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { useArtifactPeekHost } from "@/modules/workspace";
+import { parseSpaceViewQuery } from "@/features/spaces/lib/planning";
 import type { SpaceTabItem } from "../presentationals/SpaceTabBar.vue";
 import { storedSpaceTabKey } from "../lib/space-tabs";
 import { useActiveTabHost } from "./useActiveTabHost";
@@ -63,15 +64,43 @@ export function useSpaceTabBarSync() {
     const host = hostSpaceId.value;
     if (!host) return [];
 
+    const hostSpace = spaceDetailQuery.data.value?.space;
+    const activeView = parseSpaceViewQuery(route.query.view);
+    const onHostSpaceRoute = route.name === "space" && routeSpaceId.value === host;
+
     const items: SpaceTabItem[] = [
       buildTabItem(
         `this-space:${host}`,
         "This Space",
-        { name: "space", params: { spaceId: host } },
-        route.name === "space" && routeSpaceId.value === host,
+        { name: "space", params: { spaceId: host }, query: {} },
+        onHostSpaceRoute && activeView == null,
         false,
       ),
     ];
+
+    if (hostSpace?.showBacklog) {
+      items.push(
+        buildTabItem(
+          `view:backlog:${host}`,
+          "Backlog",
+          { name: "space", params: { spaceId: host }, query: { view: "backlog" } },
+          onHostSpaceRoute && activeView === "backlog",
+          false,
+        ),
+      );
+    }
+
+    if (hostSpace?.showBoard) {
+      items.push(
+        buildTabItem(
+          `view:board:${host}`,
+          "Board",
+          { name: "space", params: { spaceId: host }, query: { view: "board" } },
+          onHostSpaceRoute && activeView === "board",
+          false,
+        ),
+      );
+    }
 
     for (const stored of spaceTabs.listTabs(host)) {
       const key = storedSpaceTabKey(stored);
@@ -81,7 +110,7 @@ export function useSpaceTabBarSync() {
           buildTabItem(
             key,
             resolveSpaceLabel(stored.spaceId, "Space"),
-            { name: "space", params: { spaceId: stored.spaceId } },
+            { name: "space", params: { spaceId: stored.spaceId }, query: {} },
             route.name === "space" && routeSpaceId.value === stored.spaceId,
             true,
           ),
@@ -178,7 +207,7 @@ export function useSpaceTabBarSync() {
     if (!host) return;
     setActiveTabHost(host);
     spaceTabs.addChildSpaceTab(host, childSpaceId);
-    void router.push({ name: "space", params: { spaceId: childSpaceId } });
+    void router.push({ name: "space", params: { spaceId: childSpaceId }, query: {} });
   }
 
   function closeTab(tabKey: string) {
@@ -189,7 +218,7 @@ export function useSpaceTabBarSync() {
     spaceTabs.removeTab(host, tabKey);
 
     if (closing?.isActive) {
-      void router.push({ name: "space", params: { spaceId: host } });
+      void router.push({ name: "space", params: { spaceId: host }, query: {} });
     }
   }
 

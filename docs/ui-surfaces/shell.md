@@ -20,7 +20,7 @@ The shell **mounts** ThemeSwitcher and Toaster. It does not re-specify their beh
 
 Get the user to a Space, Artifact, or View without competing with the content column. Calm, consistent chrome across surfaces.
 
-Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md#space-tabs)): **This Space**, then **pins**, then **working tabs**. **`+`** adds working tabs (new document, new conversation, open child space); backlog/board view tabs come later.
+Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPACES.md](../ARTIFACTS-AND-SPACES.md#space-tabs)): **This Space**, then **space views that are on** (Backlog, Board — [BACKLOG-AND-SPRINTS.md](../BACKLOG-AND-SPRINTS.md)), then **pins**, then **working tabs**. **`+`** adds working tabs (new document, new conversation, open child space).
 
 ---
 
@@ -69,3 +69,5 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 | 2026-08-26 | Sidebar IA (Home / In space / Direct messages); space tab bar; link to domain model. |
 | 2026-08-28 | Home section only outside private workspaces; DMs only on private roots. |
 | 2026-08-28 | Tab bar: This Space → pins → working tabs. `+` opens a child as a working tab. |
+| 2026-08-28 | Space views: Backlog then Board on a sprinting space, before pins. |
+| 2026-08-29 | Backlog and Board are independent of sprinting. |

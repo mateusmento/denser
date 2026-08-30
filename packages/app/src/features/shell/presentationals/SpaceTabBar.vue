@@ -14,7 +14,7 @@ import { RouterLink } from "vue-router";
 export type SpaceTabItem = {
   tabKey: string;
   label: string;
-  to: { name: string; params?: Record<string, string> };
+  to: { name: string; params?: Record<string, string>; query?: Record<string, string> };
   isActive: boolean;
   closable: boolean;
 };

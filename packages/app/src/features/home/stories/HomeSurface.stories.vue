@@ -20,7 +20,7 @@ const loadingView: HomeSurfaceView = { state: "loading" };
 const errorView: HomeSurfaceView = { state: "error", errorMessage: "Couldn’t load home." };
 
 const content: HomeContentView = {
-  spaces: [{ id: SEED_SPACE_ACME, title: "Acme", icon: null, parentSpaceId: null }],
+  spaces: [{ id: SEED_SPACE_ACME, title: "Acme", icon: null, parentSpaceId: null, sprintRole: null }],
   artifacts: [
     {
       id: SEED_ARTIFACT_PERSONAL_NOTES,

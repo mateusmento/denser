@@ -44,4 +44,16 @@ const { Story } = defineMeta({
       />
     </div>
   </Story>
+
+  <Story as-child name="UpcomingSprint">
+    <div class="w-56">
+      <SpaceFolderTile
+        title="Sprint 1"
+        icon="folder"
+        sprint-role="upcoming"
+        @open="action('open')()"
+        @action="action('action')($event)"
+      />
+    </div>
+  </Story>
 </template>

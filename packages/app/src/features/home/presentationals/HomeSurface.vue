@@ -7,7 +7,7 @@ import {
   type SpaceGallerySpace,
   type SpaceGallerySpaceAction,
 } from "@/modules/spaces";
-import { WorkspaceCreateMenu } from "@/modules/workspace";
+import { WorkspaceCreateMenu, type WorkspaceCreateAction } from "@/modules/workspace";
 import type { HomeContentView, HomeSurfaceView } from "../types";
 
 defineProps<{
@@ -16,7 +16,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  create: [action: "space" | "document" | "conversation"];
+  create: [action: WorkspaceCreateAction];
   retry: [];
   openSpace: [spaceId: string];
   openArtifact: [artifactId: string];

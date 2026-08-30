@@ -1,4 +1,4 @@
-import type { ArtifactSummary, SpaceSummary } from "@denser/contracts";
+import type { ArtifactSummary, SpaceId, SpacePreset, SpaceSummary } from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
@@ -22,7 +22,8 @@ export function useHomeSync() {
   });
 
   const createSpaceMutation = useMutation({
-    mutationFn: (title: string) => apiClient.createSpace({ title }),
+    mutationFn: ({ title, preset }: { title: string; preset?: SpacePreset }) =>
+      apiClient.createSpace({ title, ...(preset ? { preset } : {}) }),
     onSuccess: async ({ space }) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.home() });
       await router.push({ name: "space", params: { spaceId: space.id } });
@@ -47,7 +48,8 @@ export function useHomeSync() {
     spaces,
     artifacts,
     reload: () => homeQuery.refetch(),
-    createSpace: (title: string) => createSpaceMutation.mutateAsync(title),
+    createSpace: (title: string, _parentSpaceId?: SpaceId | null, preset?: SpacePreset) =>
+      createSpaceMutation.mutateAsync({ title, preset }),
     openSpace: (spaceId: string) => router.push({ name: "space", params: { spaceId } }),
   };
 }

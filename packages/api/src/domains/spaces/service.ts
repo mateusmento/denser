@@ -3,8 +3,8 @@ import {
   type AddSpaceMemberInput,
   type CreateSpaceInput,
   type PatchSpaceInput,
-  type SpaceIcon,
   type SpaceId,
+  type SpacePreset,
   type UserId,
 } from "@denser/contracts";
 import {
@@ -15,8 +15,10 @@ import {
   requireSpaceManagement,
 } from "../tenancy/access.js";
 import * as artifactRepository from "../artifacts/repository.js";
-import { toArtifactSummary } from "../artifacts/mapper.js";
+import { provisionProjectPlanning } from "../workflows/repository.js";
+import { loadPlanningForSpace } from "../workflows/service.js";
 import { toSpaceMember, toSpaceSummary } from "./mapper.js";
+import { planningOwnerSpaceId } from "./planning.js";
 import {
   copyRootMembersToSpace,
   countOwners,
@@ -35,8 +37,65 @@ import {
   listChildSpaces,
   listRootSpacesByIds,
   updateSpace,
+  type SpacePlanningInsert,
   type SpaceRow,
 } from "./repository.js";
+
+function planningForPreset(preset: SpacePreset | undefined): SpacePlanningInsert {
+  if (preset === "project") {
+    return { showBacklog: true, showBoard: true };
+  }
+  if (preset === "scrum") {
+    return { showBacklog: true, showBoard: true, sprintingEnabled: true };
+  }
+  return {};
+}
+
+function needsProjectPlanning(preset: SpacePreset | undefined): boolean {
+  return preset === "project" || preset === "scrum";
+}
+
+function addWeeks(from: Date, weeks: number): Date {
+  return new Date(from.getTime() + weeks * 7 * 24 * 60 * 60 * 1000);
+}
+
+async function createUpcomingSprint(parent: SpaceRow, createdBy: UserId): Promise<SpaceRow> {
+  const number = parent.nextSprintNumber;
+  const created = await insertNestedSpace({
+    title: `Sprint ${number}`,
+    parentSpaceId: parent.id,
+    rootSpaceId: parent.rootSpaceId ?? parent.id,
+    createdBy,
+    visibility: "public",
+    planning: {
+      sprintRole: "upcoming",
+      sprintDurationWeeks: parent.sprintDurationWeeks === 1 || parent.sprintDurationWeeks === 4
+        ? parent.sprintDurationWeeks
+        : 2,
+    },
+  });
+  await updateSpace(parent.id, {
+    upcomingSprintId: created.id,
+    nextSprintNumber: number + 1,
+  });
+  return created;
+}
+
+async function applyCreatedSpacePlanning(
+  created: SpaceRow,
+  preset: SpacePreset | undefined,
+  userId: UserId,
+): Promise<SpaceRow> {
+  if (needsProjectPlanning(preset)) {
+    await provisionProjectPlanning(created.id);
+  }
+  if (preset === "scrum") {
+    await createUpcomingSprint(created, userId);
+    const refreshed = await findSpaceById(created.id);
+    if (refreshed) return refreshed;
+  }
+  return created;
+}
 
 async function enableMembership(spaceRow: SpaceRow): Promise<void> {
   if (spaceRow.parentSpaceId === null) {
@@ -56,6 +115,8 @@ async function enableMembership(spaceRow: SpaceRow): Promise<void> {
 }
 
 export async function createSpace(userId: UserId, input: CreateSpaceInput) {
+  const planning = planningForPreset(input.preset);
+
   if (input.parentSpaceId) {
     const parent = await requireSpaceAccess(userId, input.parentSpaceId);
     if (!parent) {
@@ -69,13 +130,15 @@ export async function createSpace(userId: UserId, input: CreateSpaceInput) {
       rootSpaceId: parent.rootSpaceId ?? parent.id,
       createdBy: userId,
       visibility,
+      planning,
     });
 
     if (visibility === "private") {
       await insertOwnerMembership({ spaceId: created.id, userId });
     }
 
-    return { ok: true as const, space: toSpaceSummary(created) };
+    const ready = await applyCreatedSpacePlanning(created, input.preset, userId);
+    return { ok: true as const, space: toSpaceSummary(ready) };
   }
 
   const visibility = input.visibility ?? "public";
@@ -83,12 +146,14 @@ export async function createSpace(userId: UserId, input: CreateSpaceInput) {
     title: input.title,
     createdBy: userId,
     visibility,
+    planning,
   });
   if (visibility === "private") {
     await insertOwnerMembership({ spaceId: created.id, userId });
   }
 
-  return { ok: true as const, space: toSpaceSummary(created) };
+  const ready = await applyCreatedSpacePlanning(created, input.preset, userId);
+  return { ok: true as const, space: toSpaceSummary(ready) };
 }
 
 export async function getSpaceDetail(userId: UserId, spaceId: SpaceId) {
@@ -105,17 +170,29 @@ export async function getSpaceDetail(userId: UserId, spaceId: SpaceId) {
     }
   }
 
-  const artifacts = await artifactRepository.listArtifactsInSpace(spaceId);
-  const members = await listSpaceMembers(spaceId);
-  const canManage = await canManageSpace(userId, spaceId);
+  const planningSpaceId = planningOwnerSpaceId(row);
+  const artifactSpaceIds = [spaceId];
+  if (row.sprintingEnabled) {
+    if (row.activeSprintId) artifactSpaceIds.push(row.activeSprintId);
+    if (row.upcomingSprintId) artifactSpaceIds.push(row.upcomingSprintId);
+  }
+
+  const [artifacts, members, canManage, planning] = await Promise.all([
+    artifactRepository.listArtifactSummariesInSpaces(artifactSpaceIds),
+    listSpaceMembers(spaceId),
+    canManageSpace(userId, spaceId),
+    loadPlanningForSpace(planningSpaceId),
+  ]);
 
   return {
     ok: true as const,
     space: toSpaceSummary(row),
     childSpaces: accessibleChildren.map(toSpaceSummary),
-    artifacts: artifacts.map(toArtifactSummary),
+    artifacts,
     members: members.map(toSpaceMember),
     canManage,
+    workflow: planning.workflow,
+    documentTypes: planning.documentTypes,
   };
 }
 
@@ -263,4 +340,105 @@ export async function deleteSpace(
 
 export function resolveTenantRootSpaceId(row: SpaceRow): SpaceId {
   return row.rootSpaceId ?? row.id;
+}
+
+export async function enableSprints(userId: UserId, spaceId: SpaceId) {
+  const spaceRow = await requireSpaceManagement(userId, spaceId);
+  if (!spaceRow) {
+    return { ok: false as const, reason: "forbidden" as const };
+  }
+
+  if (spaceRow.sprintRole != null) {
+    return { ok: false as const, reason: "not_project" as const };
+  }
+
+  let current = spaceRow;
+  if (!current.sprintingEnabled) {
+    const updated = await updateSpace(spaceId, { sprintingEnabled: true });
+    if (!updated) return { ok: false as const, reason: "not_found" as const };
+    current = updated;
+  }
+
+  if (!current.upcomingSprintId) {
+    await createUpcomingSprint(current, userId);
+    const refreshed = await findSpaceById(spaceId);
+    if (!refreshed) return { ok: false as const, reason: "not_found" as const };
+    current = refreshed;
+  }
+
+  return { ok: true as const, space: toSpaceSummary(current) };
+}
+
+export async function startSprint(userId: UserId, spaceId: SpaceId) {
+  const spaceRow = await requireSpaceManagement(userId, spaceId);
+  if (!spaceRow) {
+    return { ok: false as const, reason: "forbidden" as const };
+  }
+  if (!spaceRow.sprintingEnabled) {
+    return { ok: false as const, reason: "sprints_disabled" as const };
+  }
+  if (spaceRow.activeSprintId) {
+    return { ok: false as const, reason: "already_active" as const };
+  }
+  if (!spaceRow.upcomingSprintId) {
+    return { ok: false as const, reason: "no_upcoming" as const };
+  }
+
+  const upcoming = await findSpaceById(spaceRow.upcomingSprintId);
+  if (!upcoming) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const startedAt = new Date();
+  const duration =
+    spaceRow.sprintDurationWeeks === 1 || spaceRow.sprintDurationWeeks === 4
+      ? spaceRow.sprintDurationWeeks
+      : 2;
+
+  await updateSpace(upcoming.id, {
+    sprintRole: "active",
+    sprintStartedAt: startedAt,
+    sprintPlannedEndAt: addWeeks(startedAt, duration),
+  });
+
+  const parentAfterStart = await updateSpace(spaceId, {
+    activeSprintId: upcoming.id,
+    upcomingSprintId: null,
+  });
+  if (!parentAfterStart) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  await createUpcomingSprint(parentAfterStart, userId);
+  const refreshed = await findSpaceById(spaceId);
+  if (!refreshed) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+  return { ok: true as const, space: toSpaceSummary(refreshed) };
+}
+
+export async function completeSprint(userId: UserId, spaceId: SpaceId) {
+  const spaceRow = await requireSpaceManagement(userId, spaceId);
+  if (!spaceRow) {
+    return { ok: false as const, reason: "forbidden" as const };
+  }
+  if (!spaceRow.activeSprintId) {
+    return { ok: false as const, reason: "no_active" as const };
+  }
+
+  const active = await findSpaceById(spaceRow.activeSprintId);
+  if (!active) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  await updateSpace(active.id, {
+    sprintRole: "past",
+    sprintCompletedAt: new Date(),
+  });
+
+  const updated = await updateSpace(spaceId, { activeSprintId: null });
+  if (!updated) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+  return { ok: true as const, space: toSpaceSummary(updated) };
 }

@@ -7,7 +7,10 @@ export type SpaceGeneralView = {
   isSaving: boolean;
 };
 
-export type SpaceGallerySpace = Pick<SpaceSummary, "id" | "title" | "icon" | "parentSpaceId">;
+export type SpaceGallerySpace = Pick<
+  SpaceSummary,
+  "id" | "title" | "icon" | "parentSpaceId" | "sprintRole"
+>;
 
 export type SpaceGallerySpaceAction = "open" | "rename" | "openSettings" | "delete";
 

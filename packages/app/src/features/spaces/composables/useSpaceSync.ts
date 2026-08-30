@@ -1,4 +1,6 @@
-import type { PatchSpaceInput, SpaceIcon, SpaceId, SpaceSummary, SpaceVisibility, UserId } from "@denser/contracts";
+import type { ArtifactId, PatchSpaceInput, SpaceIcon, SpaceId, SpacePreset, SpaceSummary, SpaceVisibility, UserId, WorkflowStageId } from "@denser/contracts";
+import { ApiError } from "@denser/api-client";
+import { toast } from "@denser/design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -10,6 +12,7 @@ import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
 import { applySpacePatch, invalidateSpaceProjections } from "@/modules/spaces";
 import type { SpaceGeneralView } from "@/modules/spaces";
 import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
+import { thisSpaceArtifacts, thisSpaceChildSpaces } from "../lib/planning";
 
 export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
   const id = toReadonlyRef(spaceId);
@@ -46,8 +49,15 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   };
 
   const createSpaceMutation = useMutation({
-    mutationFn: ({ title, parentSpaceId }: { title: string; parentSpaceId: SpaceId }) =>
-      apiClient.createSpace({ title, parentSpaceId }),
+    mutationFn: ({
+      title,
+      parentSpaceId,
+      preset,
+    }: {
+      title: string;
+      parentSpaceId: SpaceId;
+      preset?: SpacePreset;
+    }) => apiClient.createSpace({ title, parentSpaceId, ...(preset ? { preset } : {}) }),
     onSuccess: async ({ space }) => {
       await invalidateSpace();
       await router.push({ name: "space", params: { spaceId: space.id } });
@@ -105,8 +115,8 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     const space = liveSpace.value ?? data.space;
     return {
       space,
-      childSpaces: liveChildSpaces.value,
-      artifacts: data.artifacts,
+      childSpaces: thisSpaceChildSpaces(liveChildSpaces.value),
+      artifacts: thisSpaceArtifacts(space.id, data.artifacts),
     };
   });
 
@@ -152,6 +162,65 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     };
   });
 
+  const startSprintMutation = useMutation({
+    mutationFn: () => apiClient.startSprint(id.value!),
+    onSuccess: async ({ space }) => {
+      applySpacePatch(space);
+      await invalidateSpace(space);
+    },
+  });
+
+  const completeSprintMutation = useMutation({
+    mutationFn: () => apiClient.completeSprint(id.value!),
+    onSuccess: async ({ space }) => {
+      applySpacePatch(space);
+      await invalidateSpace(space);
+    },
+  });
+
+  function findPlanningArtifact(artifactId: ArtifactId) {
+    return spaceQuery.data.value?.artifacts.find((artifact) => artifact.id === artifactId);
+  }
+
+  async function moveDocument(payload: {
+    artifactId: ArtifactId;
+    toSpaceId: SpaceId;
+    toIndex: number;
+  }) {
+    const artifact = findPlanningArtifact(payload.artifactId);
+    if (!artifact || artifact.kind !== "document") return;
+    try {
+      await apiClient.patchDocument(payload.artifactId, {
+        spaceId: payload.toSpaceId,
+        rank: payload.toIndex,
+        version: artifact.version,
+      });
+      await invalidateSpace();
+    } catch {
+      toast("Couldn’t move document");
+      await invalidateSpace();
+    }
+  }
+
+  async function transitionDocument(payload: { artifactId: ArtifactId; stageId: WorkflowStageId }) {
+    const artifact = findPlanningArtifact(payload.artifactId);
+    if (!artifact || artifact.kind !== "document") return;
+    try {
+      await apiClient.patchDocument(payload.artifactId, {
+        stageId: payload.stageId,
+        version: artifact.version,
+      });
+      await invalidateSpace();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 400) {
+        toast("That stage isn’t allowed from here");
+      } else {
+        toast("Couldn’t update stage");
+      }
+      await invalidateSpace();
+    }
+  }
+
   return {
     view,
     content,
@@ -160,10 +229,11 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     generalView,
     membersView,
     reload: () => spaceQuery.refetch(),
-    createSpace: (title: string, parentSpaceId?: SpaceId | null) =>
+    createSpace: (title: string, parentSpaceId?: SpaceId | null, preset?: SpacePreset) =>
       createSpaceMutation.mutateAsync({
         title,
         parentSpaceId: parentSpaceId ?? id.value!,
+        preset,
       }),
     addMember: (username: string) => addMemberMutation.mutateAsync(username),
     removeMember: (memberUserId: UserId) => removeMemberMutation.mutateAsync(memberUserId),
@@ -173,5 +243,11 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
       patchVisibilityMutation.mutateAsync(visibility),
     openSpace: (nextSpaceId: string) =>
       router.push({ name: "space", params: { spaceId: nextSpaceId } }),
+    startSprint: () => startSprintMutation.mutateAsync(),
+    completeSprint: () => completeSprintMutation.mutateAsync(),
+    isStartingSprint: computed(() => startSprintMutation.isPending.value),
+    isCompletingSprint: computed(() => completeSprintMutation.isPending.value),
+    moveDocument,
+    transitionDocument,
   };
 }

@@ -4,9 +4,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@denser/design-system";
-import { FileTextIcon, FolderIcon, MessageCircleIcon, PlusIcon } from "@lucide/vue";
+import {
+  BriefcaseIcon,
+  FileTextIcon,
+  FolderIcon,
+  MessageCircleIcon,
+  PlusIcon,
+  RocketIcon,
+} from "@lucide/vue";
 import type { WorkspaceCreateAction } from "../types";
 
 withDefaults(
@@ -43,11 +51,20 @@ const emit = defineEmits<{
         New
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" class="min-w-44">
-      <DropdownMenuItem @select="emit('create', 'space')">
+    <DropdownMenuContent align="end" class="min-w-52">
+      <DropdownMenuItem @select="emit('create', 'folder')">
         <FolderIcon class="size-3.5" />
-        Space
+        New folder
       </DropdownMenuItem>
+      <DropdownMenuItem @select="emit('create', 'project')">
+        <BriefcaseIcon class="size-3.5" />
+        New project
+      </DropdownMenuItem>
+      <DropdownMenuItem @select="emit('create', 'scrum')">
+        <RocketIcon class="size-3.5" />
+        New Scrum project
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
       <DropdownMenuItem @select="emit('create', 'document')">
         <FileTextIcon class="size-3.5" />
         Document

@@ -6,6 +6,7 @@ export type {
   SpaceGallerySpaceAction,
 } from "./types.js";
 
+export { sprintRoleLabel } from "./lib/sprint-role.js";
 export { DEFAULT_SPACE_ICON, SPACE_ICON_OPTIONS, resolveSpaceIcon, resolveSpaceIconValue } from "./lib/space-icons.js";
 export { useLiveSpace, useLiveSpacesInWindow, resolveSpacesInOrder } from "./lib/live-spaces.js";
 export { applySpacePatch, invalidateSpaceProjections } from "./lib/sync-space-patch.js";
