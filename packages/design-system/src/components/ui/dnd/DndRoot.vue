@@ -17,7 +17,6 @@ const props = withDefaults(defineProps<Props>(), {
   settle: "overlay",
   sourceMode: "hide",
   swapMode: "drop",
-  overlayCap: 3,
   orientation: "vertical",
   as: "div",
 });
@@ -32,7 +31,6 @@ const session = useProvideDndSession(
     settle: props.settle,
     sourceMode: props.sourceMode,
     swapMode: props.swapMode,
-    overlayCap: props.overlayCap,
     orientation: props.orientation,
     sensors: props.sensors,
     sourceIdsFor: props.sourceIdsFor,

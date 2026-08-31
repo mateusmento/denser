@@ -42,7 +42,6 @@ export type DndSessionConfig = {
   settle?: DndSettle;
   sourceMode?: DndSourceMode;
   swapMode?: DndSwapMode;
-  overlayCap?: number;
   orientation?: DndAxis;
   sensors?: DndSensor[];
   sourceIdsFor?: (id: DndId) => DndId[];
@@ -70,7 +69,6 @@ type TargetRegistration = {
   element: HTMLElement;
 };
 
-const OVERLAY_CAP = 3;
 const FLY_MS = 220;
 
 function cloneMap<K, V>(map: Map<K, V>): Map<K, V> {
@@ -107,19 +105,13 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
     const settle = computed(() => options().settle ?? "item");
     const sourceMode = computed(() => options().sourceMode ?? "hide");
     const swapMode = computed(() => options().swapMode ?? "drop");
-    const overlayCap = computed(() => options().overlayCap ?? OVERLAY_CAP);
     const orientation = computed(() => options().orientation ?? "vertical");
     const defaultSensor = createPointerSensor();
     const sensors = computed(() => options().sensors ?? [defaultSensor]);
 
     const active = computed(() => phase.value !== "idle");
     const hasOverlay = computed(() => overlayCount.value > 0);
-    const visibleSourceIds = computed(() => {
-      if (phase.value === "pickup" || phase.value === "settling") {
-        return sourceIds.value;
-      }
-      return sourceIds.value.slice(0, overlayCap.value);
-    });
+    const visibleSourceIds = computed(() => sourceIds.value);
 
     const slotItemMap = computed(() => {
       const map: Record<DndId, DndId | null> = {};
@@ -576,7 +568,6 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
       pointer,
       hasOverlay,
       overlayRects,
-      overlayCap,
       policy,
       settle,
       placeholder: placeholderView,
