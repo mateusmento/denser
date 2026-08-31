@@ -31,6 +31,7 @@ import type {
   DndSensor,
   DndSensorEvent,
   DndSettle,
+  DndSourceMode,
   DndSwapMode,
   GeometrySnapshot,
   ItemSnapshot,
@@ -39,6 +40,7 @@ import type {
 export type DndSessionConfig = {
   policy?: DndPolicy;
   settle?: DndSettle;
+  sourceMode?: DndSourceMode;
   swapMode?: DndSwapMode;
   overlayCap?: number;
   orientation?: DndAxis;
@@ -103,6 +105,7 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
     const options = () => toValue(config);
     const policy = computed(() => options().policy ?? "sort");
     const settle = computed(() => options().settle ?? "item");
+    const sourceMode = computed(() => options().sourceMode ?? "hide");
     const swapMode = computed(() => options().swapMode ?? "drop");
     const overlayCap = computed(() => options().overlayCap ?? OVERLAY_CAP);
     const orientation = computed(() => options().orientation ?? "vertical");
@@ -645,8 +648,10 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
       isSource(id: DndId) {
         return sourceIds.value.includes(id);
       },
+      sourceMode,
       hideSource(id: DndId) {
         if (!sourceIds.value.includes(id) || !hasOverlay.value) return false;
+        if (sourceMode.value === "clone" || sourceMode.value === "dim") return false;
         if (phase.value === "settling") return settle.value === "overlay";
         return phase.value === "pickup" || phase.value === "dragging";
       },

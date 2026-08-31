@@ -16,6 +16,8 @@ export type DndPolicy = "sort" | "highlight" | "swap";
 
 export type DndSettle = "item" | "overlay";
 
+export type DndSourceMode = "hide" | "clone" | "dim";
+
 export type DndSwapMode = "drop" | "hover";
 
 export type DndPhase = "idle" | "pickup" | "dragging" | "settling";

@@ -15,6 +15,7 @@ type Props = DndSessionConfig &
 const props = withDefaults(defineProps<Props>(), {
   policy: "sort",
   settle: "overlay",
+  sourceMode: "hide",
   swapMode: "drop",
   overlayCap: 3,
   orientation: "vertical",
@@ -29,6 +30,7 @@ const session = useProvideDndSession(
   computed(() => ({
     policy: props.policy,
     settle: props.settle,
+    sourceMode: props.sourceMode,
     swapMode: props.swapMode,
     overlayCap: props.overlayCap,
     orientation: props.orientation,

@@ -165,7 +165,8 @@ function blockedMoveIds(itemId: string): readonly string[] {
         v-else-if="childSpaces.length || artifacts.length"
         class="flex flex-col gap-6"
         policy="highlight"
-        settle="item"
+        settle="overlay"
+        source-mode="dim"
         :source-ids-for="(id) => (selection.isSelected(id) ? selection.selectedList.value : [id])"
         @commit="onCommit"
       >

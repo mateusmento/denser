@@ -640,7 +640,8 @@ export const MultiSelectDrag: Story = {
         <DndRoot
           class="flex w-full max-w-xl flex-col gap-6"
           policy="highlight"
-          settle="item"
+          settle="overlay"
+          source-mode="dim"
           :source-ids-for="(id) => selection.isSelected(id) ? selection.selectedList.value : [id]"
           @commit="onCommit"
         >

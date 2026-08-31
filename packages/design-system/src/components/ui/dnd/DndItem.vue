@@ -84,6 +84,13 @@ watch(
 );
 
 const isDragging = computed(() => session.isSource(props.itemId));
+const isDimmed = computed(
+  () =>
+    isDragging.value &&
+    session.sourceMode.value === "dim" &&
+    session.hasOverlay.value &&
+    (session.phase.value === "pickup" || session.phase.value === "dragging"),
+);
 const hidden = computed(() => session.hideSource(props.itemId));
 const itemStyle = computed((): CSSProperties => {
   const delta = session.itemTransform(props.itemId);
@@ -92,6 +99,7 @@ const itemStyle = computed((): CSSProperties => {
     transform: delta.x === 0 && delta.y === 0 ? undefined : `translate(${delta.x}px, ${delta.y}px)`,
     transition:
       session.active.value && !settling && !isDragging.value ? "transform 180ms ease" : undefined,
+    opacity: isDimmed.value ? 0.45 : undefined,
     visibility: hidden.value ? "hidden" : undefined,
     zIndex: isDragging.value && !session.hasOverlay.value ? "10" : undefined,
   };
@@ -104,6 +112,7 @@ const itemStyle = computed((): CSSProperties => {
     :data-testid="`dnd-item-${itemId}`"
     data-slot="dnd-item"
     :data-dragging="isDragging || undefined"
+    :data-dimmed="isDimmed || undefined"
     :as="as"
     :as-child="asChild"
     :class="cn('touch-none select-none', props.class)"
