@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -9,7 +9,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
+} from "@/components/ui/empty";
 </script>
 
 <template>
@@ -28,8 +28,7 @@ import {
         <EmptyHeader>
           <EmptyTitle>Explore Catalog</EmptyTitle>
           <EmptyDescription>
-            Check your ISRC codes, metadata, and visual assets before going
-            live.
+            Check your ISRC codes, metadata, and visual assets before going live.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>

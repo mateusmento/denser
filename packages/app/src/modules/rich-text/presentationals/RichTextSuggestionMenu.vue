@@ -56,12 +56,14 @@ defineExpose({ onKeyDown });
 
 <template>
   <div
-    :class="cn(
-      'z-50 min-w-48 p-1 overflow-x-hidden overflow-y-auto',
-      'rounded-md border border-border shadow-md ',
-      'bg-popover/60 backdrop-blur-lg text-popover-foreground',
-      props.class
-    )"
+    :class="
+      cn(
+        'z-50 min-w-48 overflow-x-hidden overflow-y-auto p-1',
+        'rounded-md border border-border shadow-md',
+        'bg-popover/60 text-popover-foreground backdrop-blur-lg',
+        props.class,
+      )
+    "
     data-slot="rich-text-suggestion-menu"
     role="listbox"
   >

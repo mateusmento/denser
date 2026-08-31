@@ -39,6 +39,8 @@ export function toArtifactSummary(
     ...(planning?.stageName !== undefined ? { stageName: planning.stageName } : {}),
     ...(planning?.stageKind !== undefined ? { stageKind: planning.stageKind } : {}),
     ...(planning?.documentTypeId !== undefined ? { documentTypeId: planning.documentTypeId } : {}),
-    ...(planning?.documentTypeKey !== undefined ? { documentTypeKey: planning.documentTypeKey } : {}),
+    ...(planning?.documentTypeKey !== undefined
+      ? { documentTypeKey: planning.documentTypeKey }
+      : {}),
   };
 }

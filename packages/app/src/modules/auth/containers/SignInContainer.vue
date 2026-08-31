@@ -17,10 +17,6 @@ async function onSubmit(username: string, password: string) {
 
 <template>
   <div class="flex min-h-svh items-center justify-center bg-background p-6">
-    <SignInSurface
-      :loading="isSigningIn"
-      :error-message="errorMessage"
-      @submit="onSubmit"
-    />
+    <SignInSurface :loading="isSigningIn" :error-message="errorMessage" @submit="onSubmit" />
   </div>
 </template>

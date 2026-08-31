@@ -6,7 +6,7 @@ import type { HTMLAttributes } from "vue";
 
 const props = defineProps<{
   intro: ConversationIntroView;
-  class?: HTMLAttributes['class'];
+  class?: HTMLAttributes["class"];
 }>();
 
 const emit = defineEmits<{
@@ -16,7 +16,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section :class="cn('flex flex-col gap-4 px-2 pb-6 pt-6 sm:px-3', props.class)" data-slot="conversation-intro">
+  <section
+    :class="cn('flex flex-col gap-4 px-2 pt-6 pb-6 sm:px-3', props.class)"
+    data-slot="conversation-intro"
+  >
     <div class="flex flex-col gap-2">
       <h2 class="text-3xl font-semibold tracking-tight">#{{ intro.title }}</h2>
       <p class="max-w-prose text-sm text-muted-foreground">

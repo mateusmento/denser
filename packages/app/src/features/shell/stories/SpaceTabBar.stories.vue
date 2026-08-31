@@ -84,9 +84,6 @@ function onReorder(payload: { tabKey: string; toIndex: number }) {
     />
   </Story>
   <Story as-child name="Pinned only">
-    <SpaceTabBar
-      :tabs="pinned"
-      @add="action('add')($event)"
-    />
+    <SpaceTabBar :tabs="pinned" @add="action('add')($event)" />
   </Story>
 </template>

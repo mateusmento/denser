@@ -6,7 +6,9 @@ import { listHomeRootSpaces } from "../spaces/service.js";
 export async function getHome(userId: UserId) {
   const [spaces, artifacts] = await Promise.all([
     listHomeRootSpaces(userId),
-    artifactRepository.listRootArtifactsByOwner(userId).then((rows) => rows.map((row) => toArtifactSummary(row))),
+    artifactRepository
+      .listRootArtifactsByOwner(userId)
+      .then((rows) => rows.map((row) => toArtifactSummary(row))),
   ]);
 
   return { spaces, artifacts };

@@ -49,16 +49,24 @@ test("ends use stride offsets", () => {
 });
 
 test("reindex order inserts after the surviving neighbor", () => {
-  assert.deepEqual(orderIdsForReindex(rows.filter((entry) => entry.id !== "c"), "c", null, "a"), [
-    "c",
-    "a",
-    "b",
-  ]);
-  assert.deepEqual(orderIdsForReindex(rows.filter((entry) => entry.id !== "a"), "a", "c", null), [
-    "b",
-    "c",
-    "a",
-  ]);
+  assert.deepEqual(
+    orderIdsForReindex(
+      rows.filter((entry) => entry.id !== "c"),
+      "c",
+      null,
+      "a",
+    ),
+    ["c", "a", "b"],
+  );
+  assert.deepEqual(
+    orderIdsForReindex(
+      rows.filter((entry) => entry.id !== "a"),
+      "a",
+      "c",
+      null,
+    ),
+    ["b", "c", "a"],
+  );
   assert.equal(strideRank(0), 1000);
   assert.equal(strideRank(2), 3000);
 });

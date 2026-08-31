@@ -61,7 +61,9 @@ export function useSpaceCommands() {
     const target = resolveSpaceRef(space);
     if (target.id === toParentId || target.parentSpaceId === toParentId) return;
     try {
-      const { space: updated } = await apiClient.patchSpace(target.id, { parentSpaceId: toParentId });
+      const { space: updated } = await apiClient.patchSpace(target.id, {
+        parentSpaceId: toParentId,
+      });
       applySpacePatch(updated);
       await invalidateSpaceProjections(queryClient, target);
       await invalidateSpaceProjections(queryClient, updated);

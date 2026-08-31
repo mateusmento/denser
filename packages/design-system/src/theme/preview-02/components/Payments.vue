@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
+import IconPlaceholder from "../IconPlaceholder.vue";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,16 +7,16 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Item,
   ItemContent,
@@ -24,7 +24,7 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item"
+} from "@/components/ui/item";
 </script>
 
 <template>
@@ -33,9 +33,7 @@ import {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">
-              Home
-            </BreadcrumbLink>
+            <BreadcrumbLink href="#"> Home </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -82,9 +80,7 @@ import {
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Change transfer limit</ItemTitle>
-            <ItemDescription>
-              Adjust how much you can send from your balance.
-            </ItemDescription>
+            <ItemDescription> Adjust how much you can send from your balance. </ItemDescription>
           </ItemContent>
           <IconPlaceholder
             lucide="ChevronRightIcon"
@@ -107,9 +103,7 @@ import {
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Scheduled transfers</ItemTitle>
-            <ItemDescription>
-              Set up a transfer to send at a later date.
-            </ItemDescription>
+            <ItemDescription> Set up a transfer to send at a later date. </ItemDescription>
           </ItemContent>
           <IconPlaceholder
             lucide="ChevronRightIcon"
@@ -132,9 +126,7 @@ import {
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Direct Debits</ItemTitle>
-            <ItemDescription>
-              Set up and manage regular payments.
-            </ItemDescription>
+            <ItemDescription> Set up and manage regular payments. </ItemDescription>
           </ItemContent>
           <IconPlaceholder
             lucide="ChevronRightIcon"
@@ -157,9 +149,7 @@ import {
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Recurring card payments</ItemTitle>
-            <ItemDescription>
-              Manage your repeated card transactions.
-            </ItemDescription>
+            <ItemDescription> Manage your repeated card transactions. </ItemDescription>
           </ItemContent>
           <IconPlaceholder
             lucide="ChevronRightIcon"

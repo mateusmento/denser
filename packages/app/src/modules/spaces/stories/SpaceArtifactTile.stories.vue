@@ -36,11 +36,7 @@ const { Story } = defineMeta({
 
   <Story as-child name="Preview">
     <div class="size-48">
-      <SpaceArtifactTile
-        preview
-        title="Personal notes"
-        kind="document"
-      />
+      <SpaceArtifactTile preview title="Personal notes" kind="document" />
     </div>
   </Story>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Badge } from "@/components/ui/badge"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 </script>
 
 <template>
@@ -31,10 +31,10 @@ import {
       </CardAction>
     </CardHeader>
     <CardContent>
-      <div class="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,var(--border)_10px,var(--border)_11px)]">
-        <Badge variant="destructive" class="absolute top-2 right-2">
-          Live
-        </Badge>
+      <div
+        class="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,var(--border)_10px,var(--border)_11px)]"
+      >
+        <Badge variant="destructive" class="absolute top-2 right-2"> Live </Badge>
       </div>
     </CardContent>
   </Card>

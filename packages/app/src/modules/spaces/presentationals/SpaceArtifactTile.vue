@@ -27,9 +27,7 @@ const props = defineProps<{
 
 const displayTitle = computed(() => artifactDisplayTitle(props.title));
 
-const tileIcon = computed(() =>
-  props.kind === "conversation" ? MessageCircleIcon : FileTextIcon,
-);
+const tileIcon = computed(() => (props.kind === "conversation" ? MessageCircleIcon : FileTextIcon));
 
 const emit = defineEmits<{
   open: [];
@@ -69,7 +67,7 @@ function onAction(action: SpaceGalleryArtifactAction) {
         :class="
           cn(
             'group w-full rounded-xl text-left',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
           )
         "
         @click="emit('open')"
@@ -78,9 +76,9 @@ function onAction(action: SpaceGalleryArtifactAction) {
           size="sm"
           :class="
             cn(
-              'aspect-square w-full border-border transition-colors rounded-xl cursor-pointer',
+              'aspect-square w-full cursor-pointer rounded-xl border-border transition-colors',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
-              selected && 'ring-2 ring-primary bg-primary/10 border-primary/50 text-foreground',
+              selected && 'border-primary/50 bg-primary/10 text-foreground ring-2 ring-primary',
             )
           "
         >
@@ -115,9 +113,7 @@ function onAction(action: SpaceGalleryArtifactAction) {
         <ContextMenuItem @select="onAction('duplicate')">Duplicate</ContextMenuItem>
       </template>
       <ContextMenuSeparator />
-      <ContextMenuItem variant="destructive" @select="onAction('delete')">
-        Delete
-      </ContextMenuItem>
+      <ContextMenuItem variant="destructive" @select="onAction('delete')"> Delete </ContextMenuItem>
     </ContextMenuContent>
   </ContextMenu>
 </template>

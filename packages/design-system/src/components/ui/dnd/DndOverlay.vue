@@ -1,41 +1,44 @@
 <script setup lang="ts">
-import type { PrimitiveProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
-import { computed, onMounted, onUnmounted } from "vue"
-import { Primitive } from "reka-ui"
-import { cn } from "@/lib/utils"
-import { useDndSession } from "./useDndSession"
-import type { DndId } from "./types"
+import type { PrimitiveProps } from "reka-ui";
+import type { HTMLAttributes } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
+import { Primitive } from "reka-ui";
+import { cn } from "@/lib/utils";
+import { useDndSession } from "./useDndSession";
+import type { DndId } from "./types";
 
-const props = withDefaults(defineProps<PrimitiveProps & {
-  class?: HTMLAttributes["class"]
-}>(), {
-  as: "div",
-})
+const props = withDefaults(
+  defineProps<
+    PrimitiveProps & {
+      class?: HTMLAttributes["class"];
+    }
+  >(),
+  {
+    as: "div",
+  },
+);
 
-const session = useDndSession()
-let stop: (() => void) | undefined
+const session = useDndSession();
+let stop: (() => void) | undefined;
 
 onMounted(() => {
-  stop = session.registerOverlay()
-})
+  stop = session.registerOverlay();
+});
 
 onUnmounted(() => {
-  stop?.()
-})
+  stop?.();
+});
 
 const ids = computed(() => {
-  if (session.phase.value === "idle")
-    return []
-  if (session.phase.value === "settling" && session.settle.value === "item")
-    return []
-  return session.visibleSourceIds.value
-})
+  if (session.phase.value === "idle") return [];
+  if (session.phase.value === "settling" && session.settle.value === "item") return [];
+  return session.visibleSourceIds.value;
+});
 
 const styles = computed(() => {
-  void session.overlayRects.value
-  return Object.fromEntries(ids.value.map((id) => [id, session.overlayStyle(id)]))
-})
+  void session.overlayRects.value;
+  return Object.fromEntries(ids.value.map((id) => [id, session.overlayStyle(id)]));
+});
 </script>
 
 <template>

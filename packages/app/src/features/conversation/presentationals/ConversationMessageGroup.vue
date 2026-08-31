@@ -31,11 +31,7 @@ const props = withDefaults(
   >
     <MessageAvatar>
       <Avatar size="sm">
-        <AvatarImage
-          v-if="author.avatarUrl"
-          :src="author.avatarUrl"
-          :alt="author.name"
-        />
+        <AvatarImage v-if="author.avatarUrl" :src="author.avatarUrl" :alt="author.name" />
         <AvatarFallback>{{ author.initials }}</AvatarFallback>
       </Avatar>
     </MessageAvatar>

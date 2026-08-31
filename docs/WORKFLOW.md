@@ -15,21 +15,21 @@ Not an artifact kind. Not team-scoped.
 
 ### Workflow
 
-| Field | Notes |
-| ----- | ----- |
-| id | uuid |
-| name | e.g. Issue tracking |
+| Field   | Notes                      |
+| ------- | -------------------------- |
+| id      | uuid                       |
+| name    | e.g. Issue tracking        |
 | spaceId | Project space that owns it |
-| stages | Ordered list |
+| stages  | Ordered list               |
 
 ### Stage
 
-| Field | Notes |
-| ----- | ----- |
-| id | uuid (stable; rename does not change id) |
-| name | Display, e.g. Todo, In Review, Done |
-| kind | Stage kind |
-| description | Optional |
+| Field                 | Notes                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
+| id                    | uuid (stable; rename does not change id)                                                           |
+| name                  | Display, e.g. Todo, In Review, Done                                                                |
+| kind                  | Stage kind                                                                                         |
+| description           | Optional                                                                                           |
 | allowedSourceStageIds | Which stages may transition **to** this one. Empty-or-sentinel “any” = all stages in this workflow |
 
 Documents store **`stageId`**, not the name.
@@ -38,13 +38,13 @@ Documents store **`stageId`**, not the name.
 
 No **Backlog** kind. Unscheduled work is location, not a stage.
 
-| Kind | Meaning | System |
-| ---- | ------- | ------ |
-| **Idle** | Planned, not started | Editable |
-| **In Progress** | Active work | Editable |
-| **Blocked** | Dependency-blocked | Cannot advance until blocker is Settled (or in the active sprint — see planning) |
-| **Settled** | Completed | Read-only body/fields except reopen; counts as progress |
-| **Cancelled** | Closed without finishing | Read-only; does not count as progress |
+| Kind            | Meaning                  | System                                                                           |
+| --------------- | ------------------------ | -------------------------------------------------------------------------------- |
+| **Idle**        | Planned, not started     | Editable                                                                         |
+| **In Progress** | Active work              | Editable                                                                         |
+| **Blocked**     | Dependency-blocked       | Cannot advance until blocker is Settled (or in the active sprint — see planning) |
+| **Settled**     | Completed                | Read-only body/fields except reopen; counts as progress                          |
+| **Cancelled**   | Closed without finishing | Read-only; does not count as progress                                            |
 
 ---
 
@@ -72,10 +72,10 @@ Each stage lists **allowed sources**. Default Issue: Done allowed only from In R
 
 ### Context
 
-| Where the document lives | Rule |
-| ------------------------ | ---- |
+| Where the document lives                                        | Rule                                                                               |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | On the **Board** (Kanban: this space; Scrum: **active** sprint) | Any-to-any, subject to allowed sources. Settled **rollback** allowed (correction). |
-| **Upcoming**, **past** sprint, or unscheduled on the parent | **Forward** only (no rollback). Settled/cancelled stay closed until **reopen**. |
+| **Upcoming**, **past** sprint, or unscheduled on the parent     | **Forward** only (no rollback). Settled/cancelled stay closed until **reopen**.    |
 
 Skipping stages is allowed when the target lists the current stage as a source (e.g. Todo → In Review).
 
@@ -89,10 +89,10 @@ Cannot delete a workflow still referenced by a document type — reassign types 
 
 ## Blocked + dependencies
 
-| Link | Meaning |
-| ---- | ------- |
+| Link               | Meaning                             |
+| ------------------ | ----------------------------------- |
 | A **blocked by** B | A cannot proceed until B is Settled |
-| A **blocks** B | Inverse |
+| A **blocks** B     | Inverse                             |
 
 If the workflow has a Blocked-kind stage and A is blocked by B: auto-move A to that stage. If B becomes Settled: move A back to its previous non-blocked stage (or first idle).
 
@@ -110,10 +110,10 @@ Settled/Cancelled cannot be dragged onto a sprint. **Reopen** sets stage to the 
 
 ## Permissions
 
-| Action | Who |
-| ------ | --- |
-| Create / edit / duplicate workflow | `canManage` on the owning space |
-| Transition / reopen | Same as editing the document (space access) |
+| Action                             | Who                                         |
+| ---------------------------------- | ------------------------------------------- |
+| Create / edit / duplicate workflow | `canManage` on the owning space             |
+| Transition / reopen                | Same as editing the document (space access) |
 
 ---
 
@@ -141,6 +141,6 @@ Settled/Cancelled cannot be dragged onto a sprint. **Reopen** sets stage to the 
 
 ## Changelog
 
-| Date | Change |
-| ---- | ------ |
+| Date       | Change                                                                        |
+| ---------- | ----------------------------------------------------------------------------- |
 | 2026-08-29 | Ported from Epicstory; space-scoped; no Backlog kind; Kanban + Scrum context. |

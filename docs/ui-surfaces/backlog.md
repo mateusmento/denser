@@ -41,24 +41,24 @@ Upcoming is always above the unscheduled list. Rank is per section. Past sprints
 
 ## Features
 
-| Feature | Notes |
-| ------- | ----- |
-| List | Documents whose parent is this space (plus sprint children when sprinting is on) |
-| Sprint sections | Only if sprinting is on |
-| Drag | Between sections: **move** `space_id`; drop position sets rank. One list: rank only |
-| Create | Unscheduled list → this space; sprint section → that sprint space |
-| Start / complete | Shown when sprinting is on and `canManage` |
-| Open document | Working tab on this host |
+| Feature          | Notes                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| List             | Documents whose parent is this space (plus sprint children when sprinting is on)    |
+| Sprint sections  | Only if sprinting is on                                                             |
+| Drag             | Between sections: **move** `space_id`; drop position sets rank. One list: rank only |
+| Create           | Unscheduled list → this space; sprint section → that sprint space                   |
+| Start / complete | Shown when sprinting is on and `canManage`                                          |
+| Open document    | Working tab on this host                                                            |
 
 ---
 
 ## Data (UI-facing)
 
-| UI need | Source |
-| ------- | ------ |
-| Rows | Documents with `space_id` = this space |
+| UI need         | Source                                  |
+| --------------- | --------------------------------------- |
+| Rows            | Documents with `space_id` = this space  |
 | Sprint sections | Clock + documents in those child spaces |
-| Order | Rank within each space |
+| Order           | Rank within each space                  |
 
 ---
 
@@ -71,7 +71,7 @@ Upcoming is always above the unscheduled list. Rank is per section. Past sprints
 
 ## Changelog
 
-| Date       | Change |
-| ---------- | ------ |
-| 2026-08-28 | Draft: three sections, drag = move. |
+| Date       | Change                                                |
+| ---------- | ----------------------------------------------------- |
+| 2026-08-28 | Draft: three sections, drag = move.                   |
 | 2026-08-29 | Sprints optional; sections only when sprinting is on. |

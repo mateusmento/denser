@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldContent,
@@ -18,12 +18,9 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 </script>
 
 <template>
@@ -46,18 +43,11 @@ import {
     <CardContent>
       <FieldGroup>
         <Field>
-          <FieldLabel for="account-holder">
-            Account Holder Name
-          </FieldLabel>
-          <Input
-            id="account-holder"
-            default-value="Synthetic Horizons Music LLC"
-          />
+          <FieldLabel for="account-holder"> Account Holder Name </FieldLabel>
+          <Input id="account-holder" default-value="Synthetic Horizons Music LLC" />
         </Field>
         <FieldSet>
-          <FieldLegend variant="label">
-            Receiving Method
-          </FieldLegend>
+          <FieldLegend variant="label"> Receiving Method </FieldLegend>
           <RadioGroup
             default-value="bank"
             class="grid grid-cols-1 items-start gap-3 md:grid-cols-2"
@@ -77,29 +67,21 @@ import {
               <Field orientation="horizontal" class="pb-2.5">
                 <RadioGroupItem id="method-paypal" value="paypal" />
                 <FieldContent>
-                  <FieldDescription class="font-medium text-foreground">
-                    PayPal
-                  </FieldDescription>
-                  <FieldDescription class="line-clamp-1">
-                    Instant Payout
-                  </FieldDescription>
+                  <FieldDescription class="font-medium text-foreground"> PayPal </FieldDescription>
+                  <FieldDescription class="line-clamp-1"> Instant Payout </FieldDescription>
                 </FieldContent>
               </Field>
             </FieldLabel>
           </RadioGroup>
         </FieldSet>
         <Field>
-          <FieldLabel for="iban">
-            IBAN / Account Number
-          </FieldLabel>
+          <FieldLabel for="iban"> IBAN / Account Number </FieldLabel>
           <Input id="iban" placeholder="DE89 3704 0044 ...." />
         </Field>
       </FieldGroup>
     </CardContent>
     <CardFooter>
-      <Button class="w-full" disabled>
-        Save Payout Settings
-      </Button>
+      <Button class="w-full" disabled> Save Payout Settings </Button>
     </CardFooter>
   </Card>
 </template>

@@ -4,13 +4,7 @@ import type {
   ConversationThreadView,
   SchedulePreset,
 } from "./types";
-import {
-  ava,
-  channelMessages,
-  jon,
-  mia,
-  threadReplyMessages,
-} from "./messageFixtures";
+import { ava, channelMessages, jon, mia, threadReplyMessages } from "./messageFixtures";
 
 export { channelMessages } from "./messageFixtures";
 

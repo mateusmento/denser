@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ChartConfig } from "@/components/ui/chart"
-import { VisGroupedBar, VisXYContainer } from "@unovis/vue"
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import type { ChartConfig } from "@/components/ui/chart";
+import { VisGroupedBar, VisXYContainer } from "@unovis/vue";
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -10,21 +10,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartCrosshair,
   ChartTooltip,
   ChartTooltipContent,
   componentToString,
-} from "@/components/ui/chart"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from "@/components/ui/item"
+} from "@/components/ui/chart";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 
 const HOLDINGS = [
   {
@@ -71,19 +65,19 @@ const HOLDINGS = [
       { q: "Q4", index: 3, value: 360 },
     ],
   },
-]
+];
 
-type HoldingData = typeof HOLDINGS[number]["data"][number]
+type HoldingData = (typeof HOLDINGS)[number]["data"][number];
 
 const miniChartConfig = {
   value: {
     label: "Dividend",
     color: "var(--chart-2)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 // Hard-edged styles (lyra, sera) flatten the bar corners — mirrors shadcn-ui.
-const isRounded = true
+const isRounded = true;
 </script>
 
 <template>
@@ -112,10 +106,7 @@ const isRounded = true
             <ItemTitle>{{ holding.name }}</ItemTitle>
             <ItemDescription>{{ holding.shares }}</ItemDescription>
           </ItemContent>
-          <ChartContainer
-            :config="miniChartConfig"
-            class="hidden h-8 w-24 md:block"
-          >
+          <ChartContainer :config="miniChartConfig" class="hidden h-8 w-24 md:block">
             <VisXYContainer :data="holding.data" :margin="{ top: 0, right: 0, bottom: 0, left: 0 }">
               <VisGroupedBar
                 :x="(d: HoldingData) => d.index"
@@ -125,7 +116,9 @@ const isRounded = true
               />
               <ChartTooltip />
               <ChartCrosshair
-                :template="componentToString(miniChartConfig, ChartTooltipContent, { hideLabel: true })"
+                :template="
+                  componentToString(miniChartConfig, ChartTooltipContent, { hideLabel: true })
+                "
                 color="#0000"
               />
             </VisXYContainer>

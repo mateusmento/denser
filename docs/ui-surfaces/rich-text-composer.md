@@ -112,20 +112,20 @@ Do **not**: Tippy, a second VueUse `useFloating` loop beside `mount()`, or TipTa
 - TipTap extensions set `HTMLAttributes.class` to the same `rt-*` class **RichTextSubtree** puts on the matching element.
 - Theme tokens (`foreground`, `muted`, `border`, …) only — no one-off hex in this layer ([VISUAL-LANGUAGE.md](../VISUAL-LANGUAGE.md)).
 
-| `JSONContent.type` / mark                 | Class                                                        | Notes                                 |
-| ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------- |
-| `doc`                                     | —                                                            | Fragment wrapper                      |
-| `paragraph`                               | `rt-paragraph`                                               |                                       |
-| `heading` (`attrs.level` 1–3)             | `rt-heading-1` … `rt-heading-3`                              |                                       |
-| `bulletList` / `orderedList` / `listItem` | `rt-bullet-list` / `rt-ordered-list` / `rt-list-item`        |                                       |
-| `taskList` / `taskItem`                   | `rt-task-list` / `rt-task-item`                              |                                       |
-| `blockquote`                              | `rt-blockquote`                                              | Left rule + muted inset               |
+| `JSONContent.type` / mark                 | Class                                                        | Notes                                                              |
+| ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `doc`                                     | —                                                            | Fragment wrapper                                                   |
+| `paragraph`                               | `rt-paragraph`                                               |                                                                    |
+| `heading` (`attrs.level` 1–3)             | `rt-heading-1` … `rt-heading-3`                              |                                                                    |
+| `bulletList` / `orderedList` / `listItem` | `rt-bullet-list` / `rt-ordered-list` / `rt-list-item`        |                                                                    |
+| `taskList` / `taskItem`                   | `rt-task-list` / `rt-task-item`                              |                                                                    |
+| `blockquote`                              | `rt-blockquote`                                              | Left rule + muted inset                                            |
 | `codeBlock`                               | `rt-code-block` + `rt-code-token-*`                          | Chrome + language control in composer; token spans, never `hljs-*` |
-| `horizontalRule`                          | `rt-hr`                                                      |                                       |
-| `image`                                   | `rt-image`                                                   |                                       |
-| `mention`                                 | `rt-mention`                                                 |                                       |
-| `hardBreak`                               | —                                                            | `<br>`                                |
-| `text` + marks                            | `rt-bold` `rt-italic` `rt-strike` `rt-inline-code` `rt-link` | Marks wrap text                       |
+| `horizontalRule`                          | `rt-hr`                                                      |                                                                    |
+| `image`                                   | `rt-image`                                                   |                                                                    |
+| `mention`                                 | `rt-mention`                                                 |                                                                    |
+| `hardBreak`                               | —                                                            | `<br>`                                                             |
+| `text` + marks                            | `rt-bold` `rt-italic` `rt-strike` `rt-inline-code` `rt-link` | Marks wrap text                                                    |
 
 Unknown `type`: render children as text only — never pass the node through `v-html`.
 

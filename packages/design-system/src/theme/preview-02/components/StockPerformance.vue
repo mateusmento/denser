@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import type { ChartConfig } from "@/components/ui/chart"
-import { VisArea, VisLine, VisXYContainer } from "@unovis/vue"
-import { computed, ref } from "vue"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import type { ChartConfig } from "@/components/ui/chart";
+import { VisArea, VisLine, VisXYContainer } from "@unovis/vue";
+import { computed, ref } from "vue";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartCrosshair,
   ChartTooltip,
   ChartTooltipContent,
   componentToString,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Combobox,
   ComboboxEmpty,
@@ -23,13 +17,13 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxViewport,
-} from "@/components/ui/combobox"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/combobox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
 
-const TICKERS = ["VOO", "VIG", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+const TICKERS = ["VOO", "VIG", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"];
 
-const CHART_DATA: Record<string, { month: string, index: number, price: number }[]> = {
+const CHART_DATA: Record<string, { month: string; index: number; price: number }[]> = {
   VOO: [
     { month: "Jan", index: 0, price: 412 },
     { month: "Feb", index: 1, price: 438 },
@@ -46,7 +40,7 @@ const CHART_DATA: Record<string, { month: string, index: number, price: number }
     { month: "May", index: 4, price: 178 },
     { month: "Jun", index: 5, price: 215 },
   ],
-}
+};
 
 const DEFAULT_DATA = [
   { month: "Jan", index: 0, price: 100 },
@@ -55,19 +49,23 @@ const DEFAULT_DATA = [
   { month: "Apr", index: 3, price: 125 },
   { month: "May", index: 4, price: 108 },
   { month: "Jun", index: 5, price: 130 },
-]
+];
 
-interface Data { month: string, index: number, price: number }
+interface Data {
+  month: string;
+  index: number;
+  price: number;
+}
 
 const chartConfig = {
   price: {
     label: "Price",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-const ticker = ref("VOO")
-const data = computed(() => CHART_DATA[ticker.value] ?? DEFAULT_DATA)
+const ticker = ref("VOO");
+const data = computed(() => CHART_DATA[ticker.value] ?? DEFAULT_DATA);
 </script>
 
 <template>
@@ -79,26 +77,21 @@ const data = computed(() => CHART_DATA[ticker.value] ?? DEFAULT_DATA)
     <CardContent class="flex flex-col gap-4">
       <FieldGroup>
         <Field>
-          <FieldLabel for="ticker-select">
-            Ticker
-          </FieldLabel>
+          <FieldLabel for="ticker-select"> Ticker </FieldLabel>
           <Combobox
             :items="TICKERS"
             :model-value="ticker"
-            @update:model-value="(value) => { if (value !== null) ticker = value as string }"
+            @update:model-value="
+              (value) => {
+                if (value !== null) ticker = value as string;
+              }
+            "
           >
-            <ComboboxInput
-              id="ticker-select"
-              placeholder="Search ticker..."
-            />
+            <ComboboxInput id="ticker-select" placeholder="Search ticker..." />
             <ComboboxList>
               <ComboboxViewport>
                 <ComboboxEmpty>No tickers found.</ComboboxEmpty>
-                <ComboboxItem
-                  v-for="item in TICKERS"
-                  :key="item"
-                  :value="item"
-                >
+                <ComboboxItem v-for="item in TICKERS" :key="item" :value="item">
                   {{ item }}
                 </ComboboxItem>
               </ComboboxViewport>

@@ -36,9 +36,7 @@ export function useLiveSpacesInWindow(window: ReadonlyRefOrGetter<readonly Space
     (q) => {
       const idList = ids.value;
       if (idList.length === 0) return undefined;
-      return q
-        .from({ spaces: spacesCollection })
-        .where(({ spaces }) => inArray(spaces.id, idList));
+      return q.from({ spaces: spacesCollection }).where(({ spaces }) => inArray(spaces.id, idList));
     },
     [ids],
   );

@@ -34,10 +34,7 @@ export function useSpaceTabsStore() {
     setTabs(hostSpaceId, moveStoredTab(listTabs(hostSpaceId), tabKey, toIndex));
   }
 
-  function addArtifactTab(
-    hostSpaceId: SpaceId,
-    artifact: { id: ArtifactId; kind: ArtifactKind },
-  ) {
+  function addArtifactTab(hostSpaceId: SpaceId, artifact: { id: ArtifactId; kind: ArtifactKind }) {
     if (artifact.kind !== "document" && artifact.kind !== "conversation") return;
     addTab(hostSpaceId, {
       kind: "artifact",

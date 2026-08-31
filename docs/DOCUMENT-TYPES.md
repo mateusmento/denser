@@ -15,40 +15,40 @@ The artifact is still `kind = document`. The type is a schema on that shell + bo
 
 ### Document type
 
-| Field | Notes |
-| ----- | ----- |
-| id | uuid |
-| name | Issue, Spec, Bug, … |
-| description | Optional |
-| spaceId | Project space that owns it |
-| icon / color | Optional chrome |
-| builtin | Cannot delete if true |
-| fields | Ordered field definitions |
+| Field        | Notes                      |
+| ------------ | -------------------------- |
+| id           | uuid                       |
+| name         | Issue, Spec, Bug, …        |
+| description  | Optional                   |
+| spaceId      | Project space that owns it |
+| icon / color | Optional chrome            |
+| builtin      | Cannot delete if true      |
+| fields       | Ordered field definitions  |
 
 ### Field definition
 
-| Field | Notes |
-| ----- | ----- |
-| key | `title`, `assignee`, `priority`, … |
-| label | Display |
-| fieldType | See below |
-| required | |
-| defaultValue | Optional |
-| options | Selects |
-| order | |
+| Field        | Notes                              |
+| ------------ | ---------------------------------- |
+| key          | `title`, `assignee`, `priority`, … |
+| label        | Display                            |
+| fieldType    | See below                          |
+| required     |                                    |
+| defaultValue | Optional                           |
+| options      | Selects                            |
+| order        |                                    |
 
 **Title** and **body** are always on the artifact / document row. They are not optional field types. Types describe **extra** fields.
 
 ### Field types
 
-| Type | Denser mapping |
-| ---- | -------------- |
-| **Workflow** | Document participates in the space’s (or this field’s) workflow; has `stageId`. Trackable on Board; can be planned into sprints. |
-| **Prefix** | Human id `{spaceKey}-{n}` from the **project space** key, even if the document currently lives in a sprint child. Not a Project entity. |
-| **Related to** | Link to another document (rework, relation). Later with dependencies. |
-| Text, long text, number, date, select, multi-select | Extra fields JSON on the document |
-| User | User id |
-| Labels | Space-scoped labels (later if labels are not in v1) |
+| Type                                                | Denser mapping                                                                                                                          |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Workflow**                                        | Document participates in the space’s (or this field’s) workflow; has `stageId`. Trackable on Board; can be planned into sprints.        |
+| **Prefix**                                          | Human id `{spaceKey}-{n}` from the **project space** key, even if the document currently lives in a sprint child. Not a Project entity. |
+| **Related to**                                      | Link to another document (rework, relation). Later with dependencies.                                                                   |
+| Text, long text, number, date, select, multi-select | Extra fields JSON on the document                                                                                                       |
+| User                                                | User id                                                                                                                                 |
+| Labels                                              | Space-scoped labels (later if labels are not in v1)                                                                                     |
 
 Without a Workflow field, the document appears on Backlog (it is still a document in the space) but **not** on the Board.
 
@@ -56,11 +56,11 @@ Without a Workflow field, the document appears on Backlog (it is still a documen
 
 ## Builtins
 
-| Type | Extra fields | Trackable |
-| ---- | ------------ | --------- |
-| **Issue** | Workflow, Prefix, Assignee, Labels, Priority, Due date, Estimate, Related to | Yes |
-| **Spec** | Workflow, Assignee, Labels | Yes |
-| **Doc** | Labels | No |
+| Type      | Extra fields                                                                 | Trackable |
+| --------- | ---------------------------------------------------------------------------- | --------- |
+| **Issue** | Workflow, Prefix, Assignee, Labels, Priority, Due date, Estimate, Related to | Yes       |
+| **Spec**  | Workflow, Assignee, Labels                                                   | Yes       |
+| **Doc**   | Labels                                                                       | No        |
 
 Customize builtins (add/remove extra fields); do not delete them. Clone to make a custom type. Custom types with Workflow (+ optional Prefix) behave like Issue.
 
@@ -72,13 +72,13 @@ Today: artifact shell + TipTap body.
 
 Add:
 
-| Field | Notes |
-| ----- | ----- |
+| Field          | Notes                                                                          |
+| -------------- | ------------------------------------------------------------------------------ |
 | documentTypeId | Required once types exist; default **Doc** in a folder, **Issue** on a Backlog |
-| stageId | Null if the type has no Workflow |
-| fields | JSON values for extra keys |
-| rank | Integer, ordered among siblings in the same `space_id` |
-| identifier | Optional `KEY-n` if the type has Prefix |
+| stageId        | Null if the type has no Workflow                                               |
+| fields         | JSON values for extra keys                                                     |
+| rank           | Integer, ordered among siblings in the same `space_id`                         |
+| identifier     | Optional `KEY-n` if the type has Prefix                                        |
 
 `space_id` / `root_space_id` stay on the **artifact** (filing). Version stays on the artifact (409).
 
@@ -100,9 +100,9 @@ Add:
 
 ## Permissions
 
-| Action | Who |
-| ------ | --- |
-| Define / clone / edit types | `canManage` on the owning space |
+| Action                           | Who                                           |
+| -------------------------------- | --------------------------------------------- |
+| Define / clone / edit types      | `canManage` on the owning space               |
 | Create / convert / edit document | Space access (same as today’s document patch) |
 
 ---
@@ -132,6 +132,6 @@ Add:
 
 ## Changelog
 
-| Date | Change |
-| ---- | ------ |
+| Date       | Change                                                                          |
+| ---------- | ------------------------------------------------------------------------------- |
 | 2026-08-29 | Ported from Epicstory; space-scoped; Prefix → space key; filing stays Artifact. |

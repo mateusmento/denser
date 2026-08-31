@@ -1,4 +1,10 @@
-import type { ArtifactId, ArtifactSummary, SpaceId, SpacePreset, SpaceSummary } from "@denser/contracts";
+import type {
+  ArtifactId,
+  ArtifactSummary,
+  SpaceId,
+  SpacePreset,
+  SpaceSummary,
+} from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -28,7 +34,10 @@ function spaceLink(
   };
 }
 
-function artifactLink(artifact: Pick<ArtifactSummary, "id" | "title" | "kind">, isActive: boolean): WorkspaceNavLink {
+function artifactLink(
+  artifact: Pick<ArtifactSummary, "id" | "title" | "kind">,
+  isActive: boolean,
+): WorkspaceNavLink {
   if (artifact.kind === "conversation") {
     return {
       id: artifact.id,
@@ -76,10 +85,10 @@ export function useWorkspaceNavSync() {
 
   const activeSpaceId = computed(() => route.params.spaceId as SpaceId | undefined);
   const activeDocumentId = computed(() => route.params.documentId as ArtifactId | undefined);
-  const activeConversationId = computed(() => route.params.conversationId as ArtifactId | undefined);
-  const activeArtifactId = computed(
-    () => activeDocumentId.value ?? activeConversationId.value,
+  const activeConversationId = computed(
+    () => route.params.conversationId as ArtifactId | undefined,
   );
+  const activeArtifactId = computed(() => activeDocumentId.value ?? activeConversationId.value);
   const isHomeActive = computed(() => route.name === "home");
 
   const homeQuery = useQuery({
@@ -126,10 +135,7 @@ export function useWorkspaceNavSync() {
   });
 
   const artifactSpaceId = computed(
-    () =>
-      documentQuery.data.value?.spaceId ??
-      conversationQuery.data.value?.spaceId ??
-      undefined,
+    () => documentQuery.data.value?.spaceId ?? conversationQuery.data.value?.spaceId ?? undefined,
   );
 
   const artifactSpaceQuery = useQuery({
@@ -148,9 +154,7 @@ export function useWorkspaceNavSync() {
     () => routeSpaceQuery.data.value ?? artifactSpaceQuery.data.value ?? null,
   );
 
-  const liveRootSpaces = useLiveSpacesInWindow(
-    computed(() => homeQuery.data.value?.spaces ?? []),
-  );
+  const liveRootSpaces = useLiveSpacesInWindow(computed(() => homeQuery.data.value?.spaces ?? []));
   const liveContextChildSpaces = useLiveSpacesInWindow(
     computed(() => contextDetail.value?.childSpaces ?? []),
   );
@@ -171,9 +175,7 @@ export function useWorkspaceNavSync() {
     return null;
   });
 
-  const liveWorkspaceRoot = useLiveSpace(
-    computed(() => workspaceRootId.value ?? undefined),
-  );
+  const liveWorkspaceRoot = useLiveSpace(computed(() => workspaceRootId.value ?? undefined));
 
   const inPrivateWorkspace = computed(() => {
     const rootId = workspaceRootId.value;
@@ -193,9 +195,7 @@ export function useWorkspaceNavSync() {
     const title =
       liveWorkspaceRoot.value?.title ??
       liveRootSpaces.value.find((space) => space.id === rootId)?.title ??
-      (contextSpace != null &&
-      contextSpace.parentSpaceId == null &&
-      contextSpace.id === rootId
+      (contextSpace != null && contextSpace.parentSpaceId == null && contextSpace.id === rootId
         ? contextSpace.title
         : undefined);
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldContent,
@@ -17,7 +17,7 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -25,24 +25,22 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const CURRENCIES = [
   { label: "USD — United States Dollar", value: "usd" },
   { label: "EUR — Euro", value: "eur" },
   { label: "GBP — British Pound", value: "gbp" },
   { label: "JPY — Japanese Yen", value: "jpy" },
-]
+];
 </script>
 
 <template>
   <Card>
     <CardHeader>
       <CardTitle>Preferences</CardTitle>
-      <CardDescription>
-        Manage your account settings and notifications.
-      </CardDescription>
+      <CardDescription> Manage your account settings and notifications. </CardDescription>
       <CardAction>
         <Button variant="ghost" size="icon-sm" class="bg-muted">
           <IconPlaceholder
@@ -58,20 +56,14 @@ const CURRENCIES = [
     <CardContent>
       <FieldGroup>
         <Field>
-          <FieldLabel for="default-currency">
-            Default Currency
-          </FieldLabel>
+          <FieldLabel for="default-currency"> Default Currency </FieldLabel>
           <Select default-value="usd">
             <SelectTrigger id="default-currency" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem
-                  v-for="item in CURRENCIES"
-                  :key="item.value"
-                  :value="item.value"
-                >
+                <SelectItem v-for="item in CURRENCIES" :key="item.value" :value="item.value">
                   {{ item.label }}
                 </SelectItem>
               </SelectGroup>
@@ -81,12 +73,9 @@ const CURRENCIES = [
         <FieldSeparator class="-my-4" />
         <Field orientation="horizontal">
           <FieldContent>
-            <FieldLabel for="public-statistics">
-              Public Statistics
-            </FieldLabel>
+            <FieldLabel for="public-statistics"> Public Statistics </FieldLabel>
             <FieldDescription>
-              Allow others to see your total stream count and listening
-              activity
+              Allow others to see your total stream count and listening activity
             </FieldDescription>
           </FieldContent>
           <Switch id="public-statistics" :default-checked="true" />
@@ -94,24 +83,16 @@ const CURRENCIES = [
         <FieldSeparator class="-my-4" />
         <Field orientation="horizontal">
           <FieldContent>
-            <FieldLabel for="email-notifications">
-              Email Notifications
-            </FieldLabel>
-            <FieldDescription>
-              Monthly royalty reports and distribution updates
-            </FieldDescription>
+            <FieldLabel for="email-notifications"> Email Notifications </FieldLabel>
+            <FieldDescription> Monthly royalty reports and distribution updates </FieldDescription>
           </FieldContent>
           <Switch id="email-notifications" :default-checked="true" />
         </Field>
       </FieldGroup>
     </CardContent>
     <CardFooter>
-      <Button variant="outline">
-        Reset
-      </Button>
-      <Button class="ml-auto">
-        Save Preferences
-      </Button>
+      <Button variant="outline"> Reset </Button>
+      <Button class="ml-auto"> Save Preferences </Button>
     </CardFooter>
   </Card>
 </template>

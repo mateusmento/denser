@@ -12,8 +12,9 @@ const { Story } = defineMeta({
   tags: ["autodocs"],
 });
 
-const sampleGroup = conversationMessageGroups(channelMessages).find((g) => g.messages.length > 1)
-  ?? conversationMessageGroups(channelMessages)[0]!;
+const sampleGroup =
+  conversationMessageGroups(channelMessages).find((g) => g.messages.length > 1) ??
+  conversationMessageGroups(channelMessages)[0]!;
 </script>
 
 <template>

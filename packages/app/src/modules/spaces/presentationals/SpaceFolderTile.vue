@@ -43,22 +43,11 @@ function onAction(action: SpaceGallerySpaceAction) {
   <div
     v-if="preview"
     data-slot="space-folder-tile"
-    :class="cn('group h-10 sm:h-12 w-full rounded-xl text-left pointer-events-none')"
+    :class="cn('group pointer-events-none h-10 w-full rounded-xl text-left sm:h-12')"
   >
-    <Card
-      size="sm"
-      :class="
-        cn(
-          'h-10 sm:h-12 w-full border-border rounded-xl bg-card shadow-lg',
-        )
-      "
-    >
+    <Card size="sm" :class="cn('h-10 w-full rounded-xl border-border bg-card shadow-lg sm:h-12')">
       <CardContent class="flex h-full items-center gap-3 text-card-foreground">
-        <component
-          :is="resolveSpaceIcon(icon)"
-          class="size-4 shrink-0"
-          aria-hidden="true"
-        />
+        <component :is="resolveSpaceIcon(icon)" class="size-4 shrink-0" aria-hidden="true" />
         <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ title }}</p>
         <Badge v-if="roleLabel" variant="outline" class="shrink-0">
           {{ roleLabel }}
@@ -77,7 +66,7 @@ function onAction(action: SpaceGallerySpaceAction) {
         :class="
           cn(
             'group w-full rounded-xl text-left',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
           )
         "
         @click="emit('open')"
@@ -86,9 +75,9 @@ function onAction(action: SpaceGallerySpaceAction) {
           size="sm"
           :class="
             cn(
-              'h-10 sm:h-12 w-full border-border transition-colors rounded-xl cursor-pointer',
+              'h-10 w-full cursor-pointer rounded-xl border-border transition-colors sm:h-12',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
-              selected && 'ring-2 ring-primary bg-primary/10 border-primary/50 text-foreground',
+              selected && 'border-primary/50 bg-primary/10 text-foreground ring-2 ring-primary',
             )
           "
         >
@@ -100,11 +89,7 @@ function onAction(action: SpaceGallerySpaceAction) {
               )
             "
           >
-            <component
-              :is="resolveSpaceIcon(icon)"
-              class="size-4 shrink-0"
-              aria-hidden="true"
-            />
+            <component :is="resolveSpaceIcon(icon)" class="size-4 shrink-0" aria-hidden="true" />
             <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ title }}</p>
             <Badge v-if="roleLabel" variant="outline" class="shrink-0">
               {{ roleLabel }}

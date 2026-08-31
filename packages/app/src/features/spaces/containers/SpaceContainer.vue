@@ -182,7 +182,9 @@ const showBoard = computed(
   <BoardSurface
     v-else-if="showBoard"
     :columns="board"
-    :empty-until-start="detail?.space.sprintingEnabled === true && detail.space.activeSprintId == null"
+    :empty-until-start="
+      detail?.space.sprintingEnabled === true && detail.space.activeSprintId == null
+    "
     :can-manage="detail?.canManage"
     :is-starting="isStartingSprint"
     @open="openArtifact"
@@ -199,7 +201,13 @@ const showBoard = computed(
     @retry="reload"
     @create="onCreate($event, spaceId)"
     @open-space="openSpace"
-    @open-artifact="(id) => artifactCommands.openArtifact({ id: id as ArtifactId, kind: content?.artifacts.find((a) => a.id === id)?.kind ?? 'document' })"
+    @open-artifact="
+      (id) =>
+        artifactCommands.openArtifact({
+          id: id as ArtifactId,
+          kind: content?.artifacts.find((a) => a.id === id)?.kind ?? 'document',
+        })
+    "
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
     @explore="exploreMove"

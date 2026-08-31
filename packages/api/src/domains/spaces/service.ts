@@ -69,9 +69,10 @@ async function createUpcomingSprint(parent: SpaceRow, createdBy: UserId): Promis
     visibility: "public",
     planning: {
       sprintRole: "upcoming",
-      sprintDurationWeeks: parent.sprintDurationWeeks === 1 || parent.sprintDurationWeeks === 4
-        ? parent.sprintDurationWeeks
-        : 2,
+      sprintDurationWeeks:
+        parent.sprintDurationWeeks === 1 || parent.sprintDurationWeeks === 4
+          ? parent.sprintDurationWeeks
+          : 2,
     },
   });
   await updateSpace(parent.id, {
@@ -196,11 +197,7 @@ export async function getSpaceDetail(userId: UserId, spaceId: SpaceId) {
   };
 }
 
-export async function addSpaceMember(
-  userId: UserId,
-  spaceId: SpaceId,
-  input: AddSpaceMemberInput,
-) {
+export async function addSpaceMember(userId: UserId, spaceId: SpaceId, input: AddSpaceMemberInput) {
   const spaceRow = await requireSpaceManagement(userId, spaceId);
   if (!spaceRow) {
     return { ok: false as const, reason: "forbidden" as const };
@@ -238,11 +235,7 @@ export async function addSpaceMember(
   return { ok: true as const, member: toSpaceMember(member) };
 }
 
-export async function deleteSpaceMember(
-  actorId: UserId,
-  spaceId: SpaceId,
-  memberUserId: UserId,
-) {
+export async function deleteSpaceMember(actorId: UserId, spaceId: SpaceId, memberUserId: UserId) {
   const spaceRow = await requireSpaceManagement(actorId, spaceId);
   if (!spaceRow) {
     return { ok: false as const, reason: "forbidden" as const };

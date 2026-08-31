@@ -59,25 +59,42 @@ async function onMentionSearch(query: string) {
 </script>
 
 <template>
-  <Story as-child name="Ready" :parameters="storyDocs('Edit-ready title and body (feature-tour fixture).')">
+  <Story
+    as-child
+    name="Ready"
+    :parameters="storyDocs('Edit-ready title and body (feature-tour fixture).')"
+  >
     <DocumentEditor v-model="readyDraft" :view="view" @mention-search="onMentionSearch" />
   </Story>
-  <Story as-child name="EmptyNew" :parameters="storyDocs('New document: empty title and body, ready to type.')">
+  <Story
+    as-child
+    name="EmptyNew"
+    :parameters="storyDocs('New document: empty title and body, ready to type.')"
+  >
     <DocumentEditor v-model="blankDraft" :view="view" @mention-search="onMentionSearch" />
   </Story>
-  <Story as-child name="ReadOnly" :parameters="storyDocs('Same layout; title and body are not editable.')">
-    <DocumentEditor
-      v-model="readOnlyDraft"
-      :view="toDocumentEditorView(readOnlyDocumentView)"
-    />
+  <Story
+    as-child
+    name="ReadOnly"
+    :parameters="storyDocs('Same layout; title and body are not editable.')"
+  >
+    <DocumentEditor v-model="readOnlyDraft" :view="toDocumentEditorView(readOnlyDocumentView)" />
   </Story>
   <Story as-child name="Loading" :parameters="storyDocs('Quiet skeleton; no empty-title flash.')">
     <DocumentEditor v-model="readyDraft" :view="toDocumentEditorView(loadingDocumentView)" />
   </Story>
-  <Story as-child name="Error" :parameters="storyDocs('Inline load error and Retry; draft is not wiped.')">
+  <Story
+    as-child
+    name="Error"
+    :parameters="storyDocs('Inline load error and Retry; draft is not wiped.')"
+  >
     <DocumentEditor v-model="readyDraft" :view="toDocumentEditorView(errorDocumentView)" />
   </Story>
-  <Story as-child name="Forbidden" :parameters="storyDocs('No body payload; permission empty state.')">
+  <Story
+    as-child
+    name="Forbidden"
+    :parameters="storyDocs('No body payload; permission empty state.')"
+  >
     <DocumentEditor v-model="readyDraft" :view="toDocumentEditorView(forbiddenDocumentView)" />
   </Story>
 </template>

@@ -12,7 +12,9 @@ export const artifact = pgTable(
     id: uuid("id").primaryKey().$type<ArtifactId>().defaultRandom(),
     kind: artifactKindEnum("kind").notNull(),
     title: text("title").notNull(),
-    spaceId: uuid("space_id").$type<SpaceId>().references(() => space.id, { onDelete: "cascade" }),
+    spaceId: uuid("space_id")
+      .$type<SpaceId>()
+      .references(() => space.id, { onDelete: "cascade" }),
     rootSpaceId: uuid("root_space_id").$type<SpaceId>(),
     createdBy: uuid("created_by")
       .$type<UserId>()

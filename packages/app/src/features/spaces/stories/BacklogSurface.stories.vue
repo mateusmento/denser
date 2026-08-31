@@ -70,12 +70,22 @@ const kanbanSections = ref<BacklogSection[]>([
   },
 ]);
 
-function onScrumMove(payload: { artifactId: string; toSpaceId: string; afterId: string | null; beforeId: string | null }) {
+function onScrumMove(payload: {
+  artifactId: string;
+  toSpaceId: string;
+  afterId: string | null;
+  beforeId: string | null;
+}) {
   action("move")(payload);
   scrumSections.value = placeInBacklog(scrumSections.value, payload);
 }
 
-function onKanbanMove(payload: { artifactId: string; toSpaceId: string; afterId: string | null; beforeId: string | null }) {
+function onKanbanMove(payload: {
+  artifactId: string;
+  toSpaceId: string;
+  afterId: string | null;
+  beforeId: string | null;
+}) {
   action("move")(payload);
   kanbanSections.value = placeInBacklog(kanbanSections.value, payload);
 }

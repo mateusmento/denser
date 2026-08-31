@@ -48,7 +48,13 @@ export async function canAccessSpace(userId: UserId, spaceId: SpaceId): Promise<
 export async function canManageSpace(userId: UserId, spaceId: SpaceId): Promise<boolean> {
   const row = await db.query.space.findFirst({
     where: eq(space.id, spaceId),
-    columns: { id: true, rootSpaceId: true, parentSpaceId: true, visibility: true, createdBy: true },
+    columns: {
+      id: true,
+      rootSpaceId: true,
+      parentSpaceId: true,
+      visibility: true,
+      createdBy: true,
+    },
   });
   if (!row) return false;
 
@@ -58,7 +64,12 @@ export async function canManageSpace(userId: UserId, spaceId: SpaceId): Promise<
       where: eq(space.id, rootSpaceId),
       columns: { parentSpaceId: true, visibility: true, createdBy: true },
     });
-    if (root && root.parentSpaceId == null && root.visibility === "public" && root.createdBy === userId) {
+    if (
+      root &&
+      root.parentSpaceId == null &&
+      root.visibility === "public" &&
+      root.createdBy === userId
+    ) {
       return true;
     }
   } else if (row.visibility === "public" && row.createdBy === userId) {

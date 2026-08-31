@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -8,8 +8,8 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
-import { Spinner } from "@/components/ui/spinner"
+} from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
 </script>
 
 <template>
@@ -22,14 +22,11 @@ import { Spinner } from "@/components/ui/spinner"
           </EmptyMedia>
           <EmptyTitle>Syncing your accounts</EmptyTitle>
           <EmptyDescription>
-            We're pulling in your latest transactions. This usually takes
-            a few seconds.
+            We're pulling in your latest transactions. This usually takes a few seconds.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline">
-            Cancel
-          </Button>
+          <Button variant="outline"> Cancel </Button>
         </EmptyContent>
       </Empty>
     </CardContent>

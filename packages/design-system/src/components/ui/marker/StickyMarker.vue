@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from "vue";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const props = defineProps<{
   /** Merged onto the sticky pill (e.g. surface fill: `bg-background`, `bg-card/90`). */
-  class?: HTMLAttributes['class']
-}>()
+  class?: HTMLAttributes["class"];
+}>();
 </script>
 
 <template>
@@ -23,11 +23,13 @@ const props = defineProps<{
     </div>
     <div class="sticky top-0 z-10 flex justify-center py-1">
       <div
-        :class="cn(
-          'relative w-fit border border-border rounded-full px-3 py-1 whitespace-nowrap',
-          'hover:bg-muted text-center text-xs text-muted-foreground cursor-pointer',
-          props.class,
-        )"
+        :class="
+          cn(
+            'relative w-fit rounded-full border border-border px-3 py-1 whitespace-nowrap',
+            'cursor-pointer text-center text-xs text-muted-foreground hover:bg-muted',
+            props.class,
+          )
+        "
       >
         <slot name="label" />
       </div>

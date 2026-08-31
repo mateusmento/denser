@@ -241,9 +241,10 @@ export async function resolveActiveRootSpaceId(
   return resolveTenantRootSpaceId(spaceRow);
 }
 
-async function resolveDirectMemberIds(input: CreateDirectConversationInput): Promise<
-  | { ok: true; userIds: UserId[] }
-  | { ok: false; reason: "invalid_members" | "user_not_found" }
+async function resolveDirectMemberIds(
+  input: CreateDirectConversationInput,
+): Promise<
+  { ok: true; userIds: UserId[] } | { ok: false; reason: "invalid_members" | "user_not_found" }
 > {
   if (input.memberUserIds?.length) {
     const userIds = [...new Set(input.memberUserIds)];

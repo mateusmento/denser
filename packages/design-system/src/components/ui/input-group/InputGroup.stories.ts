@@ -1,11 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import { SearchIcon } from "@lucide/vue";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "./index";
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "./index";
 
 const meta = {
   title: "primitives/InputGroup",

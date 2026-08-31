@@ -118,10 +118,7 @@ export function neighborsAfterSort(
   return { afterId: rest[overIndex - 1] ?? null, beforeId: rest[overIndex] ?? null };
 }
 
-export function samePlace(
-  current: PlaceNeighbors,
-  next: PlaceNeighbors,
-): boolean {
+export function samePlace(current: PlaceNeighbors, next: PlaceNeighbors): boolean {
   return current.afterId === next.afterId && current.beforeId === next.beforeId;
 }
 

@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import type { AccordionTriggerProps } from 'reka-ui'
+import type { AccordionTriggerProps } from "reka-ui";
 
-import type { HTMLAttributes } from 'vue'
-import { ChevronDownIcon, ChevronUpIcon } from '@lucide/vue'
-import { reactiveOmit } from '@vueuse/core'
-import {
-  AccordionHeader,
-  AccordionTrigger,
-} from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from "vue";
+import { ChevronDownIcon, ChevronUpIcon } from "@lucide/vue";
+import { reactiveOmit } from "@vueuse/core";
+import { AccordionHeader, AccordionTrigger } from "reka-ui";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<AccordionTriggerProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<AccordionTriggerProps & { class?: HTMLAttributes["class"] }>();
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, "class");
 </script>
 
 <template>
@@ -22,15 +19,21 @@ const delegatedProps = reactiveOmit(props, 'class')
       v-bind="delegatedProps"
       :class="
         cn(
-          '**:data-[slot=accordion-trigger-icon]:text-muted-foreground gap-6 p-4 text-left text-sm font-medium hover:underline **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 group/accordion-trigger relative flex flex-1 items-start justify-between border border-transparent transition-all outline-none disabled:pointer-events-none disabled:opacity-50',
+          'group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left text-sm font-medium transition-all outline-none hover:underline disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground',
           props.class,
         )
       "
     >
       <slot />
       <slot name="icon">
-        <ChevronDownIcon data-slot="accordion-trigger-icon" class="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden" />
-        <ChevronUpIcon data-slot="accordion-trigger-icon" class="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline" />
+        <ChevronDownIcon
+          data-slot="accordion-trigger-icon"
+          class="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden"
+        />
+        <ChevronUpIcon
+          data-slot="accordion-trigger-icon"
+          class="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline"
+        />
       </slot>
     </AccordionTrigger>
   </AccordionHeader>

@@ -237,22 +237,19 @@ export function useDocumentSync(
       },
     );
 
-    watch(
-      id,
-      (nextId, prevId) => {
-        if (!nextId || isCompose.value || nextId === prevId) return;
-        dirty.value = { title: false, body: false };
-        const doc = canonical.value;
-        if (!doc || doc.id !== nextId) return;
-        syncing = true;
-        draft.value = {
-          title: doc.title,
-          body: cloneDoc(doc.body as JSONContent),
-        };
-        dirty.value = { title: false, body: false };
-        syncing = false;
-      },
-    );
+    watch(id, (nextId, prevId) => {
+      if (!nextId || isCompose.value || nextId === prevId) return;
+      dirty.value = { title: false, body: false };
+      const doc = canonical.value;
+      if (!doc || doc.id !== nextId) return;
+      syncing = true;
+      draft.value = {
+        title: doc.title,
+        body: cloneDoc(doc.body as JSONContent),
+      };
+      dirty.value = { title: false, body: false };
+      syncing = false;
+    });
 
     watch(
       canonical,

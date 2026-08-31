@@ -26,10 +26,10 @@ Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPAC
 
 ## Sidebar information architecture
 
-| Section | Contents |
-| ------- | -------- |
-| **Home** | Shown on Personal home, public root folders, and root artifacts: public roots the user created, private roots they belong to, and root artifacts. Hidden inside a **private** workspace tree. |
-| **In {space}** | When a space is active: nested child spaces, then artifacts (**documents + regular conversations** only). |
+| Section             | Contents                                                                                                                                                                                                          |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Home**            | Shown on Personal home, public root folders, and root artifacts: public roots the user created, private roots they belong to, and root artifacts. Hidden inside a **private** workspace tree.                     |
+| **In {space}**      | When a space is active: nested child spaces, then artifacts (**documents + regular conversations** only).                                                                                                         |
 | **Direct messages** | **Direct** conversation artifacts for the **current private root** (workspace) where the user is a member. Not shown for public Home folders. Flat list — not nested under folders. Not duplicated in In {space}. |
 
 DMs are **global within the workspace** (one thread per member set per private root). Switching nested spaces does not change the DM list.
@@ -62,12 +62,12 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 
 ## Changelog
 
-| Date       | Change                                                                             |
-| ---------- | ---------------------------------------------------------------------------------- |
-| 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome.       |
-| 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD. |
+| Date       | Change                                                                               |
+| ---------- | ------------------------------------------------------------------------------------ |
+| 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome.         |
+| 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD.   |
 | 2026-08-26 | Sidebar IA (Home / In space / Direct messages); space tab bar; link to domain model. |
-| 2026-08-28 | Home section only outside private workspaces; DMs only on private roots. |
-| 2026-08-28 | Tab bar: This Space → pins → working tabs. `+` opens a child as a working tab. |
-| 2026-08-28 | Space views: Backlog then Board on a sprinting space, before pins. |
-| 2026-08-29 | Backlog and Board are independent of sprinting. |
+| 2026-08-28 | Home section only outside private workspaces; DMs only on private roots.             |
+| 2026-08-28 | Tab bar: This Space → pins → working tabs. `+` opens a child as a working tab.       |
+| 2026-08-28 | Space views: Backlog then Board on a sprinting space, before pins.                   |
+| 2026-08-29 | Backlog and Board are independent of sprinting.                                      |

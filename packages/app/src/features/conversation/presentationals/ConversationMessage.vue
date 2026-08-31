@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { RichTextPreview } from "@/modules/rich-text";
-import {
-  Bubble,
-  BubbleContent,
-  Button,
-  MessageFooter,
-} from "@denser/design-system";
+import { Bubble, BubbleContent, Button, MessageFooter } from "@denser/design-system";
 import type { ConversationMessageView } from "../types";
 import MessageContextMenu from "./MessageContextMenu.vue";
 import MessageHoverMenu from "./MessageHoverMenu.vue";

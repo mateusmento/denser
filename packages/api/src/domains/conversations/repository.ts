@@ -21,7 +21,9 @@ export async function findConversationByArtifactId(
   });
 }
 
-export async function insertRegularConversationRow(artifactId: ArtifactId): Promise<ConversationRow> {
+export async function insertRegularConversationRow(
+  artifactId: ArtifactId,
+): Promise<ConversationRow> {
   const [created] = await db
     .insert(conversation)
     .values({

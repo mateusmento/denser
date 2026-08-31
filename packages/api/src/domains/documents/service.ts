@@ -54,8 +54,7 @@ async function resolveCreateType(input: {
   if (!input.space) return { documentTypeId: null, stageId: null };
   const ownerId = planningOwnerSpaceId(input.space);
   const key =
-    input.documentTypeKey ??
-    (input.space.showBacklog || input.space.showBoard ? "issue" : "doc");
+    input.documentTypeKey ?? (input.space.showBacklog || input.space.showBoard ? "issue" : "doc");
   const type = await findDocumentTypeByKey(ownerId, key);
   if (!type) return { documentTypeId: null, stageId: null };
   if (!type.workflowId) return { documentTypeId: type.id, stageId: null };
@@ -298,9 +297,7 @@ export async function patchDocument(
     artifactId: artifactRow.id,
     expectedVersion: input.version,
     title: nextTitle,
-    ...(input.spaceId !== undefined
-      ? { spaceId: nextSpaceId, rootSpaceId: nextRootSpaceId }
-      : {}),
+    ...(input.spaceId !== undefined ? { spaceId: nextSpaceId, rootSpaceId: nextRootSpaceId } : {}),
   });
 
   if (!updatedArtifact) {

@@ -25,10 +25,7 @@ function dayLabel(iso: string): string {
   }).format(date);
 }
 
-function continuesGroup(
-  previous: ConversationMessageView,
-  next: ConversationMessageView,
-): boolean {
+function continuesGroup(previous: ConversationMessageView, next: ConversationMessageView): boolean {
   return (
     previous.author.id === next.author.id &&
     Math.abs(Date.parse(next.createdAt) - Date.parse(previous.createdAt)) < GROUP_WINDOW_MS &&

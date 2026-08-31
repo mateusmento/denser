@@ -1,27 +1,27 @@
-<script lang='ts' setup>
-import type { PrimitiveProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
-import type { BubbleVariant } from '.'
-import { Primitive } from 'reka-ui'
-import { computed } from 'vue'
-import { cn } from '@/lib/utils'
-import { bubbleVariants, provideBubbleContext } from '.'
+<script lang="ts" setup>
+import type { PrimitiveProps } from "reka-ui";
+import type { HTMLAttributes } from "vue";
+import type { BubbleVariant } from ".";
+import { Primitive } from "reka-ui";
+import { computed } from "vue";
+import { cn } from "@/lib/utils";
+import { bubbleVariants, provideBubbleContext } from ".";
 
 interface Props extends PrimitiveProps {
-  variant?: BubbleVariant
-  align?: 'start' | 'end'
-  class?: HTMLAttributes['class']
+  variant?: BubbleVariant;
+  align?: "start" | "end";
+  class?: HTMLAttributes["class"];
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: 'default',
-  align: 'start',
-  as: 'div',
-})
+  variant: "default",
+  align: "start",
+  as: "div",
+});
 
 provideBubbleContext({
   variant: computed(() => props.variant),
-})
+});
 </script>
 
 <template>

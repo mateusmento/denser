@@ -116,28 +116,30 @@ function runAction(id: ComposerActionId) {
   <Card
     ref="root"
     size="sm"
-    :class="cn(
-      'h-full min-h-0 gap-1 rounded-2xl',
-      'border transition-[box-shadow,--card-edge-end,--tw-gradient-to] duration-[150ms,250ms,200ms]',
-      'light:border-mist-300',
-      'dark:card-edge dark:card-edge-start-mist-700 dark:card-edge-middle-[var(--color-mist-800)_45%] dark:card-edge-end-mist-950',
-      'bg-linear-to-b',
-      'light:from-mist-50 light:via-mist-50 light:via-55% light:to-mist-50 light:focus-within:to-mist-100',
-      'dark:from-muted dark:via-muted dark:via-35% dark:to-muted/45',
-      'light:focus-within:shadow-[0_1px_3px_var(--color-mist-300)]',
-      'dark:focus-within:shadow-[0_0_3px_var(--color-primary)]',
-      'focus-within:card-edge-end-primary',
-      props.class
-    )"
+    :class="
+      cn(
+        'h-full min-h-0 gap-1 rounded-2xl',
+        'border transition-[box-shadow,--card-edge-end,--tw-gradient-to] duration-[150ms,250ms,200ms]',
+        'light:border-mist-300',
+        'dark:card-edge dark:card-edge-middle-[var(--color-mist-800)_45%] dark:card-edge-end-mist-950 dark:card-edge-start-mist-700',
+        'bg-linear-to-b',
+        'light:from-mist-50 light:via-mist-50 light:via-55% light:to-mist-50 light:focus-within:to-mist-100',
+        'dark:from-muted dark:via-muted dark:via-35% dark:to-muted/45',
+        'light:focus-within:shadow-[0_1px_3px_var(--color-mist-300)]',
+        'dark:focus-within:shadow-[0_0_3px_var(--color-primary)]',
+        'focus-within:card-edge-end-primary',
+        props.class,
+      )
+    "
     data-slot="message-composer"
     :data-shape="view.shape"
   >
     <CardContent class="min-h-0 flex-1">
-      <ScrollArea class="min-h-0 h-full">
+      <ScrollArea class="h-full min-h-0">
         <RichTextComposer
           ref="composer"
           v-model="body"
-          class="min-h-0 h-full overflow-y-auto"
+          class="h-full min-h-0 overflow-y-auto"
           :placeholder="view.placeholder"
           :disabled="view.disabled || view.sending"
           submit-on-enter

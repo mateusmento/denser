@@ -3,7 +3,9 @@ import { nodeText } from "./nodeText";
 
 /** Plain-text serialization of a rich-text doc for clipboard / search previews. */
 export function docPlainText(doc: JSONContent): string {
-  return serializeBlock(doc).replace(/\n{3,}/g, "\n\n").trim();
+  return serializeBlock(doc)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function serializeBlock(node: JSONContent): string {

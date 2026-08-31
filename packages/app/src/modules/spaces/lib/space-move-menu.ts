@@ -21,12 +21,18 @@ export function destinationForLocation(location: SpaceMoveLocation): SpaceMoveDe
   return { kind: "space", spaceId: location };
 }
 
-export function titleForLocation(location: SpaceMoveLocation, spaces: readonly SpaceMoveNode[]): string {
+export function titleForLocation(
+  location: SpaceMoveLocation,
+  spaces: readonly SpaceMoveNode[],
+): string {
   if (location === MOVE_HOME) return "Home";
   return spaces.find((space) => space.id === location)?.title ?? "Home";
 }
 
-export function parentLocation(location: SpaceMoveLocation, spaces: readonly SpaceMoveNode[]): SpaceMoveLocation {
+export function parentLocation(
+  location: SpaceMoveLocation,
+  spaces: readonly SpaceMoveNode[],
+): SpaceMoveLocation {
   if (location === MOVE_HOME) return MOVE_HOME;
   const space = spaces.find((entry) => entry.id === location);
   return space?.parentId ?? MOVE_HOME;

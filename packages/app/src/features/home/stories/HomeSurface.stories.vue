@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { HomeContentView, HomeSurfaceView } from "../types";
-import {
-  SEED_ARTIFACT_PERSONAL_NOTES,
-  SEED_SPACE_ACME,
-} from "@denser/contracts";
+import { SEED_ARTIFACT_PERSONAL_NOTES, SEED_SPACE_ACME } from "@denser/contracts";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import HomeSurface from "../presentationals/HomeSurface.vue";
@@ -20,7 +17,9 @@ const loadingView: HomeSurfaceView = { state: "loading" };
 const errorView: HomeSurfaceView = { state: "error", errorMessage: "Couldn’t load home." };
 
 const content: HomeContentView = {
-  spaces: [{ id: SEED_SPACE_ACME, title: "Acme", icon: null, parentSpaceId: null, sprintRole: null }],
+  spaces: [
+    { id: SEED_SPACE_ACME, title: "Acme", icon: null, parentSpaceId: null, sprintRole: null },
+  ],
   artifacts: [
     {
       id: SEED_ARTIFACT_PERSONAL_NOTES,
@@ -43,7 +42,13 @@ const content: HomeContentView = {
       @open-artifact="action('openArtifact')($event)"
       @space-action="(kind, space) => action('spaceAction')(kind, space)"
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
-      :move-spaces="[{ id: content.spaces[0]!.id, title: content.spaces[0]!.title, parentId: content.spaces[0]!.parentSpaceId }]"
+      :move-spaces="[
+        {
+          id: content.spaces[0]!.id,
+          title: content.spaces[0]!.title,
+          parentId: content.spaces[0]!.parentSpaceId,
+        },
+      ]"
       @explore="action('explore')($event)"
       @move="action('move')($event)"
       @move-space="action('moveSpace')($event)"

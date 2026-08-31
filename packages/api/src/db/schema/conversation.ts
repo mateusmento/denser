@@ -1,6 +1,14 @@
 import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
 import { sql } from "drizzle-orm";
-import { pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth.js";
 import { artifact } from "./artifact.js";
 

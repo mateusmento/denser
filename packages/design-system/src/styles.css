@@ -192,13 +192,15 @@ html.dark,
       color 300ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  html, body, #app {
+  html,
+  body,
+  #app {
     @apply h-full min-h-full;
   }
 
   html,
   body {
-    @apply bg-background text-foreground font-sans selection:bg-accent selection:text-accent-foreground;
+    @apply bg-background font-sans text-foreground selection:bg-accent selection:text-accent-foreground;
   }
 
   h1,

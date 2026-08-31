@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import {
-  SEED_USER_ALICE,
-  SEED_USER_BOB,
-} from "@denser/contracts";
+import { SEED_USER_ALICE, SEED_USER_BOB } from "@denser/contracts";
 import { Button } from "@denser/design-system";
 import { SpaceGeneralPanel } from "@/modules/spaces";
 import { defineMeta } from "sb-addon-vue-csf";
@@ -61,11 +58,7 @@ const generalView: SpaceGeneralView = {
 <template>
   <Story as-child name="General">
     <Button @click="open = true">Open settings</Button>
-    <SpaceSettingsDialog
-      v-model:open="open"
-      title="Acme"
-      active-section="general"
-    >
+    <SpaceSettingsDialog v-model:open="open" title="Acme" active-section="general">
       <SpaceGeneralPanel :view="generalView" @save="action('save')($event)" />
     </SpaceSettingsDialog>
   </Story>

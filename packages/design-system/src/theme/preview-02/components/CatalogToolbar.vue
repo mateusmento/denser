@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 </script>
 
 <template>
@@ -37,15 +30,9 @@ import {
       Upload New Release
     </Button>
     <ToggleGroup :default-value="['releases']" variant="outline">
-      <ToggleGroupItem value="all-tracks">
-        All Tracks
-      </ToggleGroupItem>
-      <ToggleGroupItem value="releases">
-        Releases
-      </ToggleGroupItem>
-      <ToggleGroupItem value="top-earners">
-        Top Earners
-      </ToggleGroupItem>
+      <ToggleGroupItem value="all-tracks"> All Tracks </ToggleGroupItem>
+      <ToggleGroupItem value="releases"> Releases </ToggleGroupItem>
+      <ToggleGroupItem value="top-earners"> Top Earners </ToggleGroupItem>
     </ToggleGroup>
   </div>
 </template>

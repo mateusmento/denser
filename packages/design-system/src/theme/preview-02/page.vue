@@ -44,12 +44,9 @@ import UpcomingPayments from "./components/UpcomingPayments.vue";
     auto-fill packs as many ~20rem columns as the viewport allows.
     Wide demos (tables / dual panels) span 2 tracks when there is room.
   -->
-  <div
-    class="p-4 rounded-xl border border-border bg-background"
-    data-slot="capture-target"
-  >
+  <div class="rounded-xl border border-border bg-background p-4" data-slot="capture-target">
     <div
-      class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] grid-flow-dense items-start gap-4"
+      class="grid grid-flow-dense grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] items-start gap-4"
     >
       <ContributionHistory class="min-w-0" />
       <PayoutThreshold class="min-w-0" />

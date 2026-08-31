@@ -76,14 +76,14 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 
 ## Index
 
-| Feature                             | Status | Objects (summary)                    | UI surfaces                                                  |
-| ----------------------------------- | ------ | ------------------------------------ | ------------------------------------------------------------ |
-| [Conversation](#conversation) | Active | Conversation artifact, Message, Thread?, Reaction?, conversation_member (DM) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) |
-| Document                            | Active | Artifact(document), body, …          | [ui-surfaces/document.md](./ui-surfaces/document.md)         |
-| Spaces & membership                 | Active | Space, Membership, Invite            | Shell, home, invites, space tabs                             |
-| [Backlog & sprints](#backlog--sprints) | Draft | Space views, sprint child spaces | [backlog.md](./ui-surfaces/backlog.md), [board.md](./ui-surfaces/board.md) |
-| [Workflow](#workflow) | Draft | Space-scoped workflow, stages, kinds, transitions | [board.md](./ui-surfaces/board.md) |
-| [Document types](#document-types) | Draft | Space-scoped templates on document artifacts | [document.md](./ui-surfaces/document.md) |
+| Feature                                | Status | Objects (summary)                                                            | UI surfaces                                                                |
+| -------------------------------------- | ------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Conversation](#conversation)          | Active | Conversation artifact, Message, Thread?, Reaction?, conversation_member (DM) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md)               |
+| Document                               | Active | Artifact(document), body, …                                                  | [ui-surfaces/document.md](./ui-surfaces/document.md)                       |
+| Spaces & membership                    | Active | Space, Membership, Invite                                                    | Shell, home, invites, space tabs                                           |
+| [Backlog & sprints](#backlog--sprints) | Draft  | Space views, sprint child spaces                                             | [backlog.md](./ui-surfaces/backlog.md), [board.md](./ui-surfaces/board.md) |
+| [Workflow](#workflow)                  | Draft  | Space-scoped workflow, stages, kinds, transitions                            | [board.md](./ui-surfaces/board.md)                                         |
+| [Document types](#document-types)      | Draft  | Space-scoped templates on document artifacts                                 | [document.md](./ui-surfaces/document.md)                                   |
 
 ---
 
@@ -99,15 +99,15 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 
 ### Core objects
 
-| Object                        | Role                                                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Conversation (artifact)**   | Thin shell (`kind = conversation`) + typed row: `kind` (`regular` \| `direct`), optional intro, archival flags    |
-| **conversation_member** (DM)  | Explicit membership for **direct** conversations only — who can read/post                                           |
-| **Message**                   | One post in a conversation (or thread); rich body                                                                   |
-| **Thread** (optional v1)      | Side conversation anchored to a parent message                                                                      |
-| **Reaction** (optional v1)    | Emoji (or short) reaction on a message                                                                              |
-| **Poll** (phased)             | Structured poll embedded or referenced from a message                                                               |
-| **ScheduledMessage** (phased) | Message payload + send-at / recurrence before it becomes a live Message                                             |
+| Object                        | Role                                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Conversation (artifact)**   | Thin shell (`kind = conversation`) + typed row: `kind` (`regular` \| `direct`), optional intro, archival flags |
+| **conversation_member** (DM)  | Explicit membership for **direct** conversations only — who can read/post                                      |
+| **Message**                   | One post in a conversation (or thread); rich body                                                              |
+| **Thread** (optional v1)      | Side conversation anchored to a parent message                                                                 |
+| **Reaction** (optional v1)    | Emoji (or short) reaction on a message                                                                         |
+| **Poll** (phased)             | Structured poll embedded or referenced from a message                                                          |
+| **ScheduledMessage** (phased) | Message payload + send-at / recurrence before it becomes a live Message                                        |
 
 **Regular conversations** inherit **Space ACL** for read/post (v1). **Direct conversations** gate on **`conversation_member`** only and are listed in **Direct messages** nav for the root space, not in This Space.
 
@@ -217,22 +217,22 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ## Backlog & sprints
 
-| Field            | Value |
-| ---------------- | ----- |
-| Status           | Draft |
-| Owner surface(s) | [backlog.md](./ui-surfaces/backlog.md), [board.md](./ui-surfaces/board.md); chrome: [shell.md](./ui-surfaces/shell.md) |
+| Field            | Value                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Status           | Draft                                                                                                                                      |
+| Owner surface(s) | [backlog.md](./ui-surfaces/backlog.md), [board.md](./ui-surfaces/board.md); chrome: [shell.md](./ui-surfaces/shell.md)                     |
 | v1 scope         | Independent Backlog and Board space views; Board needs workflow + stage; opt-in sprint clock as child spaces; project/Kanban/Scrum presets |
 
 **Product model:** [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md). Filing: [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md). Workflow: [WORKFLOW.md](./WORKFLOW.md). Types: [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md).
 
 ### Core objects
 
-| Object | Role |
-| ------ | ---- |
-| Space | Organizational asset; may have Backlog, Board, and/or sprinting |
-| Sprint | Child space with role upcoming / active / past |
-| Document | Rows on Backlog; cards on Board if they have a stage |
-| Workflow | Ordered stages + transition rules on the space that has Board |
+| Object   | Role                                                            |
+| -------- | --------------------------------------------------------------- |
+| Space    | Organizational asset; may have Backlog, Board, and/or sprinting |
+| Sprint   | Child space with role upcoming / active / past                  |
+| Document | Rows on Backlog; cards on Board if they have a stage            |
+| Workflow | Ordered stages + transition rules on the space that has Board   |
 
 ### Data schema (conceptual)
 
@@ -244,15 +244,15 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ### Behaviors
 
-| Behavior | Trigger | Result |
-| -------- | ------- | ------ |
-| Create from preset | New folder / project / Scrum project | Space with the matching views, workflow, and sprinting |
-| Enable Backlog / Board / sprinting | `canManage` | That capability on; views pick up sprinting if it is already on |
-| Enable sprints | `canManage` | First upcoming child; Backlog (if on) grows sections; Board (if on) scopes to active when one exists |
-| Start | `canManage`, no active | Upcoming → active; new upcoming created |
-| Complete | `canManage`, active exists | Active → past; leftovers stay unless moved |
-| Drag on backlog | Drop on another section | Move `space_id` + rank (only when sprint sections exist) |
-| Drag on board | Drop on a column | Stage change if the transition is allowed |
+| Behavior                           | Trigger                              | Result                                                                                               |
+| ---------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Create from preset                 | New folder / project / Scrum project | Space with the matching views, workflow, and sprinting                                               |
+| Enable Backlog / Board / sprinting | `canManage`                          | That capability on; views pick up sprinting if it is already on                                      |
+| Enable sprints                     | `canManage`                          | First upcoming child; Backlog (if on) grows sections; Board (if on) scopes to active when one exists |
+| Start                              | `canManage`, no active               | Upcoming → active; new upcoming created                                                              |
+| Complete                           | `canManage`, active exists           | Active → past; leftovers stay unless moved                                                           |
+| Drag on backlog                    | Drop on another section              | Move `space_id` + rank (only when sprint sections exist)                                             |
+| Drag on board                      | Drop on a column                     | Stage change if the transition is allowed                                                            |
 
 ### Constraints
 
@@ -279,20 +279,20 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ## Workflow
 
-| Field            | Value |
-| ---------------- | ----- |
-| Status           | Draft |
-| Owner surface(s) | [board.md](./ui-surfaces/board.md) |
+| Field            | Value                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| Status           | Draft                                                                                               |
+| Owner surface(s) | [board.md](./ui-surfaces/board.md)                                                                  |
 | v1 scope         | Space-scoped workflows; kinds without Backlog; allowed sources; Kanban and Scrum transition context |
 
 **Product model:** [WORKFLOW.md](./WORKFLOW.md), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md).
 
 ### Core objects
 
-| Object | Role |
-| ------ | ---- |
-| Workflow | Ordered stages owned by the project space |
-| Stage | Name, kind, allowed sources |
+| Object   | Role                                         |
+| -------- | -------------------------------------------- |
+| Workflow | Ordered stages owned by the project space    |
+| Stage    | Name, kind, allowed sources                  |
 | Document | `stageId` when the type has a Workflow field |
 
 ### Data schema (conceptual)
@@ -304,12 +304,12 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ### Behaviors
 
-| Behavior | Trigger | Result |
-| -------- | ------- | ------ |
-| Define / duplicate | `canManage` | New workflow on the space |
-| Transition | Board drag or stage picker | New stage if allowed for this location |
-| Reopen | Explicit action | First idle stage; move off a past sprint onto the project space |
-| Auto-block | blocked-by link and a Blocked kind exists | Document moves to Blocked stage |
+| Behavior           | Trigger                                   | Result                                                          |
+| ------------------ | ----------------------------------------- | --------------------------------------------------------------- |
+| Define / duplicate | `canManage`                               | New workflow on the space                                       |
+| Transition         | Board drag or stage picker                | New stage if allowed for this location                          |
+| Reopen             | Explicit action                           | First idle stage; move off a past sprint onto the project space |
+| Auto-block         | blocked-by link and a Blocked kind exists | Document moves to Blocked stage                                 |
 
 ### Constraints
 
@@ -328,20 +328,20 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ## Document types
 
-| Field            | Value |
-| ---------------- | ----- |
-| Status           | Draft |
-| Owner surface(s) | [document.md](./ui-surfaces/document.md) |
+| Field            | Value                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| Status           | Draft                                                                                   |
+| Owner surface(s) | [document.md](./ui-surfaces/document.md)                                                |
 | v1 scope         | Space-scoped types on document artifacts; builtins Issue / Spec / Doc; in-place convert |
 
 **Product model:** [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md). Filing: artifact `kind = document`.
 
 ### Core objects
 
-| Object | Role |
-| ------ | ---- |
+| Object        | Role                                                  |
+| ------------- | ----------------------------------------------------- |
 | Document type | Template of extra fields + optional Workflow / Prefix |
-| Document | Artifact shell + body + type + extra field values |
+| Document      | Artifact shell + body + type + extra field values     |
 
 ### Data schema (conceptual)
 
@@ -351,11 +351,11 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ### Behaviors
 
-| Behavior | Trigger | Result |
-| -------- | ------- | ------ |
-| Define / clone / edit type | `canManage` | Type on the project space |
-| Create document | User in a space | Type default by context; first idle stage if trackable |
-| Convert type | User | In-place; keep id; remap or prompt stage |
+| Behavior                   | Trigger         | Result                                                 |
+| -------------------------- | --------------- | ------------------------------------------------------ |
+| Define / clone / edit type | `canManage`     | Type on the project space                              |
+| Create document            | User in a space | Type default by context; first idle stage if trackable |
+| Convert type               | User            | In-place; keep id; remap or prompt stage               |
 
 ### Constraints
 
@@ -373,13 +373,13 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 ## Changelog
 
-| Date       | Change                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| 2026-08-10 | Scaffold + Conversation draft.                                                                 |
-| 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note. |
-| 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON.                                              |
-| 2026-08-26 | Conversation as Artifact kind; regular/direct kinds; DM dedupe within root space; space tabs. |
+| Date       | Change                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-10 | Scaffold + Conversation draft.                                                                                                        |
+| 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note.                                        |
+| 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON.                                                                                     |
+| 2026-08-26 | Conversation as Artifact kind; regular/direct kinds; DM dedupe within root space; space tabs.                                         |
 | 2026-08-28 | Space visibility is the membership gate; private → public is not a feature. See [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md). |
-| 2026-08-28 | Backlog & sprints conception: sprints as spaces, opt-in clock, backlog/board views. |
-| 2026-08-29 | Backlog, board, and sprinting are independent; project presets; Board does not require sprints. |
-| 2026-08-29 | Workflow + document types from Epicstory, mapped onto Space/Artifact domains. |
+| 2026-08-28 | Backlog & sprints conception: sprints as spaces, opt-in clock, backlog/board views.                                                   |
+| 2026-08-29 | Backlog, board, and sprinting are independent; project presets; Board does not require sprints.                                       |
+| 2026-08-29 | Workflow + document types from Epicstory, mapped onto Space/Artifact domains.                                                         |

@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 </script>
 
 <template>
@@ -18,10 +12,8 @@ import { Separator } from "@/components/ui/separator"
           src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&h=800&fit=crop"
           alt="Synthetic Horizons EP cover art"
           class="aspect-square w-full object-cover"
-        >
-        <Badge class="absolute top-3 right-3">
-          $26,033.79
-        </Badge>
+        />
+        <Badge class="absolute top-3 right-3"> $26,033.79 </Badge>
       </div>
       <div class="flex flex-col gap-1">
         <CardTitle>Synthetic Horizons EP</CardTitle>
@@ -34,9 +26,7 @@ import { Separator } from "@/components/ui/separator"
       <Separator />
       <div class="grid w-full grid-cols-2 gap-4">
         <div class="flex flex-col gap-0.5">
-          <span class="text-xs tracking-wider text-muted-foreground uppercase">
-            Tracks
-          </span>
+          <span class="text-xs tracking-wider text-muted-foreground uppercase"> Tracks </span>
           <span class="text-lg font-medium tabular-nums">6 Tracks</span>
         </div>
         <div class="flex flex-col gap-0.5">

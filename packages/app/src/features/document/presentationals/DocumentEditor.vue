@@ -19,10 +19,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8"
-    data-slot="document-editor"
-  >
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8" data-slot="document-editor">
     <template v-if="view.state === 'loading'">
       <Skeleton class="h-8 w-2/3" />
       <Skeleton class="h-24 w-full" />

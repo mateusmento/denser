@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import type { RadioGroupItemProps } from 'reka-ui'
+import type { RadioGroupItemProps } from "reka-ui";
 
-import type { HTMLAttributes } from 'vue'
-import { CircleIcon } from '@lucide/vue'
-import { reactiveOmit } from '@vueuse/core'
-import {
-  RadioGroupIndicator,
-  RadioGroupItem,
-  useForwardProps,
-} from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from "vue";
+import { CircleIcon } from "@lucide/vue";
+import { reactiveOmit } from "@vueuse/core";
+import { RadioGroupIndicator, RadioGroupItem, useForwardProps } from "reka-ui";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<RadioGroupItemProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<RadioGroupItemProps & { class?: HTMLAttributes["class"] }>();
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, "class");
 
-const forwardedProps = useForwardProps(delegatedProps)
+const forwardedProps = useForwardProps(delegatedProps);
 </script>
 
 <template>
@@ -24,7 +20,7 @@ const forwardedProps = useForwardProps(delegatedProps)
     v-bind="forwardedProps"
     :class="
       cn(
-        'bg-input/90 data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary border-transparent aria-invalid:border-destructive focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:border-destructive/50 flex size-4 rounded-2xl focus-visible:ring-3 aria-invalid:ring-3 group/radio-group-item peer relative aspect-square shrink-0 border outline-none after:absolute after:-inset-x-3 after:-inset-y-2 disabled:cursor-not-allowed disabled:opacity-50',
+        'group/radio-group-item peer relative flex aspect-square size-4 shrink-0 rounded-2xl border border-transparent bg-input/90 outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary',
         props.class,
       )
     "
@@ -34,7 +30,9 @@ const forwardedProps = useForwardProps(delegatedProps)
       class="flex size-4 items-center justify-center"
     >
       <slot>
-        <CircleIcon class="bg-primary-foreground absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full dark:size-2.5" />
+        <CircleIcon
+          class="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground dark:size-2.5"
+        />
       </slot>
     </RadioGroupIndicator>
   </RadioGroupItem>

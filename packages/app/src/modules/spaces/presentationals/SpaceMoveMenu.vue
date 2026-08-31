@@ -94,16 +94,18 @@ function onMoveHere() {
       <div
         :key="location"
         class="flex flex-col"
-        :class="direction === 'forward' ? 'animate-in slide-in-from-right-4 fade-in duration-150' : 'animate-in slide-in-from-left-4 fade-in duration-150'"
+        :class="
+          direction === 'forward'
+            ? 'animate-in duration-150 fade-in slide-in-from-right-4'
+            : 'animate-in duration-150 fade-in slide-in-from-left-4'
+        "
       >
         <ContextMenuLabel>{{ title }}</ContextMenuLabel>
         <ContextMenuItem v-if="canGoBack" @select="onBack">
           <ChevronLeftIcon class="size-3.5" />
           Back
         </ContextMenuItem>
-        <ContextMenuItem v-if="canMoveHere" @select="onMoveHere">
-          Move here
-        </ContextMenuItem>
+        <ContextMenuItem v-if="canMoveHere" @select="onMoveHere"> Move here </ContextMenuItem>
         <ContextMenuItem
           v-for="item in items"
           :key="item.id"

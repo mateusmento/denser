@@ -37,12 +37,12 @@ A **root space** is a Space with no parent. Visibility decides whether that root
 
 Every space has a **tab bar** — the single mechanism for “what am I looking at in this space?”
 
-| Tab kind | v1 | Role |
-| -------- | -- | ---- |
-| **This Space** | Yes | Always present (rename from “Gallery”). Browse **child spaces** and **regular artifacts** in the current space. |
-| **Pin** | Next | Shared shortcut to a **child space** or **regular artifact**. `canManage` only; no close; omit if the viewer cannot read the target. Direct conversations cannot be pins. |
-| **Working tab** | Yes | Personal. A **document**, **regular conversation**, or **child space** this user opened. Closable. One fixed view per artifact kind — no view-mode picker. |
-| **Space view** | Later | **Backlog** / **board** — independent views, not artifacts. Sprinting is optional; Backlog grows sprint sections when it is on. See [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md). |
+| Tab kind        | v1    | Role                                                                                                                                                                                    |
+| --------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **This Space**  | Yes   | Always present (rename from “Gallery”). Browse **child spaces** and **regular artifacts** in the current space.                                                                         |
+| **Pin**         | Next  | Shared shortcut to a **child space** or **regular artifact**. `canManage` only; no close; omit if the viewer cannot read the target. Direct conversations cannot be pins.               |
+| **Working tab** | Yes   | Personal. A **document**, **regular conversation**, or **child space** this user opened. Closable. One fixed view per artifact kind — no view-mode picker.                              |
+| **Space view**  | Later | **Backlog** / **board** — independent views, not artifacts. Sprinting is optional; Backlog grows sprint sections when it is on. See [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md). |
 
 Bar order: **This Space** → **space views that are on** (Backlog, Board) → **pins** → **working tabs**.
 
@@ -56,12 +56,12 @@ The **`+`** on the tab bar adds **working tabs** (new document, new conversation
 
 ## Location & tenancy
 
-| Item            | Parent                 | Home?                              |
-| --------------- | ---------------------- | ---------------------------------- |
+| Item            | Parent                 | Home?                                                                        |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------- |
 | Root Space      | none                   | Yes, if public and `createdBy` the user, or private and the user is a member |
-| Nested Space    | another Space          | No — only under parent             |
-| Root Artifact   | none (`space_id` null) | Yes, if user owns it               |
-| Nested Artifact | a Space                | No — only when browsing that Space |
+| Nested Space    | another Space          | No — only under parent                                                       |
+| Root Artifact   | none (`space_id` null) | Yes, if user owns it                                                         |
+| Nested Artifact | a Space                | No — only when browsing that Space                                           |
 
 Persist **`root_space_id`** alongside **`space_id`** on rows that live in a Space tree (tenant index). Root Artifacts have no Space parent; do not invent a fake Space row for personal home unless storage forces it later.
 
@@ -69,12 +69,12 @@ Persist **`root_space_id`** alongside **`space_id`** on rows that live in a Spac
 
 ## Visibility
 
-| Space | Visibility | Access | Behavior |
-| ----- | ---------- | ------ | -------- |
-| **Root** (no parent) | **Public** (default on create) | `createdBy` only; no membership rows | Personal folder on Home. Organize artifacts without a workspace. |
-| **Root** | **Private** | Explicit members | Workspace / tenant. Invites, DMs, home-button name. |
-| **Nested** | **Public** (default) | Inherit parent access | Folder inside a space. Optional extra member rows do not grant access. |
-| **Nested** | **Private** | Parent access **and** explicit members | Sealed room. |
+| Space                | Visibility                     | Access                                 | Behavior                                                               |
+| -------------------- | ------------------------------ | -------------------------------------- | ---------------------------------------------------------------------- |
+| **Root** (no parent) | **Public** (default on create) | `createdBy` only; no membership rows   | Personal folder on Home. Organize artifacts without a workspace.       |
+| **Root**             | **Private**                    | Explicit members                       | Workspace / tenant. Invites, DMs, home-button name.                    |
+| **Nested**           | **Public** (default)           | Inherit parent access                  | Folder inside a space. Optional extra member rows do not grant access. |
+| **Nested**           | **Private**                    | Parent access **and** explicit members | Sealed room.                                                           |
 
 Create-as-private nested: the creator becomes **owner** (not a copy of the whole root roster).
 
@@ -96,11 +96,11 @@ Create-as-private nested: the creator becomes **owner** (not a copy of the whole
 
 ### Roles
 
-| Role       | Where            | Notes                                                                                                                                                                                                                                                                                                                              |
-| ---------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Role       | Where                                                | Notes                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Owner**  | Private roots; creator of a new private nested space | Can do everything Admin can; unique **workspace** powers (e.g. delete that private root). **Break-glass** over the whole tree under that root: control/recovery (membership, visibility, delete nested Spaces) — **not** ambient Member read of every private child. Private nested content still needs membership or a deliberate Owner override. |
-| **Admin**  | Root and nested  | Day-to-day control; on nested Spaces may delete that Space. Cannot delete a **root** Space.                                                                                                                                                                                                                                        |
-| **Member** | Root and nested  | Participate per action grants (create content, etc., as configured).                                                                                                                                                                                                                                                               |
+| **Admin**  | Root and nested                                      | Day-to-day control; on nested Spaces may delete that Space. Cannot delete a **root** Space.                                                                                                                                                                                                                                                        |
+| **Member** | Root and nested                                      | Participate per action grants (create content, etc., as configured).                                                                                                                                                                                                                                                                               |
 
 Permissions are **role-based plus action grants** (granular). Exact action matrices can be refined in implementation; the role split above is the product rule.
 
@@ -124,10 +124,10 @@ Permissions are **role-based plus action grants** (granular). Exact action matri
 
 ### Regular vs direct
 
-| Kind | Listed in This Space? | Access | Notifications |
-| ---- | --------------------- | ------ | ------------- |
-| **Regular** | Yes | Space ACL (v1). Multiple regular conversations per nested space are allowed (channel-style density). | Channel-style — non-intrusive. |
-| **Direct (DM)** | **Never** | Explicit **`conversation_member`** rows only. Supports multi-peer DMs, not only 1:1. | DM-style — Slack-like identity and alerts. |
+| Kind            | Listed in This Space? | Access                                                                                               | Notifications                              |
+| --------------- | --------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Regular**     | Yes                   | Space ACL (v1). Multiple regular conversations per nested space are allowed (channel-style density). | Channel-style — non-intrusive.             |
+| **Direct (DM)** | **Never**             | Explicit **`conversation_member`** rows only. Supports multi-peer DMs, not only 1:1.                 | DM-style — Slack-like identity and alerts. |
 
 **Direct membership applies only to DM conversations**, not to spaces. Space membership remains the boundary for team chat; DM membership is per conversation.
 
@@ -209,9 +209,9 @@ Blank personal home with light base UI and a create affordance — not an opinio
 
 ## Changelog
 
-| Date       | Change |
-| ---------- | ------ |
+| Date       | Change                                                                                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |
-| 2026-08-28 | Tab bar: This Space → shared pins → personal working tabs. `+` opens a child as a working tab, not a pin. |
-| 2026-08-28 | Backlog & sprints: child spaces + space views; see [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md). |
-| 2026-08-29 | Backlog, board, and sprinting independent; project presets. |
+| 2026-08-28 | Tab bar: This Space → shared pins → personal working tabs. `+` opens a child as a working tab, not a pin.                                                 |
+| 2026-08-28 | Backlog & sprints: child spaces + space views; see [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md).                                                    |
+| 2026-08-29 | Backlog, board, and sprinting independent; project presets.                                                                                               |

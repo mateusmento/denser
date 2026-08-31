@@ -2,11 +2,7 @@ import type { Decorator, Preview } from "@storybook/vue3-vite";
 import { DecoratorHelpers } from "@storybook/addon-themes";
 import { addons } from "storybook/preview-api";
 import { GLOBALS_UPDATED } from "storybook/internal/core-events";
-import {
-  syncThemeOverrideFromStorage,
-  THEME_OVERRIDE_EVENT,
-  type ThemeMode,
-} from "../src/theme";
+import { syncThemeOverrideFromStorage, THEME_OVERRIDE_EVENT, type ThemeMode } from "../src/theme";
 import "../src/styles.css";
 import "./preview.css";
 
@@ -35,7 +31,9 @@ function ensureGlobalsListener() {
     applyColorMode(globals.theme ?? DEFAULT_THEME);
   });
   window.addEventListener(THEME_OVERRIDE_EVENT, () => {
-    syncThemeOverrideFromStorage(themeMode(document.documentElement.classList.contains("dark") ? "dark" : "light"));
+    syncThemeOverrideFromStorage(
+      themeMode(document.documentElement.classList.contains("dark") ? "dark" : "light"),
+    );
   });
 }
 

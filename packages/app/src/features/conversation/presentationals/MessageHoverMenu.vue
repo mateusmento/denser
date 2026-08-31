@@ -58,10 +58,7 @@ const scroller = useMessageScrollerContextMaybe();
 const isInset = computed(() => placement.value === "inset");
 
 const boundaryEl = computed(
-  () =>
-    resolveBoundary(props.collisionBoundary) ??
-    scroller?.viewportElement.value ??
-    null,
+  () => resolveBoundary(props.collisionBoundary) ?? scroller?.viewportElement.value ?? null,
 );
 
 let openTimer: ReturnType<typeof setTimeout> | undefined;
@@ -308,15 +305,22 @@ async function updatePosition() {
         aria-label="Message actions"
         data-slot="message-hover-menu"
         :style="floatingStyle"
-        :class="cn(
-          'z-50 flex w-fit gap-1 **:[button]:rounded-lg',
-          'rounded-xl border border-border bg-secondary p-0.5 text-secondary-foreground',
-          'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10',
-        )"
+        :class="
+          cn(
+            'z-50 flex w-fit gap-1 **:[button]:rounded-lg',
+            'rounded-xl border border-border bg-secondary p-0.5 text-secondary-foreground',
+            'shadow-md ring-1 ring-foreground/5 dark:ring-foreground/10',
+          )
+        "
         @pointerenter="onMenuEnter"
         @pointerleave="onMenuLeave"
       >
-        <Button size="icon-sm" variant="ghost" aria-label="Add reaction" @click="emit('react', '👍')">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label="Add reaction"
+          @click="emit('react', '👍')"
+        >
           <SmileIcon class="size-3.5" />
         </Button>
         <Button

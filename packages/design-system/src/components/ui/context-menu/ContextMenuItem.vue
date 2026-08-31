@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import type { ContextMenuItemEmits, ContextMenuItemProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
-import { reactiveOmit } from '@vueuse/core'
-import {
-  ContextMenuItem,
-  useForwardPropsEmits,
-} from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { ContextMenuItemEmits, ContextMenuItemProps } from "reka-ui";
+import type { HTMLAttributes } from "vue";
+import { reactiveOmit } from "@vueuse/core";
+import { ContextMenuItem, useForwardPropsEmits } from "reka-ui";
+import { cn } from "@/lib/utils";
 
-const props = withDefaults(defineProps<ContextMenuItemProps & {
-  class?: HTMLAttributes['class']
-  inset?: boolean
-  variant?: 'default' | 'destructive'
-}>(), {
-  variant: 'default',
-})
-const emits = defineEmits<ContextMenuItemEmits>()
+const props = withDefaults(
+  defineProps<
+    ContextMenuItemProps & {
+      class?: HTMLAttributes["class"];
+      inset?: boolean;
+      variant?: "default" | "destructive";
+    }
+  >(),
+  {
+    variant: "default",
+  },
+);
+const emits = defineEmits<ContextMenuItemEmits>();
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, "class");
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
 
 <template>
@@ -28,13 +30,15 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     :data-inset="inset ? '' : undefined"
     :data-variant="variant"
     v-bind="forwarded"
-    :class="cn(
-      'data-highlighted:bg-accent data-highlighted:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:data-highlighted:bg-destructive/20',
-      'dark:data-[variant=destructive]:data-highlighted:bg-destructive/20 data-[variant=destructive]:data-highlighted:text-destructive data-[variant=destructive]:*:[svg]:text-destructive data-highlighted:*:[svg]:text-accent-foreground',
-      'gap-2 min-h-7 rounded-lg px-2 py-1 text-xs data-inset:pl-7 [&_svg:not([class*=size-])]:size-3 group/context-menu-item relative flex cursor-default',
-      'items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
-      props.class,
-    )"
+    :class="
+      cn(
+        'data-highlighted:bg-accent data-highlighted:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:data-highlighted:bg-destructive/20',
+        'data-[variant=destructive]:data-highlighted:text-destructive dark:data-[variant=destructive]:data-highlighted:bg-destructive/20 data-highlighted:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive',
+        'group/context-menu-item relative flex min-h-7 cursor-default gap-2 rounded-lg px-2 py-1 text-xs data-inset:pl-7 [&_svg:not([class*=size-])]:size-3',
+        'items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+        props.class,
+      )
+    "
   >
     <slot />
   </ContextMenuItem>

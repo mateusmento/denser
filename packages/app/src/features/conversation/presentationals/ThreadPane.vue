@@ -45,12 +45,7 @@ const emit = defineEmits<{
       <div class="min-w-0 flex-1">
         <p class="text-sm font-medium">Thread</p>
       </div>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Close thread"
-        @click="emit('close')"
-      >
+      <Button variant="ghost" size="icon-sm" aria-label="Close thread" @click="emit('close')">
         <XIcon class="size-4" />
       </Button>
     </header>
@@ -71,7 +66,7 @@ const emit = defineEmits<{
         <template #intro="introSlot">
           <MessageScrollerItem :message-id="thread.parent.id" class="px-0">
             <ConversationMessageGroup
-              class="pb-2 pt-4"
+              class="pt-4 pb-2"
               :author="thread.parent.author"
               :created-at-label="thread.parent.createdAtLabel"
             >
@@ -93,7 +88,7 @@ const emit = defineEmits<{
       </ConversationTimeline>
     </div>
 
-    <div class="box-border flex basis-surface-footer shrink-0 flex-col p-2 pt-0">
+    <div class="box-border flex shrink-0 basis-surface-footer flex-col p-2 pt-0">
       <MessageComposer
         v-model="draft"
         :view="composer"

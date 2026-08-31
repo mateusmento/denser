@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,43 +8,27 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
 </script>
 
 <template>
   <Card>
     <CardHeader>
       <CardTitle>Account Access</CardTitle>
-      <CardDescription>
-        Update your credentials or re-authenticate.
-      </CardDescription>
+      <CardDescription> Update your credentials or re-authenticate. </CardDescription>
     </CardHeader>
     <CardContent>
       <FieldGroup>
         <Field>
-          <FieldLabel for="email-address">
-            Email Address
-          </FieldLabel>
-          <Input
-            id="email-address"
-            type="email"
-            default-value="artist@studio.inc"
-          />
+          <FieldLabel for="email-address"> Email Address </FieldLabel>
+          <Input id="email-address" type="email" default-value="artist@studio.inc" />
         </Field>
         <Field>
           <div class="flex items-center justify-between">
-            <FieldLabel for="current-password">
-              Current Password
-            </FieldLabel>
+            <FieldLabel for="current-password"> Current Password </FieldLabel>
             <a
               href="#"
               class="text-xs font-medium tracking-wider text-muted-foreground uppercase hover:text-foreground"
@@ -52,11 +36,7 @@ import {
               Forgot?
             </a>
           </div>
-          <Input
-            id="current-password"
-            type="password"
-            default-value="password123"
-          />
+          <Input id="current-password" type="password" default-value="password123" />
         </Field>
       </FieldGroup>
     </CardContent>

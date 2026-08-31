@@ -56,7 +56,9 @@ const emit = defineEmits<{
       <div class="col-start-2 flex flex-wrap items-start justify-between gap-4 px-6">
         <div class="min-w-0 space-y-2">
           <h1 class="text-2xl font-semibold tracking-tight">Home</h1>
-          <p class="text-sm text-muted-foreground">Your root spaces and artifacts, all in one place.</p>
+          <p class="text-sm text-muted-foreground">
+            Your root spaces and artifacts, all in one place.
+          </p>
         </div>
         <WorkspaceCreateMenu @create="emit('create', $event)" />
       </div>

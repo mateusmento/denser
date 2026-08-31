@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
   Item,
   ItemContent,
@@ -14,11 +10,8 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
+} from "@/components/ui/item";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const HOLDINGS = [
   {
@@ -53,7 +46,7 @@ const HOLDINGS = [
     shares: "320",
     value: "$15,136.59",
   },
-]
+];
 </script>
 
 <template>
@@ -73,27 +66,19 @@ const HOLDINGS = [
           <InputGroupInput placeholder="Search holdings or tickers..." />
         </InputGroup>
         <ToggleGroup :default-value="['etfs']" variant="outline" :spacing="1">
-          <ToggleGroupItem value="stocks">
-            Stocks
-          </ToggleGroupItem>
-          <ToggleGroupItem value="etfs">
-            ETFs
-          </ToggleGroupItem>
-          <ToggleGroupItem value="reits">
-            REITs
-          </ToggleGroupItem>
+          <ToggleGroupItem value="stocks"> Stocks </ToggleGroupItem>
+          <ToggleGroupItem value="etfs"> ETFs </ToggleGroupItem>
+          <ToggleGroupItem value="reits"> REITs </ToggleGroupItem>
         </ToggleGroup>
       </div>
     </CardHeader>
     <CardContent>
       <ItemGroup>
-        <Item
-          v-for="holding in HOLDINGS"
-          :key="holding.ticker"
-          variant="muted"
-        >
+        <Item v-for="holding in HOLDINGS" :key="holding.ticker" variant="muted">
           <ItemMedia>
-            <div class="flex size-12 items-center justify-center rounded-lg border text-sm font-semibold">
+            <div
+              class="flex size-12 items-center justify-center rounded-lg border text-sm font-semibold"
+            >
               {{ holding.ticker }}
             </div>
           </ItemMedia>
@@ -108,9 +93,7 @@ const HOLDINGS = [
               {{ holding.type }}
             </Badge>
             <div class="flex flex-col items-end gap-0.5">
-              <span class="text-xs tracking-wider text-muted-foreground uppercase">
-                Value
-              </span>
+              <span class="text-xs tracking-wider text-muted-foreground uppercase"> Value </span>
               <span class="font-medium tabular-nums">
                 {{ holding.value }}
               </span>

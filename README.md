@@ -25,7 +25,7 @@ pnpm seed
 pnpm dev           # api :3457 + app :5173
 ```
 
-Seeded users (`SEED_PASSWORD`, default `password`): `alice`, `bob`.
+Seeded users (`SEED_PASSWORD`, default `password`): `alice`, `bob`, `carol`, `david`, `emma`, `frank`.
 
 Google OAuth and invite SMTP: copy placeholders from [`.env.example`](.env.example) into `.env` and fill from Epicstory `api/.env` (`GOOGLE_*`, `EMAIL_SMTP_*`, `DEFAULT_SENDER_EMAIL_ADDRESS`). Google callback must be `${BETTER_AUTH_URL}/api/auth/callback/google` (default `http://localhost:3457/api/auth/callback/google`).
 

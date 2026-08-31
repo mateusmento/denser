@@ -13,11 +13,11 @@ Backlog, board, and sprinting are **independent**. None requires the others. Vie
 
 ## Three capabilities
 
-| Capability | Needs | Does not need | What it shows |
-| ---------- | ----- | ------------- | ------------- |
-| **Backlog view** | Documents in this space | Sprints, workflow | This space’s documents. If sprinting is on: Active and Upcoming sections appear above the rest. |
-| **Board view** | A **workflow** and a **stage** on documents | Sprints | Columns = workflow stages. Drag follows **transition rules**. If sprinting is on: scoped to the **active** sprint. If not: this space’s staged documents (Kanban). |
-| **Sprinting** | Opt-in clock; sprint **child spaces** | Backlog or Board to exist first | One upcoming, at most one active; rest past. Enable creates the first upcoming. |
+| Capability       | Needs                                       | Does not need                   | What it shows                                                                                                                                                      |
+| ---------------- | ------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Backlog view** | Documents in this space                     | Sprints, workflow               | This space’s documents. If sprinting is on: Active and Upcoming sections appear above the rest.                                                                    |
+| **Board view**   | A **workflow** and a **stage** on documents | Sprints                         | Columns = workflow stages. Drag follows **transition rules**. If sprinting is on: scoped to the **active** sprint. If not: this space’s staged documents (Kanban). |
+| **Sprinting**    | Opt-in clock; sprint **child spaces**       | Backlog or Board to exist first | One upcoming, at most one active; rest past. Enable creates the first upcoming.                                                                                    |
 
 Only **documents** appear on Backlog and Board. Conversations and DMs do not.
 
@@ -29,11 +29,11 @@ Documents in **non-sprint** child spaces are not this parent’s backlog or boar
 
 The create command names the job. Storage is still a space (flags + a default workflow when needed).
 
-| Command | What it sets up |
-| ------- | ---------------- |
-| **New folder** | Space. This Space only. No planning views. |
+| Command                                  | What it sets up                                                |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| **New folder**                           | Space. This Space only. No planning views.                     |
 | **New project** / **New Kanban project** | Space + Backlog + Board + a default workflow. No sprint clock. |
-| **New Scrum project** | That, plus **sprinting** on (first upcoming sprint space). |
+| **New Scrum project**                    | That, plus **sprinting** on (first upcoming sprint space).     |
 
 Empty state and tabs teach the rest: a Scrum project shows Backlog and Board; sprint sections show up on Backlog because sprinting is on. Settings may show `Space · Scrum preset` for people who care.
 
@@ -43,14 +43,14 @@ Users can still enable Backlog, Board, or sprinting later on any space (`canMana
 
 ## Nouns
 
-| Noun | What it is |
-| ---- | ---------- |
-| **Space** | Organizational asset + optional membership. The only filing type here. |
-| **Project** | Intent: a space set up for tracked work (Backlog and/or Board). Not a type. |
-| **Sprint** | Child space of a space with sprinting on, role **upcoming** / **active** / **past**. Timeboxed. Documents in it **live there**. |
-| **Backlog (view)** | Space view over this space’s documents. Sprint sections only when sprinting is on. |
-| **Board (view)** | Space view: columns are workflow stages. Requires workflow + stage on documents. |
-| **Workflow** | Ordered **stages** plus **transition rules**. Lives on the space that has Board (or ships with a project preset). |
+| Noun               | What it is                                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Space**          | Organizational asset + optional membership. The only filing type here.                                                          |
+| **Project**        | Intent: a space set up for tracked work (Backlog and/or Board). Not a type.                                                     |
+| **Sprint**         | Child space of a space with sprinting on, role **upcoming** / **active** / **past**. Timeboxed. Documents in it **live there**. |
+| **Backlog (view)** | Space view over this space’s documents. Sprint sections only when sprinting is on.                                              |
+| **Board (view)**   | Space view: columns are workflow stages. Requires workflow + stage on documents.                                                |
+| **Workflow**       | Ordered **stages** plus **transition rules**. Lives on the space that has Board (or ships with a project preset).               |
 
 **In a sprint** means `space_id` is that sprint child. Drag on Backlog between sections **moves** the document.
 
@@ -80,11 +80,11 @@ Past sprints are not sections. They appear as children in This Space.
 
 Columns are the space’s workflow stages, in order. Cards are documents that have a stage. Drag to a column is a **transition**; illegal targets are rejected. Location does not change here — that is Backlog.
 
-| Sprinting | Cards |
-| --------- | ----- |
-| Off | Documents in this space that have a stage |
-| On, active exists | Documents in the **active** sprint space |
-| On, no active | Empty until Start |
+| Sprinting         | Cards                                     |
+| ----------------- | ----------------------------------------- |
+| Off               | Documents in this space that have a stage |
+| On, active exists | Documents in the **active** sprint space  |
+| On, no active     | Empty until Start                         |
 
 The Board is specified in [WORKFLOW.md](./WORKFLOW.md). Trackable documents (type has a Workflow field) are cards; others stay on Backlog only.
 
@@ -94,11 +94,11 @@ The Board is specified in [WORKFLOW.md](./WORKFLOW.md). Trackable documents (typ
 
 At most **one active** and **one upcoming**. Enable is explicit (`canManage`). The system does not create sprints unless the user enabled sprinting or **Start** (which creates the next upcoming).
 
-| Action | Result |
-| ------ | ------ |
-| **Enable sprints** | First **upcoming** child exists. Backlog, if on, grows sections. Board, if on, waits for an active sprint. |
-| **Start** (no active) | Upcoming → active. New upcoming created. |
-| **Complete** (active exists) | Active → past. Upcoming unchanged. |
+| Action                       | Result                                                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Enable sprints**           | First **upcoming** child exists. Backlog, if on, grows sections. Board, if on, waits for an active sprint. |
+| **Start** (no active)        | Upcoming → active. New upcoming created.                                                                   |
+| **Complete** (active exists) | Active → past. Upcoming unchanged.                                                                         |
 
 Start and complete are **manual** (ceremonies). Cannot start while an active exists.
 
@@ -120,11 +120,11 @@ A folder (no views, no sprinting): This Space → pins → working tabs.
 
 ## Permissions
 
-| Action | Who |
-| ------ | --- |
-| Enable/disable views; enable sprinting; start; complete | `canManage` |
-| Create / rank / move on Backlog | Same as create/move documents in that tree |
-| Change stage on Board | Same as editing those documents |
+| Action                                                  | Who                                        |
+| ------------------------------------------------------- | ------------------------------------------ |
+| Enable/disable views; enable sprinting; start; complete | `canManage`                                |
+| Create / rank / move on Backlog                         | Same as create/move documents in that tree |
+| Change stage on Board                                   | Same as editing those documents            |
 
 ---
 
@@ -154,8 +154,8 @@ A folder (no views, no sprinting): This Space → pins → working tabs.
 
 ## Changelog
 
-| Date       | Change |
-| ---------- | ------ |
-| 2026-08-28 | First draft: sprints as spaces, opt-in clock, backlog sections, board of active. |
+| Date       | Change                                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-08-28 | First draft: sprints as spaces, opt-in clock, backlog sections, board of active.                                                     |
 | 2026-08-29 | Split backlog, board, and sprinting. Presets for project/Kanban/Scrum intent. Board does not require sprints. No Backlog stage kind. |
-| 2026-08-29 | Epicstory map: manual complete only; leftovers stay; duration/goal; workflow and types in sibling specs. |
+| 2026-08-29 | Epicstory map: manual complete only; leftovers stay; duration/goal; workflow and types in sibling specs.                             |

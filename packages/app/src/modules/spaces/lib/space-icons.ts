@@ -35,5 +35,8 @@ export function resolveSpaceIconValue(icon: SpaceIcon | null | undefined): Space
 }
 
 export function resolveSpaceIcon(icon: SpaceIcon | null | undefined): Component {
-  return SPACE_ICON_OPTIONS.find((option) => option.id === resolveSpaceIconValue(icon))?.icon ?? FolderIcon;
+  return (
+    SPACE_ICON_OPTIONS.find((option) => option.id === resolveSpaceIconValue(icon))?.icon ??
+    FolderIcon
+  );
 }

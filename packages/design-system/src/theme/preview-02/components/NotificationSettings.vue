@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive } from "vue"
-import { Button } from "@/components/ui/button"
+import { computed, reactive } from "vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,15 +8,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldContent,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 
 const NOTIFICATIONS = [
   {
@@ -43,23 +43,23 @@ const NOTIFICATIONS = [
     description: "Daily portfolio summary and price alerts.",
     defaultChecked: false,
   },
-]
+];
 
 const checked = reactive<Record<string, boolean>>(
-  Object.fromEntries(NOTIFICATIONS.map(n => [n.id, n.defaultChecked])),
-)
+  Object.fromEntries(NOTIFICATIONS.map((n) => [n.id, n.defaultChecked])),
+);
 
-const allChecked = computed(() => NOTIFICATIONS.every(n => checked[n.id]))
-const someChecked = computed(() => NOTIFICATIONS.some(n => checked[n.id]) && !allChecked.value)
+const allChecked = computed(() => NOTIFICATIONS.every((n) => checked[n.id]));
+const someChecked = computed(() => NOTIFICATIONS.some((n) => checked[n.id]) && !allChecked.value);
 
 function handleSelectAll(value: boolean) {
   for (const n of NOTIFICATIONS) {
-    checked[n.id] = value
+    checked[n.id] = value;
   }
 }
 
 function handleToggle(id: string, value: boolean) {
-  checked[id] = value
+  checked[id] = value;
 }
 </script>
 
@@ -67,9 +67,7 @@ function handleToggle(id: string, value: boolean) {
   <Card>
     <CardHeader>
       <CardTitle>Notifications</CardTitle>
-      <CardDescription>
-        Choose what you want to be notified about.
-      </CardDescription>
+      <CardDescription> Choose what you want to be notified about. </CardDescription>
     </CardHeader>
     <CardContent>
       <FieldGroup>
@@ -81,16 +79,10 @@ function handleToggle(id: string, value: boolean) {
             @update:checked="(v: boolean | 'indeterminate') => handleSelectAll(!!v)"
           />
           <FieldContent>
-            <FieldLabel for="notify-all">
-              Select all
-            </FieldLabel>
+            <FieldLabel for="notify-all"> Select all </FieldLabel>
           </FieldContent>
         </Field>
-        <Field
-          v-for="n in NOTIFICATIONS"
-          :key="n.id"
-          orientation="horizontal"
-        >
+        <Field v-for="n in NOTIFICATIONS" :key="n.id" orientation="horizontal">
           <Checkbox
             :id="`notify-${n.id}`"
             :checked="checked[n.id]"
@@ -106,9 +98,7 @@ function handleToggle(id: string, value: boolean) {
       </FieldGroup>
     </CardContent>
     <CardFooter>
-      <Button class="w-full">
-        Save Preferences
-      </Button>
+      <Button class="w-full"> Save Preferences </Button>
     </CardFooter>
   </Card>
 </template>

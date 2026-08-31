@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { SpaceVisibility, UserId } from "@denser/contracts";
-import { Badge, Button, Label, NativeSelect, NativeSelectOption, Skeleton } from "@denser/design-system";
+import {
+  Badge,
+  Button,
+  Label,
+  NativeSelect,
+  NativeSelectOption,
+  Skeleton,
+} from "@denser/design-system";
 import { computed } from "vue";
 import type { SpaceMembersView } from "../types";
 
@@ -34,7 +41,8 @@ const visibilityModel = computed({
         <div class="space-y-1">
           <h2 class="text-sm font-medium">Members</h2>
           <p class="text-xs text-muted-foreground">
-            Public spaces are folders. Make a space private to turn on membership — that cannot be undone.
+            Public spaces are folders. Make a space private to turn on membership — that cannot be
+            undone.
           </p>
         </div>
         <Button
@@ -56,8 +64,12 @@ const visibilityModel = computed({
           class="w-full max-w-xs"
           :disabled="view.isUpdatingVisibility"
         >
-          <NativeSelectOption value="public">{{ view.isNested ? "Public folder" : "Personal folder" }}</NativeSelectOption>
-          <NativeSelectOption value="private">{{ view.isNested ? "Private room" : "Workspace" }}</NativeSelectOption>
+          <NativeSelectOption value="public">{{
+            view.isNested ? "Public folder" : "Personal folder"
+          }}</NativeSelectOption>
+          <NativeSelectOption value="private">{{
+            view.isNested ? "Private room" : "Workspace"
+          }}</NativeSelectOption>
         </NativeSelect>
       </div>
 

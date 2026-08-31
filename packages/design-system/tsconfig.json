@@ -11,6 +11,13 @@
     "declarationMap": false,
     "exactOptionalPropertyTypes": false
   },
-  "include": ["src", ".storybook", "vite.config.ts", "vitest.config.ts", "playwright.config.ts", "e2e"],
+  "include": [
+    "src",
+    ".storybook",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "e2e"
+  ],
   "exclude": ["src/**/*.stories.ts"]
 }

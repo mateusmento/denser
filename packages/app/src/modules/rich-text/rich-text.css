@@ -51,7 +51,7 @@
 }
 
 .rt-code-highlight {
-  @apply z-0 pointer-events-none select-none text-foreground;
+  @apply pointer-events-none z-0 text-foreground select-none;
 }
 
 .rt-code-edit {

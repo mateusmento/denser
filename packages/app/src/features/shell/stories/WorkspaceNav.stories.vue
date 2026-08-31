@@ -5,12 +5,7 @@ import {
   SEED_SPACE_ACME,
   SEED_SPACE_ENGINEERING,
 } from "@denser/contracts";
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarInset,
-  SidebarProvider,
-} from "@denser/design-system";
+import { Sidebar, SidebarHeader, SidebarInset, SidebarProvider } from "@denser/design-system";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import WorkspaceNav from "../presentationals/WorkspaceNav.vue";

@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "./index";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "./index";
 import { Button } from "../button";
 
 const meta = {

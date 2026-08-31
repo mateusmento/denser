@@ -48,7 +48,11 @@ export async function firstIdleStage(workflowId: WorkflowId) {
 
 async function insertStages(
   workflowId: WorkflowId,
-  stages: readonly { name: string; kind: "idle" | "in_progress" | "blocked" | "settled" | "cancelled"; sort: number }[],
+  stages: readonly {
+    name: string;
+    kind: "idle" | "in_progress" | "blocked" | "settled" | "cancelled";
+    sort: number;
+  }[],
 ) {
   const created = [];
   for (const stage of stages) {
@@ -70,10 +74,7 @@ export async function provisionProjectPlanning(spaceId: SpaceId): Promise<void> 
     .insert(workflow)
     .values({ spaceId, name: "Issue tracking" })
     .returning();
-  const [specWorkflow] = await db
-    .insert(workflow)
-    .values({ spaceId, name: "Spec" })
-    .returning();
+  const [specWorkflow] = await db.insert(workflow).values({ spaceId, name: "Spec" }).returning();
   if (!issueWorkflow || !specWorkflow) throw new Error("Failed to create workflows");
 
   const issueStages = await insertStages(issueWorkflow.id, [

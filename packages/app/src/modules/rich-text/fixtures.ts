@@ -64,7 +64,9 @@ export const featureTourDoc: JSONContent = {
               content: [
                 {
                   type: "listItem",
-                  content: [{ type: "paragraph", content: [{ type: "text", text: "Nested bullet" }] }],
+                  content: [
+                    { type: "paragraph", content: [{ type: "text", text: "Nested bullet" }] },
+                  ],
                 },
               ],
             },
@@ -95,7 +97,12 @@ export const featureTourDoc: JSONContent = {
         {
           type: "taskItem",
           attrs: { checked: true },
-          content: [{ type: "paragraph", content: [{ type: "text", text: "Done — toggle in edit or preview" }] }],
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Done — toggle in edit or preview" }],
+            },
+          ],
         },
         {
           type: "taskItem",

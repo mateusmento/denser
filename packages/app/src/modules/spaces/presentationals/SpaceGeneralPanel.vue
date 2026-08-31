@@ -30,9 +30,7 @@ watch(
 const isDirty = computed(() => {
   const view = props.view;
   if (!view) return false;
-  return (
-    title.value.trim() !== view.title || icon.value !== (view.icon ?? DEFAULT_SPACE_ICON)
-  );
+  return title.value.trim() !== view.title || icon.value !== (view.icon ?? DEFAULT_SPACE_ICON);
 });
 
 function selectIcon(next: SpaceIcon) {

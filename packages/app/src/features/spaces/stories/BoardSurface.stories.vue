@@ -60,7 +60,9 @@ const initialColumns: BoardColumn[] = [
     stageId: "doing",
     name: "In Progress",
     kind: "in_progress",
-    documents: [card(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", "doing" as WorkflowStageId, 0)],
+    documents: [
+      card(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", "doing" as WorkflowStageId, 0),
+    ],
   },
   {
     stageId: "review",
@@ -71,7 +73,9 @@ const initialColumns: BoardColumn[] = [
   { stageId: "done", name: "Done", kind: "settled", documents: [] },
 ];
 
-const columns = ref(initialColumns.map((column) => ({ ...column, documents: [...column.documents] })));
+const columns = ref(
+  initialColumns.map((column) => ({ ...column, documents: [...column.documents] })),
+);
 
 function onDrop(payload: {
   artifactId: string;
@@ -86,11 +90,7 @@ function onDrop(payload: {
 
 <template>
   <Story as-child name="Kanban">
-    <BoardSurface
-      :columns="columns"
-      @open="action('open')($event)"
-      @drop="onDrop"
-    />
+    <BoardSurface :columns="columns" @open="action('open')($event)" @drop="onDrop" />
   </Story>
   <Story as-child name="Empty until start">
     <BoardSurface

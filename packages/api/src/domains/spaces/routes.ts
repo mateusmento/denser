@@ -1,9 +1,5 @@
 import type { SpaceId, UserId } from "@denser/contracts";
-import {
-  AddSpaceMemberInput,
-  CreateSpaceInput,
-  PatchSpaceInput,
-} from "@denser/contracts";
+import { AddSpaceMemberInput, CreateSpaceInput, PatchSpaceInput } from "@denser/contracts";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
@@ -130,9 +126,12 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
 
 function sprintClockError(reason: string) {
   if (reason === "forbidden") return { status: 403 as const, error: "Forbidden" };
-  if (reason === "not_project") return { status: 400 as const, error: "Cannot enable sprints on a sprint space" };
-  if (reason === "sprints_disabled") return { status: 400 as const, error: "Sprinting is not enabled" };
-  if (reason === "already_active") return { status: 409 as const, error: "A sprint is already active" };
+  if (reason === "not_project")
+    return { status: 400 as const, error: "Cannot enable sprints on a sprint space" };
+  if (reason === "sprints_disabled")
+    return { status: 400 as const, error: "Sprinting is not enabled" };
+  if (reason === "already_active")
+    return { status: 409 as const, error: "A sprint is already active" };
   if (reason === "no_upcoming") return { status: 400 as const, error: "No upcoming sprint" };
   if (reason === "no_active") return { status: 400 as const, error: "No active sprint" };
   return { status: 404 as const, error: "Space not found" };

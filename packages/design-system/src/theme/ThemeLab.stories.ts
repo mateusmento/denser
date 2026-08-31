@@ -18,7 +18,9 @@ export const Default: Story = {
   render: (_args, { globals }) => ({
     components: { ThemeLabPanel, ThemeLabGallery },
     setup() {
-      const mode = computed(() => (globals.theme === "dark" ? "dark" : "light") as "light" | "dark");
+      const mode = computed(
+        () => (globals.theme === "dark" ? "dark" : "light") as "light" | "dark",
+      );
       return { mode };
     },
     template: `

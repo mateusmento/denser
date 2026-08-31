@@ -94,7 +94,11 @@ const nestedBackLink: SpaceBackLink = {
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
       :move-spaces="[
         { id: content.space.id, title: content.space.title, parentId: content.space.parentSpaceId },
-        { id: content.childSpaces[0]!.id, title: content.childSpaces[0]!.title, parentId: content.childSpaces[0]!.parentSpaceId },
+        {
+          id: content.childSpaces[0]!.id,
+          title: content.childSpaces[0]!.title,
+          parentId: content.childSpaces[0]!.parentSpaceId,
+        },
       ]"
       @explore="action('explore')($event)"
       @move="action('move')($event)"
@@ -114,7 +118,11 @@ const nestedBackLink: SpaceBackLink = {
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
       :move-spaces="[
         { id: content.space.id, title: content.space.title, parentId: content.space.parentSpaceId },
-        { id: nestedContent.space.id, title: nestedContent.space.title, parentId: nestedContent.space.parentSpaceId },
+        {
+          id: nestedContent.space.id,
+          title: nestedContent.space.title,
+          parentId: nestedContent.space.parentSpaceId,
+        },
       ]"
       @explore="action('explore')($event)"
       @move="action('move')($event)"

@@ -356,9 +356,7 @@ export const channelMessages: ConversationMessageView[] = [
       content: [
         {
           type: "paragraph",
-          content: [
-            { type: "text", text: "Ship criteria for Friday:" },
-          ],
+          content: [{ type: "text", text: "Ship criteria for Friday:" }],
         },
         {
           type: "orderedList",

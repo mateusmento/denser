@@ -4,19 +4,10 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const GENERAL_QUESTIONS = [
   {
@@ -31,7 +22,7 @@ const GENERAL_QUESTIONS = [
     q: "Can I export my data for tax purposes?",
     a: "Yes. Navigate to Reports > Tax Export to download a CSV or PDF summary of your transactions, dividends, and capital gains for any tax year.",
   },
-]
+];
 
 const BILLING_QUESTIONS = [
   {
@@ -46,7 +37,7 @@ const BILLING_QUESTIONS = [
     q: "Do you offer a free trial?",
     a: "Yes. All new accounts start with a 14-day Pro trial. No credit card required.",
   },
-]
+];
 
 const GOALS_QUESTIONS = [
   {
@@ -61,7 +52,7 @@ const GOALS_QUESTIONS = [
     q: "How are monthly contributions calculated?",
     a: "We divide the remaining amount by the number of months until your target date, adjusted for your current savings rate and any auto-transfer schedules.",
   },
-]
+];
 </script>
 
 <template>
@@ -69,15 +60,9 @@ const GOALS_QUESTIONS = [
     <CardContent>
       <Tabs default-value="general">
         <TabsList class="w-full">
-          <TabsTrigger value="general" class="flex-1">
-            General
-          </TabsTrigger>
-          <TabsTrigger value="billing" class="flex-1">
-            Billing
-          </TabsTrigger>
-          <TabsTrigger value="goals" class="flex-1">
-            Goals
-          </TabsTrigger>
+          <TabsTrigger value="general" class="flex-1"> General </TabsTrigger>
+          <TabsTrigger value="billing" class="flex-1"> Billing </TabsTrigger>
+          <TabsTrigger value="goals" class="flex-1"> Goals </TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <Accordion :default-value="['item-0']">
@@ -118,12 +103,8 @@ const GOALS_QUESTIONS = [
       </Tabs>
     </CardContent>
     <CardFooter>
-      <Button variant="outline" class="w-full">
-        Contact Support
-      </Button>
-      <Button variant="link" class="w-full">
-        Learn More
-      </Button>
+      <Button variant="outline" class="w-full"> Contact Support </Button>
+      <Button variant="link" class="w-full"> Learn More </Button>
     </CardFooter>
   </Card>
 </template>

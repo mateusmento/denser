@@ -27,10 +27,7 @@ const PRESET_BY_ACTION: Record<"folder" | "project" | "scrum", SpacePreset> = {
 export function useWorkspaceCreateActions(createSpace: CreateSpace) {
   const { openPeek } = useArtifactPeekHost();
 
-  async function onCreate(
-    action: WorkspaceCreateAction,
-    spaceId?: SpaceId | null,
-  ) {
+  async function onCreate(action: WorkspaceCreateAction, spaceId?: SpaceId | null) {
     if (action === "folder" || action === "project" || action === "scrum") {
       const copy = SPACE_PROMPTS[action];
       const title = await prompt({

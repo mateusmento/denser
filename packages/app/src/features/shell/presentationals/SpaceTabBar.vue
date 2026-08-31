@@ -68,17 +68,8 @@ function tabButtonClass(tab: SpaceTabItem) {
     class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-4 py-1"
     data-slot="space-tab-bar"
   >
-    <div
-      v-for="tab in pinnedTabs"
-      :key="tab.tabKey"
-      class="flex shrink-0 items-center"
-    >
-      <Button
-        as-child
-        variant="ghost"
-        size="sm"
-        :class="tabButtonClass(tab)"
-      >
+    <div v-for="tab in pinnedTabs" :key="tab.tabKey" class="flex shrink-0 items-center">
+      <Button as-child variant="ghost" size="sm" :class="tabButtonClass(tab)">
         <RouterLink :to="tab.to" class="max-w-48 truncate">
           {{ tab.label }}
         </RouterLink>
@@ -93,11 +84,7 @@ function tabButtonClass(tab: SpaceTabItem) {
       settle="item"
       @commit="onCommit"
     >
-      <DndList
-        list-id="working"
-        orientation="horizontal"
-        class="flex items-center gap-1"
-      >
+      <DndList list-id="working" orientation="horizontal" class="flex items-center gap-1">
         <DndItem
           v-for="(tab, index) in workingTabs"
           :key="tab.tabKey"
@@ -106,12 +93,7 @@ function tabButtonClass(tab: SpaceTabItem) {
           :index="index"
           class="flex shrink-0 items-center"
         >
-          <Button
-            as-child
-            variant="ghost"
-            size="sm"
-            :class="tabButtonClass(tab)"
-          >
+          <Button as-child variant="ghost" size="sm" :class="tabButtonClass(tab)">
             <RouterLink :to="tab.to" class="max-w-48 truncate" @click="onTabNavigate">
               {{ tab.label }}
             </RouterLink>
@@ -132,7 +114,13 @@ function tabButtonClass(tab: SpaceTabItem) {
 
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
-        <Button variant="ghost" size="icon" class="size-8 shrink-0" title="Add tab" aria-label="Add tab">
+        <Button
+          variant="ghost"
+          size="icon"
+          class="size-8 shrink-0"
+          title="Add tab"
+          aria-label="Add tab"
+        >
           <PlusIcon class="size-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -154,10 +154,10 @@ const placeholderAttr = computed(() => props.placeholder ?? "");
     :data-placeholder="placeholderAttr"
     :class="
       cn(
-        'inline-block bg-transparent outline-none whitespace-nowrap',
+        'inline-block bg-transparent whitespace-nowrap outline-none',
         editable && !isDomReady && 'invisible',
         editable &&
-          'empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none',
+          'empty:before:pointer-events-none empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]',
         props.class,
       )
     "

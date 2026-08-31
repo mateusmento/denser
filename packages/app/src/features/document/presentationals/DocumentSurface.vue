@@ -1,5 +1,4 @@
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col p-3" data-slot="document-surface">

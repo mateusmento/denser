@@ -77,21 +77,25 @@ export const conversationRoutes = new Hono<{ Variables: Variables }>()
 
     return c.json({ conversation: result.conversation });
   })
-  .patch("/conversations/:conversationId", zValidator("json", PatchConversationInput), async (c) => {
-    const userId = c.get("user").id as UserId;
-    const conversationId = c.req.param("conversationId") as ArtifactId;
-    const result = await patchConversation(userId, conversationId, c.req.valid("json"));
+  .patch(
+    "/conversations/:conversationId",
+    zValidator("json", PatchConversationInput),
+    async (c) => {
+      const userId = c.get("user").id as UserId;
+      const conversationId = c.req.param("conversationId") as ArtifactId;
+      const result = await patchConversation(userId, conversationId, c.req.valid("json"));
 
-    if (result.reason === "conflict") {
-      return c.json({ error: "conflict" as const, conversation: result.conversation }, 409);
-    }
+      if (result.reason === "conflict") {
+        return c.json({ error: "conflict" as const, conversation: result.conversation }, 409);
+      }
 
-    if (!result.ok) {
-      return c.json({ error: "Conversation not found" }, 404);
-    }
+      if (!result.ok) {
+        return c.json({ error: "Conversation not found" }, 404);
+      }
 
-    return c.json({ conversation: result.conversation });
-  })
+      return c.json({ conversation: result.conversation });
+    },
+  )
   .delete("/conversations/:conversationId", async (c) => {
     const userId = c.get("user").id as UserId;
     const conversationId = c.req.param("conversationId") as ArtifactId;

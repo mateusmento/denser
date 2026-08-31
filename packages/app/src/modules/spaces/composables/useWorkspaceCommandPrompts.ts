@@ -3,9 +3,7 @@ import { documentDisplayTitle } from "@/features/document/lib/document-content";
 import { confirm, prompt } from "@/lib/dialog";
 
 export function useWorkspaceCommandPrompts() {
-  async function promptSpaceRename(
-    space: Pick<SpaceSummary, "title">,
-  ): Promise<string | null> {
+  async function promptSpaceRename(space: Pick<SpaceSummary, "title">): Promise<string | null> {
     const title = await prompt({
       title: "Rename space",
       label: "Name",
@@ -40,9 +38,7 @@ export function useWorkspaceCommandPrompts() {
     });
   }
 
-  async function confirmArtifactDelete(
-    artifact: Pick<ArtifactSummary, "title">,
-  ): Promise<boolean> {
+  async function confirmArtifactDelete(artifact: Pick<ArtifactSummary, "title">): Promise<boolean> {
     return confirm({
       title: `Delete “${documentDisplayTitle(artifact.title)}”?`,
       description: "This document will be permanently deleted.",

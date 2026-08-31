@@ -2,7 +2,13 @@ import type { ArtifactId, UserId } from "@denser/contracts";
 import { CreateDocumentInput, PatchDocumentInput } from "@denser/contracts";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { createDocument, deleteDocument, duplicateDocument, getDocument, patchDocument } from "./service.js";
+import {
+  createDocument,
+  deleteDocument,
+  duplicateDocument,
+  getDocument,
+  patchDocument,
+} from "./service.js";
 
 type Variables = {
   user: { id: string; name: string; email: string };

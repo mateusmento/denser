@@ -49,7 +49,10 @@ export async function listRanksInSpace(spaceId: SpaceId): Promise<RankRow[]> {
   }));
 }
 
-export async function reindexSpaceRanks(spaceId: SpaceId, orderedIds: readonly string[]): Promise<void> {
+export async function reindexSpaceRanks(
+  spaceId: SpaceId,
+  orderedIds: readonly string[],
+): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .select({ id: document.artifactId })

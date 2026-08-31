@@ -48,4 +48,3 @@ export function resolveSpaceTabHostId(input: SpaceTabHostInput): SpaceId | undef
   }
   return undefined;
 }
-

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -9,7 +9,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
+} from "@/components/ui/empty";
 </script>
 
 <template>
@@ -28,8 +28,7 @@ import {
         <EmptyHeader>
           <EmptyTitle>Connect Bank</EmptyTitle>
           <EmptyDescription>
-            Link your payout method to receive monthly royalty distributions
-            automatically.
+            Link your payout method to receive monthly royalty distributions automatically.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>

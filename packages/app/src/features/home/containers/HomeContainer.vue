@@ -67,7 +67,13 @@ const content = computed(() => {
     @retry="reload"
     @create="onCreate($event, null)"
     @open-space="openSpace"
-    @open-artifact="(id) => artifactCommands.openArtifact({ id: id as ArtifactId, kind: artifacts.find((a) => a.id === id)?.kind ?? 'document' })"
+    @open-artifact="
+      (id) =>
+        artifactCommands.openArtifact({
+          id: id as ArtifactId,
+          kind: artifacts.find((a) => a.id === id)?.kind ?? 'document',
+        })
+    "
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
     @explore="exploreMove"

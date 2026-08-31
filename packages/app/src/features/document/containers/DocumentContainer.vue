@@ -4,10 +4,7 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import type { MentionCandidate } from "@/modules/rich-text";
 import { documentMentionItems } from "../fixtures";
-import {
-  createDocumentDraftState,
-  useDocumentSync,
-} from "../composables/useDocumentSync";
+import { createDocumentDraftState, useDocumentSync } from "../composables/useDocumentSync";
 import { toDocumentEditorView } from "../types";
 import DocumentEditorContainer from "./DocumentEditorContainer.vue";
 import DocumentHeaderContainer from "./DocumentHeaderContainer.vue";

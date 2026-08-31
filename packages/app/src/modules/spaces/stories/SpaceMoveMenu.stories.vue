@@ -31,7 +31,9 @@ const spaces: SpaceMoveNode[] = [
 <template>
   <Story as-child name="In submenu">
     <ContextMenu>
-      <ContextMenuTrigger class="rounded-lg border border-dashed px-6 py-8 text-sm text-muted-foreground">
+      <ContextMenuTrigger
+        class="rounded-lg border border-dashed px-6 py-8 text-sm text-muted-foreground"
+      >
         Right click
       </ContextMenuTrigger>
       <ContextMenuContent>

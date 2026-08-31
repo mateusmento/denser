@@ -90,7 +90,7 @@ async function onChannelSend() {
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="flex h-[min(36rem,calc(100vh-2rem))] max-w-3xl flex-col gap-0 p-0 overflow-hidden sm:max-w-3xl"
+      class="flex h-[min(36rem,calc(100vh-2rem))] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
       data-slot="artifact-peek-dialog"
     >
       <DialogTitle class="sr-only">{{ peekTitle }}</DialogTitle>
@@ -106,18 +106,11 @@ async function onChannelSend() {
       <ConversationSurface v-else>
         <template #header>
           <div class="flex h-full w-full items-center px-4">
-            <TitleEditor
-              v-model="conversationTitle"
-              placeholder="Untitled"
-              editable
-            />
+            <TitleEditor v-model="conversationTitle" placeholder="Untitled" editable />
           </div>
         </template>
         <template #messages>
-          <ConversationTimeline
-            :messages="channelMessages"
-            :intro="channelIntro"
-          />
+          <ConversationTimeline :messages="channelMessages" :intro="channelIntro" />
         </template>
         <template #composer>
           <MessageComposer

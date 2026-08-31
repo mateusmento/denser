@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import IconPlaceholder from "../IconPlaceholder.vue"
+import { ref } from "vue";
+import IconPlaceholder from "../IconPlaceholder.vue";
 import {
   Card,
   CardAction,
@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Item,
   ItemActions,
@@ -16,39 +16,35 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
+} from "@/components/ui/item";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const SCENES = {
   cooking: { brightness: [90], colorTemp: [70], volume: [30], fade: [0] },
   dining: { brightness: [50], colorTemp: [40], volume: [20], fade: [60] },
   nightlight: { brightness: [15], colorTemp: [20], volume: [0], fade: [80] },
   focus: { brightness: [100], colorTemp: [85], volume: [0], fade: [0] },
-} as const
+} as const;
 
-const enabled = ref(true)
-const scene = ref("cooking")
-const brightness = ref([90])
-const colorTemp = ref([70])
-const volume = ref([30])
-const fade = ref([0])
+const enabled = ref(true);
+const scene = ref("cooking");
+const brightness = ref([90]);
+const colorTemp = ref([70]);
+const volume = ref([30]);
+const fade = ref([0]);
 
 function handleSceneChange(value: unknown) {
-  const arr = Array.isArray(value) ? value as string[] : [value as string]
-  const v = arr[0]
-  if (!v)
-    return
-  scene.value = v
-  const preset = SCENES[v as keyof typeof SCENES]
-  brightness.value = [...preset.brightness]
-  colorTemp.value = [...preset.colorTemp]
-  volume.value = [...preset.volume]
-  fade.value = [...preset.fade]
+  const arr = Array.isArray(value) ? (value as string[]) : [value as string];
+  const v = arr[0];
+  if (!v) return;
+  scene.value = v;
+  const preset = SCENES[v as keyof typeof SCENES];
+  brightness.value = [...preset.brightness];
+  colorTemp.value = [...preset.colorTemp];
+  volume.value = [...preset.volume];
+  fade.value = [...preset.fade];
 }
 </script>
 
@@ -71,18 +67,10 @@ function handleSceneChange(value: unknown) {
           class="flex-wrap"
           @update:model-value="handleSceneChange"
         >
-          <ToggleGroupItem value="cooking" :disabled="!enabled">
-            Cooking
-          </ToggleGroupItem>
-          <ToggleGroupItem value="dining" :disabled="!enabled">
-            Dining
-          </ToggleGroupItem>
-          <ToggleGroupItem value="nightlight" :disabled="!enabled">
-            Nightlight
-          </ToggleGroupItem>
-          <ToggleGroupItem value="focus" :disabled="!enabled">
-            Focus
-          </ToggleGroupItem>
+          <ToggleGroupItem value="cooking" :disabled="!enabled"> Cooking </ToggleGroupItem>
+          <ToggleGroupItem value="dining" :disabled="!enabled"> Dining </ToggleGroupItem>
+          <ToggleGroupItem value="nightlight" :disabled="!enabled"> Nightlight </ToggleGroupItem>
+          <ToggleGroupItem value="focus" :disabled="!enabled"> Focus </ToggleGroupItem>
         </ToggleGroup>
       </div>
       <ItemGroup>
@@ -97,17 +85,10 @@ function handleSceneChange(value: unknown) {
             />
           </ItemMedia>
           <ItemContent class="flex-row items-center gap-3">
-            <ItemTitle class="shrink-0">
-              Brightness
-            </ItemTitle>
+            <ItemTitle class="shrink-0"> Brightness </ItemTitle>
           </ItemContent>
           <ItemActions class="flex-1">
-            <Slider
-              v-model="brightness"
-              :max="100"
-              :disabled="!enabled"
-              class="w-full"
-            />
+            <Slider v-model="brightness" :max="100" :disabled="!enabled" class="w-full" />
           </ItemActions>
         </Item>
         <Item size="sm" variant="outline">
@@ -121,16 +102,10 @@ function handleSceneChange(value: unknown) {
             />
           </ItemMedia>
           <ItemContent class="flex-row items-center gap-3">
-            <ItemTitle class="shrink-0">
-              Color Temp
-            </ItemTitle>
+            <ItemTitle class="shrink-0"> Color Temp </ItemTitle>
           </ItemContent>
           <ItemActions class="flex-1">
-            <Slider
-              v-model="colorTemp"
-              :max="100"
-              :disabled="!enabled"
-            />
+            <Slider v-model="colorTemp" :max="100" :disabled="!enabled" />
           </ItemActions>
         </Item>
         <Item size="sm" variant="outline">
@@ -144,16 +119,10 @@ function handleSceneChange(value: unknown) {
             />
           </ItemMedia>
           <ItemContent class="flex-row items-center gap-3">
-            <ItemTitle class="shrink-0">
-              Volume
-            </ItemTitle>
+            <ItemTitle class="shrink-0"> Volume </ItemTitle>
           </ItemContent>
           <ItemActions class="flex-1">
-            <Slider
-              v-model="volume"
-              :max="100"
-              :disabled="!enabled"
-            />
+            <Slider v-model="volume" :max="100" :disabled="!enabled" />
           </ItemActions>
         </Item>
         <Item size="sm" variant="outline">
@@ -167,16 +136,10 @@ function handleSceneChange(value: unknown) {
             />
           </ItemMedia>
           <ItemContent class="flex-row items-center gap-3">
-            <ItemTitle class="shrink-0">
-              Fade
-            </ItemTitle>
+            <ItemTitle class="shrink-0"> Fade </ItemTitle>
           </ItemContent>
           <ItemActions class="flex-1">
-            <Slider
-              v-model="fade"
-              :max="100"
-              :disabled="!enabled"
-            />
+            <Slider v-model="fade" :max="100" :disabled="!enabled" />
           </ItemActions>
         </Item>
       </ItemGroup>

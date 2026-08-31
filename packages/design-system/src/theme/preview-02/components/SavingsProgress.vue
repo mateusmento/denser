@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import type { ChartConfig } from "@/components/ui/chart"
-import { Donut } from "@unovis/ts"
-import { VisDonut, VisSingleContainer } from "@unovis/vue"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import type { ChartConfig } from "@/components/ui/chart";
+import { Donut } from "@unovis/ts";
+import { VisDonut, VisSingleContainer } from "@unovis/vue";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   componentToString,
-} from "@/components/ui/chart"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/chart";
+import { Separator } from "@/components/ui/separator";
 
 const chartData = [
   { name: "saved", value: 24000 },
   { name: "remaining", value: 6000 },
-]
+];
 
-type Data = typeof chartData[number]
+type Data = (typeof chartData)[number];
 
 const chartConfig = {
   saved: {
@@ -27,7 +27,7 @@ const chartConfig = {
     label: "Remaining",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 </script>
 
 <template>
@@ -54,7 +54,9 @@ const chartConfig = {
           />
           <ChartTooltip
             :triggers="{
-              [Donut.selectors.segment]: componentToString(chartConfig, ChartTooltipContent, { hideLabel: true })!,
+              [Donut.selectors.segment]: componentToString(chartConfig, ChartTooltipContent, {
+                hideLabel: true,
+              })!,
             }"
           />
         </VisSingleContainer>
@@ -62,9 +64,7 @@ const chartConfig = {
     </CardContent>
     <CardFooter class="flex-col gap-0">
       <div class="flex w-full items-center justify-between py-3">
-        <span class="text-sm text-muted-foreground">
-          Projected Finish
-        </span>
+        <span class="text-sm text-muted-foreground"> Projected Finish </span>
         <span class="text-sm font-semibold">October 2024</span>
       </div>
       <Separator />

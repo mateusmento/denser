@@ -40,10 +40,7 @@ export async function listRegularArtifactsInSpaces(
     .where(
       and(
         inArray(artifact.spaceId, spaceIds),
-        or(
-          ne(artifact.kind, "conversation"),
-          eq(conversation.conversationKind, "regular"),
-        ),
+        or(ne(artifact.kind, "conversation"), eq(conversation.conversationKind, "regular")),
       ),
     )
     .orderBy(desc(artifact.updatedAt))
@@ -72,10 +69,7 @@ export async function listArtifactSummariesInSpaces(
     .where(
       and(
         inArray(artifact.spaceId, spaceIds),
-        or(
-          ne(artifact.kind, "conversation"),
-          eq(conversation.conversationKind, "regular"),
-        ),
+        or(ne(artifact.kind, "conversation"), eq(conversation.conversationKind, "regular")),
       ),
     )
     .orderBy(desc(artifact.updatedAt));

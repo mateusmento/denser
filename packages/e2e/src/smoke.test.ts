@@ -1,4 +1,8 @@
-import { SEED_ARTIFACT_ONBOARDING_NOTES, SEED_SPACE_ACME, SEED_SPACE_ENGINEERING } from "@denser/contracts";
+import {
+  SEED_ARTIFACT_ONBOARDING_NOTES,
+  SEED_SPACE_ACME,
+  SEED_SPACE_ENGINEERING,
+} from "@denser/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { startHarness, type E2eHarness } from "./harness.js";
 
@@ -300,9 +304,11 @@ describe("domain api", () => {
       afterPromote.members.some((member) => member.username === "alice" && member.role === "owner"),
     ).toBe(true);
 
-    await expect(aliceClient.patchSpace(folder.id, { visibility: "public" })).rejects.toMatchObject({
-      status: 400,
-    });
+    await expect(aliceClient.patchSpace(folder.id, { visibility: "public" })).rejects.toMatchObject(
+      {
+        status: 400,
+      },
+    );
     await expect(
       aliceClient.patchSpace(SEED_SPACE_ACME, { visibility: "public" }),
     ).rejects.toMatchObject({ status: 400 });
@@ -363,9 +369,11 @@ describe("planning", () => {
     expect(settled.document.stageName).toBe("Done");
 
     const listed = await client.getSpace(space.id);
-    expect(listed.artifacts.some((artifact) => artifact.id === document.id && artifact.spaceId === space.id)).toBe(
-      true,
-    );
+    expect(
+      listed.artifacts.some(
+        (artifact) => artifact.id === document.id && artifact.spaceId === space.id,
+      ),
+    ).toBe(true);
     expect(todo.name).toBe("Todo");
   });
 
@@ -398,7 +406,9 @@ describe("planning", () => {
     expect(started.space.upcomingSprintId).toBeTruthy();
 
     const activeDetail = await client.getSpace(space.id);
-    const activeChild = activeDetail.childSpaces.find((child) => child.id === started.space.activeSprintId);
+    const activeChild = activeDetail.childSpaces.find(
+      (child) => child.id === started.space.activeSprintId,
+    );
     expect(activeChild?.sprintRole).toBe("active");
     expect(activeDetail.artifacts.some((artifact) => artifact.id === document.id)).toBe(true);
 

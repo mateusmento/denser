@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/vue3-vite"
-import { computed, ref } from "vue"
-import { Badge } from "../badge"
-import { useSelection } from "../../../composables/useSelection"
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import { computed, ref } from "vue";
+import { Badge } from "../badge";
+import { useSelection } from "../../../composables/useSelection";
 import {
   applySortCommit,
   commitSwapMap,
@@ -13,30 +13,37 @@ import {
   DndTarget,
   type DndCommitPayload,
   type DndId,
-} from "./index"
+} from "./index";
 
-type DemoItem = { id: DndId; title: string }
+type DemoItem = { id: DndId; title: string };
 
 const meta = {
   title: "primitives/Dnd",
   component: DndRoot,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
-} satisfies Meta<typeof DndRoot>
+} satisfies Meta<typeof DndRoot>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const cardClass =
-  "rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium text-card-foreground shadow-sm"
+  "rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium text-card-foreground shadow-sm";
 
-function onSortCommit(lists: NonNullable<ReturnType<typeof ref<Record<string, DemoItem[]>>>>, payload: DndCommitPayload) {
-  if (payload.canceled || !payload.over || !("listId" in payload.over) || !("listId" in payload.from))
-    return
-  const sourceId = payload.sourceIds[0]
-  if (!sourceId)
-    return
-  lists.value = applySortCommit(lists.value!, sourceId, payload.from.listId, payload.over)
+function onSortCommit(
+  lists: NonNullable<ReturnType<typeof ref<Record<string, DemoItem[]>>>>,
+  payload: DndCommitPayload,
+) {
+  if (
+    payload.canceled ||
+    !payload.over ||
+    !("listId" in payload.over) ||
+    !("listId" in payload.from)
+  )
+    return;
+  const sourceId = payload.sourceIds[0];
+  if (!sourceId) return;
+  lists.value = applySortCommit(lists.value!, sourceId, payload.from.listId, payload.over);
 }
 
 export const SortableColumn: Story = {
@@ -52,16 +59,20 @@ export const SortableColumn: Story = {
           { id: "delta", title: "Settle on the real item" },
           { id: "echo", title: "Keep Vue as DOM owner" },
         ],
-      })
+      });
       const byId = computed(() =>
-        Object.fromEntries(Object.values(lists.value).flat().map((item) => [item.id, item])),
-      )
+        Object.fromEntries(
+          Object.values(lists.value)
+            .flat()
+            .map((item) => [item.id, item]),
+        ),
+      );
       return {
         lists,
         byId,
         cardClass,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh justify-center bg-background p-10">
@@ -85,7 +96,7 @@ export const SortableColumn: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const MultiList: Story = {
   name: "Multi list",
@@ -102,16 +113,20 @@ export const MultiList: Story = {
           { id: "four", title: "Board card D" },
           { id: "five", title: "Board card E" },
         ],
-      })
+      });
       const byId = computed(() =>
-        Object.fromEntries(Object.values(lists.value).flat().map((item) => [item.id, item])),
-      )
+        Object.fromEntries(
+          Object.values(lists.value)
+            .flat()
+            .map((item) => [item.id, item]),
+        ),
+      );
       return {
         lists,
         byId,
         cardClass,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh justify-center gap-6 bg-background p-10">
@@ -137,7 +152,7 @@ export const MultiList: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const HighlightGrid: Story = {
   name: "Highlight grid",
@@ -148,19 +163,18 @@ export const HighlightGrid: Story = {
         { id: "spec", title: "Spec" },
         { id: "notes", title: "Notes" },
         { id: "brief", title: "Brief" },
-      ])
+      ]);
       const folders = [
         { id: "design", title: "Design" },
         { id: "eng", title: "Engineering" },
-      ]
-      const last = ref<string>("Drop a tile on a folder")
-      const byId = computed(() => Object.fromEntries(tiles.value.map((item) => [item.id, item])))
+      ];
+      const last = ref<string>("Drop a tile on a folder");
+      const byId = computed(() => Object.fromEntries(tiles.value.map((item) => [item.id, item])));
       function onCommit(payload: DndCommitPayload) {
-        if (payload.canceled || !payload.over || !("targetId" in payload.over))
-          return
-        last.value = `Moved ${payload.sourceIds.join(", ")} → ${payload.over.targetId}`
+        if (payload.canceled || !payload.over || !("targetId" in payload.over)) return;
+        last.value = `Moved ${payload.sourceIds.join(", ")} → ${payload.over.targetId}`;
       }
-      return { tiles, folders, last, byId, cardClass, onCommit }
+      return { tiles, folders, last, byId, cardClass, onCommit };
     },
     template: `
       <div class="flex min-h-dvh flex-col items-center gap-8 bg-background p-10">
@@ -188,7 +202,7 @@ export const HighlightGrid: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const SparseLists: Story = {
   name: "Sparse lists",
@@ -198,16 +212,20 @@ export const SparseLists: Story = {
       const lists = ref<Record<string, DemoItem[]>>({
         todo: [{ id: "task-3", title: "Task 3" }],
         done: [{ id: "task-4", title: "Task 4" }],
-      })
+      });
       const byId = computed(() =>
-        Object.fromEntries(Object.values(lists.value).flat().map((item) => [item.id, item])),
-      )
+        Object.fromEntries(
+          Object.values(lists.value)
+            .flat()
+            .map((item) => [item.id, item]),
+        ),
+      );
       return {
         lists,
         byId,
         cardClass,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh justify-center gap-6 bg-background p-10">
@@ -233,7 +251,7 @@ export const SparseLists: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const InFlowTabs: Story = {
   name: "In-flow tabs",
@@ -247,11 +265,11 @@ export const InFlowTabs: Story = {
           { id: "docs", title: "Docs" },
           { id: "chat", title: "Chat" },
         ],
-      })
+      });
       return {
         lists,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh items-start justify-center bg-background p-10">
@@ -274,7 +292,7 @@ export const InFlowTabs: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const SwapGrid: Story = {
   name: "Swap grid",
@@ -286,25 +304,34 @@ export const SwapGrid: Story = {
         calendar: { id: "calendar", title: "Calendar" },
         tasks: { id: "tasks", title: "Tasks" },
         notes: { id: "notes", title: "Notes" },
-      }
+      };
       const slots = [
         { id: "s1", height: "h-24" },
         { id: "s2", height: "h-36 row-span-2" },
         { id: "s3", height: "h-36 row-span-2" },
         { id: "s4", height: "h-24" },
-      ]
+      ];
       const slotItemMap = ref<Record<string, string | null>>({
         s1: "weather",
         s2: "calendar",
         s3: "tasks",
         s4: "notes",
-      })
+      });
       function onCommit(payload: DndCommitPayload) {
-        if (payload.canceled || !payload.over || !("slotId" in payload.over) || !("slotId" in payload.from))
-          return
-        slotItemMap.value = commitSwapMap(slotItemMap.value, payload.from.slotId, payload.over.slotId)
+        if (
+          payload.canceled ||
+          !payload.over ||
+          !("slotId" in payload.over) ||
+          !("slotId" in payload.from)
+        )
+          return;
+        slotItemMap.value = commitSwapMap(
+          slotItemMap.value,
+          payload.from.slotId,
+          payload.over.slotId,
+        );
       }
-      return { widgets, slots, slotItemMap, cardClass, onCommit }
+      return { widgets, slots, slotItemMap, cardClass, onCommit };
     },
     template: `
       <div class="flex min-h-dvh justify-center bg-background p-10">
@@ -341,7 +368,7 @@ export const SwapGrid: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const OverlayFlock: Story = {
   name: "Overlay flock",
@@ -354,18 +381,17 @@ export const OverlayFlock: Story = {
         { id: "three", title: "Charlie" },
         { id: "four", title: "Delta" },
         { id: "five", title: "Echo" },
-      ]
-      const selected = ["one", "two", "three", "four"]
-      const last = ref("Drag the selected tiles")
+      ];
+      const selected = ["one", "two", "three", "four"];
+      const last = ref("Drag the selected tiles");
       function sourceIdsFor(id: string) {
-        return selected.includes(id) ? selected : [id]
+        return selected.includes(id) ? selected : [id];
       }
       function onCommit(payload: DndCommitPayload) {
-        if (payload.canceled || !payload.over || !("targetId" in payload.over))
-          return
-        last.value = `${payload.sourceIds.length} tiles → ${payload.over.targetId}`
+        if (payload.canceled || !payload.over || !("targetId" in payload.over)) return;
+        last.value = `${payload.sourceIds.length} tiles → ${payload.over.targetId}`;
       }
-      return { tiles, selected, last, sourceIdsFor, onCommit, cardClass }
+      return { tiles, selected, last, sourceIdsFor, onCommit, cardClass };
     },
     template: `
       <div class="flex min-h-dvh flex-col items-center gap-8 bg-background p-10">
@@ -405,7 +431,7 @@ export const OverlayFlock: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const ItemSettle: Story = {
   name: "Item settle",
@@ -418,16 +444,16 @@ export const ItemSettle: Story = {
           { id: "b", title: "Second" },
           { id: "c", title: "Third" },
         ],
-      })
+      });
       const byId = computed(() =>
         Object.fromEntries(lists.value.inbox!.map((item) => [item.id, item])),
-      )
+      );
       return {
         lists,
         byId,
         cardClass,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh justify-center bg-background p-10">
@@ -450,7 +476,7 @@ export const ItemSettle: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const ClickableItems: Story = {
   name: "Clickable items",
@@ -463,19 +489,19 @@ export const ClickableItems: Story = {
           { id: "bravo", title: "Bravo" },
           { id: "charlie", title: "Charlie" },
         ],
-      })
-      const lastClick = ref("none")
+      });
+      const lastClick = ref("none");
       return {
         lists,
         lastClick,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
         onOpen: (id: string) => {
-          lastClick.value = `open:${id}`
+          lastClick.value = `open:${id}`;
         },
         onClose: (id: string) => {
-          lastClick.value = `close:${id}`
+          lastClick.value = `close:${id}`;
         },
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh flex-col items-center gap-4 bg-background p-10">
@@ -513,7 +539,7 @@ export const ClickableItems: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const OverlaySettle: Story = {
   name: "Overlay settle",
@@ -526,16 +552,16 @@ export const OverlaySettle: Story = {
           { id: "b", title: "Second" },
           { id: "c", title: "Third" },
         ],
-      })
+      });
       const byId = computed(() =>
         Object.fromEntries(lists.value.inbox!.map((item) => [item.id, item])),
-      )
+      );
       return {
         lists,
         byId,
         cardClass,
         onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh justify-center bg-background p-10">
@@ -558,7 +584,7 @@ export const OverlaySettle: Story = {
       </div>
     `,
   }),
-}
+};
 
 export const MultiSelectDrag: Story = {
   name: "Multi-select drag",
@@ -570,32 +596,32 @@ export const MultiSelectDrag: Story = {
         { id: "doc-2", title: "Document 2" },
         { id: "doc-3", title: "Document 3" },
         { id: "doc-4", title: "Document 4" },
-      ])
+      ]);
       const targets = ref<DemoItem[]>([
         { id: "folder-a", title: "Folder A" },
         { id: "folder-b", title: "Folder B" },
-      ])
-      const lastAction = ref("Ctrl/Cmd or Shift click to select multiple items, then drag onto a folder")
-      const itemIds = computed(() => items.value.map((i) => i.id))
-      const selection = useSelection({ items: itemIds })
-      const byId = computed(() =>
-        Object.fromEntries(items.value.map((item) => [item.id, item])),
-      )
+      ]);
+      const lastAction = ref(
+        "Ctrl/Cmd or Shift click to select multiple items, then drag onto a folder",
+      );
+      const itemIds = computed(() => items.value.map((i) => i.id));
+      const selection = useSelection({ items: itemIds });
+      const byId = computed(() => Object.fromEntries(items.value.map((item) => [item.id, item])));
 
       function onItemClick(id: string, event: MouseEvent) {
-        const res = selection.handleItemClick(id, event)
+        const res = selection.handleItemClick(id, event);
         if (!res.wasSelectionAction && selection.hasSelection.value) {
-          selection.clear()
+          selection.clear();
         }
       }
 
       function onCommit(payload: DndCommitPayload) {
-        if (payload.canceled || !payload.over || !("targetId" in payload.over)) return
-        const over = payload.over
-        const target = targets.value.find((t) => t.id === over.targetId)
-        lastAction.value = `Dropped [${payload.sourceIds.join(", ")}] into ${target?.title}`
-        items.value = items.value.filter((i) => !payload.sourceIds.includes(i.id))
-        selection.clear()
+        if (payload.canceled || !payload.over || !("targetId" in payload.over)) return;
+        const over = payload.over;
+        const target = targets.value.find((t) => t.id === over.targetId);
+        lastAction.value = `Dropped [${payload.sourceIds.join(", ")}] into ${target?.title}`;
+        items.value = items.value.filter((i) => !payload.sourceIds.includes(i.id));
+        selection.clear();
       }
 
       return {
@@ -606,7 +632,7 @@ export const MultiSelectDrag: Story = {
         lastAction,
         onItemClick,
         onCommit,
-      }
+      };
     },
     template: `
       <div class="flex min-h-dvh flex-col items-center gap-6 bg-background p-10">
@@ -672,4 +698,4 @@ export const MultiSelectDrag: Story = {
       </div>
     `,
   }),
-}
+};

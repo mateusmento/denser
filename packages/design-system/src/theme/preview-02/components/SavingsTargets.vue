@@ -9,13 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemFooter,
-  ItemGroup,
-} from "@/components/ui/item";
+import { Item, ItemContent, ItemDescription, ItemFooter, ItemGroup } from "@/components/ui/item";
 import { Progress } from "@/components/ui/progress";
 </script>
 

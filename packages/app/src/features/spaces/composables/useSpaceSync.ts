@@ -1,4 +1,15 @@
-import type { ArtifactId, ArtifactSummary, PatchSpaceInput, SpaceIcon, SpaceId, SpacePreset, SpaceSummary, SpaceVisibility, UserId, WorkflowStageId } from "@denser/contracts";
+import type {
+  ArtifactId,
+  ArtifactSummary,
+  PatchSpaceInput,
+  SpaceIcon,
+  SpaceId,
+  SpacePreset,
+  SpaceSummary,
+  SpaceVisibility,
+  UserId,
+  WorkflowStageId,
+} from "@denser/contracts";
 import { ApiError } from "@denser/api-client";
 import { toast } from "@denser/design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
@@ -50,8 +61,10 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
 
   const invalidateSpace = async (space?: Pick<SpaceSummary, "id" | "parentSpaceId">) => {
     if (!id.value && !space) return;
-    const target =
-      space ?? { id: id.value!, parentSpaceId: content.value?.space.parentSpaceId ?? null };
+    const target = space ?? {
+      id: id.value!,
+      parentSpaceId: content.value?.space.parentSpaceId ?? null,
+    };
     await invalidateSpaceProjections(queryClient, target);
   };
 
@@ -97,8 +110,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   });
 
   const patchVisibilityMutation = useMutation({
-    mutationFn: (visibility: SpaceVisibility) =>
-      apiClient.patchSpace(id.value!, { visibility }),
+    mutationFn: (visibility: SpaceVisibility) => apiClient.patchSpace(id.value!, { visibility }),
     onSuccess: async ({ space }) => {
       applySpacePatch(space);
       await invalidateSpaceProjections(queryClient, space);
@@ -193,7 +205,10 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     return (spaceQuery.data.value?.artifacts ?? [])
       .filter((artifact) => artifact.kind === "document" && filter(artifact))
       .slice()
-      .sort((left, right) => (left.rank ?? 0) - (right.rank ?? 0) || left.title.localeCompare(right.title))
+      .sort(
+        (left, right) =>
+          (left.rank ?? 0) - (right.rank ?? 0) || left.title.localeCompare(right.title),
+      )
       .map((artifact) => artifact.id);
   }
 
@@ -261,7 +276,9 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
       await invalidateSpace();
       return true;
     } catch (error) {
-      toast.error(error instanceof ApiError ? messageFromApiBody(error.body) : "Couldn’t update stage");
+      toast.error(
+        error instanceof ApiError ? messageFromApiBody(error.body) : "Couldn’t update stage",
+      );
       await invalidateSpace();
       return false;
     }

@@ -10,7 +10,11 @@ import {
 import { useWorkspaceCreateActions } from "@/modules/workspace";
 import SpaceSettingsContainer from "@/features/spaces/containers/SpaceSettingsContainer.vue";
 import { useWorkspaceNavSync } from "../composables/useWorkspaceNavSync";
-import type { WorkspaceNavArtifactAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
+import type {
+  WorkspaceNavArtifactAction,
+  WorkspaceNavLink,
+  WorkspaceNavSpaceAction,
+} from "../types";
 import WorkspaceNav from "../presentationals/WorkspaceNav.vue";
 
 const { view, isHomeActive, reload, createSpace, createDirectMessage } = useWorkspaceNavSync();

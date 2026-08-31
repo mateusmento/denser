@@ -35,10 +35,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8"
-    data-slot="space-surface"
-  >
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8" data-slot="space-surface">
     <template v-if="view.state === 'loading'">
       <Skeleton class="h-8 w-1/3" />
       <SpaceGallery :child-spaces="[]" :artifacts="[]" loading />

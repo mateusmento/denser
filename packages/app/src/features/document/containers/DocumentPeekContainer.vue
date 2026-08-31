@@ -3,10 +3,7 @@ import type { SpaceId, ArtifactId } from "@denser/contracts";
 import { computed, ref } from "vue";
 import type { MentionCandidate } from "@/modules/rich-text";
 import { documentMentionItems } from "../fixtures";
-import {
-  createDocumentDraftState,
-  useDocumentSync,
-} from "../composables/useDocumentSync";
+import { createDocumentDraftState, useDocumentSync } from "../composables/useDocumentSync";
 import { toDocumentEditorView } from "../types";
 import DocumentEditorContainer from "./DocumentEditorContainer.vue";
 import DocumentSurface from "../presentationals/DocumentSurface.vue";

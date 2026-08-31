@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { MenubarLabelProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
-import { reactiveOmit } from '@vueuse/core'
-import { MenubarLabel } from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { MenubarLabelProps } from "reka-ui";
+import type { HTMLAttributes } from "vue";
+import { reactiveOmit } from "@vueuse/core";
+import { MenubarLabel } from "reka-ui";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<MenubarLabelProps & { class?: HTMLAttributes['class'], inset?: boolean }>()
-const delegatedProps = reactiveOmit(props, 'class', 'inset')
+const props = defineProps<
+  MenubarLabelProps & { class?: HTMLAttributes["class"]; inset?: boolean }
+>();
+const delegatedProps = reactiveOmit(props, "class", "inset");
 </script>
 
 <template>
@@ -14,7 +16,7 @@ const delegatedProps = reactiveOmit(props, 'class', 'inset')
     data-slot="menubar-label"
     :data-inset="inset ? '' : undefined"
     v-bind="delegatedProps"
-    :class="cn('text-muted-foreground px-2 py-1 text-sm data-inset:pl-7', props.class)"
+    :class="cn('px-2 py-1 text-sm text-muted-foreground data-inset:pl-7', props.class)"
   >
     <slot />
   </MenubarLabel>

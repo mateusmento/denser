@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { ChartConfig } from "@/components/ui/chart"
-import { VisAxis, VisGroupedBar, VisXYContainer } from "@unovis/vue"
-import { Button } from "@/components/ui/button"
+import type { ChartConfig } from "@/components/ui/chart";
+import { VisAxis, VisGroupedBar, VisXYContainer } from "@unovis/vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,19 +9,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartCrosshair,
   ChartTooltip,
   ChartTooltipContent,
   componentToString,
-} from "@/components/ui/chart"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-} from "@/components/ui/item"
+} from "@/components/ui/chart";
+import { Item, ItemContent, ItemDescription } from "@/components/ui/item";
 
 const chartData = [
   { month: "Dec", index: 0, amount: 800 },
@@ -30,19 +26,19 @@ const chartData = [
   { month: "Mar", index: 3, amount: 1300 },
   { month: "Apr", index: 4, amount: 750 },
   { month: "May", index: 5, amount: 1400 },
-]
+];
 
-type Data = typeof chartData[number]
+type Data = (typeof chartData)[number];
 
 const chartConfig = {
   amount: {
     label: "Contribution",
     color: "var(--chart-2)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 // Hard-edged styles (lyra, sera) flatten the bar corners — mirrors shadcn-ui.
-const isRounded = true
+const isRounded = true;
 </script>
 
 <template>
@@ -71,7 +67,12 @@ const isRounded = true
           />
           <ChartTooltip />
           <ChartCrosshair
-            :template="componentToString(chartConfig, ChartTooltipContent, { hideLabel: true, class: 'min-w-40' })"
+            :template="
+              componentToString(chartConfig, ChartTooltipContent, {
+                hideLabel: true,
+                class: 'min-w-40',
+              })
+            "
             color="#0000"
           />
         </VisXYContainer>
@@ -81,34 +82,28 @@ const isRounded = true
       <div class="grid w-full grid-cols-1 gap-3 md:grid-cols-2">
         <Item variant="muted" class="flex-col items-stretch">
           <ItemContent class="gap-1">
-            <ItemDescription class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            <ItemDescription
+              class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            >
               Upcoming
             </ItemDescription>
-            <span class="cn-font-heading text-lg font-semibold">
-              May 25, 2024
-            </span>
-            <span class="text-sm text-muted-foreground">
-              $1,000 scheduled
-            </span>
+            <span class="cn-font-heading text-lg font-semibold"> May 25, 2024 </span>
+            <span class="text-sm text-muted-foreground"> $1,000 scheduled </span>
           </ItemContent>
         </Item>
         <Item variant="muted" class="flex-col items-stretch">
           <ItemContent class="gap-1">
-            <ItemDescription class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            <ItemDescription
+              class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            >
               Auto-Save Plan
             </ItemDescription>
-            <span class="cn-font-heading text-lg font-semibold">
-              Accelerated
-            </span>
-            <span class="text-sm text-muted-foreground">
-              Recurring weekly
-            </span>
+            <span class="cn-font-heading text-lg font-semibold"> Accelerated </span>
+            <span class="text-sm text-muted-foreground"> Recurring weekly </span>
           </ItemContent>
         </Item>
       </div>
-      <Button class="w-full">
-        View Full Report
-      </Button>
+      <Button class="w-full"> View Full Report </Button>
     </CardFooter>
   </Card>
 </template>

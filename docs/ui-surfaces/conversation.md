@@ -16,10 +16,10 @@ Persistent discussion among people who can access the conversation: read history
 
 The surface binds to a **Conversation artifact** opened as a **space tab** (regular) or from **Direct messages** (direct). There is **one default view** — no view-mode picker on this tab.
 
-| Kind | Where opened | Listing | Access |
-| ---- | ------------ | ------- | ------ |
-| **Regular** | Space tab, This Space | This Space gallery | Space ACL (v1) |
-| **Direct (DM)** | Direct messages nav | DM sidebar only | `conversation_member` |
+| Kind            | Where opened          | Listing            | Access                |
+| --------------- | --------------------- | ------------------ | --------------------- |
+| **Regular**     | Space tab, This Space | This Space gallery | Space ACL (v1)        |
+| **Direct (DM)** | Direct messages nav   | DM sidebar only    | `conversation_member` |
 
 Notification and header chrome may differ by kind (channel-style vs DM-style); the message surface is the same.
 
@@ -39,7 +39,7 @@ The surface should feel **calm by default** (message stream dominates) while kee
 
 | Region                      | Job                                                       | Density                                                                                            |
 | --------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **Header**                  | Orient: which channel, who is here, channel-level actions | Calm chrome; shared `h-surface-header` with Thread                                          |
+| **Header**                  | Orient: which channel, who is here, channel-level actions | Calm chrome; shared `h-surface-header` with Thread                                                 |
 | **Message scroller**        | Read and act on history                                   | Calm–medium; content-first                                                                         |
 | **Thread pane** (when open) | Focused side conversation                                 | **Distinct elevated card**: `rounded-2xl`, `card` / elevated fill, shadow — not a flush split pane |
 | **MessageComposer**         | Author and send / schedule                                | Derived composer; [below](#messagecomposer)                                                        |
@@ -50,16 +50,16 @@ Shared app shell (nav sidebar, space switcher) stays outside this surface; Conve
 
 ## Sub-components
 
-| Sub-component                                   | Role                                                                                                | Spec depth                   |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
-| **ChannelHeader**                               | Title, topic/description (if any), member/presence affordances, channel menu                        | Below                        |
-| **ConversationIntro**                           | Start-of-history “channel beginning”: title, intro copy, edit description, add people               | Light                        |
-| **Timeline** (`ConversationTimeline`)           | Windowed history (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                     |
-| **Message** (`ConversationMessage`)             | Rich body, attachments/embeds, reactions, hover/context menus (DS `Message` is layout only)         | Below                        |
-| **MessageGroup** (`ConversationMessageGroup`)   | Same-author, near-in-time cluster: avatar + name/time once, slotted messages (≠ DS `MessageGroup`)  | Light                        |
-| **ThreadPane**                                  | Parent summary + thread timeline + MessageComposer (thread)                                         | Below                        |
-| **MessageComposer**                             | Channel / thread chrome over the shared editor                                                      | [Detailed](#messagecomposer) |
-| **PermissionEmpty**                             | Replaces MessageComposer when user cannot post                                                      | States                       |
+| Sub-component                                 | Role                                                                                                   | Spec depth                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **ChannelHeader**                             | Title, topic/description (if any), member/presence affordances, channel menu                           | Below                        |
+| **ConversationIntro**                         | Start-of-history “channel beginning”: title, intro copy, edit description, add people                  | Light                        |
+| **Timeline** (`ConversationTimeline`)         | Windowed history (DS `MessageScroller`), **sticky** date separators, scroll-to-bottom / jump-to-latest | Below                        |
+| **Message** (`ConversationMessage`)           | Rich body, attachments/embeds, reactions, hover/context menus (DS `Message` is layout only)            | Below                        |
+| **MessageGroup** (`ConversationMessageGroup`) | Same-author, near-in-time cluster: avatar + name/time once, slotted messages (≠ DS `MessageGroup`)     | Light                        |
+| **ThreadPane**                                | Parent summary + thread timeline + MessageComposer (thread)                                            | Below                        |
+| **MessageComposer**                           | Channel / thread chrome over the shared editor                                                         | [Detailed](#messagecomposer) |
+| **PermissionEmpty**                           | Replaces MessageComposer when user cannot post                                                         | States                       |
 
 Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Message` / `MessageGroup` layout, etc.) are implementation detail; this doc names **product** sub-components.
 
@@ -67,20 +67,20 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Me
 
 ## Features
 
-| Feature                      | Where it lives                                   | Notes                                                              |
-| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| Read channel history         | Timeline                                         | Cursor/window load; stable order                                   |
-| Jump to latest / unread      | Timeline + header or floating control            | TBD exact chrome                                                   |
-| Post rich message            | MessageComposer (channel)                        | Send Layer 1                                                       |
-| Format selection             | MessageComposer → RichTextSelectionMenu / slash  | [Standard formatting](./rich-text-composer.md#standard-formatting) |
-| Mention / image / attachment | MessageComposer action row                       |                                                                    |
-| Code block / poll            | MessageComposer action row                       | Poll phased                                                        |
-| Screen recording / schedule  | MessageComposer action row                       | Phased; schedule → SchedulePopover                                 |
-| React to message             | Message                                          |                                                                    |
-| Edit / delete own message    | Message actions                                  | Permission rules in feature spec                                   |
-| Open / reply in thread       | Message → ThreadPane + composer thread shape     |                                                                    |
-| Presence (viewing / typing)  | Header and/or scroller                           | TBD v1                                                             |
-| Search in channel            | Header or ambient                                | Likely Layer 2/3                                                   |
+| Feature                      | Where it lives                                  | Notes                                                              |
+| ---------------------------- | ----------------------------------------------- | ------------------------------------------------------------------ |
+| Read channel history         | Timeline                                        | Cursor/window load; stable order                                   |
+| Jump to latest / unread      | Timeline + header or floating control           | TBD exact chrome                                                   |
+| Post rich message            | MessageComposer (channel)                       | Send Layer 1                                                       |
+| Format selection             | MessageComposer → RichTextSelectionMenu / slash | [Standard formatting](./rich-text-composer.md#standard-formatting) |
+| Mention / image / attachment | MessageComposer action row                      |                                                                    |
+| Code block / poll            | MessageComposer action row                      | Poll phased                                                        |
+| Screen recording / schedule  | MessageComposer action row                      | Phased; schedule → SchedulePopover                                 |
+| React to message             | Message                                         |                                                                    |
+| Edit / delete own message    | Message actions                                 | Permission rules in feature spec                                   |
+| Open / reply in thread       | Message → ThreadPane + composer thread shape    |                                                                    |
+| Presence (viewing / typing)  | Header and/or scroller                          | TBD v1                                                             |
+| Search in channel            | Header or ambient                               | Likely Layer 2/3                                                   |
 
 ---
 
@@ -88,17 +88,17 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Me
 
 UI consumes the Conversation feature model; it does not invent a second schema. Summary of what this surface binds:
 
-| UI need             | Source objects / fields                                                          |
-| ------------------- | -------------------------------------------------------------------------------- |
-| Conversation title, id, kind | Conversation artifact (`regular` \| `direct`)                           |
-| Message list        | Message (`id`, `author_id`, `body`, timestamps, `thread_id`, attachments/embeds) |
-| Author display      | User (avatar, display name) via author id                                        |
-| Reactions           | Reaction aggregates per message                                                  |
-| Thread              | Messages with same `thread_id` + parent message                                  |
-| Composer draft      | Local UI state until send/schedule succeeds                                      |
-| Schedule            | ScheduledMessage (when phased)                                                   |
-| Poll embed          | Poll (when phased)                                                               |
-| Can read / can post | Space ACL (regular) or conversation_member (direct)                              |
+| UI need                      | Source objects / fields                                                          |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| Conversation title, id, kind | Conversation artifact (`regular` \| `direct`)                                    |
+| Message list                 | Message (`id`, `author_id`, `body`, timestamps, `thread_id`, attachments/embeds) |
+| Author display               | User (avatar, display name) via author id                                        |
+| Reactions                    | Reaction aggregates per message                                                  |
+| Thread                       | Messages with same `thread_id` + parent message                                  |
+| Composer draft               | Local UI state until send/schedule succeeds                                      |
+| Schedule                     | ScheduledMessage (when phased)                                                   |
+| Poll embed                   | Poll (when phased)                                                               |
+| Can read / can post          | Space ACL (regular) or conversation_member (direct)                              |
 
 Realtime: apply `message.*` / `reaction.*` (and schedule events if any) into the same replica the scroller reads — no divergent client cache. Details: feature spec.
 

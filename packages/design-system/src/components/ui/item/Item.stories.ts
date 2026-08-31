@@ -1,12 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import { FileIcon } from "@lucide/vue";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "./index";
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "./index";
 
 const meta = {
   title: "primitives/Item",

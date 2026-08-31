@@ -1,11 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "./index";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./index";
 import { Card, CardContent } from "../card";
 
 const meta = {

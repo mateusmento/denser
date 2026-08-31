@@ -1,140 +1,160 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
+import type { HTMLAttributes } from "vue";
 
-import { CheckIcon } from '@lucide/vue'
-import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
-import { cn } from '@/lib/utils'
-import { getAnswerKeyShortcuts, injectQuestionnaireItemContext } from './useQuestionnaire'
+import { CheckIcon } from "@lucide/vue";
+import { computed, onBeforeUnmount, ref, useId, watch } from "vue";
+import { cn } from "@/lib/utils";
+import { getAnswerKeyShortcuts, injectQuestionnaireItemContext } from "./useQuestionnaire";
 
-const props = withDefaults(defineProps<{
-  /** Controlled checked state. Use with `v-model:checked`. */
-  checked?: boolean
-  class?: HTMLAttributes['class']
-  /** Checks the choice on mount and after a native form reset. */
-  defaultChecked?: boolean
-  disabled?: boolean
-  /** Submitted as the answer of the parent item. */
-  value: string
-}>(), {
-  // `undefined` keeps the choice uncontrolled. Without this default, Vue casts
-  // the absent boolean prop to `false` and every choice looks controlled.
-  checked: undefined,
-  defaultChecked: false,
-  disabled: false,
-})
+const props = withDefaults(
+  defineProps<{
+    /** Controlled checked state. Use with `v-model:checked`. */
+    checked?: boolean;
+    class?: HTMLAttributes["class"];
+    /** Checks the choice on mount and after a native form reset. */
+    defaultChecked?: boolean;
+    disabled?: boolean;
+    /** Submitted as the answer of the parent item. */
+    value: string;
+  }>(),
+  {
+    // `undefined` keeps the choice uncontrolled. Without this default, Vue casts
+    // the absent boolean prop to `false` and every choice looks controlled.
+    checked: undefined,
+    defaultChecked: false,
+    disabled: false,
+  },
+);
 
 const emits = defineEmits<{
-  'change': [event: Event]
-  'update:checked': [checked: boolean]
-}>()
+  change: [event: Event];
+  "update:checked": [checked: boolean];
+}>();
 
-const item = injectQuestionnaireItemContext()
+const item = injectQuestionnaireItemContext();
 
-const answerId = useId()
-const inputElement = ref<HTMLInputElement | null>(null)
-const initialDefaultChecked = props.defaultChecked
+const answerId = useId();
+const inputElement = ref<HTMLInputElement | null>(null);
+const initialDefaultChecked = props.defaultChecked;
 
-const controlled = computed(() => props.checked !== undefined)
-const disabled = computed(() => item.disabled.value || props.disabled)
-const selected = computed(() => item.selectedAnswerIds.value.includes(answerId))
+const controlled = computed(() => props.checked !== undefined);
+const disabled = computed(() => item.disabled.value || props.disabled);
+const selected = computed(() => item.selectedAnswerIds.value.includes(answerId));
 const checked = computed(() => {
   if (!controlled.value) {
-    return selected.value
+    return selected.value;
   }
 
   // A skipped item clears every answer, including controlled ones.
-  return item.status.value === 'skipped' ? false : props.checked!
-})
-const type = computed(() => (item.multiple.value ? 'checkbox' : 'radio'))
-const shortcut = computed(() =>
-  item.shortcutByChoiceValue.value?.get(props.value)
-  ?? item.shortcutByAnswerId.value.get(answerId)
-  ?? null)
+  return item.status.value === "skipped" ? false : props.checked!;
+});
+const type = computed(() => (item.multiple.value ? "checkbox" : "radio"));
+const shortcut = computed(
+  () =>
+    item.shortcutByChoiceValue.value?.get(props.value) ??
+    item.shortcutByAnswerId.value.get(answerId) ??
+    null,
+);
 
 function syncCheckedElement() {
   if (inputElement.value && inputElement.value.checked !== checked.value) {
-    inputElement.value.checked = checked.value
+    inputElement.value.checked = checked.value;
   }
 }
 
 function handleChange(event: Event) {
-  emits('change', event)
+  emits("change", event);
 
   if (event.defaultPrevented) {
-    syncCheckedElement()
-    return
+    syncCheckedElement();
+    return;
   }
 
-  const nextChecked = (event.target as HTMLInputElement).checked
+  const nextChecked = (event.target as HTMLInputElement).checked;
 
-  emits('update:checked', nextChecked)
+  emits("update:checked", nextChecked);
 
   if (!controlled.value) {
-    item.setAnswerSelectionFromInteraction(answerId, nextChecked)
-    return
+    item.setAnswerSelectionFromInteraction(answerId, nextChecked);
+    return;
   }
 
   // Re-selecting the same controlled choice has to clear the skipped state.
-  if (item.status.value === 'skipped' && props.checked === nextChecked) {
-    item.setAnswerSelectionFromInteraction(answerId, props.checked)
+  if (item.status.value === "skipped" && props.checked === nextChecked) {
+    item.setAnswerSelectionFromInteraction(answerId, props.checked);
   }
 
   // Checking a radio clears its siblings, so the whole group has to re-sync in
   // case the host keeps the previous answer.
-  item.requestControlSync()
+  item.requestControlSync();
 }
 
-const unregisterSelection = item.registerAnswerSelection(answerId, initialDefaultChecked)
+const unregisterSelection = item.registerAnswerSelection(answerId, initialDefaultChecked);
 
-let unregisterControl: (() => void) | null = null
+let unregisterControl: (() => void) | null = null;
 
-watch([inputElement, disabled, () => props.disabled, () => props.value], ([element]) => {
-  unregisterControl?.()
-  unregisterControl = null
+watch(
+  [inputElement, disabled, () => props.disabled, () => props.value],
+  ([element]) => {
+    unregisterControl?.();
+    unregisterControl = null;
 
-  if (!element) {
-    return
-  }
+    if (!element) {
+      return;
+    }
 
-  unregisterControl = item.registerAnswerControl({
-    disabled: disabled.value,
-    element,
-    id: answerId,
-    ownDisabled: props.disabled,
-    type: 'choice',
-    value: props.value,
-  })
-}, { flush: 'post' })
+    unregisterControl = item.registerAnswerControl({
+      disabled: disabled.value,
+      element,
+      id: answerId,
+      ownDisabled: props.disabled,
+      type: "choice",
+      value: props.value,
+    });
+  },
+  { flush: "post" },
+);
 
-watch(() => props.defaultChecked, (defaultChecked) => {
-  item.setAnswerDefault(answerId, defaultChecked)
-})
+watch(
+  () => props.defaultChecked,
+  (defaultChecked) => {
+    item.setAnswerDefault(answerId, defaultChecked);
+  },
+);
 
-watch([() => props.checked, item.resetVersion], () => {
-  if (controlled.value) {
-    item.syncControlledAnswerSelection(answerId, props.checked!)
-  }
-}, { immediate: true })
+watch(
+  [() => props.checked, item.resetVersion],
+  () => {
+    if (controlled.value) {
+      item.syncControlledAnswerSelection(answerId, props.checked!);
+    }
+  },
+  { immediate: true },
+);
 
-watch(item.controlSyncVersion, syncCheckedElement, { flush: 'post' })
+watch(item.controlSyncVersion, syncCheckedElement, { flush: "post" });
 
-watch([checked, inputElement, () => props.defaultChecked, item.resetVersion], () => {
-  if (!inputElement.value) {
-    return
-  }
+watch(
+  [checked, inputElement, () => props.defaultChecked, item.resetVersion],
+  () => {
+    if (!inputElement.value) {
+      return;
+    }
 
-  // Keep the native reset target aligned with the questionnaire owned default,
-  // including controlled choices whose `checked` prop stays authoritative.
-  inputElement.value.defaultChecked = controlled.value ? props.checked! : props.defaultChecked
+    // Keep the native reset target aligned with the questionnaire owned default,
+    // including controlled choices whose `checked` prop stays authoritative.
+    inputElement.value.defaultChecked = controlled.value ? props.checked! : props.defaultChecked;
 
-  syncCheckedElement()
-}, { flush: 'post' })
+    syncCheckedElement();
+  },
+  { flush: "post" },
+);
 
 onBeforeUnmount(() => {
-  unregisterControl?.()
-  unregisterControl = null
-  unregisterSelection()
-})
+  unregisterControl?.();
+  unregisterControl = null;
+  unregisterSelection();
+});
 </script>
 
 <template>
@@ -146,11 +166,13 @@ onBeforeUnmount(() => {
     :data-shortcut="shortcut ?? undefined"
     :data-type="type"
     :data-unchecked="checked ? undefined : ''"
-    :class="cn(
-      'border-input bg-input/20 hover:bg-input/40 data-checked:border-primary/40 data-checked:bg-primary/10 data-invalid:border-destructive has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-ring/50 gap-3 rounded-2xl border px-4 py-3 text-sm has-[>input:focus-visible]:ring-3 group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start text-start transition-colors outline-none select-none',
-      'data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50',
-      props.class,
-    )"
+    :class="
+      cn(
+        'group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border border-input bg-input/20 px-4 py-3 text-start text-sm transition-colors outline-none select-none hover:bg-input/40 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive data-checked:border-primary/40 data-checked:bg-primary/10',
+        'data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50',
+        props.class,
+      )
+    "
   >
     <input
       :id="answerId"
@@ -168,21 +190,24 @@ onBeforeUnmount(() => {
       :type="type"
       :value="props.value"
       @change="handleChange"
-    >
+    />
     <span
       aria-hidden="true"
       data-slot="questionnaire-choice-indicator"
-      class="bg-input/90 group-data-checked/questionnaire-choice:bg-primary dark:group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground group-data-checked/questionnaire-choice:border-primary size-4 translate-y-[--spacing(0.45)] group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 rounded-[5px] border-transparent pointer-events-none relative flex shrink-0 items-center justify-center border group-data-[type=radio]/questionnaire-choice:rounded-full"
+      class="pointer-events-none relative flex size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-[5px] border border-transparent bg-input/90 group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[type=radio]/questionnaire-choice:rounded-full group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground dark:group-data-checked/questionnaire-choice:bg-primary"
     >
       <span
         data-slot="questionnaire-choice-indicator-dot"
-        class="bg-primary-foreground size-2 dark:size-2.5 hidden rounded-full group-data-[type=checkbox]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block"
+        class="hidden size-2 rounded-full bg-primary-foreground group-data-[type=checkbox]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block dark:size-2.5"
       />
-      <CheckIcon data-slot="questionnaire-choice-indicator-check" class="size-3.5 hidden group-data-[type=radio]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block" />
+      <CheckIcon
+        data-slot="questionnaire-choice-indicator-check"
+        class="hidden size-3.5 group-data-[type=radio]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block"
+      />
     </span>
     <span
       data-slot="questionnaire-choice-label"
-      class="gap-1 flex min-w-0 flex-1 flex-col leading-snug"
+      class="flex min-w-0 flex-1 flex-col gap-1 leading-snug"
     >
       <slot :checked="checked" :disabled="disabled" :shortcut="shortcut" :type="type" />
     </span>
@@ -190,7 +215,7 @@ onBeforeUnmount(() => {
       v-if="shortcut"
       aria-hidden="true"
       data-slot="questionnaire-choice-shortcut"
-      class="border-primary/10 bg-background/80 text-muted-foreground size-5 translate-y-[--spacing(0.45)] group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 items-center justify-center rounded-full border font-mono text-[0.625rem] font-medium leading-none pointer-events-none ms-auto hidden shrink-0 group-data-[shortcut]/questionnaire-choice:inline-flex"
+      class="pointer-events-none ms-auto hidden size-5 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-full border border-primary/10 bg-background/80 font-mono text-[0.625rem] leading-none font-medium text-muted-foreground group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex"
     >
       {{ shortcut }}
     </span>

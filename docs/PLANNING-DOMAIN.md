@@ -9,20 +9,20 @@ Epicstory decisions in `epicstory2/docs/decisions/domain/` are the source of wor
 
 ## Noun map
 
-| Epicstory | Denser |
-| --------- | ------ |
-| Team | **Space** that owns workflows, document types, and optional sprinting (a project-like space). Not a Team type. |
-| Workspace | **Workspace** — private root space (`root_space_id`) |
-| Folder | **Public nested space** |
-| Project | **Preset / intent** on a space (Backlog and/or Board). Not a type. |
-| Channel | **Conversation** artifact (regular). DMs are **direct** conversations on the workspace. |
-| Sprint (row + document IDs) | **Child space** with role upcoming / active / past. Documents **live in** that space. |
-| Document | **Artifact** `kind = document` + document body (TipTap). Fields come from a **document type**. |
-| Document type (team-scoped) | Document type **space-scoped** (same space as the Board) |
-| Workflow (team-scoped) | Workflow **space-scoped** (same space as the Board) |
-| Backlog **stage kind** | **Dropped.** Unscheduled work is documents whose `space_id` is the project space. |
-| Prefix / `PROJ-42` | Optional **space key** + sequence on the project space (not a Project entity) |
-| Epic | Later. Not a space. |
+| Epicstory                   | Denser                                                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Team                        | **Space** that owns workflows, document types, and optional sprinting (a project-like space). Not a Team type. |
+| Workspace                   | **Workspace** — private root space (`root_space_id`)                                                           |
+| Folder                      | **Public nested space**                                                                                        |
+| Project                     | **Preset / intent** on a space (Backlog and/or Board). Not a type.                                             |
+| Channel                     | **Conversation** artifact (regular). DMs are **direct** conversations on the workspace.                        |
+| Sprint (row + document IDs) | **Child space** with role upcoming / active / past. Documents **live in** that space.                          |
+| Document                    | **Artifact** `kind = document` + document body (TipTap). Fields come from a **document type**.                 |
+| Document type (team-scoped) | Document type **space-scoped** (same space as the Board)                                                       |
+| Workflow (team-scoped)      | Workflow **space-scoped** (same space as the Board)                                                            |
+| Backlog **stage kind**      | **Dropped.** Unscheduled work is documents whose `space_id` is the project space.                              |
+| Prefix / `PROJ-42`          | Optional **space key** + sequence on the project space (not a Project entity)                                  |
+| Epic                        | Later. Not a space.                                                                                            |
 
 ---
 
@@ -43,15 +43,15 @@ Epicstory decisions in `epicstory2/docs/decisions/domain/` are the source of wor
 
 ## What Denser already decided (overrides Epicstory)
 
-| Epicstory | Denser |
-| --------- | ------ |
-| Backlog is a workflow stage; board hides it | Backlog is a **view** + **location** (`space_id`) |
-| Stage change into a forward stage **enters** the active sprint | Planning is **drag on the Backlog view** (move). Board drag changes **stage** only. |
-| Complete sprint **auto** on end date; leftovers reset to Backlog stage and auto-carry | **Manual** complete. Leftovers **stay** in the past sprint unless moved in that step. Period is still stored. |
-| Transitions only fully flexible **in** an active sprint | **Kanban** (no sprinting): Board is this space; full flexibility subject to allowed sources. **Scrum:** Board is the active sprint. |
-| Team Lead manages workflows | **`canManage`** on the space that owns them ([tenancy access](../packages/api/src/domains/tenancy/access.ts)) |
-| Archive + 30-day auto-delete | Keep today’s **delete** on artifacts until a later archive spec |
-| Reports, burndown, velocity, epics | Later |
+| Epicstory                                                                             | Denser                                                                                                                              |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Backlog is a workflow stage; board hides it                                           | Backlog is a **view** + **location** (`space_id`)                                                                                   |
+| Stage change into a forward stage **enters** the active sprint                        | Planning is **drag on the Backlog view** (move). Board drag changes **stage** only.                                                 |
+| Complete sprint **auto** on end date; leftovers reset to Backlog stage and auto-carry | **Manual** complete. Leftovers **stay** in the past sprint unless moved in that step. Period is still stored.                       |
+| Transitions only fully flexible **in** an active sprint                               | **Kanban** (no sprinting): Board is this space; full flexibility subject to allowed sources. **Scrum:** Board is the active sprint. |
+| Team Lead manages workflows                                                           | **`canManage`** on the space that owns them ([tenancy access](../packages/api/src/domains/tenancy/access.ts))                       |
+| Archive + 30-day auto-delete                                                          | Keep today’s **delete** on artifacts until a later archive spec                                                                     |
+| Reports, burndown, velocity, epics                                                    | Later                                                                                                                               |
 
 ---
 
@@ -59,21 +59,21 @@ Epicstory decisions in `epicstory2/docs/decisions/domain/` are the source of wor
 
 Existing (`packages/api/src/domains`):
 
-| Domain | Owns |
-| ------ | ---- |
-| **tenancy** | `canAccessSpace`, `canManageSpace`, artifact access |
-| **spaces** | Space rows, membership, create/patch, children, visibility |
-| **artifacts** | Shell: id, kind, title, `spaceId`, `rootSpaceId`, version |
-| **documents** | TipTap **body** on a document artifact |
-| **conversations** | Regular vs direct; DMs on the private root |
-| **home** | Root spaces and root artifacts the user can see |
+| Domain            | Owns                                                       |
+| ----------------- | ---------------------------------------------------------- |
+| **tenancy**       | `canAccessSpace`, `canManageSpace`, artifact access        |
+| **spaces**        | Space rows, membership, create/patch, children, visibility |
+| **artifacts**     | Shell: id, kind, title, `spaceId`, `rootSpaceId`, version  |
+| **documents**     | TipTap **body** on a document artifact                     |
+| **conversations** | Regular vs direct; DMs on the private root                 |
+| **home**          | Root spaces and root artifacts the user can see            |
 
 Add (same package, new folders):
 
-| Domain | Owns |
-| ------ | ---- |
-| **workflows** | Workflows, stages, kinds, allowed sources; validate transition |
-| **documentTypes** | Types and field definitions; assign type; convert type |
+| Domain              | Owns                                                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **workflows**       | Workflows, stages, kinds, allowed sources; validate transition                                                                                            |
+| **documentTypes**   | Types and field definitions; assign type; convert type                                                                                                    |
 | **spaces** (extend) | View flags (Backlog, Board), sprinting flag, clock (`activeSprintId`, `upcomingSprintId`), space **key** for identifiers, sprint **role** on child spaces |
 
 Sprint is not a fourth filing noun. The clock and roles live on **spaces**. Documents never store a sprint id — location is `artifact.space_id`.

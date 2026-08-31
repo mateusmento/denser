@@ -1,12 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import { Checkbox } from "../checkbox";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "./index";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "./index";
 import { Input } from "../input";
 
 const meta = {

@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 </script>
 
 <template>
@@ -24,9 +14,7 @@ import {
     <CardContent>
       <FieldGroup>
         <Field>
-          <FieldLabel for="spotify-url">
-            Spotify Artist URL
-          </FieldLabel>
+          <FieldLabel for="spotify-url"> Spotify Artist URL </FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <IconPlaceholder
@@ -37,16 +25,11 @@ import {
                 remixicon="RiAddCircleLine"
               />
             </InputGroupAddon>
-            <InputGroupInput
-              id="spotify-url"
-              default-value="spotify.com/artist/3j...2k"
-            />
+            <InputGroupInput id="spotify-url" default-value="spotify.com/artist/3j...2k" />
           </InputGroup>
         </Field>
         <Field>
-          <FieldLabel for="instagram-handle">
-            Instagram Handle
-          </FieldLabel>
+          <FieldLabel for="instagram-handle"> Instagram Handle </FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <IconPlaceholder
@@ -57,16 +40,11 @@ import {
                 remixicon="RiCameraLine"
               />
             </InputGroupAddon>
-            <InputGroupInput
-              id="instagram-handle"
-              default-value="@julianduryea_music"
-            />
+            <InputGroupInput id="instagram-handle" default-value="@julianduryea_music" />
           </InputGroup>
         </Field>
         <Field>
-          <FieldLabel for="soundcloud-url">
-            SoundCloud URL
-          </FieldLabel>
+          <FieldLabel for="soundcloud-url"> SoundCloud URL </FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <IconPlaceholder
@@ -77,16 +55,11 @@ import {
                 remixicon="RiCloudLine"
               />
             </InputGroupAddon>
-            <InputGroupInput
-              id="soundcloud-url"
-              placeholder="soundcloud.com/username"
-            />
+            <InputGroupInput id="soundcloud-url" placeholder="soundcloud.com/username" />
           </InputGroup>
         </Field>
         <Field>
-          <FieldLabel for="website-url">
-            Website
-          </FieldLabel>
+          <FieldLabel for="website-url"> Website </FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <IconPlaceholder
@@ -97,18 +70,13 @@ import {
                 remixicon="RiGlobalLine"
               />
             </InputGroupAddon>
-            <InputGroupInput
-              id="website-url"
-              placeholder="https://yoursite.com"
-            />
+            <InputGroupInput id="website-url" placeholder="https://yoursite.com" />
           </InputGroup>
         </Field>
       </FieldGroup>
     </CardContent>
     <CardFooter class="justify-end gap-2">
-      <Button variant="secondary">
-        Discard
-      </Button>
+      <Button variant="secondary"> Discard </Button>
       <Button>Save Changes</Button>
     </CardFooter>
   </Card>

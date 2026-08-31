@@ -35,11 +35,7 @@ export async function listRootSpacesByIds(ids: readonly SpaceId[]): Promise<Spac
 }
 
 export async function listChildSpaces(parentSpaceId: SpaceId): Promise<SpaceRow[]> {
-  return db
-    .select()
-    .from(space)
-    .where(eq(space.parentSpaceId, parentSpaceId))
-    .orderBy(space.title);
+  return db.select().from(space).where(eq(space.parentSpaceId, parentSpaceId)).orderBy(space.title);
 }
 
 function planningValues(input: SpacePlanningInsert | undefined): SpacePlanningInsert {

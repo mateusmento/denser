@@ -55,10 +55,7 @@ export const space = pgTable(
     index("space_parent_space_id_idx").on(table.parentSpaceId),
     index("space_root_space_id_idx").on(table.rootSpaceId),
     index("space_created_by_idx").on(table.createdBy),
-    check(
-      "space_sprint_duration",
-      sql`${table.sprintDurationWeeks} IN (1, 2, 4)`,
-    ),
+    check("space_sprint_duration", sql`${table.sprintDurationWeeks} IN (1, 2, 4)`),
     check(
       "space_location_invariant",
       sql`(

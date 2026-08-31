@@ -80,7 +80,10 @@ export async function countOwners(spaceId: SpaceId): Promise<number> {
 }
 
 /** When a nested space becomes private, seed explicit members from the root roster. */
-export async function copyRootMembersToSpace(rootSpaceId: SpaceId, spaceId: SpaceId): Promise<void> {
+export async function copyRootMembersToSpace(
+  rootSpaceId: SpaceId,
+  spaceId: SpaceId,
+): Promise<void> {
   const rootMembers = await db
     .select({
       userId: spaceMembership.userId,

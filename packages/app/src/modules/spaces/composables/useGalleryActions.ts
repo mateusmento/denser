@@ -13,9 +13,7 @@ type GalleryCommands = {
     space: Pick<SpaceGallerySpace, "id" | "title" | "parentSpaceId">,
     title: string,
   ) => Promise<void>;
-  deleteSpace: (
-    space: Pick<SpaceGallerySpace, "id" | "title" | "parentSpaceId">,
-  ) => Promise<void>;
+  deleteSpace: (space: Pick<SpaceGallerySpace, "id" | "title" | "parentSpaceId">) => Promise<void>;
   renameArtifact: (
     artifact: Pick<SpaceGalleryArtifact, "id" | "title" | "version" | "spaceId">,
     title: string,

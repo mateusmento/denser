@@ -16,7 +16,11 @@ import { computed, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 import { resolveSpaceIcon } from "@/modules/spaces";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
-import type { WorkspaceNavArtifactAction, WorkspaceNavLink, WorkspaceNavSpaceAction } from "../types";
+import type {
+  WorkspaceNavArtifactAction,
+  WorkspaceNavLink,
+  WorkspaceNavSpaceAction,
+} from "../types";
 
 const props = defineProps<{
   link: WorkspaceNavLink;
@@ -62,12 +66,14 @@ const displayIcon = computed(() => {
 });
 
 const renamePlaceholder = computed(() =>
-  isSpace.value ? "Space name" : props.link.artifactKind === "conversation" ? "Conversation name" : "Document name",
+  isSpace.value
+    ? "Space name"
+    : props.link.artifactKind === "conversation"
+      ? "Conversation name"
+      : "Document name",
 );
 
-const renameButtonClass = cn(
-  "gap-2 ring-2 ring-ring ring-offset-2 ring-offset-sidebar",
-);
+const renameButtonClass = cn("gap-2 ring-2 ring-ring ring-offset-2 ring-offset-sidebar");
 
 function onSpaceAction(action: WorkspaceNavSpaceAction) {
   emit("spaceAction", action, props.link);
@@ -146,7 +152,13 @@ function cancelRename() {
           </div>
         </SidebarMenuButton>
 
-        <SidebarMenuButton v-else as-child :is-active="link.isActive" :tooltip="displayLabel" size="sm">
+        <SidebarMenuButton
+          v-else
+          as-child
+          :is-active="link.isActive"
+          :tooltip="displayLabel"
+          size="sm"
+        >
           <RouterLink :to="link.to">
             <component :is="displayIcon" />
             <span>{{ displayLabel }}</span>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -8,25 +8,26 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 const transactions = [
   {
     id: "coffee",
-    icon: { lucide: "CoffeeIcon", tabler: "IconCoffee", hugeicons: "Coffee01Icon", phosphor: "CoffeeIcon", remixicon: "RiCupLine" },
+    icon: {
+      lucide: "CoffeeIcon",
+      tabler: "IconCoffee",
+      hugeicons: "Coffee01Icon",
+      phosphor: "CoffeeIcon",
+      remixicon: "RiCupLine",
+    },
     name: "Blue Bottle Coffee",
     category: "Food & Drink",
     date: "Today, 10:24 AM",
@@ -35,7 +36,13 @@ const transactions = [
   },
   {
     id: "groceries",
-    icon: { lucide: "ShoppingCartIcon", tabler: "IconShoppingCart", hugeicons: "ShoppingCart01Icon", phosphor: "ShoppingCartIcon", remixicon: "RiShoppingCartLine" },
+    icon: {
+      lucide: "ShoppingCartIcon",
+      tabler: "IconShoppingCart",
+      hugeicons: "ShoppingCart01Icon",
+      phosphor: "ShoppingCartIcon",
+      remixicon: "RiShoppingCartLine",
+    },
     name: "Whole Foods Market",
     category: "Groceries",
     date: "Yesterday",
@@ -44,7 +51,13 @@ const transactions = [
   },
   {
     id: "stripe",
-    icon: { lucide: "WalletIcon", tabler: "IconWallet", hugeicons: "Wallet01Icon", phosphor: "WalletIcon", remixicon: "RiWalletLine" },
+    icon: {
+      lucide: "WalletIcon",
+      tabler: "IconWallet",
+      hugeicons: "Wallet01Icon",
+      phosphor: "WalletIcon",
+      remixicon: "RiWalletLine",
+    },
     name: "Stripe Payout",
     category: "Income",
     date: "Oct 12",
@@ -53,7 +66,13 @@ const transactions = [
   },
   {
     id: "uber",
-    icon: { lucide: "CarIcon", tabler: "IconCar", hugeicons: "Car01Icon", phosphor: "CarIcon", remixicon: "RiCarLine" },
+    icon: {
+      lucide: "CarIcon",
+      tabler: "IconCar",
+      hugeicons: "Car01Icon",
+      phosphor: "CarIcon",
+      remixicon: "RiCarLine",
+    },
     name: "Uber Technologies",
     category: "Transport",
     date: "Oct 11",
@@ -62,14 +81,20 @@ const transactions = [
   },
   {
     id: "netflix",
-    icon: { lucide: "TvIcon", tabler: "IconDeviceTv", hugeicons: "Tv01Icon", phosphor: "TelevisionIcon", remixicon: "RiTvLine" },
+    icon: {
+      lucide: "TvIcon",
+      tabler: "IconDeviceTv",
+      hugeicons: "Tv01Icon",
+      phosphor: "TelevisionIcon",
+      remixicon: "RiTvLine",
+    },
     name: "Netflix Subscription",
     category: "Entertainment",
     date: "Oct 10",
     amount: "-$19.99",
     amountClass: "text-sm font-semibold tabular-nums",
   },
-]
+];
 </script>
 
 <template>
@@ -78,9 +103,7 @@ const transactions = [
       <CardTitle>Recent Transactions</CardTitle>
       <CardDescription>Your latest account activity.</CardDescription>
       <CardAction>
-        <Button variant="outline" size="sm">
-          View All
-        </Button>
+        <Button variant="outline" size="sm"> View All </Button>
       </CardAction>
     </CardHeader>
     <CardContent>

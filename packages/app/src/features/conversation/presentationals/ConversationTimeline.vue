@@ -47,9 +47,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   /** Rendered at the top of the scroll content (channel intro or thread parent). */
-  intro: (props: {
-    collisionBoundary: HTMLElement | null;
-  }) => unknown;
+  intro: (props: { collisionBoundary: HTMLElement | null }) => unknown;
 }>();
 
 const slots = useSlots();
@@ -94,11 +92,7 @@ watch(
               @add-people="emit('addPeople')"
             />
           </slot>
-          <StickyMarker
-            v-for="day in dayGroups"
-            :key="day.id"
-            :class="dayClass"
-          >
+          <StickyMarker v-for="day in dayGroups" :key="day.id" :class="dayClass">
             <template #label>
               {{ day.label }}
             </template>

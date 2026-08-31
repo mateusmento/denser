@@ -30,9 +30,19 @@ export function pickNeighbor(
 export function resolvePlaceBounds(
   after: RankRow | null,
   before: RankRow | null,
-): { afterRank: number | null; beforeRank: number | null; afterId: string | null; beforeId: string | null } {
+): {
+  afterRank: number | null;
+  beforeRank: number | null;
+  afterId: string | null;
+  beforeId: string | null;
+} {
   if (after && before && after.rank < before.rank) {
-    return { afterRank: after.rank, beforeRank: before.rank, afterId: after.id, beforeId: before.id };
+    return {
+      afterRank: after.rank,
+      beforeRank: before.rank,
+      afterId: after.id,
+      beforeId: before.id,
+    };
   }
   if (after) {
     return { afterRank: after.rank, beforeRank: null, afterId: after.id, beforeId: null };
@@ -78,7 +88,11 @@ export function orderIdsForReindex(
     const index = sorted.findIndex((row) => row.id === beforeId);
     if (index >= 0) at = index;
   }
-  return [...sorted.slice(0, at).map((row) => row.id), movedId, ...sorted.slice(at).map((row) => row.id)];
+  return [
+    ...sorted.slice(0, at).map((row) => row.id),
+    movedId,
+    ...sorted.slice(at).map((row) => row.id),
+  ];
 }
 
 export function strideRank(index: number): number {

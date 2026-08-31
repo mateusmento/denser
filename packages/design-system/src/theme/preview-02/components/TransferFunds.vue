@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconPlaceholder from "../IconPlaceholder.vue"
-import { Button } from "@/components/ui/button"
+import IconPlaceholder from "../IconPlaceholder.vue";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -9,15 +9,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from "@/components/ui/input-group"
-import { Item, ItemContent } from "@/components/ui/item"
+} from "@/components/ui/input-group";
+import { Item, ItemContent } from "@/components/ui/item";
 import {
   Select,
   SelectContent,
@@ -25,27 +25,25 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 const FROM_ACCOUNTS = [
   { label: "Main Checking (··8402) — $12,450.00", value: "checking" },
   { label: "Business (··7731) — $8,920.00", value: "business" },
-]
+];
 
 const TO_ACCOUNTS = [
   { label: "High Yield Savings (··1192) — $42,100.00", value: "savings" },
   { label: "Investment (··3349) — $18,200.00", value: "investment" },
-]
+];
 </script>
 
 <template>
   <Card>
     <CardHeader>
       <CardTitle>Transfer Funds</CardTitle>
-      <CardDescription>
-        Move money between your connected accounts.
-      </CardDescription>
+      <CardDescription> Move money between your connected accounts. </CardDescription>
       <CardAction>
         <Button variant="ghost" size="icon-sm" class="bg-muted">
           <IconPlaceholder
@@ -61,9 +59,7 @@ const TO_ACCOUNTS = [
     <CardContent>
       <FieldGroup>
         <Field>
-          <FieldLabel for="transfer-amount">
-            Amount to Transfer
-          </FieldLabel>
+          <FieldLabel for="transfer-amount"> Amount to Transfer </FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <InputGroupText>$</InputGroupText>
@@ -72,20 +68,14 @@ const TO_ACCOUNTS = [
           </InputGroup>
         </Field>
         <Field>
-          <FieldLabel for="from-account">
-            From Account
-          </FieldLabel>
+          <FieldLabel for="from-account"> From Account </FieldLabel>
           <Select default-value="checking">
             <SelectTrigger id="from-account" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem
-                  v-for="item in FROM_ACCOUNTS"
-                  :key="item.value"
-                  :value="item.value"
-                >
+                <SelectItem v-for="item in FROM_ACCOUNTS" :key="item.value" :value="item.value">
                   {{ item.label }}
                 </SelectItem>
               </SelectGroup>
@@ -93,20 +83,14 @@ const TO_ACCOUNTS = [
           </Select>
         </Field>
         <Field>
-          <FieldLabel for="to-account">
-            To Account
-          </FieldLabel>
+          <FieldLabel for="to-account"> To Account </FieldLabel>
           <Select default-value="savings">
             <SelectTrigger id="to-account" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem
-                  v-for="item in TO_ACCOUNTS"
-                  :key="item.value"
-                  :value="item.value"
-                >
+                <SelectItem v-for="item in TO_ACCOUNTS" :key="item.value" :value="item.value">
                   {{ item.label }}
                 </SelectItem>
               </SelectGroup>
@@ -116,33 +100,25 @@ const TO_ACCOUNTS = [
         <Item variant="muted" class="flex-col items-stretch">
           <ItemContent class="gap-3">
             <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">
-                Estimated arrival
-              </span>
+              <span class="text-sm text-muted-foreground"> Estimated arrival </span>
               <span class="text-sm font-medium">Today, Apr 14</span>
             </div>
             <Separator />
             <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">
-                Transaction fee
-              </span>
+              <span class="text-sm text-muted-foreground"> Transaction fee </span>
               <span class="text-sm font-medium tabular-nums">$0.00</span>
             </div>
             <Separator />
             <div class="flex items-center justify-between">
               <span class="text-sm font-medium">Total amount</span>
-              <span class="text-sm font-semibold tabular-nums">
-                $1,200.00
-              </span>
+              <span class="text-sm font-semibold tabular-nums"> $1,200.00 </span>
             </div>
           </ItemContent>
         </Item>
       </FieldGroup>
     </CardContent>
     <CardFooter>
-      <Button class="w-full">
-        Confirm Transfer
-      </Button>
+      <Button class="w-full"> Confirm Transfer </Button>
     </CardFooter>
   </Card>
 </template>

@@ -39,7 +39,12 @@ function onCommit(payload: DndCommitPayload) {
   requestAnimationFrame(() => {
     suppressOpen = false;
   });
-  if (payload.canceled || !payload.over || !("listId" in payload.over) || !("listId" in payload.from))
+  if (
+    payload.canceled ||
+    !payload.over ||
+    !("listId" in payload.over) ||
+    !("listId" in payload.from)
+  )
     return;
   const artifactId = payload.sourceIds[0];
   const over = payload.over;
@@ -96,12 +101,20 @@ function onOpen(document: ArtifactSummary) {
       <section
         v-for="column in columns"
         :key="column.stageId"
-        class="flex w-64 shrink-0 flex-col gap-2 rounded-xl border border-border bg-muted/30 p-2"
+        class="flex max-h-full min-h-0 w-72 shrink-0 flex-col gap-2 rounded-xl border border-border bg-muted/30 p-2"
       >
-        <h2 class="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {{ column.name }}
+        <h2
+          class="flex items-center justify-between px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+        >
+          <span>{{ column.name }}</span>
+          <span class="font-normal text-muted-foreground/70 normal-case">
+            {{ column.documents.length }}
+          </span>
         </h2>
-        <DndList :list-id="column.stageId" class="flex min-h-24 flex-1 flex-col gap-2">
+        <DndList
+          :list-id="column.stageId"
+          class="flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto pr-0.5"
+        >
           <DndItem
             v-for="(document, index) in column.documents"
             :key="document.id"
@@ -119,7 +132,7 @@ function onOpen(document: ArtifactSummary) {
       </section>
       <DndOverlay #default="{ sourceId }">
         <div
-          class="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg rotate-1"
+          class="rotate-1 rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg"
         >
           {{ titleById[sourceId] }}
         </div>

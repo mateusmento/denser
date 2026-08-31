@@ -30,11 +30,11 @@ v1 is **title + body**. Custom properties, comments-as-capability, board/calenda
 └──────────────────────────────────────────────────────┘
 ```
 
-| Region               | Job                                   | Density                                                           |
-| -------------------- | ------------------------------------- | ----------------------------------------------------------------- |
+| Region               | Job                                   | Density                                                    |
+| -------------------- | ------------------------------------- | ---------------------------------------------------------- |
 | **Header**           | Orient: which document; quiet actions | Calm chrome; shared `h-surface-header` with other surfaces |
-| **Title**            | Name the artifact                     | Large, in-flow; not a second app title bar                        |
-| **DocumentComposer** | Read / write the page body            | Calm; wide measure, generous vertical rhythm                      |
+| **Title**            | Name the artifact                     | Large, in-flow; not a second app title bar                 |
+| **DocumentComposer** | Read / write the page body            | Calm; wide measure, generous vertical rhythm               |
 
 Shared app shell (nav sidebar, space switcher) stays outside this surface; Document owns the content column.
 

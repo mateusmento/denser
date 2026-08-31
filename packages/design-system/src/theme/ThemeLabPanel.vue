@@ -126,7 +126,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex w-full h-full max-w-sm flex-col gap-4 text-sm text-foreground p-4">
+  <div class="flex h-full w-full max-w-sm flex-col gap-4 p-4 text-sm text-foreground">
     <header class="flex flex-col gap-1">
       <h2 class="text-base font-semibold tracking-tight">Theme Lab</h2>
       <p class="text-xs text-muted-foreground">
@@ -147,7 +147,7 @@ onUnmounted(() => {
 
     <p v-if="status" class="text-xs text-muted-foreground" role="status">{{ status }}</p>
 
-    <ScrollArea class="!flex flex-1 min-h-0 flex-col gap-4 px-4 -mx-4">
+    <ScrollArea class="-mx-4 !flex min-h-0 flex-1 flex-col gap-4 px-4">
       <div>
         <section v-for="group in grouped" :key="group.id" class="flex flex-col gap-2">
           <h3 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
