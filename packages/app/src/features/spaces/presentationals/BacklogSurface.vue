@@ -10,7 +10,7 @@ import {
 } from "@denser/design-system";
 import { PlusIcon } from "@lucide/vue";
 import { computed } from "vue";
-import type { BacklogSection } from "../lib/planning";
+import { neighborsAfterSort, type BacklogSection, type PlaceNeighbors } from "../lib/planning";
 
 const props = defineProps<{
   sections: readonly BacklogSection[];
@@ -24,7 +24,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   open: [artifact: ArtifactSummary];
   create: [spaceId: string];
-  move: [payload: { artifactId: string; toSpaceId: string; toIndex: number }];
+  move: [payload: { artifactId: string; toSpaceId: string } & PlaceNeighbors];
   start: [];
   complete: [];
 }>();
@@ -46,11 +46,17 @@ function onCommit(payload: DndCommitPayload) {
   });
   if (payload.canceled || !payload.over || !("listId" in payload.over)) return;
   const artifactId = payload.sourceIds[0];
+  const over = payload.over;
   if (!artifactId) return;
+  const section = props.sections.find((entry) => entry.spaceId === over.listId);
   emit("move", {
     artifactId,
-    toSpaceId: payload.over.listId,
-    toIndex: payload.over.index,
+    toSpaceId: over.listId,
+    ...neighborsAfterSort(
+      section?.documents.map((document) => document.id) ?? [],
+      artifactId,
+      over.index,
+    ),
   });
 }
 

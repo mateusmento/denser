@@ -12,7 +12,7 @@ import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import { ref } from "vue";
 import BoardSurface from "../presentationals/BoardSurface.vue";
-import type { BoardColumn } from "../lib/planning";
+import { placeInBoard, type BoardColumn } from "../lib/planning";
 
 const { Story } = defineMeta({
   title: "features/spaces/BoardSurface",
@@ -73,25 +73,14 @@ const initialColumns: BoardColumn[] = [
 
 const columns = ref(initialColumns.map((column) => ({ ...column, documents: [...column.documents] })));
 
-function onDrop(payload: { artifactId: string; stageId: string }) {
+function onDrop(payload: {
+  artifactId: string;
+  stageId: string;
+  afterId: string | null;
+  beforeId: string | null;
+}) {
   action("drop")(payload);
-  const source = columns.value.find((column) =>
-    column.documents.some((document) => document.id === payload.artifactId),
-  );
-  const document = source?.documents.find((entry) => entry.id === payload.artifactId);
-  if (!source || !document || source.stageId === payload.stageId) return;
-  columns.value = columns.value.map((column) => {
-    if (column.stageId === source.stageId) {
-      return { ...column, documents: column.documents.filter((entry) => entry.id !== document.id) };
-    }
-    if (column.stageId === payload.stageId) {
-      return {
-        ...column,
-        documents: [...column.documents, { ...document, stageId: payload.stageId as WorkflowStageId }],
-      };
-    }
-    return column;
-  });
+  columns.value = placeInBoard(columns.value, payload);
 }
 </script>
 

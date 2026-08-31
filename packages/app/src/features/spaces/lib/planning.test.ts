@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ArtifactSummary, SpaceSummary, WorkflowView } from "@denser/contracts";
-import { backlogSections, boardColumns, thisSpaceChildSpaces } from "./planning.ts";
+import {
+  backlogSections,
+  boardColumns,
+  neighborsAfterSort,
+  neighborsOf,
+  placeInBacklog,
+  placeInBoard,
+  samePlace,
+  thisSpaceChildSpaces,
+} from "./planning.ts";
 
 const now = "2026-01-01T00:00:00.000Z";
 const acme = "00000000-0000-4000-8000-000000000010" as SpaceSummary["id"];
@@ -123,4 +132,50 @@ test("scrum board is empty until there is an active sprint", () => {
     artifacts: [doc({ stageId: workflow.stages[0]!.id })],
   });
   assert.equal(columns[0]?.documents.length, 0);
+});
+
+test("neighborsAfterSort uses the list without the moved card", () => {
+  assert.deepEqual(neighborsAfterSort(["a", "b", "c"], "c", 0), { afterId: null, beforeId: "a" });
+  assert.deepEqual(neighborsAfterSort(["a", "b", "c"], "a", 2), { afterId: "c", beforeId: null });
+  assert.deepEqual(neighborsOf(["a", "b", "c"], "b"), { afterId: "a", beforeId: "c" });
+  assert.equal(samePlace(neighborsOf(["a", "b", "c"], "b"), { afterId: "a", beforeId: "c" }), true);
+});
+
+test("placeInBacklog moves a card between neighbors without using rank", () => {
+  const first = doc({ title: "A" });
+  const second = doc({
+    id: "00000000-0000-4000-8000-000000000022" as ArtifactSummary["id"],
+    title: "B",
+  });
+  const placed = placeInBacklog(
+    [
+      {
+        key: "unscheduled",
+        title: "Backlog",
+        spaceId: acme,
+        documents: [first, second],
+      },
+    ],
+    { artifactId: first.id, toSpaceId: acme, afterId: second.id, beforeId: null },
+  );
+  assert.deepEqual(
+    placed[0]?.documents.map((entry) => entry.title),
+    ["B", "A"],
+  );
+});
+
+test("placeInBoard moves a card into another column", () => {
+  const todo = "00000000-0000-4000-8000-000000000031" as NonNullable<ArtifactSummary["stageId"]>;
+  const doing = "00000000-0000-4000-8000-000000000032" as NonNullable<ArtifactSummary["stageId"]>;
+  const card = doc({ title: "A", stageId: todo });
+  const placed = placeInBoard(
+    [
+      { stageId: todo, name: "Todo", kind: "idle", documents: [card] },
+      { stageId: doing, name: "Doing", kind: "in_progress", documents: [] },
+    ],
+    { artifactId: card.id, stageId: doing, afterId: null, beforeId: null },
+  );
+  assert.equal(placed[0]?.documents.length, 0);
+  assert.equal(placed[1]?.documents[0]?.title, "A");
+  assert.equal(placed[1]?.documents[0]?.stageId, doing);
 });

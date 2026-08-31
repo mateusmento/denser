@@ -1,4 +1,4 @@
-import type { ArtifactId, PatchSpaceInput, SpaceIcon, SpaceId, SpacePreset, SpaceSummary, SpaceVisibility, UserId, WorkflowStageId } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, PatchSpaceInput, SpaceIcon, SpaceId, SpacePreset, SpaceSummary, SpaceVisibility, UserId, WorkflowStageId } from "@denser/contracts";
 import { ApiError } from "@denser/api-client";
 import { toast } from "@denser/design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
@@ -12,7 +12,14 @@ import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
 import { applySpacePatch, invalidateSpaceProjections } from "@/modules/spaces";
 import type { SpaceGeneralView } from "@/modules/spaces";
 import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
-import { thisSpaceArtifacts, thisSpaceChildSpaces } from "../lib/planning";
+import {
+  neighborsOf,
+  samePlace,
+  thisSpaceArtifacts,
+  thisSpaceChildSpaces,
+  type PlaceNeighbors,
+} from "../lib/planning";
+import { messageFromApiBody } from "../lib/api-error-message";
 
 export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
   const id = toReadonlyRef(spaceId);
@@ -182,42 +189,81 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     return spaceQuery.data.value?.artifacts.find((artifact) => artifact.id === artifactId);
   }
 
-  async function moveDocument(payload: {
-    artifactId: ArtifactId;
-    toSpaceId: SpaceId;
-    toIndex: number;
-  }) {
+  function orderedIds(filter: (artifact: ArtifactSummary) => boolean) {
+    return (spaceQuery.data.value?.artifacts ?? [])
+      .filter((artifact) => artifact.kind === "document" && filter(artifact))
+      .slice()
+      .sort((left, right) => (left.rank ?? 0) - (right.rank ?? 0) || left.title.localeCompare(right.title))
+      .map((artifact) => artifact.id);
+  }
+
+  function skipUnchangedPlace(
+    artifact: NonNullable<ReturnType<typeof findPlanningArtifact>>,
+    listIds: readonly string[],
+    next: PlaceNeighbors,
+  ) {
+    return samePlace(neighborsOf(listIds, artifact.id), next);
+  }
+
+  async function moveDocument(
+    payload: { artifactId: ArtifactId; toSpaceId: SpaceId } & PlaceNeighbors,
+  ) {
     const artifact = findPlanningArtifact(payload.artifactId);
-    if (!artifact || artifact.kind !== "document") return;
+    if (!artifact || artifact.kind !== "document") return false;
+    if (
+      artifact.spaceId === payload.toSpaceId &&
+      skipUnchangedPlace(
+        artifact,
+        orderedIds((entry) => entry.spaceId === payload.toSpaceId),
+        payload,
+      )
+    ) {
+      return true;
+    }
     try {
       await apiClient.patchDocument(payload.artifactId, {
         spaceId: payload.toSpaceId,
-        rank: payload.toIndex,
+        afterId: payload.afterId as ArtifactId | null,
+        beforeId: payload.beforeId as ArtifactId | null,
         version: artifact.version,
       });
       await invalidateSpace();
+      return true;
     } catch {
       toast("Couldn’t move document");
       await invalidateSpace();
+      return false;
     }
   }
 
-  async function transitionDocument(payload: { artifactId: ArtifactId; stageId: WorkflowStageId }) {
+  async function transitionDocument(
+    payload: { artifactId: ArtifactId; stageId: WorkflowStageId } & PlaceNeighbors,
+  ) {
     const artifact = findPlanningArtifact(payload.artifactId);
-    if (!artifact || artifact.kind !== "document") return;
+    if (!artifact || artifact.kind !== "document") return false;
+    if (
+      artifact.stageId === payload.stageId &&
+      skipUnchangedPlace(
+        artifact,
+        orderedIds((entry) => entry.stageId === payload.stageId),
+        payload,
+      )
+    ) {
+      return true;
+    }
     try {
       await apiClient.patchDocument(payload.artifactId, {
         stageId: payload.stageId,
+        afterId: payload.afterId as ArtifactId | null,
+        beforeId: payload.beforeId as ArtifactId | null,
         version: artifact.version,
       });
       await invalidateSpace();
+      return true;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 400) {
-        toast("That stage isn’t allowed from here");
-      } else {
-        toast("Couldn’t update stage");
-      }
+      toast.error(error instanceof ApiError ? messageFromApiBody(error.body) : "Couldn’t update stage");
       await invalidateSpace();
+      return false;
     }
   }
 

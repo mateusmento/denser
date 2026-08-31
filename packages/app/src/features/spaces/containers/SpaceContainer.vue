@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ArtifactId, ArtifactSummary, SpaceId, WorkflowStageId } from "@denser/contracts";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   useArtifactCommands,
@@ -16,6 +16,10 @@ import {
   backlogSections,
   boardColumns,
   parseSpaceViewQuery,
+  placeInBacklog,
+  placeInBoard,
+  type BacklogSection,
+  type BoardColumn,
 } from "../lib/planning";
 import BacklogSurface from "../presentationals/BacklogSurface.vue";
 import BoardSurface from "../presentationals/BoardSurface.vue";
@@ -86,7 +90,19 @@ function moveGallerySpace(payload: { spaceId: string; to: SpaceMoveDestination }
   void spaceCommands.moveSpace(space, destinationSpaceId(payload.to));
 }
 
+const placedBacklog = ref<BacklogSection[] | null>(null);
+const placedBoard = ref<BoardColumn[] | null>(null);
+
+watch(
+  () => detail.value?.artifacts,
+  () => {
+    placedBacklog.value = null;
+    placedBoard.value = null;
+  },
+);
+
 const backlog = computed(() => {
+  if (placedBacklog.value) return placedBacklog.value;
   const data = detail.value;
   if (!data) return [];
   return backlogSections({
@@ -97,6 +113,7 @@ const backlog = computed(() => {
 });
 
 const board = computed(() => {
+  if (placedBoard.value) return placedBoard.value;
   const data = detail.value;
   if (!data) return [];
   return boardColumns({
@@ -105,6 +122,38 @@ const board = computed(() => {
     artifacts: data.artifacts,
   });
 });
+
+async function onBacklogMove(payload: {
+  artifactId: string;
+  toSpaceId: string;
+  afterId: string | null;
+  beforeId: string | null;
+}) {
+  placedBacklog.value = placeInBacklog(backlog.value, payload);
+  const ok = await moveDocument({
+    artifactId: payload.artifactId as ArtifactId,
+    toSpaceId: payload.toSpaceId as SpaceId,
+    afterId: payload.afterId as ArtifactId | null,
+    beforeId: payload.beforeId as ArtifactId | null,
+  });
+  if (!ok) placedBacklog.value = null;
+}
+
+async function onBoardDrop(payload: {
+  artifactId: string;
+  stageId: string;
+  afterId: string | null;
+  beforeId: string | null;
+}) {
+  placedBoard.value = placeInBoard(board.value, payload);
+  const ok = await transitionDocument({
+    artifactId: payload.artifactId as ArtifactId,
+    stageId: payload.stageId as WorkflowStageId,
+    afterId: payload.afterId as ArtifactId | null,
+    beforeId: payload.beforeId as ArtifactId | null,
+  });
+  if (!ok) placedBoard.value = null;
+}
 
 const showBacklog = computed(
   () => spaceView.value === "backlog" && detail.value?.space.showBacklog === true,
@@ -125,7 +174,7 @@ const showBoard = computed(
     :is-completing="isCompletingSprint"
     @open="openArtifact"
     @create="(id) => openPeek('document', id as SpaceId)"
-    @move="(payload) => moveDocument({ artifactId: payload.artifactId as ArtifactId, toSpaceId: payload.toSpaceId as SpaceId, toIndex: payload.toIndex })"
+    @move="onBacklogMove"
     @start="startSprint"
     @complete="completeSprint"
   />
@@ -137,7 +186,7 @@ const showBoard = computed(
     :can-manage="detail?.canManage"
     :is-starting="isStartingSprint"
     @open="openArtifact"
-    @drop="(payload) => transitionDocument({ artifactId: payload.artifactId as ArtifactId, stageId: payload.stageId as WorkflowStageId })"
+    @drop="onBoardDrop"
     @start="startSprint"
   />
 

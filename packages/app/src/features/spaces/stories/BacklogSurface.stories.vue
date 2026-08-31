@@ -8,12 +8,11 @@ import {
   type ArtifactId,
   type ArtifactSummary,
 } from "@denser/contracts";
-import { applySortCommit } from "@denser/design-system";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import { ref } from "vue";
 import BacklogSurface from "../presentationals/BacklogSurface.vue";
-import type { BacklogSection } from "../lib/planning";
+import { placeInBacklog, type BacklogSection } from "../lib/planning";
 
 const { Story } = defineMeta({
   title: "features/spaces/BacklogSurface",
@@ -71,30 +70,14 @@ const kanbanSections = ref<BacklogSection[]>([
   },
 ]);
 
-function applyMove(sections: BacklogSection[], payload: { artifactId: string; toSpaceId: string; toIndex: number }) {
-  const from = sections.find((section) =>
-    section.documents.some((document) => document.id === payload.artifactId),
-  );
-  if (!from) return sections;
-  const lists = Object.fromEntries(sections.map((section) => [section.spaceId, [...section.documents]]));
-  const next = applySortCommit(lists, payload.artifactId, from.spaceId, {
-    listId: payload.toSpaceId,
-    index: payload.toIndex,
-  });
-  return sections.map((section) => ({
-    ...section,
-    documents: next[section.spaceId] ?? [],
-  }));
+function onScrumMove(payload: { artifactId: string; toSpaceId: string; afterId: string | null; beforeId: string | null }) {
+  action("move")(payload);
+  scrumSections.value = placeInBacklog(scrumSections.value, payload);
 }
 
-function onScrumMove(payload: { artifactId: string; toSpaceId: string; toIndex: number }) {
+function onKanbanMove(payload: { artifactId: string; toSpaceId: string; afterId: string | null; beforeId: string | null }) {
   action("move")(payload);
-  scrumSections.value = applyMove(scrumSections.value, payload);
-}
-
-function onKanbanMove(payload: { artifactId: string; toSpaceId: string; toIndex: number }) {
-  action("move")(payload);
-  kanbanSections.value = applyMove(kanbanSections.value, payload);
+  kanbanSections.value = placeInBacklog(kanbanSections.value, payload);
 }
 </script>
 

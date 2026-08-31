@@ -9,7 +9,7 @@ import {
   type DndCommitPayload,
 } from "@denser/design-system";
 import { computed } from "vue";
-import type { BoardColumn } from "../lib/planning";
+import { neighborsAfterSort, type BoardColumn, type PlaceNeighbors } from "../lib/planning";
 
 const props = defineProps<{
   columns: readonly BoardColumn[];
@@ -20,7 +20,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   open: [artifact: ArtifactSummary];
-  drop: [payload: { artifactId: string; stageId: string }];
+  drop: [payload: { artifactId: string; stageId: string } & PlaceNeighbors];
   start: [];
 }>();
 
@@ -42,8 +42,18 @@ function onCommit(payload: DndCommitPayload) {
   if (payload.canceled || !payload.over || !("listId" in payload.over) || !("listId" in payload.from))
     return;
   const artifactId = payload.sourceIds[0];
-  if (!artifactId || payload.from.listId === payload.over.listId) return;
-  emit("drop", { artifactId, stageId: payload.over.listId });
+  const over = payload.over;
+  if (!artifactId) return;
+  const column = props.columns.find((entry) => entry.stageId === over.listId);
+  emit("drop", {
+    artifactId,
+    stageId: over.listId,
+    ...neighborsAfterSort(
+      column?.documents.map((document) => document.id) ?? [],
+      artifactId,
+      over.index,
+    ),
+  });
 }
 
 function onOpen(document: ArtifactSummary) {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { AuthProviderContainer } from "@/modules/auth";
 import { DialogHost } from "@/lib/dialog";
+import { Toaster } from "@denser/design-system";
 import { RouterView } from "vue-router";
 </script>
 
@@ -8,5 +9,6 @@ import { RouterView } from "vue-router";
   <AuthProviderContainer>
     <RouterView />
     <DialogHost />
+    <Toaster />
   </AuthProviderContainer>
 </template>
