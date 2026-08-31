@@ -85,6 +85,22 @@ export async function createDocument(userId: UserId, input: CreateDocumentInput)
   });
   const rank = spaceId ? await documentRepository.nextRankInSpace(spaceId) : RANK_STRIDE;
 
+  const docTypeId = input.documentTypeId !== undefined ? input.documentTypeId : planning.documentTypeId;
+  let customFields: Record<string, unknown> = {};
+  if (input.properties) {
+    if (docTypeId) {
+      const docType = await findDocumentTypeById(docTypeId);
+      const allowedKeys = new Set(docType?.properties?.map((p) => p.key) ?? []);
+      for (const [key, val] of Object.entries(input.properties)) {
+        if (allowedKeys.size === 0 || allowedKeys.has(key)) {
+          customFields[key] = val;
+        }
+      }
+    } else {
+      customFields = input.properties;
+    }
+  }
+
   const artifactRow = await artifactRepository.insertDocumentArtifact({
     title,
     spaceId,
@@ -95,9 +111,10 @@ export async function createDocument(userId: UserId, input: CreateDocumentInput)
   const documentRow = await documentRepository.insertDocumentBody({
     artifactId: artifactRow.id,
     body,
-    documentTypeId: planning.documentTypeId,
+    documentTypeId: docTypeId,
     stageId: planning.stageId,
     rank,
+    fields: customFields,
   });
 
   return { ok: true as const, document: await mapDocument(artifactRow, documentRow) };
@@ -282,11 +299,31 @@ export async function patchDocument(
     nextRank = placed.rank;
   }
 
+  let nextFields = documentRow.fields;
+  if (input.properties !== undefined) {
+    const targetTypeId = input.documentTypeId !== undefined ? input.documentTypeId : documentRow.documentTypeId;
+    const docType = targetTypeId ? await findDocumentTypeById(targetTypeId) : null;
+    const allowedKeys = new Set(docType?.properties?.map((p) => p.key) ?? []);
+    const merged: Record<string, unknown> = { ...(documentRow.fields as Record<string, unknown>) };
+    for (const [key, val] of Object.entries(input.properties)) {
+      if (allowedKeys.size === 0 || allowedKeys.has(key)) {
+        if (val === null || val === undefined) {
+          delete merged[key];
+        } else {
+          merged[key] = val;
+        }
+      }
+    }
+    nextFields = merged;
+  }
+
   const unchanged =
     nextSpaceId === artifactRow.spaceId &&
     nextStageId === documentRow.stageId &&
     nextTitle === artifactRow.title &&
     input.body === undefined &&
+    input.documentTypeId === undefined &&
+    input.properties === undefined &&
     nextRank === documentRow.rank;
 
   if (unchanged) {
@@ -322,6 +359,8 @@ export async function patchDocument(
     body: nextBody,
     rank: nextRank,
     ...(input.stageId !== undefined ? { stageId: input.stageId } : {}),
+    ...(input.documentTypeId !== undefined ? { documentTypeId: input.documentTypeId } : {}),
+    fields: nextFields,
   });
 
   if (!updatedDocument) {

@@ -46,6 +46,7 @@ export * from "./components/ui/pagination";
 export * from "./components/ui/pin-input";
 export * from "./components/ui/popover";
 export * from "./components/ui/progress";
+export * from "./components/ui/property";
 export * from "./components/ui/questionnaire";
 export * from "./components/ui/radio-group";
 export * from "./components/ui/range-calendar";

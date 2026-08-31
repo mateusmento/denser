@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { ArtifactId, DocumentTypeId, SpaceId, UserId, WorkflowId, WorkflowStageId } from "./ids.js";
+import {
+  ArtifactId,
+  DocumentTypeId,
+  PropertyDefinitionId,
+  SpaceId,
+  UserId,
+  WorkflowId,
+  WorkflowStageId,
+} from "./ids.js";
 
 /** Stable dev seed IDs — safe for fixtures and e2e. */
 export const SEED_USER_ALICE = "00000000-0000-4000-8000-000000000001" as UserId;
@@ -94,6 +102,38 @@ export const SpaceIcon = z.enum([
 ]);
 export type SpaceIcon = z.infer<typeof SpaceIcon>;
 
+export const PropertyType = z.enum([
+  "text",
+  "number",
+  "select",
+  "multi_select",
+  "date",
+  "person",
+  "relation",
+]);
+export type PropertyType = z.infer<typeof PropertyType>;
+
+export const PropertyOption = z.object({
+  id: z.string(),
+  name: z.string(),
+  color: z.string().optional(),
+});
+export type PropertyOption = z.infer<typeof PropertyOption>;
+
+export const PropertyDefinition = z.object({
+  id: PropertyDefinitionId,
+  key: z.string(),
+  name: z.string(),
+  type: PropertyType,
+  required: z.boolean().default(false),
+  defaultValue: z.unknown().optional(),
+  options: z.array(PropertyOption).optional(),
+  relationSpaceId: SpaceId.nullable().optional(),
+  allowMultiple: z.boolean().optional(),
+  order: z.number().int().default(0),
+});
+export type PropertyDefinition = z.infer<typeof PropertyDefinition>;
+
 export const SpaceSummary = z.object({
   id: SpaceId,
   title: z.string(),
@@ -109,6 +149,9 @@ export const SpaceSummary = z.object({
   sprintDurationWeeks: SprintDurationWeeks,
   activeSprintId: SpaceId.nullable(),
   upcomingSprintId: SpaceId.nullable(),
+  allowedArtifactKinds: z.array(ArtifactKind).nullable().optional(),
+  allowedDocumentTypeIds: z.array(DocumentTypeId).nullable().optional(),
+  defaultDocumentTypeId: DocumentTypeId.nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -158,11 +201,13 @@ export const ArtifactSummary = z.object({
   stageKind: StageKind.nullable().optional(),
   documentTypeId: DocumentTypeId.nullable().optional(),
   documentTypeKey: DocumentTypeKey.nullable().optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 export type ArtifactSummary = z.infer<typeof ArtifactSummary>;
 
 export const DocumentView = ArtifactSummary.extend({
   body: TipTapDoc,
+  properties: z.record(z.string(), z.unknown()).default({}),
 });
 export type DocumentView = z.infer<typeof DocumentView>;
 
@@ -188,6 +233,7 @@ export const DocumentTypeView = z.object({
   name: z.string(),
   key: DocumentTypeKey,
   workflowId: WorkflowId.nullable(),
+  properties: z.array(PropertyDefinition).default([]),
 });
 export type DocumentTypeView = z.infer<typeof DocumentTypeView>;
 
@@ -224,6 +270,9 @@ export const PatchSpaceInput = z.object({
   icon: SpaceIcon.nullable().optional(),
   visibility: SpaceVisibility.optional(),
   parentSpaceId: SpaceId.nullable().optional(),
+  allowedArtifactKinds: z.array(ArtifactKind).nullable().optional(),
+  allowedDocumentTypeIds: z.array(DocumentTypeId).nullable().optional(),
+  defaultDocumentTypeId: DocumentTypeId.nullable().optional(),
 });
 export type PatchSpaceInput = z.infer<typeof PatchSpaceInput>;
 
@@ -237,6 +286,9 @@ export const CreateSpaceInput = z.object({
   parentSpaceId: SpaceId.optional(),
   visibility: SpaceVisibility.optional(),
   preset: SpacePreset.optional(),
+  allowedArtifactKinds: z.array(ArtifactKind).nullable().optional(),
+  allowedDocumentTypeIds: z.array(DocumentTypeId).nullable().optional(),
+  defaultDocumentTypeId: DocumentTypeId.nullable().optional(),
 });
 export type CreateSpaceInput = z.infer<typeof CreateSpaceInput>;
 
@@ -255,6 +307,8 @@ export const CreateDocumentInput = z.object({
   spaceId: SpaceId.optional(),
   body: TipTapDoc.optional(),
   documentTypeKey: DocumentTypeKey.optional(),
+  documentTypeId: DocumentTypeId.nullable().optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreateDocumentInput = z.infer<typeof CreateDocumentInput>;
 
@@ -270,6 +324,8 @@ export const PatchDocumentInput = z.object({
   afterId: ArtifactId.nullable().optional(),
   beforeId: ArtifactId.nullable().optional(),
   stageId: WorkflowStageId.nullable().optional(),
+  documentTypeId: DocumentTypeId.nullable().optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
   version: z.number().int().positive(),
 });
 export type PatchDocumentInput = z.infer<typeof PatchDocumentInput>;

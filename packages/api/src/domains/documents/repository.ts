@@ -76,6 +76,7 @@ export async function insertDocumentBody(input: {
   documentTypeId?: DocumentTypeId | null;
   stageId?: WorkflowStageId | null;
   rank?: number;
+  fields?: Record<string, unknown>;
 }): Promise<DocumentRow> {
   const [created] = await db
     .insert(document)
@@ -85,6 +86,7 @@ export async function insertDocumentBody(input: {
       documentTypeId: input.documentTypeId,
       stageId: input.stageId,
       rank: input.rank ?? 0,
+      fields: input.fields ?? {},
     })
     .returning();
 
@@ -101,12 +103,14 @@ export async function updateDocumentBody(input: {
   documentTypeId?: DocumentTypeId | null;
   stageId?: WorkflowStageId | null;
   rank?: number;
+  fields?: Record<string, unknown>;
 }): Promise<DocumentRow | null> {
   const values: Partial<typeof document.$inferInsert> = {};
   if (input.body !== undefined) values.body = input.body;
   if (input.documentTypeId !== undefined) values.documentTypeId = input.documentTypeId;
   if (input.stageId !== undefined) values.stageId = input.stageId;
   if (input.rank !== undefined) values.rank = input.rank;
+  if (input.fields !== undefined) values.fields = input.fields;
   if (Object.keys(values).length === 0) {
     const current = await db.query.document.findFirst({
       where: eq(document.artifactId, input.artifactId),

@@ -28,6 +28,7 @@ export function toDocumentTypeView(
     name: row.name,
     key: row.key,
     workflowId: row.workflowId ?? null,
+    properties: row.properties ?? [],
   };
 }
 

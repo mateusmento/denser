@@ -24,5 +24,6 @@ export function toDocumentView(
       documentTypeKey: typeRow?.key ?? null,
     }),
     body: documentRow.body as TipTapDoc,
+    properties: (documentRow.fields as Record<string, unknown>) ?? {},
   };
 }

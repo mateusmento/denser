@@ -21,3 +21,6 @@ export type WorkflowStageId = z.infer<typeof WorkflowStageId>;
 
 export const DocumentTypeId = brandedId("DocumentTypeId");
 export type DocumentTypeId = z.infer<typeof DocumentTypeId>;
+
+export const PropertyDefinitionId = brandedId("PropertyDefinitionId");
+export type PropertyDefinitionId = z.infer<typeof PropertyDefinitionId>;
