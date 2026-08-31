@@ -38,6 +38,10 @@ const emit = defineEmits<{
 
 const gridClass = "grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3";
 
+const spaceById = computed(() =>
+  Object.fromEntries(props.childSpaces.map((space) => [space.id, space])),
+);
+
 const artifactById = computed(() =>
   Object.fromEntries(props.artifacts.map((artifact) => [artifact.id, artifact])),
 );
@@ -50,9 +54,16 @@ function onCommit(payload: DndCommitPayload) {
     suppressOpen = false;
   });
   if (payload.canceled || !payload.over || !("targetId" in payload.over)) return;
-  const artifactId = payload.sourceIds[0];
-  if (!artifactId) return;
-  emit("move", { artifactId, to: { kind: "space", spaceId: payload.over.targetId } });
+  const sourceId = payload.sourceIds[0];
+  if (!sourceId) return;
+  const targetId = payload.over.targetId;
+  if (sourceId === targetId) return;
+
+  if (artifactById.value[sourceId]) {
+    emit("move", { artifactId: sourceId, to: { kind: "space", spaceId: targetId } });
+  } else if (spaceById.value[sourceId]) {
+    emit("moveSpace", { spaceId: sourceId, to: { kind: "space", spaceId: targetId } });
+  }
 }
 
 function onOpenSpace(spaceId: string) {
@@ -104,28 +115,33 @@ function onOpenArtifact(artifactId: string) {
         <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Spaces</h2>
         <div :class="gridClass">
           <DndTarget
-            v-for="space in childSpaces"
+            v-for="(space, index) in childSpaces"
             :key="space.id"
             :target-id="space.id"
             class="rounded-xl data-over:bg-primary/10 data-over:ring-2 data-over:ring-primary"
           >
-            <SpaceFolderTile
-              :title="space.title"
-              :icon="space.icon"
-              :sprint-role="space.sprintRole"
-              @open="onOpenSpace(space.id)"
-              @action="(action) => emit('spaceAction', action, space)"
+            <DndItem
+              :item-id="space.id"
+              :index="index"
+              @click="onOpenSpace(space.id)"
             >
-              <template #move-to>
-                <SpaceMoveMenu
-                  :spaces="moveSpaces ?? []"
-                  :current-destination="space.parentSpaceId"
-                  :blocked-ids="[space.id]"
-                  @explore="emit('explore', $event)"
-                  @select="(to) => emit('moveSpace', { spaceId: space.id, to })"
-                />
-              </template>
-            </SpaceFolderTile>
+              <SpaceFolderTile
+                :title="space.title"
+                :icon="space.icon"
+                :sprint-role="space.sprintRole"
+                @action="(action) => emit('spaceAction', action, space)"
+              >
+                <template #move-to>
+                  <SpaceMoveMenu
+                    :spaces="moveSpaces ?? []"
+                    :current-destination="space.parentSpaceId"
+                    :blocked-ids="[space.id]"
+                    @explore="emit('explore', $event)"
+                    @select="(to) => emit('moveSpace', { spaceId: space.id, to })"
+                  />
+                </template>
+              </SpaceFolderTile>
+            </DndItem>
           </DndTarget>
         </div>
       </section>
@@ -139,11 +155,11 @@ function onOpenArtifact(artifactId: string) {
             :item-id="artifact.id"
             :index="index"
             :disabled="artifact.kind !== 'document'"
+            @click="onOpenArtifact(artifact.id)"
           >
             <SpaceArtifactTile
               :title="artifact.title"
               :kind="artifact.kind"
-              @open="onOpenArtifact(artifact.id)"
               @action="(action) => emit('artifactAction', action, artifact)"
             >
               <template v-if="artifact.kind === 'document'" #move-to>
@@ -165,6 +181,13 @@ function onOpenArtifact(artifactId: string) {
           preview
           :title="artifactById[sourceId].title"
           :kind="artifactById[sourceId].kind"
+        />
+        <SpaceFolderTile
+          v-else-if="spaceById[sourceId]"
+          preview
+          :title="spaceById[sourceId].title"
+          :icon="spaceById[sourceId].icon"
+          :sprint-role="spaceById[sourceId].sprintRole"
         />
       </DndOverlay>
     </DndRoot>

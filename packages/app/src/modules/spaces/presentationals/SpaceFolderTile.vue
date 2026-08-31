@@ -23,6 +23,7 @@ const props = defineProps<{
   title: string;
   icon?: SpaceIcon | null;
   sprintRole?: SprintRole | null;
+  preview?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -38,7 +39,34 @@ function onAction(action: SpaceGallerySpaceAction) {
 </script>
 
 <template>
-  <ContextMenu>
+  <div
+    v-if="preview"
+    data-slot="space-folder-tile"
+    :class="cn('group h-10 sm:h-12 w-full rounded-xl text-left pointer-events-none')"
+  >
+    <Card
+      size="sm"
+      :class="
+        cn(
+          'h-10 sm:h-12 w-full border-border rounded-xl bg-card shadow-lg',
+        )
+      "
+    >
+      <CardContent class="flex h-full items-center gap-3 text-card-foreground">
+        <component
+          :is="resolveSpaceIcon(icon)"
+          class="size-4 shrink-0"
+          aria-hidden="true"
+        />
+        <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ title }}</p>
+        <Badge v-if="roleLabel" variant="outline" class="shrink-0">
+          {{ roleLabel }}
+        </Badge>
+      </CardContent>
+    </Card>
+  </div>
+
+  <ContextMenu v-else>
     <ContextMenuTrigger as-child>
       <button
         type="button"

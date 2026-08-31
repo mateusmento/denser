@@ -480,12 +480,12 @@ export const ClickableItems: Story = {
               list-id="inbox"
               :index="index"
               class="flex items-center gap-2"
+              @click="onOpen(item.id)"
             >
               <button
                 type="button"
                 :data-testid="'dnd-open-' + item.id"
                 class="flex-1 rounded-lg border border-border bg-card px-3 py-2.5 text-left text-sm font-medium"
-                @click="onOpen(item.id)"
               >
                 {{ item.title }}
               </button>
@@ -494,7 +494,7 @@ export const ClickableItems: Story = {
                 data-dnd-ignore
                 :data-testid="'dnd-close-' + item.id"
                 class="rounded-lg border border-border px-2 py-1 text-xs"
-                @click="onClose(item.id)"
+                @click.stop="onClose(item.id)"
               >
                 Close
               </button>

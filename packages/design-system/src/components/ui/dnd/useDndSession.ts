@@ -235,7 +235,7 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
         return
       }
       if (policy.value === "highlight") {
-        over.value = hitTestHighlight(geometry.targets, pointer.value)
+        over.value = hitTestHighlight(geometry.targets, pointer.value, sourceIds.value)
         return
       }
       over.value = hitTestSwap(geometry.slots, pointer.value)

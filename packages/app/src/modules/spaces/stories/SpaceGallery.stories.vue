@@ -20,7 +20,7 @@ const { Story } = defineMeta({
   parameters: { layout: "padded" },
 });
 
-const childSpaces: SpaceGallerySpace[] = [
+const childSpaces = ref<SpaceGallerySpace[]>([
   {
     id: SEED_SPACE_ENGINEERING,
     title: "Engineering",
@@ -42,7 +42,7 @@ const childSpaces: SpaceGallerySpace[] = [
     parentSpaceId: SEED_SPACE_ACME,
     sprintRole: "upcoming" as const,
   },
-];
+]);
 
 const mixedArtifacts = ref<SpaceGalleryArtifact[]>([
   {
@@ -68,13 +68,15 @@ const mixedArtifacts = ref<SpaceGalleryArtifact[]>([
   },
 ]);
 
-const manyFolders = Array.from({ length: 6 }, (_, index) => ({
-  id: `${SEED_SPACE_ACME.slice(0, -1)}${index}` as SpaceId,
-  title: `Space ${index + 1}`,
-  icon: null,
-  parentSpaceId: SEED_SPACE_ACME,
-  sprintRole: null,
-}));
+const manyFolders = ref<SpaceGallerySpace[]>(
+  Array.from({ length: 6 }, (_, index) => ({
+    id: `${SEED_SPACE_ACME.slice(0, -1)}${index}` as SpaceId,
+    title: `Space ${index + 1}`,
+    icon: null,
+    parentSpaceId: SEED_SPACE_ACME,
+    sprintRole: null,
+  })),
+);
 
 const manyArtifacts = ref<SpaceGalleryArtifact[]>(
   Array.from({ length: 8 }, (_, index) => ({
@@ -88,7 +90,7 @@ const manyArtifacts = ref<SpaceGalleryArtifact[]>(
 
 const moveSpaces: SpaceMoveNode[] = [
   { id: SEED_SPACE_ACME, title: "Acme", parentId: null },
-  ...childSpaces.map((space) => ({
+  ...childSpaces.value.map((space) => ({
     id: space.id,
     title: space.title,
     parentId: space.parentSpaceId,
@@ -101,6 +103,14 @@ function applyMove(
 ) {
   action("move")(payload);
   return artifacts.filter((artifact) => artifact.id !== payload.artifactId);
+}
+
+function applyMoveSpace(
+  spaces: SpaceGallerySpace[],
+  payload: { spaceId: string; to: SpaceMoveDestination },
+) {
+  action("moveSpace")(payload);
+  return spaces.filter((space) => space.id !== payload.spaceId);
 }
 </script>
 
@@ -116,7 +126,7 @@ function applyMove(
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
       @explore="action('explore')($event)"
       @move="(payload) => (mixedArtifacts = applyMove(mixedArtifacts, payload))"
-      @move-space="action('moveSpace')($event)"
+      @move-space="(payload) => (childSpaces = applyMoveSpace(childSpaces, payload))"
     />
   </Story>
 
@@ -146,7 +156,7 @@ function applyMove(
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
       @explore="action('explore')($event)"
       @move="(payload) => (manyArtifacts = applyMove(manyArtifacts, payload))"
-      @move-space="action('moveSpace')($event)"
+      @move-space="(payload) => (manyFolders = applyMoveSpace(manyFolders, payload))"
     />
   </Story>
 </template>
