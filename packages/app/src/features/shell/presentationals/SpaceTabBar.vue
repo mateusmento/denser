@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Button,
+  cn,
   DndItem,
   DndList,
   DndRoot,
@@ -59,7 +60,10 @@ function onTabNavigate(event: MouseEvent) {
 }
 
 function tabButtonClass(tab: SpaceTabItem) {
-  return tab.isActive ? "bg-muted text-foreground" : "text-muted-foreground";
+  return cn(
+    "max-w-48 justify-start",
+    tab.isActive ? "bg-muted text-foreground" : "text-muted-foreground",
+  );
 }
 </script>
 
@@ -70,8 +74,8 @@ function tabButtonClass(tab: SpaceTabItem) {
   >
     <div v-for="tab in pinnedTabs" :key="tab.tabKey" class="flex shrink-0 items-center">
       <Button as-child variant="ghost" size="sm" :class="tabButtonClass(tab)">
-        <RouterLink :to="tab.to" class="max-w-48 truncate">
-          {{ tab.label }}
+        <RouterLink :to="tab.to">
+          <span class="truncate">{{ tab.label }}</span>
         </RouterLink>
       </Button>
     </div>
@@ -94,8 +98,8 @@ function tabButtonClass(tab: SpaceTabItem) {
           class="flex shrink-0 items-center"
         >
           <Button as-child variant="ghost" size="sm" :class="tabButtonClass(tab)">
-            <RouterLink :to="tab.to" class="max-w-48 truncate" @click="onTabNavigate">
-              {{ tab.label }}
+            <RouterLink :to="tab.to" @click="onTabNavigate">
+              <span class="truncate">{{ tab.label }}</span>
             </RouterLink>
           </Button>
           <Button

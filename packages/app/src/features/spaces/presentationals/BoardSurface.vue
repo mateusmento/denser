@@ -2,6 +2,7 @@
 import type { ArtifactSummary } from "@denser/contracts";
 import {
   Button,
+  cn,
   DndItem,
   DndList,
   DndOverlay,
@@ -125,7 +126,10 @@ function onOpen(document: ArtifactSummary) {
               :item-id="document.id"
               :list-id="column.stageId"
               :index="index"
-              class="w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing"
+              :class="cn([
+                'w-full min-w-0 px-3 py-2 cursor-grab rounded-lg border border-border bg-background',
+                'text-left text-sm line-clamp-2 wrap-break-word select-none data-dragging:cursor-grabbing',
+              ])"
               @click="onOpen(document)"
             >
               {{ document.title || "Untitled" }}
