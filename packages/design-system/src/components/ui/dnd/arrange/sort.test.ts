@@ -19,6 +19,7 @@ const column: ListSnapshot = {
   y: 0,
   width: 80,
   height: 200,
+  gap: 8,
 }
 
 const cards = [
@@ -73,6 +74,30 @@ test("entering another list opens a slot and closes the source", () => {
   expect(transforms.get("c")?.y).toBe(-28)
   expect(transforms.get("y")?.y).toBe(28)
   expect(transforms.has("x")).toBe(false)
+})
+
+test("placeholder after a single item uses the list gap", () => {
+  const done: ListSnapshot = { ...column, id: "done" }
+  const only = [item("x", "done", 0, 0)]
+  const source = item("b", "todo", 1, 28)
+  expect(placeholderRect(only, source, { listId: "done", index: 1 }, done, "vertical")).toEqual({
+    x: 0,
+    y: 28,
+    width: 80,
+    height: 20,
+  })
+})
+
+test("entering a one-item list opens a slot that includes the list gap", () => {
+  const done: ListSnapshot = { ...column, id: "done" }
+  const transforms = computeSortTransforms(
+    [...cards, item("x", "done", 0, 0)],
+    "b",
+    { listId: "done", index: 0 },
+    "vertical",
+    [column, done],
+  )
+  expect(transforms.get("x")?.y).toBe(28)
 })
 
 test("placeholder sits in the opened slot", () => {

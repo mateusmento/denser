@@ -44,6 +44,7 @@ export type ItemSnapshot = DndRect & {
 export type ListSnapshot = DndRect & {
   id: DndId
   orientation: DndAxis
+  gap: number
 }
 
 export type SlotSnapshot = DndRect & {

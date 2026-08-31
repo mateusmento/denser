@@ -68,15 +68,29 @@ export function applyScrollDelta(rect: DndRect, start: DndPoint, current: DndPoi
   }
 }
 
+export function parseCssGap(value: string): number {
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+export function readCssGap(
+  element: HTMLElement,
+  orientation: "horizontal" | "vertical",
+): number {
+  const style = getComputedStyle(element)
+  return parseCssGap(orientation === "vertical" ? style.rowGap : style.columnGap)
+}
+
 export function listGap(
   items: Array<DndRect & { index: number }>,
   orientation: "horizontal" | "vertical",
+  fallback = 0,
 ): number {
   const ordered = [...items].sort((a, b) => a.index - b.index)
   const first = ordered[0]
   const second = ordered[1]
   if (!first || !second)
-    return 0
+    return fallback
   return orientation === "vertical"
     ? second.y - (first.y + first.height)
     : second.x - (first.x + first.width)

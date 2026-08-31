@@ -45,18 +45,27 @@ export function hitTestSort(
   return { listId: list.id, index: members.length }
 }
 
+function declaredGap(lists: ListSnapshot[], listId: DndId | undefined) {
+  return lists.find((list) => list.id === listId)?.gap ?? 0
+}
+
 export function computeSortTransforms(
   items: ItemSnapshot[],
   sourceId: DndId,
   over: SortOver | null,
   orientation: DndAxis,
+  lists: ListSnapshot[] = [],
 ): Map<DndId, DndDelta> {
   const source = items.find((item) => item.id === sourceId)
   const result = new Map<DndId, DndDelta>()
   if (!source?.listId)
     return result
 
-  const sourceGap = listGap(items.filter((item) => item.listId === source.listId), orientation)
+  const sourceGap = listGap(
+    items.filter((item) => item.listId === source.listId),
+    orientation,
+    declaredGap(lists, source.listId),
+  )
   const closeSize = axisSize(source, orientation) + sourceGap
 
   if (!over) {
@@ -93,7 +102,8 @@ export function computeSortTransforms(
 
   const targetItems = items.filter((item) => item.listId === over.listId)
   const targetOrientation = orientation
-  const openSize = axisSize(source, targetOrientation) + listGap(targetItems, targetOrientation)
+  const openSize = axisSize(source, targetOrientation)
+    + listGap(targetItems, targetOrientation, declaredGap(lists, over.listId))
 
   for (const item of items) {
     if (item.id === sourceId)
@@ -111,12 +121,16 @@ export function placeholderRect(
   items: ItemSnapshot[],
   source: ItemSnapshot,
   over: SortOver,
-  listRect: DndRect,
+  listRect: ListSnapshot,
   orientation: DndAxis,
 ): DndRect {
   const size = { width: source.width, height: source.height }
   const members = membersOf(items, over.listId, [source.id])
-  const gap = listGap(items.filter((item) => item.listId === over.listId), orientation)
+  const gap = listGap(
+    items.filter((item) => item.listId === over.listId),
+    orientation,
+    listRect.gap,
+  )
 
   if (members.length === 0)
     return { x: listRect.x, y: listRect.y, ...size }

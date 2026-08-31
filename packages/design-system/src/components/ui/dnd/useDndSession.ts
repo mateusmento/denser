@@ -5,7 +5,7 @@ import { hitTestHighlight } from "./arrange/highlight"
 import { computeSwapTransforms, hitTestSwap, previewSwapMap, slotIdForItem } from "./arrange/swap"
 import { dndFly, easeOutCubic, flockOverlayRects, type DndFlyHandle } from "./DndFly"
 import { dropRegistration, settleFromRect, invertSettleDelta } from "./settle"
-import { applyScrollDelta, getUntransformedRect } from "./geometry"
+import { applyScrollDelta, getUntransformedRect, readCssGap } from "./geometry"
 import { autoScrollDelta } from "./scroll-port"
 import { createPointerSensor } from "./sensors/pointer"
 import type {
@@ -149,6 +149,7 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
         lists: [...lists].map(([id, list]) => ({
           id,
           orientation: list.orientation,
+          gap: readCssGap(list.element, list.orientation),
           ...getUntransformedRect(list.element),
         })),
         slots: [...slots].map(([id, slot]) => ({
@@ -202,7 +203,13 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
         const listOrientation = geometry.lists.find((list) => list.id === sortOver?.listId)?.orientation
           ?? geometry.lists.find((list) => list.id === (from.value && "listId" in from.value ? from.value.listId : ""))?.orientation
           ?? orientation.value
-        transforms.value = computeSortTransforms(geometry.items, primary, sortOver, listOrientation)
+        transforms.value = computeSortTransforms(
+          geometry.items,
+          primary,
+          sortOver,
+          listOrientation,
+          geometry.lists,
+        )
         return
       }
       if (policy.value === "swap") {

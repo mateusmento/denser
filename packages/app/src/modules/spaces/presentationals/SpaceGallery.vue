@@ -78,7 +78,7 @@ function onOpenArtifact(artifactId: string) {
       <section class="space-y-3">
         <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Spaces</h2>
         <div :class="gridClass">
-          <Skeleton v-for="index in 2" :key="`folder-${index}`" class="aspect-[5/3] rounded-[min(var(--radius-4xl),24px)]" />
+          <Skeleton v-for="index in 2" :key="`folder-${index}`" class="aspect-5/3 rounded-[min(var(--radius-4xl),24px)]" />
         </div>
       </section>
       <section class="space-y-3">

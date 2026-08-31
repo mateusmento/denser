@@ -3,6 +3,7 @@ import {
   applyScrollDelta,
   distance,
   listGap,
+  parseCssGap,
   parseTranslate,
   pointInRect,
   subtractTranslate,
@@ -57,4 +58,14 @@ test("listGap reads the space between the first two items", () => {
       "vertical",
     ),
   ).toBe(8)
+})
+
+test("listGap falls back when a list has fewer than two items", () => {
+  expect(listGap([{ x: 0, y: 0, width: 10, height: 20, index: 0 }], "vertical", 8)).toBe(8)
+  expect(listGap([], "vertical", 8)).toBe(8)
+})
+
+test("parseCssGap reads computed pixel gaps", () => {
+  expect(parseCssGap("8px")).toBe(8)
+  expect(parseCssGap("normal")).toBe(0)
 })
