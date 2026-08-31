@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite"
 import { computed, ref } from "vue"
+import { Badge } from "../badge"
+import { useSelection } from "../../../composables/useSelection"
 import {
   applySortCommit,
   commitSwapMap,
@@ -544,6 +546,120 @@ export const OverlaySettle: Story = {
           </DndList>
           <DndOverlay #default="{ sourceId }">
             <div :class="[cardClass, 'rotate-1 scale-105 shadow-lg']">{{ byId[sourceId]?.title }}</div>
+          </DndOverlay>
+        </DndRoot>
+      </div>
+    `,
+  }),
+}
+
+export const MultiSelectDrag: Story = {
+  name: "Multi-select drag",
+  render: () => ({
+    components: { DndRoot, DndTarget, DndItem, DndOverlay, Badge },
+    setup() {
+      const items = ref<DemoItem[]>([
+        { id: "doc-1", title: "Document 1" },
+        { id: "doc-2", title: "Document 2" },
+        { id: "doc-3", title: "Document 3" },
+        { id: "doc-4", title: "Document 4" },
+      ])
+      const targets = ref<DemoItem[]>([
+        { id: "folder-a", title: "Folder A" },
+        { id: "folder-b", title: "Folder B" },
+      ])
+      const lastAction = ref("Ctrl/Cmd or Shift click to select multiple items, then drag onto a folder")
+      const itemIds = computed(() => items.value.map((i) => i.id))
+      const selection = useSelection({ items: itemIds })
+      const byId = computed(() =>
+        Object.fromEntries(items.value.map((item) => [item.id, item])),
+      )
+
+      function onItemClick(id: string, event: MouseEvent) {
+        const res = selection.handleItemClick(id, event)
+        if (!res.wasSelectionAction && selection.hasSelection.value) {
+          selection.clear()
+        }
+      }
+
+      function onCommit(payload: DndCommitPayload) {
+        if (payload.canceled || !payload.over || !("targetId" in payload.over)) return
+        const over = payload.over
+        const target = targets.value.find((t) => t.id === over.targetId)
+        lastAction.value = `Dropped [${payload.sourceIds.join(", ")}] into ${target?.title}`
+        items.value = items.value.filter((i) => !payload.sourceIds.includes(i.id))
+        selection.clear()
+      }
+
+      return {
+        items,
+        targets,
+        selection,
+        byId,
+        lastAction,
+        onItemClick,
+        onCommit,
+      }
+    },
+    template: `
+      <div class="flex min-h-dvh flex-col items-center gap-6 bg-background p-10">
+        <p class="text-sm font-medium text-muted-foreground">{{ lastAction }}</p>
+        <DndRoot
+          class="flex w-full max-w-xl flex-col gap-6"
+          policy="highlight"
+          settle="item"
+          :source-ids-for="(id) => selection.isSelected(id) ? selection.selectedList.value : [id]"
+          @commit="onCommit"
+        >
+          <div class="space-y-2">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Drop Targets</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <DndTarget
+                v-for="target in targets"
+                :key="target.id"
+                :target-id="target.id"
+                class="flex h-16 items-center justify-center rounded-xl border-2 border-dashed border-border bg-card font-medium transition-colors data-over:border-primary data-over:bg-primary/10"
+              >
+                {{ target.title }}
+              </DndTarget>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Selectable Items</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <DndItem
+                v-for="(item, index) in items"
+                :key="item.id"
+                :item-id="item.id"
+                :index="index"
+                @click="onItemClick(item.id, $event)"
+              >
+                <div
+                  :class="[
+                    'flex h-16 cursor-pointer items-center justify-between rounded-xl border border-border bg-card px-4 text-sm font-medium transition-colors select-none',
+                    selection.isSelected(item.id)
+                      ? 'border-primary ring-2 ring-primary bg-primary/10 text-foreground'
+                      : 'hover:bg-accent'
+                  ]"
+                >
+                  <span>{{ item.title }}</span>
+                  <span v-if="selection.isSelected(item.id)" class="size-2 rounded-full bg-primary" />
+                </div>
+              </DndItem>
+            </div>
+          </div>
+
+          <DndOverlay #default="{ sourceId, index }" class="rotate-1">
+            <div class="relative flex h-16 w-48 items-center rounded-xl border border-primary bg-card px-4 shadow-xl">
+              <span class="truncate text-sm font-medium">{{ byId[sourceId]?.title }}</span>
+              <Badge
+                v-if="index === 0 && selection.count.value > 1"
+                class="absolute -top-2 -right-2 shadow-md"
+              >
+                {{ selection.count.value }} items
+              </Badge>
+            </div>
           </DndOverlay>
         </DndRoot>
       </div>

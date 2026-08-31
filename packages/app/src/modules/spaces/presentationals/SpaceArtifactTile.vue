@@ -22,6 +22,7 @@ const props = defineProps<{
   title: string;
   kind: ArtifactKind;
   preview?: boolean;
+  selected?: boolean;
 }>();
 
 const displayTitle = computed(() => artifactDisplayTitle(props.title));
@@ -63,6 +64,8 @@ function onAction(action: SpaceGalleryArtifactAction) {
       <button
         type="button"
         data-slot="space-artifact-tile"
+        :aria-selected="selected || undefined"
+        :data-selected="selected || undefined"
         :class="
           cn(
             'group w-full rounded-xl text-left',
@@ -77,10 +80,18 @@ function onAction(action: SpaceGalleryArtifactAction) {
             cn(
               'aspect-square w-full border-border transition-colors rounded-xl cursor-pointer',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
+              selected && 'ring-2 ring-primary bg-primary/10 border-primary/50 text-foreground',
             )
           "
         >
-          <CardContent class="flex h-full flex-col text-muted-foreground group-hover:text-secondary-foreground">
+          <CardContent
+            :class="
+              cn(
+                'flex h-full flex-col text-muted-foreground group-hover:text-secondary-foreground',
+                selected && 'text-foreground',
+              )
+            "
+          >
             <div class="flex flex-1 items-center justify-center">
               <component :is="tileIcon" class="size-6" aria-hidden="true" />
             </div>

@@ -24,6 +24,7 @@ const props = defineProps<{
   icon?: SpaceIcon | null;
   sprintRole?: SprintRole | null;
   preview?: boolean;
+  selected?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -71,6 +72,8 @@ function onAction(action: SpaceGallerySpaceAction) {
       <button
         type="button"
         data-slot="space-folder-tile"
+        :aria-selected="selected || undefined"
+        :data-selected="selected || undefined"
         :class="
           cn(
             'group w-full rounded-xl text-left',
@@ -85,10 +88,18 @@ function onAction(action: SpaceGallerySpaceAction) {
             cn(
               'h-10 sm:h-12 w-full border-border transition-colors rounded-xl cursor-pointer',
               'group-hover:bg-secondary/80 group-focus-visible:bg-card/80',
+              selected && 'ring-2 ring-primary bg-primary/10 border-primary/50 text-foreground',
             )
           "
         >
-          <CardContent class="flex h-full items-center gap-3 text-muted-foreground group-hover:text-secondary-foreground">
+          <CardContent
+            :class="
+              cn(
+                'flex h-full items-center gap-3 text-muted-foreground group-hover:text-secondary-foreground',
+                selected && 'text-foreground',
+              )
+            "
+          >
             <component
               :is="resolveSpaceIcon(icon)"
               class="size-4 shrink-0"
