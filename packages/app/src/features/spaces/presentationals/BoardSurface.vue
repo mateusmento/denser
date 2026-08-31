@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import type { ArtifactSummary } from "@denser/contracts";
-import { Button } from "@denser/design-system";
+import {
+  Button,
+  DndItem,
+  DndList,
+  DndOverlay,
+  DndRoot,
+  type DndCommitPayload,
+} from "@denser/design-system";
+import { computed } from "vue";
 import type { BoardColumn } from "../lib/planning";
 
-defineProps<{
+const props = defineProps<{
   columns: readonly BoardColumn[];
   emptyUntilStart?: boolean;
   canManage?: boolean;
@@ -16,11 +24,34 @@ const emit = defineEmits<{
   start: [];
 }>();
 
-function onDrop(event: DragEvent, stageId: string) {
-  event.preventDefault();
-  const artifactId = event.dataTransfer?.getData("text/artifact-id");
-  if (!artifactId) return;
-  emit("drop", { artifactId, stageId });
+const titleById = computed(() =>
+  Object.fromEntries(
+    props.columns.flatMap((column) =>
+      column.documents.map((document) => [document.id, document.title || "Untitled"] as const),
+    ),
+  ),
+);
+
+let suppressOpen = false;
+
+function onCommit(payload: DndCommitPayload) {
+  suppressOpen = true;
+  requestAnimationFrame(() => {
+    suppressOpen = false;
+  });
+  if (payload.canceled || !payload.over || !("listId" in payload.over) || !("listId" in payload.from))
+    return;
+  const artifactId = payload.sourceIds[0];
+  if (!artifactId || payload.from.listId === payload.over.listId) return;
+  emit("drop", { artifactId, stageId: payload.over.listId });
+}
+
+function onOpen(document: ArtifactSummary) {
+  if (suppressOpen) {
+    suppressOpen = false;
+    return;
+  }
+  emit("open", document);
 }
 </script>
 
@@ -45,32 +76,44 @@ function onDrop(event: DragEvent, stageId: string) {
       Start a sprint to fill the board.
     </p>
 
-    <div
+    <DndRoot
       v-else
       class="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-4"
+      policy="sort"
+      settle="item"
+      @commit="onCommit"
     >
       <section
         v-for="column in columns"
         :key="column.stageId"
         class="flex w-64 shrink-0 flex-col gap-2 rounded-xl border border-border bg-muted/30 p-2"
-        @dragover.prevent
-        @drop="onDrop($event, column.stageId)"
       >
         <h2 class="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {{ column.name }}
         </h2>
-        <button
-          v-for="document in column.documents"
-          :key="document.id"
-          type="button"
-          draggable="true"
-          class="cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm active:cursor-grabbing"
-          @dragstart="($event) => $event.dataTransfer?.setData('text/artifact-id', document.id)"
-          @click="emit('open', document)"
-        >
-          {{ document.title || "Untitled" }}
-        </button>
+        <DndList :list-id="column.stageId" class="flex min-h-24 flex-1 flex-col gap-2">
+          <DndItem
+            v-for="(document, index) in column.documents"
+            :key="document.id"
+            as="button"
+            type="button"
+            :item-id="document.id"
+            :list-id="column.stageId"
+            :index="index"
+            class="cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm data-dragging:cursor-grabbing"
+            @click="onOpen(document)"
+          >
+            {{ document.title || "Untitled" }}
+          </DndItem>
+        </DndList>
       </section>
-    </div>
+      <DndOverlay #default="{ sourceId }">
+        <div
+          class="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg rotate-1"
+        >
+          {{ titleById[sourceId] }}
+        </div>
+      </DndOverlay>
+    </DndRoot>
   </div>
 </template>

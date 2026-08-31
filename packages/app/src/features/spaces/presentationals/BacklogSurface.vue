@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import type { ArtifactSummary } from "@denser/contracts";
-import { Button } from "@denser/design-system";
+import {
+  Button,
+  DndItem,
+  DndList,
+  DndOverlay,
+  DndRoot,
+  type DndCommitPayload,
+} from "@denser/design-system";
 import { PlusIcon } from "@lucide/vue";
+import { computed } from "vue";
 import type { BacklogSection } from "../lib/planning";
 
-defineProps<{
+const props = defineProps<{
   sections: readonly BacklogSection[];
   canManage?: boolean;
   sprintingEnabled?: boolean;
@@ -21,11 +29,37 @@ const emit = defineEmits<{
   complete: [];
 }>();
 
-function onDrop(event: DragEvent, spaceId: string, index: number) {
-  event.preventDefault();
-  const artifactId = event.dataTransfer?.getData("text/artifact-id");
+const titleById = computed(() =>
+  Object.fromEntries(
+    props.sections.flatMap((section) =>
+      section.documents.map((document) => [document.id, document.title || "Untitled"] as const),
+    ),
+  ),
+);
+
+let suppressOpen = false;
+
+function onCommit(payload: DndCommitPayload) {
+  suppressOpen = true;
+  requestAnimationFrame(() => {
+    suppressOpen = false;
+  });
+  if (payload.canceled || !payload.over || !("listId" in payload.over)) return;
+  const artifactId = payload.sourceIds[0];
   if (!artifactId) return;
-  emit("move", { artifactId, toSpaceId: spaceId, toIndex: index });
+  emit("move", {
+    artifactId,
+    toSpaceId: payload.over.listId,
+    toIndex: payload.over.index,
+  });
+}
+
+function onOpen(document: ArtifactSummary) {
+  if (suppressOpen) {
+    suppressOpen = false;
+    return;
+  }
+  emit("open", document);
 }
 </script>
 
@@ -54,52 +88,58 @@ function onDrop(event: DragEvent, spaceId: string, index: number) {
       </div>
     </div>
 
-    <section
-      v-for="section in sections"
-      :key="section.key"
-      class="space-y-2"
-      @dragover.prevent
-      @drop="onDrop($event, section.spaceId, section.documents.length)"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {{ section.title }}
-          <span v-if="section.subtitle" class="font-normal normal-case text-muted-foreground/80">
-            · {{ section.subtitle }}
-          </span>
-        </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          class="h-7 px-2 text-muted-foreground"
-          @click="emit('create', section.spaceId)"
-        >
-          <PlusIcon class="size-3.5" />
-          Add
-        </Button>
-      </div>
+    <DndRoot class="flex flex-col gap-6" policy="sort" settle="item" @commit="onCommit">
+      <section v-for="section in sections" :key="section.key" class="space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {{ section.title }}
+            <span v-if="section.subtitle" class="font-normal normal-case text-muted-foreground/80">
+              · {{ section.subtitle }}
+            </span>
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-muted-foreground"
+            @click="emit('create', section.spaceId)"
+          >
+            <PlusIcon class="size-3.5" />
+            Add
+          </Button>
+        </div>
 
-      <ul class="flex flex-col gap-1">
-        <li
-          v-for="(document, index) in section.documents"
-          :key="document.id"
-          draggable="true"
-          class="cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-sm active:cursor-grabbing"
-          @dragstart="($event) => $event.dataTransfer?.setData('text/artifact-id', document.id)"
-          @dragover.prevent
-          @drop.stop="onDrop($event, section.spaceId, index)"
-          @click="emit('open', document)"
+        <DndList
+          :list-id="section.spaceId"
+          as="ul"
+          class="m-0 flex min-h-16 list-none flex-col gap-1 p-0"
         >
-          {{ document.title || "Untitled" }}
-        </li>
-      </ul>
-
-      <p
-        v-if="!section.documents.length"
-        class="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground"
-      >
-        No documents
-      </p>
-    </section>
+          <DndItem
+            v-for="(document, index) in section.documents"
+            :key="document.id"
+            as="li"
+            :item-id="document.id"
+            :list-id="section.spaceId"
+            :index="index"
+            class="cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-sm data-dragging:cursor-grabbing"
+            @click="onOpen(document)"
+          >
+            {{ document.title || "Untitled" }}
+          </DndItem>
+          <li
+            v-if="!section.documents.length"
+            class="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground"
+          >
+            No documents
+          </li>
+        </DndList>
+      </section>
+      <DndOverlay #default="{ sourceId }">
+        <div
+          class="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg rotate-1"
+        >
+          {{ titleById[sourceId] }}
+        </div>
+      </DndOverlay>
+    </DndRoot>
   </div>
 </template>
