@@ -4,6 +4,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "./index";
 
@@ -33,6 +36,41 @@ export const Default: Story = {
         <ContextMenuContent>
           <ContextMenuItem>Open</ContextMenuItem>
           <ContextMenuItem>Rename</ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem variant="destructive">Delete</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    `,
+  }),
+};
+
+export const WithSubmenu: Story = {
+  render: () => ({
+    components: {
+      ContextMenu,
+      ContextMenuTrigger,
+      ContextMenuContent,
+      ContextMenuItem,
+      ContextMenuSeparator,
+      ContextMenuSub,
+      ContextMenuSubContent,
+      ContextMenuSubTrigger,
+    },
+    template: `
+      <ContextMenu>
+        <ContextMenuTrigger class="flex h-32 w-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+          Right click here
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Open</ContextMenuItem>
+          <ContextMenuItem>Rename</ContextMenuItem>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem>Home</ContextMenuItem>
+              <ContextMenuItem>Spaces</ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive">Delete</ContextMenuItem>
         </ContextMenuContent>
