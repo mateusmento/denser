@@ -210,6 +210,12 @@ export function useSpaceTabBarSync() {
     void router.push({ name: "space", params: { spaceId: childSpaceId }, query: {} });
   }
 
+  function reorderTab(tabKey: string, toIndex: number) {
+    const host = hostSpaceId.value;
+    if (!host) return;
+    spaceTabs.moveTab(host, tabKey, toIndex);
+  }
+
   function closeTab(tabKey: string) {
     const host = hostSpaceId.value;
     if (!host) return;
@@ -232,5 +238,6 @@ export function useSpaceTabBarSync() {
     addTab,
     openChildSpace,
     closeTab,
+    reorderTab,
   };
 }

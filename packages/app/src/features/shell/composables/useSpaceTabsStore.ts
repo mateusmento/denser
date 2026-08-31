@@ -1,6 +1,6 @@
 import type { ArtifactId, ArtifactKind, SpaceId } from "@denser/contracts";
 import { useStorage } from "@vueuse/core";
-import { storedSpaceTabKey, type StoredSpaceTab } from "../lib/space-tabs";
+import { moveStoredTab, storedSpaceTabKey, type StoredSpaceTab } from "../lib/space-tabs";
 
 type TabsByHost = Record<string, StoredSpaceTab[]>;
 
@@ -28,6 +28,10 @@ export function useSpaceTabsStore() {
       hostSpaceId,
       current.filter((entry) => storedSpaceTabKey(entry) !== tabKey),
     );
+  }
+
+  function moveTab(hostSpaceId: SpaceId, tabKey: string, toIndex: number) {
+    setTabs(hostSpaceId, moveStoredTab(listTabs(hostSpaceId), tabKey, toIndex));
   }
 
   function addArtifactTab(
@@ -75,6 +79,7 @@ export function useSpaceTabsStore() {
     listTabs,
     addTab,
     removeTab,
+    moveTab,
     addArtifactTab,
     addChildSpaceTab,
     removeArtifactTabEverywhere,

@@ -9,6 +9,20 @@ export function storedSpaceTabKey(tab: StoredSpaceTab): string {
   return `space:${tab.spaceId}`;
 }
 
+export function moveStoredTab(
+  tabs: readonly StoredSpaceTab[],
+  tabKey: string,
+  toIndex: number,
+): StoredSpaceTab[] {
+  const fromIndex = tabs.findIndex((entry) => storedSpaceTabKey(entry) === tabKey);
+  if (fromIndex < 0) return [...tabs];
+  const next = [...tabs];
+  const [tab] = next.splice(fromIndex, 1);
+  if (!tab) return [...tabs];
+  next.splice(Math.max(0, Math.min(toIndex, next.length)), 0, tab);
+  return next;
+}
+
 export type SpaceTabHostInput = {
   routeName: string | symbol | null | undefined;
   routeSpaceId?: SpaceId;

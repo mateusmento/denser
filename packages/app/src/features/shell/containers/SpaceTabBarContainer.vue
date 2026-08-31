@@ -5,7 +5,8 @@ import { useSpaceTabHostNavigation } from "../composables/useSpaceTabHostNavigat
 import SpaceTabBar from "../presentationals/SpaceTabBar.vue";
 
 useSpaceTabHostNavigation();
-const { tabs, visible, childSpaces, addTab, openChildSpace, closeTab } = useSpaceTabBarSync();
+const { tabs, visible, childSpaces, addTab, openChildSpace, closeTab, reorderTab } =
+  useSpaceTabBarSync();
 </script>
 
 <template>
@@ -16,5 +17,6 @@ const { tabs, visible, childSpaces, addTab, openChildSpace, closeTab } = useSpac
     @add="addTab"
     @open-child-space="(id) => openChildSpace(id as SpaceId)"
     @close="closeTab"
+    @reorder="(payload) => reorderTab(payload.tabKey, payload.toIndex)"
   />
 </template>

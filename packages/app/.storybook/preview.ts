@@ -1,4 +1,5 @@
-import type { Decorator, Preview } from "@storybook/vue3-vite";
+import { setup, type Decorator, type Preview } from "@storybook/vue3-vite";
+import { createMemoryHistory, createRouter } from "vue-router";
 import { DecoratorHelpers } from "@storybook/addon-themes";
 import { addons } from "storybook/preview-api";
 import { GLOBALS_UPDATED } from "storybook/internal/core-events";
@@ -11,6 +12,17 @@ import {
 import { useColorModeOwner } from "../src/modules/theme";
 import "../src/styles.css";
 import "./preview.css";
+
+const storyRouter = createRouter({
+  history: createMemoryHistory(),
+  routes: [{ path: "/:pathMatch(.*)*", component: { template: "<div />" } }],
+});
+
+setup((app) => {
+  if (!app.config.globalProperties.$router) {
+    app.use(storyRouter);
+  }
+});
 
 const THEMES = ["light", "dark"] as const;
 const DEFAULT_THEME = "light";
