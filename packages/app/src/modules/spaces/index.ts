@@ -14,10 +14,13 @@ export { applySpacePatch, invalidateSpaceProjections } from "./lib/sync-space-pa
 export { useArtifactCommands, invalidateArtifactProjections } from "./composables/useArtifactCommands.js";
 export { useSpaceCommands } from "./composables/useSpaceCommands.js";
 export { useGalleryActions } from "./composables/useGalleryActions.js";
+export { useSpaceMoveTree } from "./composables/useSpaceMoveTree.js";
 export { useSpaceSettingsHost } from "./composables/useSpaceSettingsHost.js";
 export { useWorkspaceCommandPrompts } from "./composables/useWorkspaceCommandPrompts.js";
 
 export { default as SpaceGallery } from "./presentationals/SpaceGallery.vue";
+export { default as SpaceMoveMenu } from "./presentationals/SpaceMoveMenu.vue";
+export type { SpaceMoveDestination, SpaceMoveNode } from "./lib/space-move-menu.js";
 export { default as SpaceFolderTile } from "./presentationals/SpaceFolderTile.vue";
 export { default as SpaceArtifactTile } from "./presentationals/SpaceArtifactTile.vue";
 export { default as SpaceGeneralPanel } from "./presentationals/SpaceGeneralPanel.vue";

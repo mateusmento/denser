@@ -190,6 +190,7 @@ export const PatchSpaceInput = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   icon: SpaceIcon.nullable().optional(),
   visibility: SpaceVisibility.optional(),
+  parentSpaceId: SpaceId.nullable().optional(),
 });
 export type PatchSpaceInput = z.infer<typeof PatchSpaceInput>;
 

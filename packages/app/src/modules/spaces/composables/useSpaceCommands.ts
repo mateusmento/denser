@@ -1,4 +1,5 @@
 import type { SpaceId, SpaceSummary } from "@denser/contracts";
+import { toast } from "@denser/design-system";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import { useQueryClient } from "@tanstack/vue-query";
@@ -53,6 +54,22 @@ export function useSpaceCommands() {
     await router.push({ name: "space", params: { spaceId } });
   }
 
+  async function moveSpace(
+    space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
+    toParentId: SpaceId | null,
+  ) {
+    const target = resolveSpaceRef(space);
+    if (target.id === toParentId || target.parentSpaceId === toParentId) return;
+    try {
+      const { space: updated } = await apiClient.patchSpace(target.id, { parentSpaceId: toParentId });
+      applySpacePatch(updated);
+      await invalidateSpaceProjections(queryClient, target);
+      await invalidateSpaceProjections(queryClient, updated);
+    } catch {
+      toast("Couldn’t move space");
+    }
+  }
+
   async function deleteSpace(
     space: Pick<SpaceSummary, "id" | "title"> & Partial<Pick<SpaceSummary, "parentSpaceId">>,
   ) {
@@ -77,5 +94,6 @@ export function useSpaceCommands() {
     openSpace,
     renameSpace,
     deleteSpace,
+    moveSpace,
   };
 }

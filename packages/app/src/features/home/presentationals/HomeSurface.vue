@@ -6,6 +6,8 @@ import {
   type SpaceGalleryArtifactAction,
   type SpaceGallerySpace,
   type SpaceGallerySpaceAction,
+  type SpaceMoveDestination,
+  type SpaceMoveNode,
 } from "@/modules/spaces";
 import { WorkspaceCreateMenu, type WorkspaceCreateAction } from "@/modules/workspace";
 import type { HomeContentView, HomeSurfaceView } from "../types";
@@ -13,6 +15,7 @@ import type { HomeContentView, HomeSurfaceView } from "../types";
 defineProps<{
   view: HomeSurfaceView;
   content?: HomeContentView;
+  moveSpaces?: readonly SpaceMoveNode[];
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +25,9 @@ const emit = defineEmits<{
   openArtifact: [artifactId: string];
   spaceAction: [action: SpaceGallerySpaceAction, space: SpaceGallerySpace];
   artifactAction: [action: SpaceGalleryArtifactAction, artifact: SpaceGalleryArtifact];
+  explore: [spaceId: string];
+  move: [payload: { artifactId: string; to: SpaceMoveDestination }];
+  moveSpace: [payload: { spaceId: string; to: SpaceMoveDestination }];
 }>();
 </script>
 
@@ -59,10 +65,14 @@ const emit = defineEmits<{
         <SpaceGallery
           :child-spaces="content.spaces"
           :artifacts="content.artifacts"
+          :move-spaces="moveSpaces"
           @open-space="emit('openSpace', $event)"
           @open-artifact="emit('openArtifact', $event)"
           @space-action="(action, space) => emit('spaceAction', action, space)"
           @artifact-action="(action, artifact) => emit('artifactAction', action, artifact)"
+          @explore="emit('explore', $event)"
+          @move="emit('move', $event)"
+          @move-space="emit('moveSpace', $event)"
         />
       </div>
     </template>

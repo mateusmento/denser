@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import {
   SEED_ARTIFACT_ONBOARDING_NOTES,
+  SEED_ARTIFACT_PERSONAL_NOTES,
   SEED_SPACE_ACME,
   SEED_SPACE_ENGINEERING,
 } from "@denser/contracts";
 import type { ArtifactId, SpaceId } from "@denser/contracts";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
+import { ref } from "vue";
 import SpaceGallery from "../presentationals/SpaceGallery.vue";
+import type { SpaceMoveDestination, SpaceMoveNode } from "../lib/space-move-menu";
+import type { SpaceGalleryArtifact, SpaceGallerySpace } from "../types";
 
 const { Story } = defineMeta({
   title: "modules/spaces/SpaceGallery",
@@ -16,7 +20,7 @@ const { Story } = defineMeta({
   parameters: { layout: "padded" },
 });
 
-const childSpaces = [
+const childSpaces: SpaceGallerySpace[] = [
   {
     id: SEED_SPACE_ENGINEERING,
     title: "Engineering",
@@ -40,15 +44,29 @@ const childSpaces = [
   },
 ];
 
-const artifacts = [
+const mixedArtifacts = ref<SpaceGalleryArtifact[]>([
   {
     id: SEED_ARTIFACT_ONBOARDING_NOTES,
     title: "Onboarding notes",
-    kind: "document" as const,
+    kind: "document",
     version: 1,
-    spaceId: SEED_SPACE_ENGINEERING,
+    spaceId: SEED_SPACE_ACME,
   },
-];
+  {
+    id: SEED_ARTIFACT_PERSONAL_NOTES,
+    title: "Personal notes",
+    kind: "document",
+    version: 1,
+    spaceId: SEED_SPACE_ACME,
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000024" as ArtifactId,
+    title: "Standup",
+    kind: "conversation",
+    version: 1,
+    spaceId: SEED_SPACE_ACME,
+  },
+]);
 
 const manyFolders = Array.from({ length: 6 }, (_, index) => ({
   id: `${SEED_SPACE_ACME.slice(0, -1)}${index}` as SpaceId,
@@ -58,24 +76,47 @@ const manyFolders = Array.from({ length: 6 }, (_, index) => ({
   sprintRole: null,
 }));
 
-const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({
-  id: `${SEED_ARTIFACT_ONBOARDING_NOTES.slice(0, -1)}${index}` as ArtifactId,
-  title: `Document ${index + 1}`,
-  kind: "document" as const,
-  version: 1,
-  spaceId: SEED_SPACE_ACME,
-}));
+const manyArtifacts = ref<SpaceGalleryArtifact[]>(
+  Array.from({ length: 8 }, (_, index) => ({
+    id: `${SEED_ARTIFACT_ONBOARDING_NOTES.slice(0, -1)}${index}` as ArtifactId,
+    title: `Document ${index + 1}`,
+    kind: "document",
+    version: 1,
+    spaceId: SEED_SPACE_ACME,
+  })),
+);
+
+const moveSpaces: SpaceMoveNode[] = [
+  { id: SEED_SPACE_ACME, title: "Acme", parentId: null },
+  ...childSpaces.map((space) => ({
+    id: space.id,
+    title: space.title,
+    parentId: space.parentSpaceId,
+  })),
+];
+
+function applyMove(
+  artifacts: SpaceGalleryArtifact[],
+  payload: { artifactId: string; to: SpaceMoveDestination },
+) {
+  action("move")(payload);
+  return artifacts.filter((artifact) => artifact.id !== payload.artifactId);
+}
 </script>
 
 <template>
   <Story as-child name="Mixed">
     <SpaceGallery
       :child-spaces="childSpaces"
-      :artifacts="artifacts"
+      :artifacts="mixedArtifacts"
+      :move-spaces="moveSpaces"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
       @space-action="(kind, space) => action('spaceAction')(kind, space)"
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
+      @explore="action('explore')($event)"
+      @move="(payload) => (mixedArtifacts = applyMove(mixedArtifacts, payload))"
+      @move-space="action('moveSpace')($event)"
     />
   </Story>
 
@@ -98,10 +139,14 @@ const manyArtifacts = Array.from({ length: 8 }, (_, index) => ({
     <SpaceGallery
       :child-spaces="manyFolders"
       :artifacts="manyArtifacts"
+      :move-spaces="moveSpaces"
       @open-space="action('openSpace')($event)"
       @open-artifact="action('openArtifact')($event)"
       @space-action="(kind, space) => action('spaceAction')(kind, space)"
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
+      @explore="action('explore')($event)"
+      @move="(payload) => (manyArtifacts = applyMove(manyArtifacts, payload))"
+      @move-space="action('moveSpace')($event)"
     />
   </Story>
 </template>

@@ -122,6 +122,8 @@ export async function updateSpace(
     sprintPlannedEndAt?: Date | null;
     activeSprintId?: SpaceId | null;
     upcomingSprintId?: SpaceId | null;
+    parentSpaceId?: SpaceId | null;
+    rootSpaceId?: SpaceId | null;
   },
 ): Promise<SpaceRow | undefined> {
   const values: Partial<typeof space.$inferInsert> = { updatedAt: new Date() };
@@ -137,6 +139,8 @@ export async function updateSpace(
   if (patch.sprintPlannedEndAt !== undefined) values.sprintPlannedEndAt = patch.sprintPlannedEndAt;
   if (patch.activeSprintId !== undefined) values.activeSprintId = patch.activeSprintId;
   if (patch.upcomingSprintId !== undefined) values.upcomingSprintId = patch.upcomingSprintId;
+  if (patch.parentSpaceId !== undefined) values.parentSpaceId = patch.parentSpaceId;
+  if (patch.rootSpaceId !== undefined) values.rootSpaceId = patch.rootSpaceId;
 
   const [updated] = await db.update(space).set(values).where(eq(space.id, spaceId)).returning();
   return updated;

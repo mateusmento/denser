@@ -78,6 +78,9 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
       if (result.reason === "invalid_visibility") {
         return c.json({ error: "Cannot make a private space public" }, 400);
       }
+      if (result.reason === "invalid_parent") {
+        return c.json({ error: "Cannot move a space into itself" }, 400);
+      }
       return c.json({ error: "Space not found" }, 404);
     }
 

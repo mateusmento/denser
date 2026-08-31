@@ -5,6 +5,8 @@ import type {
   SpaceGalleryArtifactAction,
   SpaceGallerySpace,
   SpaceGallerySpaceAction,
+  SpaceMoveDestination,
+  SpaceMoveNode,
 } from "@/modules/spaces";
 import { Badge, Button, Skeleton } from "@denser/design-system";
 import { ChevronLeftIcon } from "@lucide/vue";
@@ -16,6 +18,7 @@ defineProps<{
   view: SpaceSurfaceView;
   content?: SpaceContentView;
   backLink?: SpaceBackLink;
+  moveSpaces?: readonly SpaceMoveNode[];
 }>();
 
 const emit = defineEmits<{
@@ -25,6 +28,9 @@ const emit = defineEmits<{
   openArtifact: [artifactId: string];
   spaceAction: [action: SpaceGallerySpaceAction, space: SpaceGallerySpace];
   artifactAction: [action: SpaceGalleryArtifactAction, artifact: SpaceGalleryArtifact];
+  explore: [spaceId: string];
+  move: [payload: { artifactId: string; to: SpaceMoveDestination }];
+  moveSpace: [payload: { spaceId: string; to: SpaceMoveDestination }];
 }>();
 </script>
 
@@ -68,10 +74,14 @@ const emit = defineEmits<{
       <SpaceGallery
         :child-spaces="content.childSpaces"
         :artifacts="content.artifacts"
+        :move-spaces="moveSpaces"
         @open-space="emit('openSpace', $event)"
         @open-artifact="emit('openArtifact', $event)"
         @space-action="(action, space) => emit('spaceAction', action, space)"
         @artifact-action="(action, artifact) => emit('artifactAction', action, artifact)"
+        @explore="emit('explore', $event)"
+        @move="emit('move', $event)"
+        @move-space="emit('moveSpace', $event)"
       />
     </template>
   </div>

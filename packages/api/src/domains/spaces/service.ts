@@ -264,8 +264,64 @@ export async function deleteSpaceMember(
   return { ok: true as const };
 }
 
+async function updateDescendantRoots(spaceId: SpaceId, rootSpaceId: SpaceId | null): Promise<void> {
+  const children = await listChildSpaces(spaceId);
+  for (const child of children) {
+    await updateSpace(child.id, { rootSpaceId });
+    await updateDescendantRoots(child.id, rootSpaceId);
+  }
+}
+
+async function isDescendant(ancestorId: SpaceId, candidateId: SpaceId): Promise<boolean> {
+  let cursor = await findSpaceById(candidateId);
+  while (cursor?.parentSpaceId) {
+    if (cursor.parentSpaceId === ancestorId) return true;
+    cursor = await findSpaceById(cursor.parentSpaceId);
+  }
+  return false;
+}
+
+async function reparentSpace(
+  userId: UserId,
+  spaceRow: SpaceRow,
+  parentSpaceId: SpaceId | null,
+): Promise<
+  | { ok: true; space: SpaceRow }
+  | { ok: false; reason: "forbidden" | "invalid_parent" | "not_found" }
+> {
+  if (spaceRow.parentSpaceId === parentSpaceId) {
+    return { ok: true, space: spaceRow };
+  }
+  if (parentSpaceId === spaceRow.id) {
+    return { ok: false, reason: "invalid_parent" };
+  }
+
+  if (parentSpaceId === null) {
+    const updated = await updateSpace(spaceRow.id, { parentSpaceId: null, rootSpaceId: null });
+    if (!updated) return { ok: false, reason: "not_found" };
+    await updateDescendantRoots(spaceRow.id, updated.id);
+    await enableMembership(updated);
+    return { ok: true, space: updated };
+  }
+
+  const parent = await requireSpaceAccess(userId, parentSpaceId);
+  if (!parent) return { ok: false, reason: "forbidden" };
+  if (await isDescendant(spaceRow.id, parent.id)) {
+    return { ok: false, reason: "invalid_parent" };
+  }
+
+  const nextRoot = parent.rootSpaceId ?? parent.id;
+  const updated = await updateSpace(spaceRow.id, {
+    parentSpaceId: parent.id,
+    rootSpaceId: nextRoot,
+  });
+  if (!updated) return { ok: false, reason: "not_found" };
+  await updateDescendantRoots(spaceRow.id, nextRoot);
+  return { ok: true, space: updated };
+}
+
 export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchSpaceInput) {
-  const spaceRow = await requireSpaceManagement(userId, spaceId);
+  let spaceRow = await requireSpaceManagement(userId, spaceId);
   if (!spaceRow) {
     return { ok: false as const, reason: "forbidden" as const };
   }
@@ -273,8 +329,9 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
   const hasTitle = input.title !== undefined;
   const hasIcon = input.icon !== undefined;
   const hasVisibility = input.visibility !== undefined;
+  const hasParent = input.parentSpaceId !== undefined;
 
-  if (!hasTitle && !hasIcon && !hasVisibility) {
+  if (!hasTitle && !hasIcon && !hasVisibility && !hasParent) {
     return { ok: true as const, space: toSpaceSummary(spaceRow) };
   }
 
@@ -286,6 +343,15 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
     const previousVisibility = spaceRow.visibility;
     if (previousVisibility === "public" && input.visibility === "private") {
       await enableMembership(spaceRow);
+    }
+  }
+
+  if (hasParent) {
+    const reparented = await reparentSpace(userId, spaceRow, input.parentSpaceId ?? null);
+    if (!reparented.ok) return reparented;
+    spaceRow = reparented.space;
+    if (!hasTitle && !hasIcon && !hasVisibility) {
+      return { ok: true as const, space: toSpaceSummary(spaceRow) };
     }
   }
 

@@ -10,6 +10,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@denser/design-system";
 import { FileTextIcon, MessageCircleIcon } from "@lucide/vue";
@@ -18,6 +21,7 @@ import { computed } from "vue";
 const props = defineProps<{
   title: string;
   kind: ArtifactKind;
+  preview?: boolean;
 }>();
 
 const displayTitle = computed(() => artifactDisplayTitle(props.title));
@@ -37,7 +41,24 @@ function onAction(action: SpaceGalleryArtifactAction) {
 </script>
 
 <template>
-  <ContextMenu>
+  <button
+    v-if="preview"
+    type="button"
+    tabindex="-1"
+    data-slot="space-artifact-tile"
+    :class="cn('group h-full w-full rounded-xl text-left')"
+  >
+    <Card size="sm" class="h-full w-full rounded-xl border-border">
+      <CardContent class="flex h-full flex-col text-muted-foreground">
+        <div class="flex flex-1 items-center justify-center">
+          <component :is="tileIcon" class="size-6" aria-hidden="true" />
+        </div>
+        <p class="truncate text-sm font-medium">{{ displayTitle }}</p>
+      </CardContent>
+    </Card>
+  </button>
+
+  <ContextMenu v-else>
     <ContextMenuTrigger as-child>
       <button
         type="button"
@@ -72,6 +93,12 @@ function onAction(action: SpaceGalleryArtifactAction) {
     <ContextMenuContent>
       <ContextMenuItem @select="onAction('open')">Open</ContextMenuItem>
       <ContextMenuItem @select="onAction('rename')">Rename</ContextMenuItem>
+      <ContextMenuSub v-if="$slots['move-to']">
+        <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
+        <ContextMenuSubContent class="min-w-56 p-0">
+          <slot name="move-to" />
+        </ContextMenuSubContent>
+      </ContextMenuSub>
       <template v-if="kind === 'document'">
         <ContextMenuSeparator />
         <ContextMenuItem @select="onAction('duplicate')">Duplicate</ContextMenuItem>

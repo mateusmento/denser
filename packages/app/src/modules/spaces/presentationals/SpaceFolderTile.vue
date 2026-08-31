@@ -9,6 +9,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@denser/design-system";
 import { computed } from "vue";
@@ -75,6 +78,12 @@ function onAction(action: SpaceGallerySpaceAction) {
     <ContextMenuContent>
       <ContextMenuItem @select="onAction('open')">Open</ContextMenuItem>
       <ContextMenuItem @select="onAction('rename')">Rename</ContextMenuItem>
+      <ContextMenuSub v-if="$slots['move-to']">
+        <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
+        <ContextMenuSubContent class="min-w-56 p-0">
+          <slot name="move-to" />
+        </ContextMenuSubContent>
+      </ContextMenuSub>
       <ContextMenuItem @select="onAction('openSettings')">Space settings</ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem variant="destructive" @select="onAction('delete')">Delete</ContextMenuItem>

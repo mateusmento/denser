@@ -7,7 +7,8 @@ import {
 } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { ApiConflictError, ApiConversationConflictError } from "@denser/api-client";
-import type { ArtifactId, ArtifactKind, ArtifactSummary } from "@denser/contracts";
+import type { ArtifactId, ArtifactKind, ArtifactSummary, SpaceId } from "@denser/contracts";
+import { toast } from "@denser/design-system";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import type { QueryClient } from "@tanstack/vue-query";
@@ -165,6 +166,44 @@ export function useArtifactCommands() {
     await router.push({ name: "document", params: { documentId: document.id } });
   }
 
+  async function moveArtifact(
+    artifact: Pick<ArtifactSummary, "id" | "title"> &
+      Partial<Pick<ArtifactSummary, "version" | "spaceId" | "kind">>,
+    toSpaceId: SpaceId | null,
+  ) {
+    const target = resolveArtifactRef(artifact);
+    if (target.kind !== "document" || target.spaceId === toSpaceId) return;
+
+    let version =
+      target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
+    let attempt = 0;
+
+    while (attempt < 3) {
+      attempt += 1;
+      try {
+        const { document } = await apiClient.patchDocument(target.id, {
+          spaceId: toSpaceId,
+          version,
+        });
+        applyArtifactPatch(document);
+        await invalidateArtifactProjections(queryClient, target);
+        await invalidateArtifactProjections(queryClient, document);
+        return;
+      } catch (error) {
+        if (!(error instanceof ApiConflictError)) {
+          toast("Couldn’t move document");
+          return;
+        }
+        applyArtifactPatch(error.conflict.document);
+        version = error.conflict.document.version;
+        if (attempt >= 2) {
+          toast("Couldn’t move document");
+          return;
+        }
+      }
+    }
+  }
+
   async function deleteArtifact(
     artifact: Pick<ArtifactSummary, "id" | "title"> &
       Partial<Pick<ArtifactSummary, "spaceId" | "kind">>,
@@ -201,5 +240,6 @@ export function useArtifactCommands() {
     renameArtifact,
     duplicateArtifact,
     deleteArtifact,
+    moveArtifact,
   };
 }

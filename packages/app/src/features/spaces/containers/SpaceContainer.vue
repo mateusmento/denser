@@ -6,7 +6,9 @@ import {
   useArtifactCommands,
   useGalleryActions,
   useSpaceCommands,
+  useSpaceMoveTree,
   useSpaceSettingsHost,
+  type SpaceMoveDestination,
 } from "@/modules/spaces";
 import { useArtifactPeekHost, useWorkspaceCreateActions } from "@/modules/workspace";
 import { useSpaceSync } from "../composables/useSpaceSync";
@@ -46,6 +48,7 @@ const { onCreate } = useWorkspaceCreateActions((title, parentSpaceId, preset) =>
   createSpace(title, parentSpaceId ?? spaceId.value, preset),
 );
 const { openPeek } = useArtifactPeekHost();
+const { spaces: moveSpaces, explore: exploreMove } = useSpaceMoveTree();
 
 const { onSpaceAction, onArtifactAction } = useGalleryActions(
   {
@@ -65,6 +68,22 @@ function openArtifact(artifact: ArtifactSummary) {
     id: artifact.id,
     kind: artifact.kind,
   });
+}
+
+function destinationSpaceId(to: SpaceMoveDestination): SpaceId | null {
+  return to.kind === "home" ? null : (to.spaceId as SpaceId);
+}
+
+function moveGalleryArtifact(payload: { artifactId: string; to: SpaceMoveDestination }) {
+  const artifact = content.value?.artifacts.find((entry) => entry.id === payload.artifactId);
+  if (!artifact) return;
+  void artifactCommands.moveArtifact(artifact, destinationSpaceId(payload.to));
+}
+
+function moveGallerySpace(payload: { spaceId: string; to: SpaceMoveDestination }) {
+  const space = content.value?.childSpaces.find((entry) => entry.id === payload.spaceId);
+  if (!space) return;
+  void spaceCommands.moveSpace(space, destinationSpaceId(payload.to));
 }
 
 const backlog = computed(() => {
@@ -127,12 +146,16 @@ const showBoard = computed(
     :view="view"
     :content="content"
     :back-link="backLink"
+    :move-spaces="moveSpaces"
     @retry="reload"
     @create="onCreate($event, spaceId)"
     @open-space="openSpace"
     @open-artifact="(id) => artifactCommands.openArtifact({ id: id as ArtifactId, kind: content?.artifacts.find((a) => a.id === id)?.kind ?? 'document' })"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
+    @explore="exploreMove"
+    @move="moveGalleryArtifact"
+    @move-space="moveGallerySpace"
   />
 
   <SpaceSettingsContainer

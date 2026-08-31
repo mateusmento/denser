@@ -43,6 +43,10 @@ const content: HomeContentView = {
       @open-artifact="action('openArtifact')($event)"
       @space-action="(kind, space) => action('spaceAction')(kind, space)"
       @artifact-action="(kind, artifact) => action('artifactAction')(kind, artifact)"
+      :move-spaces="[{ id: content.spaces[0]!.id, title: content.spaces[0]!.title, parentId: content.spaces[0]!.parentSpaceId }]"
+      @explore="action('explore')($event)"
+      @move="action('move')($event)"
+      @move-space="action('moveSpace')($event)"
       @retry="action('retry')()"
     />
   </Story>
