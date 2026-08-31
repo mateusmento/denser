@@ -120,6 +120,8 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
     });
 
     function currentPortOffset(): DndPoint {
+      const rootPort = ports.get("__root__");
+      if (rootPort) return rootPort.offset;
       const first = ports.values().next().value as DndScrollPort | undefined;
       return first?.offset ?? { x: 0, y: 0 };
     }
@@ -145,9 +147,28 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
             ...applyScrollDelta(item, frozen.scroll, scroll),
           };
         }),
-        lists: frozen.lists.map((list) => ({ ...list })),
-        slots: frozen.slots.map((slot) => ({ ...slot })),
-        targets: frozen.targets.map((target) => ({ ...target })),
+        lists: frozen.lists.map((list) => {
+          const port = ports.get(list.id);
+          const startScroll = frozen.portScrolls?.[list.id];
+          if (port && startScroll) {
+            return {
+              ...list,
+              ...applyScrollDelta(list, startScroll, port.offset),
+            };
+          }
+          return {
+            ...list,
+            ...applyScrollDelta(list, frozen.scroll, scroll),
+          };
+        }),
+        slots: frozen.slots.map((slot) => ({
+          ...slot,
+          ...applyScrollDelta(slot, frozen.scroll, scroll),
+        })),
+        targets: frozen.targets.map((target) => ({
+          ...target,
+          ...applyScrollDelta(target, frozen.scroll, scroll),
+        })),
         scroll,
         portScrolls: frozen.portScrolls,
       };

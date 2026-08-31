@@ -42,14 +42,18 @@ onMounted(async () => {
     element,
     orientation: props.orientation ?? "vertical",
   });
-  const overflow = getComputedStyle(element);
+  const viewport = element.closest?.('[data-slot="scroll-area-viewport"]');
+  const scrollTarget = viewport instanceof HTMLElement ? viewport : element;
+  const overflow = getComputedStyle(scrollTarget);
   if (
+    scrollTarget === viewport ||
     overflow.overflowY === "auto" ||
     overflow.overflowY === "scroll" ||
     overflow.overflowX === "auto" ||
     overflow.overflowX === "scroll"
-  )
-    stopPort = session.registerScrollPort(props.listId, createOverflowScrollPort(element));
+  ) {
+    stopPort = session.registerScrollPort(props.listId, createOverflowScrollPort(scrollTarget));
+  }
 });
 
 onUnmounted(() => {

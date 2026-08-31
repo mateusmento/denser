@@ -161,15 +161,15 @@ function blockedMoveIds(itemId: string): readonly string[] {
       </section>
     </template>
 
-      <DndRoot
-        v-else-if="childSpaces.length || artifacts.length"
-        class="flex flex-col gap-6"
-        policy="highlight"
-        settle="item"
-        source-mode="dim"
-        :source-ids-for="(id) => (selection.isSelected(id) ? selection.selectedList.value : [id])"
-        @commit="onCommit"
-      >
+    <DndRoot
+      v-else-if="childSpaces.length || artifacts.length"
+      class="flex flex-col gap-6"
+      policy="highlight"
+      settle="item"
+      source-mode="dim"
+      :source-ids-for="(id) => (selection.isSelected(id) ? selection.selectedList.value : [id])"
+      @commit="onCommit"
+    >
       <section v-if="childSpaces.length" class="space-y-3">
         <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Spaces</h2>
         <div :class="gridClass">

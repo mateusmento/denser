@@ -6,6 +6,7 @@ import {
   DndList,
   DndOverlay,
   DndRoot,
+  ScrollArea,
   type DndCommitPayload,
 } from "@denser/design-system";
 import { computed } from "vue";
@@ -111,24 +112,26 @@ function onOpen(document: ArtifactSummary) {
             {{ column.documents.length }}
           </span>
         </h2>
-        <DndList
-          :list-id="column.stageId"
-          class="flex min-h-24 flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto pr-0.5"
-        >
-          <DndItem
-            v-for="(document, index) in column.documents"
-            :key="document.id"
-            as="button"
-            type="button"
-            :item-id="document.id"
+        <ScrollArea class="min-h-24 flex-1">
+          <DndList
             :list-id="column.stageId"
-            :index="index"
-            class="w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing"
-            @click="onOpen(document)"
+            class="flex flex-col gap-2 p-0.5"
           >
-            {{ document.title || "Untitled" }}
-          </DndItem>
-        </DndList>
+            <DndItem
+              v-for="(document, index) in column.documents"
+              :key="document.id"
+              as="button"
+              type="button"
+              :item-id="document.id"
+              :list-id="column.stageId"
+              :index="index"
+              class="w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing"
+              @click="onOpen(document)"
+            >
+              {{ document.title || "Untitled" }}
+            </DndItem>
+          </DndList>
+        </ScrollArea>
       </section>
       <DndOverlay #default="{ sourceId }">
         <div
