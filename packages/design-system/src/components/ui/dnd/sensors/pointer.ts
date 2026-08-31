@@ -5,6 +5,26 @@ export type PointerSensorOptions = {
   threshold?: number
 }
 
+function isIgnoredTarget(event: PointerEvent, element: HTMLElement) {
+  const target = event.target
+  if (!(target instanceof Element))
+    return false
+  const ignore = target.closest("[data-dnd-ignore]")
+  return ignore != null && ignore !== element && element.contains(ignore)
+}
+
+function suppressNextClick() {
+  const stop = (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    document.removeEventListener("click", stop, true)
+  }
+  document.addEventListener("click", stop, true)
+  window.setTimeout(() => {
+    document.removeEventListener("click", stop, true)
+  }, 0)
+}
+
 export function createPointerSensor(options: PointerSensorOptions = {}): DndSensor {
   const threshold = options.threshold ?? 5
 
@@ -14,19 +34,17 @@ export function createPointerSensor(options: PointerSensorOptions = {}): DndSens
       let origin: DndPoint | null = null
       let started = false
 
+      const detachDocument = () => {
+        document.removeEventListener("pointermove", onMove, true)
+        document.removeEventListener("pointerup", onUp, true)
+        document.removeEventListener("pointercancel", onCancel, true)
+      }
+
       const reset = () => {
         pointerId = null
         origin = null
         started = false
-      }
-
-      const onDown = (event: PointerEvent) => {
-        if (event.button !== 0)
-          return
-        pointerId = event.pointerId
-        origin = { x: event.clientX, y: event.clientY }
-        started = false
-        element.setPointerCapture(event.pointerId)
+        detachDocument()
       }
 
       const onMove = (event: PointerEvent) => {
@@ -37,6 +55,8 @@ export function createPointerSensor(options: PointerSensorOptions = {}): DndSens
           if (distance(point, origin) < threshold)
             return
           started = true
+          if (element.hasPointerCapture?.(event.pointerId) !== true)
+            element.setPointerCapture(event.pointerId)
           emit({ type: "start", point, pointerId: event.pointerId, event })
         }
         emit({ type: "move", point, pointerId: event.pointerId, event })
@@ -52,6 +72,9 @@ export function createPointerSensor(options: PointerSensorOptions = {}): DndSens
             pointerId: event.pointerId,
             event,
           })
+          suppressNextClick()
+          if (element.hasPointerCapture?.(event.pointerId))
+            element.releasePointerCapture(event.pointerId)
         }
         reset()
       }
@@ -61,19 +84,26 @@ export function createPointerSensor(options: PointerSensorOptions = {}): DndSens
           return
         if (started)
           emit({ type: "cancel" } satisfies DndSensorEvent)
+        if (element.hasPointerCapture?.(event.pointerId))
+          element.releasePointerCapture(event.pointerId)
         reset()
       }
 
+      const onDown = (event: PointerEvent) => {
+        if (event.button !== 0 || isIgnoredTarget(event, element))
+          return
+        pointerId = event.pointerId
+        origin = { x: event.clientX, y: event.clientY }
+        started = false
+        document.addEventListener("pointermove", onMove, true)
+        document.addEventListener("pointerup", onUp, true)
+        document.addEventListener("pointercancel", onCancel, true)
+      }
+
       element.addEventListener("pointerdown", onDown)
-      element.addEventListener("pointermove", onMove)
-      element.addEventListener("pointerup", onUp)
-      element.addEventListener("pointercancel", onCancel)
 
       return () => {
         element.removeEventListener("pointerdown", onDown)
-        element.removeEventListener("pointermove", onMove)
-        element.removeEventListener("pointerup", onUp)
-        element.removeEventListener("pointercancel", onCancel)
         reset()
       }
     },

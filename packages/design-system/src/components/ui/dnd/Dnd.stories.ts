@@ -188,6 +188,51 @@ export const HighlightGrid: Story = {
   }),
 }
 
+export const SparseLists: Story = {
+  name: "Sparse lists",
+  render: () => ({
+    components: { DndRoot, DndList, DndItem, DndOverlay },
+    setup() {
+      const lists = ref<Record<string, DemoItem[]>>({
+        todo: [{ id: "task-3", title: "Task 3" }],
+        done: [{ id: "task-4", title: "Task 4" }],
+      })
+      const byId = computed(() =>
+        Object.fromEntries(Object.values(lists.value).flat().map((item) => [item.id, item])),
+      )
+      return {
+        lists,
+        byId,
+        cardClass,
+        onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
+      }
+    },
+    template: `
+      <div class="flex min-h-dvh justify-center gap-6 bg-background p-10">
+        <DndRoot class="flex gap-6" policy="sort" settle="item" @commit="onCommit">
+          <section v-for="listId in ['todo', 'done']" :key="listId" class="w-64">
+            <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{{ listId }}</h2>
+            <DndList :list-id="listId" class="flex min-h-64 flex-col gap-2 rounded-xl bg-muted/40 p-2">
+              <DndItem
+                v-for="(item, index) in lists[listId]"
+                :key="item.id"
+                :item-id="item.id"
+                :list-id="listId"
+                :index="index"
+              >
+                <div :class="cardClass">{{ item.title }}</div>
+              </DndItem>
+            </DndList>
+          </section>
+          <DndOverlay #default="{ sourceId }">
+            <div :class="[cardClass, 'rotate-1 scale-105 shadow-lg']">{{ byId[sourceId]?.title }}</div>
+          </DndOverlay>
+        </DndRoot>
+      </div>
+    `,
+  }),
+}
+
 export const InFlowTabs: Story = {
   name: "In-flow tabs",
   render: () => ({
@@ -392,6 +437,69 @@ export const ItemSettle: Story = {
           <DndOverlay #default="{ sourceId }">
             <div :class="[cardClass, 'rotate-1 scale-105 shadow-lg']">{{ byId[sourceId]?.title }}</div>
           </DndOverlay>
+        </DndRoot>
+      </div>
+    `,
+  }),
+}
+
+export const ClickableItems: Story = {
+  name: "Clickable items",
+  render: () => ({
+    components: { DndRoot, DndList, DndItem },
+    setup() {
+      const lists = ref<Record<string, DemoItem[]>>({
+        inbox: [
+          { id: "alpha", title: "Alpha" },
+          { id: "bravo", title: "Bravo" },
+          { id: "charlie", title: "Charlie" },
+        ],
+      })
+      const lastClick = ref("none")
+      return {
+        lists,
+        lastClick,
+        onCommit: (payload: DndCommitPayload) => onSortCommit(lists, payload),
+        onOpen: (id: string) => {
+          lastClick.value = `open:${id}`
+        },
+        onClose: (id: string) => {
+          lastClick.value = `close:${id}`
+        },
+      }
+    },
+    template: `
+      <div class="flex min-h-dvh flex-col items-center gap-4 bg-background p-10">
+        <p data-testid="dnd-last-click" class="text-sm text-muted-foreground">{{ lastClick }}</p>
+        <DndRoot class="w-80" policy="sort" settle="item" @commit="onCommit">
+          <DndList list-id="inbox" class="flex flex-col gap-2">
+            <DndItem
+              v-for="(item, index) in lists.inbox"
+              :key="item.id"
+              :item-id="item.id"
+              list-id="inbox"
+              :index="index"
+              class="flex items-center gap-2"
+            >
+              <button
+                type="button"
+                :data-testid="'dnd-open-' + item.id"
+                class="flex-1 rounded-lg border border-border bg-card px-3 py-2.5 text-left text-sm font-medium"
+                @click="onOpen(item.id)"
+              >
+                {{ item.title }}
+              </button>
+              <button
+                type="button"
+                data-dnd-ignore
+                :data-testid="'dnd-close-' + item.id"
+                class="rounded-lg border border-border px-2 py-1 text-xs"
+                @click="onClose(item.id)"
+              >
+                Close
+              </button>
+            </DndItem>
+          </DndList>
         </DndRoot>
       </div>
     `,

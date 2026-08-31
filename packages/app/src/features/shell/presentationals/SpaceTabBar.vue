@@ -120,6 +120,7 @@ function tabButtonClass(tab: SpaceTabItem) {
             variant="ghost"
             size="icon"
             class="size-7 shrink-0 text-muted-foreground"
+            data-dnd-ignore
             :aria-label="`Close ${tab.label}`"
             @click="emit('close', tab.tabKey)"
           >

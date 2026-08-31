@@ -9,6 +9,8 @@ export const STORIES = {
   flock: "primitives-dnd--overlay-flock",
   itemSettle: "primitives-dnd--item-settle",
   overlaySettle: "primitives-dnd--overlay-settle",
+  clickable: "primitives-dnd--clickable-items",
+  sparse: "primitives-dnd--sparse-lists",
 } as const
 
 export async function gotoStory(page: Page, id: string) {
