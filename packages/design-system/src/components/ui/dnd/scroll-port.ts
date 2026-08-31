@@ -1,3 +1,4 @@
+import { pointInRect } from "./geometry";
 import type { DndPoint, DndScrollPort } from "./types";
 
 export function createOverflowScrollPort(element: HTMLElement): DndScrollPort {
@@ -42,6 +43,7 @@ export function autoScrollDelta(
   speed = 12,
 ): DndPoint | null {
   const viewport = port.viewportRect;
+  if (!pointInRect(pointer, viewport)) return null;
   let x = 0;
   let y = 0;
   if (pointer.x < viewport.x + edge) x = -speed;

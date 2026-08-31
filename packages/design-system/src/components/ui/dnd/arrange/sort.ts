@@ -11,14 +11,6 @@ import type {
 
 export type SortOver = { listId: DndId; index: number };
 
-function axisSize(rect: DndRect, orientation: DndAxis): number {
-  return orientation === "vertical" ? rect.height : rect.width;
-}
-
-function asDelta(amount: number, orientation: DndAxis): DndDelta {
-  return orientation === "vertical" ? { x: 0, y: amount } : { x: amount, y: 0 };
-}
-
 function membersOf(
   items: ItemSnapshot[],
   listId: DndId,
@@ -51,8 +43,107 @@ export function hitTestSort(
   return { listId: list.id, index: members.length };
 }
 
-function declaredGap(lists: ListSnapshot[], listId: DndId | undefined) {
-  return lists.find((list) => list.id === listId)?.gap ?? 0;
+function projectList(
+  items: ItemSnapshot[],
+  listId: DndId,
+  source: ItemSnapshot,
+  insertIndex: number | null,
+  orientation: DndAxis,
+  listSnapshot?: ListSnapshot,
+): { transforms: Map<DndId, DndDelta>; placeholderRect: DndRect | null } {
+  const allOriginal = items
+    .filter((item) => item.listId === listId)
+    .sort((a, b) => a.index - b.index);
+  const isVertical = orientation !== "horizontal";
+
+  if (allOriginal.length === 0 && insertIndex === null) {
+    return { transforms: new Map(), placeholderRect: null };
+  }
+
+  const gap = listGap(allOriginal, orientation, listSnapshot?.gap ?? 0);
+
+  const originPos =
+    allOriginal.length > 0
+      ? Math.min(...allOriginal.map((item) => (isVertical ? item.y : item.x)))
+      : isVertical
+        ? (listSnapshot?.y ?? 0)
+        : (listSnapshot?.x ?? 0);
+
+  const originCross =
+    allOriginal.length > 0
+      ? isVertical
+        ? allOriginal[0]!.x
+        : allOriginal[0]!.y
+      : isVertical
+        ? (listSnapshot?.x ?? 0)
+        : (listSnapshot?.y ?? 0);
+
+  const members = membersOf(items, listId, [source.id]);
+
+  type Entry = { kind: "item"; item: ItemSnapshot } | { kind: "placeholder" };
+  const sequence: Entry[] = [];
+
+  if (insertIndex !== null) {
+    const clamped = Math.max(0, Math.min(insertIndex, members.length));
+    for (let i = 0; i < members.length; i++) {
+      if (i === clamped) {
+        sequence.push({ kind: "placeholder" });
+      }
+      sequence.push({ kind: "item", item: members[i]! });
+    }
+    if (clamped === members.length) {
+      sequence.push({ kind: "placeholder" });
+    }
+  } else {
+    for (const member of members) {
+      sequence.push({ kind: "item", item: member });
+    }
+  }
+
+  let currentPos = originPos;
+  let placeholder: DndRect | null = null;
+  const transforms = new Map<DndId, DndDelta>();
+
+  for (const entry of sequence) {
+    if (entry.kind === "placeholder") {
+      const width = source.width;
+      const height = source.height;
+      if (isVertical) {
+        placeholder = {
+          x: originCross,
+          y: currentPos,
+          width,
+          height,
+        };
+        currentPos += height + gap;
+      } else {
+        placeholder = {
+          x: currentPos,
+          y: originCross,
+          width,
+          height,
+        };
+        currentPos += width + gap;
+      }
+    } else {
+      const it = entry.item;
+      if (isVertical) {
+        const deltaY = currentPos - it.y;
+        if (Math.abs(deltaY) >= 0.5) {
+          transforms.set(it.id, { x: 0, y: deltaY });
+        }
+        currentPos += it.height + gap;
+      } else {
+        const deltaX = currentPos - it.x;
+        if (Math.abs(deltaX) >= 0.5) {
+          transforms.set(it.id, { x: deltaX, y: 0 });
+        }
+        currentPos += it.width + gap;
+      }
+    }
+  }
+
+  return { transforms, placeholderRect: placeholder };
 }
 
 export function computeSortTransforms(
@@ -66,52 +157,58 @@ export function computeSortTransforms(
   const result = new Map<DndId, DndDelta>();
   if (!source?.listId) return result;
 
-  const sourceGap = listGap(
-    items.filter((item) => item.listId === source.listId),
-    orientation,
-    declaredGap(lists, source.listId),
-  );
-  const closeSize = axisSize(source, orientation) + sourceGap;
+  const sourceListSnapshot = lists.find((l) => l.id === source.listId);
+  const sourceOrientation = sourceListSnapshot?.orientation ?? orientation;
 
   if (!over) {
-    for (const item of items) {
-      if (item.id === sourceId || item.listId !== source.listId) continue;
-      if (item.index > source.index) result.set(item.id, asDelta(-closeSize, orientation));
-    }
-    return result;
+    const { transforms } = projectList(
+      items,
+      source.listId,
+      source,
+      null,
+      sourceOrientation,
+      sourceListSnapshot,
+    );
+    return transforms;
   }
 
   if (over.listId === source.listId) {
-    const from = source.index;
-    const insert = over.index;
-    if (insert < from) {
-      for (const item of items) {
-        if (item.id === sourceId || item.listId !== source.listId) continue;
-        if (item.index >= insert && item.index < from)
-          result.set(item.id, asDelta(closeSize, orientation));
-      }
-    } else if (insert > from) {
-      for (const item of items) {
-        if (item.id === sourceId || item.listId !== source.listId) continue;
-        if (item.index > from && item.index <= insert)
-          result.set(item.id, asDelta(-closeSize, orientation));
-      }
-    }
-    return result;
+    const { transforms } = projectList(
+      items,
+      source.listId,
+      source,
+      over.index,
+      sourceOrientation,
+      sourceListSnapshot,
+    );
+    return transforms;
   }
 
-  const targetItems = items.filter((item) => item.listId === over.listId);
-  const targetOrientation = orientation;
-  const openSize =
-    axisSize(source, targetOrientation) +
-    listGap(targetItems, targetOrientation, declaredGap(lists, over.listId));
+  const targetListSnapshot = lists.find((l) => l.id === over.listId);
+  const targetOrientation = targetListSnapshot?.orientation ?? orientation;
 
-  for (const item of items) {
-    if (item.id === sourceId) continue;
-    if (item.listId === source.listId && item.index > source.index)
-      result.set(item.id, asDelta(-closeSize, orientation));
-    if (item.listId === over.listId && item.index >= over.index)
-      result.set(item.id, asDelta(openSize, targetOrientation));
+  const sourceProjected = projectList(
+    items,
+    source.listId,
+    source,
+    null,
+    sourceOrientation,
+    sourceListSnapshot,
+  );
+  const targetProjected = projectList(
+    items,
+    over.listId,
+    source,
+    over.index,
+    targetOrientation,
+    targetListSnapshot,
+  );
+
+  for (const [id, delta] of sourceProjected.transforms) {
+    result.set(id, delta);
+  }
+  for (const [id, delta] of targetProjected.transforms) {
+    result.set(id, delta);
   }
 
   return result;
@@ -123,38 +220,30 @@ export function placeholderRect(
   over: SortOver,
   listRect: ListSnapshot,
   orientation: DndAxis,
+  lists: ListSnapshot[] = [],
 ): DndRect {
-  const size = { width: source.width, height: source.height };
-  const members = membersOf(items, over.listId, [source.id]);
-  const gap = listGap(
-    items.filter((item) => item.listId === over.listId),
-    orientation,
-    listRect.gap,
+  const targetListSnapshot = lists.find((l) => l.id === over.listId) ?? listRect;
+  const targetOrientation = targetListSnapshot.orientation ?? orientation;
+
+  const projected = projectList(
+    items,
+    over.listId,
+    source,
+    over.index,
+    targetOrientation,
+    targetListSnapshot,
   );
 
-  if (members.length === 0) return { x: listRect.x, y: listRect.y, ...size };
-
-  if (over.listId === source.listId && over.index === source.index)
-    return { x: source.x, y: source.y, ...size };
-
-  if (over.index >= members.length) {
-    const last = members[members.length - 1];
-    if (!last) return { x: listRect.x, y: listRect.y, ...size };
-    const draggingDownInSource = over.listId === source.listId && source.index < over.index;
-    if (draggingDownInSource) return { x: last.x, y: last.y, ...size };
-    return orientation === "vertical"
-      ? { x: last.x, y: last.y + last.height + gap, ...size }
-      : { x: last.x + last.width + gap, y: last.y, ...size };
+  if (projected.placeholderRect) {
+    return projected.placeholderRect;
   }
 
-  if (over.listId === source.listId && over.index > source.index) {
-    const shifted = members[over.index - 1];
-    if (shifted) return { x: shifted.x, y: shifted.y, ...size };
-  }
-
-  const at = members[over.index];
-  if (!at) return { x: listRect.x, y: listRect.y, ...size };
-  return { x: at.x, y: at.y, ...size };
+  return {
+    x: targetListSnapshot.x,
+    y: targetListSnapshot.y,
+    width: source.width,
+    height: source.height,
+  };
 }
 
 export function applySortCommit<T extends { id: DndId }>(

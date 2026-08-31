@@ -123,6 +123,62 @@ test("same-list append uses the last remaining item's vacated box, not a slot af
   expect(fourEnd).toEqual({ x: 0, y: 84, width: 80, height: 20 });
 });
 
+test("variable heights: dragging a short card up shifts taller cards down correctly", () => {
+  // A (height 40, y: 0)
+  // B (height 60, y: 48)  [0 + 40 + 8]
+  // C (height 80, y: 116) [48 + 60 + 8]
+  // D (height 30, y: 204) [116 + 80 + 8]
+  const varCards = [
+    item("a", "todo", 0, 0, 40),
+    item("b", "todo", 1, 48, 60),
+    item("c", "todo", 2, 116, 80),
+    item("d", "todo", 3, 204, 30),
+  ];
+
+  // Drag D (height 30) up to index 1 (between A and B)
+  const transforms = computeSortTransforms(varCards, "d", { listId: "todo", index: 1 }, "vertical");
+  // B and C should shift down by D's height (30) + gap (8) = 38
+  expect(transforms.get("a")?.y ?? 0).toBe(0);
+  expect(transforms.get("b")?.y).toBe(38);
+  expect(transforms.get("c")?.y).toBe(38);
+
+  const placeholder = placeholderRect(
+    varCards,
+    varCards[3]!,
+    { listId: "todo", index: 1 },
+    column,
+    "vertical",
+  );
+  // Placeholder should sit at y = 0 + 40 + 8 = 48
+  expect(placeholder).toEqual({ x: 0, y: 48, width: 80, height: 30 });
+});
+
+test("variable heights: dragging a tall card down shifts taller and shorter cards up correctly", () => {
+  const varCards = [
+    item("a", "todo", 0, 0, 40),
+    item("b", "todo", 1, 48, 60),
+    item("c", "todo", 2, 116, 80),
+    item("d", "todo", 3, 204, 30),
+  ];
+
+  // Drag B (height 60) down to index 2 (between C and D)
+  const transforms = computeSortTransforms(varCards, "b", { listId: "todo", index: 2 }, "vertical");
+  // C (height 80) should shift up to take B's place at y=48 (48 - 116 = -68)
+  expect(transforms.get("a")?.y ?? 0).toBe(0);
+  expect(transforms.get("c")?.y).toBe(-68);
+  expect(transforms.get("d")?.y ?? 0).toBe(0);
+
+  const placeholder = placeholderRect(
+    varCards,
+    varCards[1]!,
+    { listId: "todo", index: 2 },
+    column,
+    "vertical",
+  );
+  // Placeholder should sit right after shifted C (48 + 80 + 8 = 136)
+  expect(placeholder).toEqual({ x: 0, y: 136, width: 80, height: 60 });
+});
+
 test("applySortCommit splices the remaining-list index", () => {
   const lists = {
     todo: [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }],

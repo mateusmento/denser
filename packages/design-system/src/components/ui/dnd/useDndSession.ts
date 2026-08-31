@@ -128,14 +128,28 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
       const frozen = snapshot.value;
       if (!frozen) return null;
       const scroll = currentPortOffset();
-      const deltaStart = frozen.scroll;
-      const shift = (rect: DndRect) => applyScrollDelta(rect, deltaStart, scroll);
       return {
-        items: frozen.items.map((item) => ({ ...item, ...shift(item) })),
-        lists: frozen.lists.map((list) => ({ ...list, ...shift(list) })),
-        slots: frozen.slots.map((slot) => ({ ...slot, ...shift(slot) })),
-        targets: frozen.targets.map((target) => ({ ...target, ...shift(target) })),
+        items: frozen.items.map((item) => {
+          const portId = item.listId;
+          const port = portId ? ports.get(portId) : undefined;
+          if (port && portId && frozen.portScrolls?.[portId]) {
+            const startScroll = frozen.portScrolls[portId];
+            const currentScroll = port.offset;
+            return {
+              ...item,
+              ...applyScrollDelta(item, startScroll, currentScroll),
+            };
+          }
+          return {
+            ...item,
+            ...applyScrollDelta(item, frozen.scroll, scroll),
+          };
+        }),
+        lists: frozen.lists.map((list) => ({ ...list })),
+        slots: frozen.slots.map((slot) => ({ ...slot })),
+        targets: frozen.targets.map((target) => ({ ...target })),
         scroll,
+        portScrolls: frozen.portScrolls,
       };
     }
 
@@ -149,6 +163,10 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
           index: item.index,
           ...getUntransformedRect(item.element),
         });
+      }
+      const portScrolls: Record<DndId, DndPoint> = {};
+      for (const [id, port] of ports) {
+        portScrolls[id] = { ...port.offset };
       }
       return {
         items: itemSnapshots,
@@ -168,6 +186,7 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
           ...getUntransformedRect(target.element),
         })),
         scroll: currentPortOffset(),
+        portScrolls,
       };
     }
 
@@ -259,7 +278,14 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
       if (!list) return null;
       return {
         listId: sortOver.listId,
-        rect: placeholderRect(geometry.items, source, sortOver, list, list.orientation),
+        rect: placeholderRect(
+          geometry.items,
+          source,
+          sortOver,
+          list,
+          list.orientation,
+          geometry.lists,
+        ),
       };
     }
 

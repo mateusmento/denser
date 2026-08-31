@@ -64,8 +64,8 @@ const placeholderStyle = computed(() => {
   const box = element.getBoundingClientRect();
   return {
     position: "absolute" as const,
-    left: `${view.rect.x - box.left}px`,
-    top: `${view.rect.y - box.top}px`,
+    left: `${view.rect.x - box.left + element.scrollLeft}px`,
+    top: `${view.rect.y - box.top + element.scrollTop}px`,
     width: `${view.rect.width}px`,
     height: `${view.rect.height}px`,
   };

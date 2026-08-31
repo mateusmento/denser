@@ -59,6 +59,7 @@ export type GeometrySnapshot = {
   slots: SlotSnapshot[];
   targets: TargetSnapshot[];
   scroll: DndPoint;
+  portScrolls?: Record<DndId, DndPoint>;
 };
 
 export type DndDelta = DndPoint;

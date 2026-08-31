@@ -113,7 +113,7 @@ function onOpen(document: ArtifactSummary) {
         </h2>
         <DndList
           :list-id="column.stageId"
-          class="flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto pr-0.5"
+          class="flex min-h-24 flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto pr-0.5"
         >
           <DndItem
             v-for="(document, index) in column.documents"
@@ -123,7 +123,7 @@ function onOpen(document: ArtifactSummary) {
             :item-id="document.id"
             :list-id="column.stageId"
             :index="index"
-            class="cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm data-dragging:cursor-grabbing"
+            class="w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing"
             @click="onOpen(document)"
           >
             {{ document.title || "Untitled" }}
@@ -132,7 +132,7 @@ function onOpen(document: ArtifactSummary) {
       </section>
       <DndOverlay #default="{ sourceId }">
         <div
-          class="rotate-1 rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg"
+          class="w-full rotate-1 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word shadow-lg select-none"
         >
           {{ titleById[sourceId] }}
         </div>
