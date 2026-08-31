@@ -89,7 +89,7 @@ function onOpen(document: ArtifactSummary) {
       </div>
     </div>
 
-    <DndRoot class="flex flex-col gap-6" policy="sort" settle="item" @commit="onCommit">
+    <DndRoot class="flex flex-col gap-6" policy="sort" settle="overlay" @commit="onCommit">
       <section v-for="section in sections" :key="section.key" class="space-y-2">
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">

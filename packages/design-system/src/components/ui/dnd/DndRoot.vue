@@ -14,7 +14,7 @@ type Props = DndSessionConfig &
 
 const props = withDefaults(defineProps<Props>(), {
   policy: "sort",
-  settle: "item",
+  settle: "overlay",
   swapMode: "drop",
   overlayCap: 3,
   orientation: "vertical",

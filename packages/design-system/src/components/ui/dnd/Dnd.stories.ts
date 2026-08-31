@@ -684,7 +684,10 @@ export const MultiSelectDrag: Story = {
           </div>
 
           <DndOverlay #default="{ sourceId, index }" class="rotate-1">
-            <div class="relative flex h-16 w-48 items-center rounded-xl border border-primary bg-card px-4 shadow-xl">
+            <div
+              class="relative flex h-16 w-48 items-center rounded-xl border border-primary bg-card px-4 shadow-xl"
+              :style="index === 1 ? 'transform: translate(-6px, 6px)' : index === 2 ? 'transform: translate(-12px, 12px)' : undefined"
+            >
               <span class="truncate text-sm font-medium">{{ byId[sourceId]?.title }}</span>
               <Badge
                 v-if="index === 0 && selection.count.value > 1"

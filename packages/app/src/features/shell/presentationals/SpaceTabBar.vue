@@ -81,7 +81,7 @@ function tabButtonClass(tab: SpaceTabItem) {
       class="flex items-center gap-1"
       policy="sort"
       orientation="horizontal"
-      settle="item"
+      settle="overlay"
       @commit="onCommit"
     >
       <DndList list-id="working" orientation="horizontal" class="flex items-center gap-1">

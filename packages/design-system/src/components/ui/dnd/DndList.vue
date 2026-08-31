@@ -73,7 +73,10 @@ const placeholderStyle = computed(() => {
 
 const showPlaceholder = computed(() => {
   const view = session.placeholder.value;
-  return view?.listId === props.listId && session.phase.value !== "idle";
+  return (
+    view?.listId === props.listId &&
+    (session.phase.value === "dragging" || session.phase.value === "pickup")
+  );
 });
 
 const resolvedPlaceholderAs = computed(() => {

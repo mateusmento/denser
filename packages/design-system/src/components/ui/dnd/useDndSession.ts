@@ -111,7 +111,12 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
 
     const active = computed(() => phase.value !== "idle");
     const hasOverlay = computed(() => overlayCount.value > 0);
-    const visibleSourceIds = computed(() => sourceIds.value.slice(0, overlayCap.value));
+    const visibleSourceIds = computed(() => {
+      if (phase.value === "pickup" || phase.value === "settling") {
+        return sourceIds.value;
+      }
+      return sourceIds.value.slice(0, overlayCap.value);
+    });
 
     const slotItemMap = computed(() => {
       const map: Record<DndId, DndId | null> = {};
@@ -268,7 +273,7 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
     }
 
     function placeholder(): { listId: DndId; rect: DndRect } | null {
-      if (policy.value !== "sort" || phase.value === "idle") return null;
+      if (policy.value !== "sort" || phase.value === "idle" || phase.value === "settling") return null;
       const geometry = liveSnapshot();
       const sortOver = over.value && "listId" in over.value ? over.value : null;
       const primary = sourceIds.value[0];
@@ -435,20 +440,38 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
       const duration = reducedMotion.value === "reduce" ? 0 : FLY_MS;
       await nextTick();
       transforms.value = new Map();
+      const destinations = new Map<DndId, DndRect>();
+      for (const id of sourceIds.value) {
+        const to = destinationRect(id);
+        if (to) destinations.set(id, to);
+      }
       const primary = sourceIds.value[0];
-      const fromRect = primary ? lastOverlays.get(primary) : null;
-      const to = primary ? destinationRect(primary) : null;
-      if (!fromRect || !to || duration === 0) {
+      const primaryFrom = primary ? lastOverlays.get(primary) : null;
+      const primaryTo = primary ? destinations.get(primary) : null;
+      if (!primaryFrom || !primaryTo || duration === 0) {
         finishSession();
         return;
       }
       fly = dndFly({
-        from: fromRect,
-        to,
+        from: primaryFrom,
+        to: primaryTo,
         duration,
-        onUpdate(rect) {
-          if (!primary) return;
-          writeOverlayRects(new Map([[primary, rect]]));
+        onUpdate(_rect, t) {
+          const eased = easeOutCubic(t);
+          const next = new Map<DndId, DndRect>();
+          for (let i = 0; i < sourceIds.value.length; i++) {
+            const id = sourceIds.value[i]!;
+            const fromRect = lastOverlays.get(id);
+            const toRect = destinations.get(id) ?? primaryTo;
+            if (!fromRect) continue;
+            next.set(id, {
+              x: fromRect.x + (toRect.x - fromRect.x) * eased,
+              y: fromRect.y + (toRect.y - fromRect.y) * eased,
+              width: fromRect.width + (toRect.width - fromRect.width) * eased,
+              height: fromRect.height + (toRect.height - fromRect.height) * eased,
+            });
+          }
+          writeOverlayRects(next);
         },
         onFinish: finishSession,
       });

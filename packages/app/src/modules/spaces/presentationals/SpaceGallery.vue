@@ -161,14 +161,14 @@ function blockedMoveIds(itemId: string): readonly string[] {
       </section>
     </template>
 
-    <DndRoot
-      v-else-if="childSpaces.length || artifacts.length"
-      class="flex flex-col gap-6"
-      policy="highlight"
-      settle="item"
-      :source-ids-for="(id) => (selection.isSelected(id) ? selection.selectedList.value : [id])"
-      @commit="onCommit"
-    >
+      <DndRoot
+        v-else-if="childSpaces.length || artifacts.length"
+        class="flex flex-col gap-6"
+        policy="highlight"
+        settle="item"
+        :source-ids-for="(id) => (selection.isSelected(id) ? selection.selectedList.value : [id])"
+        @commit="onCommit"
+      >
       <section v-if="childSpaces.length" class="space-y-3">
         <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Spaces</h2>
         <div :class="gridClass">
@@ -233,7 +233,10 @@ function blockedMoveIds(itemId: string): readonly string[] {
       </section>
 
       <DndOverlay #default="{ sourceId, index }" class="rotate-1">
-        <div class="relative h-full w-full">
+        <div
+          class="relative h-full w-full"
+          :style="index === 1 ? 'transform: translate(-6px, 6px)' : index === 2 ? 'transform: translate(-12px, 12px)' : undefined"
+        >
           <SpaceArtifactTile
             v-if="artifactById[sourceId]"
             preview
