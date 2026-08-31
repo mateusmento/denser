@@ -234,7 +234,8 @@ export const PatchDocumentInput = z.object({
   title: z.string().trim().max(200).optional(),
   body: TipTapDoc.optional(),
   spaceId: SpaceId.nullable().optional(),
-  rank: z.number().int().optional(),
+  afterId: ArtifactId.nullable().optional(),
+  beforeId: ArtifactId.nullable().optional(),
   stageId: WorkflowStageId.nullable().optional(),
   version: z.number().int().positive(),
 });

@@ -5,10 +5,11 @@ import type {
   TipTapDoc,
   WorkflowStageId,
 } from "@denser/contracts";
-import { eq, max } from "drizzle-orm";
+import { asc, eq, max } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { document } from "../../db/schema/document.js";
+import { RANK_STRIDE, strideRank, type RankRow } from "./rank.js";
 
 export type DocumentRow = typeof document.$inferSelect;
 
@@ -22,7 +23,48 @@ export async function nextRankInSpace(spaceId: SpaceId): Promise<number> {
     .from(document)
     .innerJoin(artifact, eq(document.artifactId, artifact.id))
     .where(eq(artifact.spaceId, spaceId));
-  return (row?.maxRank ?? -1) + 1;
+  return row?.maxRank == null ? RANK_STRIDE : row.maxRank + RANK_STRIDE;
+}
+
+export async function listRanksInSpace(spaceId: SpaceId): Promise<RankRow[]> {
+  const rows = await db
+    .select({
+      id: document.artifactId,
+      rank: document.rank,
+      title: artifact.title,
+      spaceId: artifact.spaceId,
+      stageId: document.stageId,
+    })
+    .from(document)
+    .innerJoin(artifact, eq(document.artifactId, artifact.id))
+    .where(eq(artifact.spaceId, spaceId))
+    .orderBy(asc(document.rank), asc(artifact.title));
+
+  return rows.map((row) => ({
+    id: row.id,
+    rank: row.rank,
+    title: row.title,
+    spaceId: row.spaceId,
+    stageId: row.stageId,
+  }));
+}
+
+export async function reindexSpaceRanks(spaceId: SpaceId, orderedIds: readonly string[]): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .select({ id: document.artifactId })
+      .from(document)
+      .innerJoin(artifact, eq(document.artifactId, artifact.id))
+      .where(eq(artifact.spaceId, spaceId))
+      .for("update");
+
+    for (const [index, artifactId] of orderedIds.entries()) {
+      await tx
+        .update(document)
+        .set({ rank: strideRank(index) })
+        .where(eq(document.artifactId, artifactId as ArtifactId));
+    }
+  });
 }
 
 export async function insertDocumentBody(input: {

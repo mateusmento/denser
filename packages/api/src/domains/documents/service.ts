@@ -21,6 +21,14 @@ import {
 } from "../workflows/repository.js";
 import { EMPTY_TIPTAP_DOC } from "./constants.js";
 import { toDocumentView } from "./mapper.js";
+import {
+  RANK_STRIDE,
+  computeRank,
+  orderIdsForReindex,
+  pickNeighbor,
+  resolvePlaceBounds,
+  strideRank,
+} from "./rank.js";
 import * as documentRepository from "./repository.js";
 
 async function mapDocument(
@@ -76,7 +84,7 @@ export async function createDocument(userId: UserId, input: CreateDocumentInput)
     space: parentSpace,
     ...(input.documentTypeKey ? { documentTypeKey: input.documentTypeKey } : {}),
   });
-  const rank = spaceId ? await documentRepository.nextRankInSpace(spaceId) : 0;
+  const rank = spaceId ? await documentRepository.nextRankInSpace(spaceId) : RANK_STRIDE;
 
   const artifactRow = await artifactRepository.insertDocumentArtifact({
     title,
@@ -108,6 +116,35 @@ export async function getDocument(userId: UserId, artifactId: ArtifactId) {
   }
 
   return { ok: true as const, document: await mapDocument(artifactRow, documentRow) };
+}
+
+async function placeInSpace(input: {
+  movedId: ArtifactId;
+  spaceId: SpaceId;
+  stageId?: documentRepository.DocumentRow["stageId"];
+  afterId?: ArtifactId | null | undefined;
+  beforeId?: ArtifactId | null | undefined;
+}): Promise<{ rank: number }> {
+  const rows = await documentRepository.listRanksInSpace(input.spaceId);
+  const others = rows.filter((row) => row.id !== input.movedId);
+  const maxRank = others.reduce<number | null>(
+    (max, row) => (max == null || row.rank > max ? row.rank : max),
+    null,
+  );
+
+  const after = pickNeighbor(input.afterId, input.movedId, rows, input.spaceId, input.stageId);
+  const before = pickNeighbor(input.beforeId, input.movedId, rows, input.spaceId, input.stageId);
+  const bounds = resolvePlaceBounds(after, before);
+  const computed = computeRank(bounds.afterRank, bounds.beforeRank, maxRank);
+
+  if (computed.kind === "value") {
+    return { rank: computed.rank };
+  }
+
+  const orderedIds = orderIdsForReindex(others, input.movedId, bounds.afterId, bounds.beforeId);
+  await documentRepository.reindexSpaceRanks(input.spaceId, orderedIds);
+  const index = orderedIds.indexOf(input.movedId);
+  return { rank: index >= 0 ? strideRank(index) : RANK_STRIDE };
 }
 
 async function resolveMoveTarget(
@@ -227,8 +264,35 @@ export async function patchDocument(
     }
   }
 
+  const nextStageId = input.stageId !== undefined ? input.stageId : documentRow.stageId;
   const nextTitle = input.title ?? artifactRow.title;
   const nextBody: TipTapDoc = input.body ?? (documentRow.body as TipTapDoc);
+  const wantsPlace = input.afterId !== undefined || input.beforeId !== undefined;
+  const spaceChanged = nextSpaceId !== artifactRow.spaceId;
+
+  let nextRank = documentRow.rank;
+  if (!nextSpaceId) {
+    nextRank = RANK_STRIDE;
+  } else if (wantsPlace || spaceChanged) {
+    const placed = await placeInSpace({
+      movedId: artifactRow.id,
+      spaceId: nextSpaceId,
+      ...(wantsPlace && input.stageId !== undefined ? { stageId: nextStageId } : {}),
+      ...(wantsPlace ? { afterId: input.afterId, beforeId: input.beforeId } : {}),
+    });
+    nextRank = placed.rank;
+  }
+
+  const unchanged =
+    nextSpaceId === artifactRow.spaceId &&
+    nextStageId === documentRow.stageId &&
+    nextTitle === artifactRow.title &&
+    input.body === undefined &&
+    nextRank === documentRow.rank;
+
+  if (unchanged) {
+    return { ok: true as const, document: await mapDocument(artifactRow, documentRow) };
+  }
 
   const updatedArtifact = await artifactRepository.updateArtifactWithVersion({
     artifactId: artifactRow.id,
@@ -259,7 +323,7 @@ export async function patchDocument(
   const updatedDocument = await documentRepository.updateDocumentBody({
     artifactId: artifactRow.id,
     body: nextBody,
-    ...(input.rank !== undefined ? { rank: input.rank } : {}),
+    rank: nextRank,
     ...(input.stageId !== undefined ? { stageId: input.stageId } : {}),
   });
 
@@ -285,7 +349,7 @@ export async function duplicateDocument(userId: UserId, artifactId: ArtifactId) 
   const body = structuredClone(documentRow.body as TipTapDoc);
   const rank = artifactRow.spaceId
     ? await documentRepository.nextRankInSpace(artifactRow.spaceId)
-    : 0;
+    : RANK_STRIDE;
 
   const copiedArtifact = await artifactRepository.insertDocumentArtifact({
     title: copyTitle,

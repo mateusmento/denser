@@ -388,7 +388,6 @@ describe("planning", () => {
     });
     const moved = await client.patchDocument(document.id, {
       spaceId: upcoming!.id,
-      rank: 0,
       version: document.version,
     });
     expect(moved.document.spaceId).toBe(upcoming!.id);
