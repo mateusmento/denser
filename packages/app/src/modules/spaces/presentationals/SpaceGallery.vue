@@ -236,7 +236,13 @@ function blockedMoveIds(itemId: string): readonly string[] {
       <DndOverlay #default="{ sourceId, index }" class="rotate-1">
         <div
           class="relative h-full w-full"
-          :style="index === 1 ? 'transform: translate(-6px, 6px)' : index === 2 ? 'transform: translate(-12px, 12px)' : undefined"
+          :style="
+            index === 1
+              ? 'transform: translate(-6px, 6px)'
+              : index === 2
+                ? 'transform: translate(-12px, 12px)'
+                : undefined
+          "
         >
           <SpaceArtifactTile
             v-if="artifactById[sourceId]"

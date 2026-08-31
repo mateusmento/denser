@@ -96,7 +96,10 @@ function onOpen(document: ArtifactSummary) {
           <div class="flex items-center justify-between gap-2">
             <h2 class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {{ section.title }}
-              <span v-if="section.subtitle" class="font-normal text-muted-foreground/80 normal-case">
+              <span
+                v-if="section.subtitle"
+                class="font-normal text-muted-foreground/80 normal-case"
+              >
                 · {{ section.subtitle }}
               </span>
             </h2>

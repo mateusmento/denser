@@ -289,7 +289,8 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
     }
 
     function placeholder(): { listId: DndId; rect: DndRect } | null {
-      if (policy.value !== "sort" || phase.value === "idle" || phase.value === "settling") return null;
+      if (policy.value !== "sort" || phase.value === "idle" || phase.value === "settling")
+        return null;
       const geometry = liveSnapshot();
       const sortOver = over.value && "listId" in over.value ? over.value : null;
       const primary = sourceIds.value[0];

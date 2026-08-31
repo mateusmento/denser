@@ -33,9 +33,7 @@ const emit = defineEmits<{
 
 <template>
   <ScrollArea class="h-full min-h-0 flex-1" data-slot="home-surface">
-    <div
-      class="grid w-full grid-cols-[minmax(0,1fr)_min(100%,72rem)_minmax(0,1fr)] gap-y-6 py-8"
-    >
+    <div class="grid w-full grid-cols-[minmax(0,1fr)_min(100%,72rem)_minmax(0,1fr)] gap-y-6 py-8">
       <template v-if="view.state === 'loading'">
         <div class="col-start-2 px-6">
           <Skeleton class="h-8 w-1/3" />

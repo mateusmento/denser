@@ -114,10 +114,7 @@ function onOpen(document: ArtifactSummary) {
           </span>
         </h2>
         <ScrollArea class="min-h-24 flex-1">
-          <DndList
-            :list-id="column.stageId"
-            class="flex flex-col gap-2 p-0.5"
-          >
+          <DndList :list-id="column.stageId" class="flex flex-col gap-2 p-0.5">
             <DndItem
               v-for="(document, index) in column.documents"
               :key="document.id"
@@ -126,10 +123,12 @@ function onOpen(document: ArtifactSummary) {
               :item-id="document.id"
               :list-id="column.stageId"
               :index="index"
-              :class="cn([
-                'w-full min-w-0 px-3 py-2 cursor-grab rounded-lg border border-border bg-background',
-                'text-left text-sm line-clamp-2 wrap-break-word select-none data-dragging:cursor-grabbing',
-              ])"
+              :class="
+                cn([
+                  'w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2',
+                  'line-clamp-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing',
+                ])
+              "
               @click="onOpen(document)"
             >
               {{ document.title || "Untitled" }}
