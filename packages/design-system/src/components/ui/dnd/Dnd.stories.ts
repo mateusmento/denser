@@ -287,7 +287,12 @@ export const SwapGrid: Story = {
         tasks: { id: "tasks", title: "Tasks" },
         notes: { id: "notes", title: "Notes" },
       }
-      const slotIds = ["s1", "s2", "s3", "s4"]
+      const slots = [
+        { id: "s1", height: "h-24" },
+        { id: "s2", height: "h-36 row-span-2" },
+        { id: "s3", height: "h-36 row-span-2" },
+        { id: "s4", height: "h-24" },
+      ]
       const slotItemMap = ref<Record<string, string | null>>({
         s1: "weather",
         s2: "calendar",
@@ -299,34 +304,36 @@ export const SwapGrid: Story = {
           return
         slotItemMap.value = commitSwapMap(slotItemMap.value, payload.from.slotId, payload.over.slotId)
       }
-      return { widgets, slotIds, slotItemMap, cardClass, onCommit }
+      return { widgets, slots, slotItemMap, cardClass, onCommit }
     },
     template: `
       <div class="flex min-h-dvh justify-center bg-background p-10">
         <DndRoot class="w-md" policy="swap" swap-mode="drop" settle="item" @commit="onCommit">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 items-start">
             <DndSlot
-              v-for="slotId in slotIds"
-              :key="slotId"
-              :slot-id="slotId"
-              :occupant-id="slotItemMap[slotId]"
-              class="min-h-28 rounded-xl border-2 border-transparent p-1 data-over:border-primary data-over:bg-primary/5"
+              v-for="slot in slots"
+              :key="slot.id"
+              :slot-id="slot.id"
+              :occupant-id="slotItemMap[slot.id]"
+              class="rounded-xl border-2 border-transparent p-1 data-over:border-primary data-over:bg-primary/5"
+              :class="slot.height"
             >
               <DndItem
-                v-if="slotItemMap[slotId]"
-                :key="slotItemMap[slotId]"
-                :item-id="slotItemMap[slotId]"
-                :slot-id="slotId"
+                v-if="slotItemMap[slot.id]"
+                :key="slotItemMap[slot.id]"
+                :item-id="slotItemMap[slot.id]"
+                :slot-id="slot.id"
                 :index="0"
+                class="h-full w-full"
               >
-                <div :class="[cardClass, 'flex h-24 items-center justify-center']">
-                  {{ widgets[slotItemMap[slotId]]?.title }}
+                <div :class="[cardClass, 'flex h-full w-full items-center justify-center']">
+                  {{ widgets[slotItemMap[slot.id]]?.title }}
                 </div>
               </DndItem>
             </DndSlot>
           </div>
           <DndOverlay #default="{ sourceId }">
-            <div :class="[cardClass, 'flex h-24 items-center justify-center shadow-lg']">
+            <div :class="[cardClass, 'flex h-full w-full items-center justify-center shadow-lg']">
               {{ widgets[sourceId]?.title }}
             </div>
           </DndOverlay>

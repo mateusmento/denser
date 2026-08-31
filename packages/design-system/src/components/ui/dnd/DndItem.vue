@@ -61,8 +61,12 @@ function attach() {
 }
 
 onMounted(async () => {
-  await nextTick()
-  attach()
+  if (host()) {
+    attach()
+  } else {
+    await nextTick()
+    attach()
+  }
 })
 
 onUnmounted(() => {

@@ -360,7 +360,6 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
 
       if (settle.value === "item" || !hasOverlay.value) {
         overlayRects.value = new Map()
-        await nextTick()
         transforms.value = new Map()
         await nextTick()
         const duration = reducedMotion.value === "reduce" ? 0 : FLY_MS
@@ -376,9 +375,17 @@ export const [useProvideDndSession, useInjectDndSession] = createInjectionState(
           nextFly.set(id, delta)
         }
         flyDeltas.value = nextFly
+        const hasMovement = [...origins.values()].some(
+          (delta) => Math.hypot(delta.x, delta.y) >= 0.5,
+        )
+        if (!hasMovement || duration === 0) {
+          finishSession()
+          return
+        }
         const first = movingIds[0]
-        const origin = first ? origins.get(first) : null
-        if (!origin || duration === 0) {
+        const firstOrigin = first ? origins.get(first) : undefined
+        const origin = firstOrigin ?? Array.from(origins.values())[0]
+        if (!origin) {
           finishSession()
           return
         }
