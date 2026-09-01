@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PropertyDefinitionId, SpaceId } from "./ids.js";
+import { PropertyDefinitionId, SpaceId, UserId } from "./ids.js";
 
 export const PropertyType = z.enum([
   "text",
@@ -18,6 +18,33 @@ export const PropertyOption = z.object({
   color: z.string().optional(),
 });
 export type PropertyOption = z.infer<typeof PropertyOption>;
+
+export const DateFormat = z.enum(["locale", "iso", "mdy", "dmy"]);
+export type DateFormat = z.infer<typeof DateFormat>;
+
+export const TimeFormat = z.enum(["none", "12h", "24h"]);
+export type TimeFormat = z.infer<typeof TimeFormat>;
+
+export const DateReminderPreset = z.enum([
+  "on_date",
+  "5_min_before",
+  "1_hour_before",
+  "1_day_before",
+  "2_days_before",
+  "custom",
+]);
+export type DateReminderPreset = z.infer<typeof DateReminderPreset>;
+
+export const DateReminderUnit = z.enum(["minutes", "hours", "days", "weeks"]);
+export type DateReminderUnit = z.infer<typeof DateReminderUnit>;
+
+export const DateNotificationConfig = z.object({
+  enabled: z.boolean().default(false),
+  preset: DateReminderPreset.default("on_date"),
+  customAmount: z.number().int().positive().optional(),
+  customUnit: DateReminderUnit.optional(),
+});
+export type DateNotificationConfig = z.infer<typeof DateNotificationConfig>;
 
 const PropertyDefinitionCore = z.object({
   id: PropertyDefinitionId,
@@ -40,11 +67,18 @@ export type NumberPropertyDefinition = z.infer<typeof NumberPropertyDefinition>;
 
 export const DatePropertyDefinition = PropertyDefinitionCore.extend({
   type: z.literal("date"),
+  dateFormat: DateFormat.default("locale"),
+  timeFormat: TimeFormat.default("none"),
+  notification: DateNotificationConfig.default({
+    enabled: false,
+    preset: "on_date",
+  }),
 });
 export type DatePropertyDefinition = z.infer<typeof DatePropertyDefinition>;
 
 export const PersonPropertyDefinition = PropertyDefinitionCore.extend({
   type: z.literal("person"),
+  allowMultiple: z.boolean().default(false),
 });
 export type PersonPropertyDefinition = z.infer<typeof PersonPropertyDefinition>;
 
@@ -90,7 +124,28 @@ export const PropertyDefinitionLoose = z.object({
   options: z.array(PropertyOption).optional(),
   relationSpaceId: SpaceId.nullable().optional(),
   allowMultiple: z.boolean().optional(),
+  dateFormat: DateFormat.optional(),
+  timeFormat: TimeFormat.optional(),
+  notification: DateNotificationConfig.optional(),
 });
+
+function normalizeDateNotification(
+  notification: z.infer<typeof DateNotificationConfig> | undefined,
+): DateNotificationConfig {
+  const base = notification ?? { enabled: false, preset: "on_date" as const };
+  if (base.preset !== "custom") {
+    return DateNotificationConfig.parse({
+      enabled: base.enabled ?? false,
+      preset: base.preset ?? "on_date",
+    });
+  }
+  return DateNotificationConfig.parse({
+    enabled: base.enabled ?? false,
+    preset: "custom",
+    customAmount: base.customAmount ?? 1,
+    customUnit: base.customUnit ?? "hours",
+  });
+}
 
 export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
   const loose = PropertyDefinitionLoose.parse(input);
@@ -117,6 +172,20 @@ export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
         type: "relation",
         relationSpaceId: loose.relationSpaceId ?? null,
         allowMultiple: loose.allowMultiple ?? true,
+      });
+    case "person":
+      return PropertyDefinition.parse({
+        ...core,
+        type: "person",
+        allowMultiple: loose.allowMultiple ?? false,
+      });
+    case "date":
+      return PropertyDefinition.parse({
+        ...core,
+        type: "date",
+        dateFormat: loose.dateFormat ?? "locale",
+        timeFormat: loose.timeFormat ?? "none",
+        notification: normalizeDateNotification(loose.notification),
       });
     default:
       return PropertyDefinition.parse({
@@ -159,6 +228,18 @@ export function isRelationPropertyDefinition(
   return property.type === "relation";
 }
 
+export function isPersonPropertyDefinition(
+  property: PropertyDefinition,
+): property is PersonPropertyDefinition {
+  return property.type === "person";
+}
+
+export function isDatePropertyDefinition(
+  property: PropertyDefinition,
+): property is DatePropertyDefinition {
+  return property.type === "date";
+}
+
 export function buildPropertyDefinition(input: {
   id: PropertyDefinitionId;
   key: string;
@@ -169,6 +250,9 @@ export function buildPropertyDefinition(input: {
   options?: PropertyOption[];
   relationSpaceId?: SpaceId | null;
   allowMultiple?: boolean;
+  dateFormat?: DateFormat;
+  timeFormat?: TimeFormat;
+  notification?: DateNotificationConfig;
 }): PropertyDefinition {
   return sanitizePropertyDefinition({
     id: input.id,
@@ -180,5 +264,30 @@ export function buildPropertyDefinition(input: {
     options: input.options,
     relationSpaceId: input.relationSpaceId,
     allowMultiple: input.allowMultiple,
+    dateFormat: input.dateFormat,
+    timeFormat: input.timeFormat,
+    notification: input.notification,
   });
+}
+
+/** Person property values: single UserId or UserId[]. Legacy string names are read-only compat. */
+export function parsePersonPropertyValue(
+  value: unknown,
+  allowMultiple: boolean,
+): UserId[] {
+  if (value == null || value === "") return [];
+  if (Array.isArray(value)) {
+    return value.filter((item): item is UserId => typeof item === "string" && item.length > 0);
+  }
+  if (typeof value === "string") {
+    return allowMultiple ? [value as UserId] : [value as UserId];
+  }
+  return [];
+}
+
+export function memberDisplayLabel(member: {
+  name: string;
+  username: string | null;
+}): string {
+  return member.name || member.username || "Member";
 }

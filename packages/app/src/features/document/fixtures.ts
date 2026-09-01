@@ -1,4 +1,4 @@
-import type { ArtifactId, ArtifactSummary, PropertyDefinition, SpaceId, SpaceMember } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, PropertyDefinition, SpaceId, SpaceMember, UserId } from "@denser/contracts";
 import { emptyDoc, featureTourDoc, type MentionCandidate } from "@/modules/rich-text";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
 import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } from "./types";
@@ -36,6 +36,7 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
     name: "Assignee",
     type: "person",
     required: false,
+    allowMultiple: false,
     order: 1,
   },
   {
@@ -60,11 +61,22 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
     required: false,
     order: 3,
   },
+  {
+    id: "prop-due-date" as PropertyDefinition["id"],
+    key: "due_date",
+    name: "Due date",
+    type: "date",
+    required: false,
+    dateFormat: "locale",
+    timeFormat: "none",
+    notification: { enabled: false, preset: "on_date" },
+    order: 4,
+  },
 ];
 
 export const samplePropertyValues: Record<string, unknown> = {
   priority: "High",
-  assignee: "Ava Chen",
+  assignee: "u-ava" as UserId,
   labels: ["Frontend", "Design"],
   estimate: 3,
 };

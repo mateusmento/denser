@@ -559,6 +559,10 @@ export function useDocumentSync(
         relationSpaceId:
           prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
         allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,
+        dateFormat: prop.type === "date" ? "locale" : undefined,
+        timeFormat: prop.type === "date" ? "none" : undefined,
+        notification:
+          prop.type === "date" ? { enabled: false, preset: "on_date" as const } : undefined,
       });
       const updated = [...documentType.value.properties, newProp];
       await patchDocTypeMutation.mutateAsync({ properties: updated });

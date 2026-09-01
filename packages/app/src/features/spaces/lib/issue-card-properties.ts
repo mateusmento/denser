@@ -130,6 +130,13 @@ export function projectIssueCardDisplay(
       continue;
     }
 
+    if (prop.type === "person" && Array.isArray(value) && value.length > 0) {
+      const names = value.filter((item): item is string => typeof item === "string");
+      assignee = names[0] ?? null;
+      fields.push({ key: prop.key, name: prop.name, type: prop.type, value: names });
+      continue;
+    }
+
     fields.push({ key: prop.key, name: prop.name, type: prop.type, value });
   }
 

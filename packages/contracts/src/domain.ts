@@ -106,6 +106,11 @@ export {
   PropertyType,
   PropertyOption,
   PropertyDefinition,
+  DateFormat,
+  TimeFormat,
+  DateReminderPreset,
+  DateReminderUnit,
+  DateNotificationConfig,
   type TextPropertyDefinition,
   type NumberPropertyDefinition,
   type DatePropertyDefinition,
@@ -118,6 +123,10 @@ export {
   propertyDefinitionHasEditor,
   isSelectPropertyDefinition,
   isRelationPropertyDefinition,
+  isPersonPropertyDefinition,
+  isDatePropertyDefinition,
+  parsePersonPropertyValue,
+  memberDisplayLabel,
   buildPropertyDefinition,
 } from "./property-definition.js";
 

@@ -21,6 +21,7 @@ import { ref, watch } from "vue";
 import type { DocumentPropertiesView } from "../types";
 import PropertyAddMenu, { type AddPropertyPayload } from "./PropertyAddMenu.vue";
 import PropertyDefinitionEditDialog from "./PropertyDefinitionEditDialog.vue";
+import PropertyDateValue from "./PropertyDateValue.vue";
 import PropertyMultiSelectValue from "./PropertyMultiSelectValue.vue";
 import PropertyPersonValue from "./PropertyPersonValue.vue";
 import PropertyRelationValue from "./PropertyRelationValue.vue";
@@ -46,6 +47,7 @@ const emit = defineEmits<{
 const addPropertyOpen = ref(false);
 const optionPickerOpen = ref<Record<string, boolean>>({});
 const relationPickerOpen = ref<Record<string, boolean>>({});
+const personPickerOpen = ref<Record<string, boolean>>({});
 
 const renameDialogOpen = ref(false);
 const renamingProperty = ref<PropertyDefinition | null>(null);
@@ -218,9 +220,20 @@ function submitEdit(property: PropertyDefinition) {
 
         <PropertyPersonValue
           v-else-if="prop.type === 'person'"
+          :prop="prop"
           :value="view.values[prop.key]"
           :editable="view.editable"
           :members="view.members"
+          :open="personPickerOpen[prop.key] ?? false"
+          @update:open="personPickerOpen[prop.key] = $event"
+          @update="emit('updateValue', prop.key, $event)"
+        />
+
+        <PropertyDateValue
+          v-else-if="prop.type === 'date'"
+          :prop="prop"
+          :value="view.values[prop.key]"
+          :editable="view.editable"
           @update="emit('updateValue', prop.key, $event)"
         />
 

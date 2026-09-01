@@ -32,6 +32,7 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
     name: "Assignee",
     type: "person",
     required: false,
+    allowMultiple: false,
     order: 1,
   },
   {
@@ -62,6 +63,9 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
     name: "Due date",
     type: "date",
     required: false,
+    dateFormat: "locale",
+    timeFormat: "none",
+    notification: { enabled: false, preset: "on_date" },
     order: 4,
   },
 ];
@@ -73,6 +77,7 @@ export const DEFAULT_SPEC_PROPERTIES: PropertyDefinition[] = [
     name: "Assignee",
     type: "person",
     required: false,
+    allowMultiple: false,
     order: 0,
   },
   {

@@ -13,6 +13,24 @@ export interface PropertyOption {
   color?: string;
 }
 
+export type DateFormat = "locale" | "iso" | "mdy" | "dmy";
+export type TimeFormat = "none" | "12h" | "24h";
+export type DateReminderPreset =
+  | "on_date"
+  | "5_min_before"
+  | "1_hour_before"
+  | "1_day_before"
+  | "2_days_before"
+  | "custom";
+export type DateReminderUnit = "minutes" | "hours" | "days" | "weeks";
+
+export interface DateNotificationConfig {
+  enabled: boolean;
+  preset: DateReminderPreset;
+  customAmount?: number;
+  customUnit?: DateReminderUnit;
+}
+
 interface PropertyDefinitionCore {
   id: string;
   key: string;
@@ -26,9 +44,17 @@ export type TextPropertyDefinition = PropertyDefinitionCore & { type: "text" };
 
 export type NumberPropertyDefinition = PropertyDefinitionCore & { type: "number" };
 
-export type DatePropertyDefinition = PropertyDefinitionCore & { type: "date" };
+export type DatePropertyDefinition = PropertyDefinitionCore & {
+  type: "date";
+  dateFormat: DateFormat;
+  timeFormat: TimeFormat;
+  notification: DateNotificationConfig;
+};
 
-export type PersonPropertyDefinition = PropertyDefinitionCore & { type: "person" };
+export type PersonPropertyDefinition = PropertyDefinitionCore & {
+  type: "person";
+  allowMultiple: boolean;
+};
 
 export type SelectPropertyDefinition = PropertyDefinitionCore & {
   type: "select";
@@ -65,6 +91,18 @@ export function isRelationPropertyDefinition(
   property: PropertyDefinition,
 ): property is RelationPropertyDefinition {
   return property.type === "relation";
+}
+
+export function isPersonPropertyDefinition(
+  property: PropertyDefinition,
+): property is PersonPropertyDefinition {
+  return property.type === "person";
+}
+
+export function isDatePropertyDefinition(
+  property: PropertyDefinition,
+): property is DatePropertyDefinition {
+  return property.type === "date";
 }
 
 export function propertyDefinitionHasEditor(_type: PropertyType): boolean {
