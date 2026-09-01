@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactId, PropertyDefinition } from "@denser/contracts";
+import type { ArtifactId, RelationPropertyDefinition } from "@denser/contracts";
 import { Badge, DropdownMenu, DropdownMenuTrigger } from "@denser/design-system";
 import { PlusIcon, XIcon } from "@lucide/vue";
 import RelationDocumentPickerMenu from "./RelationDocumentPickerMenu.vue";
@@ -7,7 +7,7 @@ import type { RelationDocumentsEntry } from "../types";
 import { relationDocumentTitle } from "../lib/document-properties-view";
 
 const props = defineProps<{
-  prop: PropertyDefinition;
+  prop: RelationPropertyDefinition;
   value: unknown;
   editable: boolean;
   open: boolean;

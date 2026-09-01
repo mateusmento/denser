@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PropertyDefinition, PropertyType } from "./types";
+import { propertyDefinitionHasEditor } from "./types";
 import type { HTMLAttributes } from "vue";
+import { computed } from "vue";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ const props = withDefaults(
   defineProps<{
     property: PropertyDefinition;
     canManage?: boolean;
+    showEdit?: boolean;
     class?: HTMLAttributes["class"];
   }>(),
   {
@@ -30,6 +33,10 @@ const emit = defineEmits<{
   delete: [propertyId: string];
   changeType: [propertyId: string, newType: PropertyType];
 }>();
+
+const showEdit = computed(
+  () => props.showEdit ?? propertyDefinitionHasEditor(props.property.type),
+);
 </script>
 
 <template>
@@ -57,7 +64,7 @@ const emit = defineEmits<{
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="w-48">
-          <DropdownMenuItem @select="emit('edit', property)">
+          <DropdownMenuItem v-if="showEdit" @select="emit('edit', property)">
             <Settings2Icon class="size-3.5 text-muted-foreground" />
             Edit property
           </DropdownMenuItem>

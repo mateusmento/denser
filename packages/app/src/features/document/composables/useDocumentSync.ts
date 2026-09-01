@@ -7,6 +7,12 @@ import type {
   SpaceId,
   TipTapDoc,
 } from "@denser/contracts";
+import {
+  buildPropertyDefinition,
+  isSelectPropertyDefinition,
+  sanitizePropertyDefinition,
+  sanitizePropertyDefinitions,
+} from "@denser/contracts";
 import { ApiConflictError, ApiError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
@@ -237,14 +243,17 @@ export function useDocumentSync(
 
   async function patchDocumentTypeProperties(properties: PropertyDefinition[]) {
     await ensureDocumentTypeFresh();
-    await patchDocTypeMutation.mutateAsync({ properties });
+    await patchDocTypeMutation.mutateAsync({
+      properties: sanitizePropertyDefinitions(properties),
+    });
   }
 
   async function editDocumentTypeProperty(property: PropertyDefinition) {
     if (!documentType.value) return;
     await ensureDocumentTypeFresh();
+    const sanitized = sanitizePropertyDefinition(property);
     const current = documentType.value.properties;
-    const updated = current.map((entry) => (entry.id === property.id ? property : entry));
+    const updated = current.map((entry) => (entry.id === sanitized.id ? sanitized : entry));
     await patchDocTypeMutation.mutateAsync({ properties: updated });
   }
 
@@ -254,18 +263,21 @@ export function useDocumentSync(
     currentValue: unknown,
     setPropertyValue: (key: string, value: unknown) => void,
   ) {
+    if (!isSelectPropertyDefinition(property)) return;
     const trimmed = optionName.trim();
     if (!trimmed) return;
 
-    const existing = property.options ?? [];
+    const existing = isSelectPropertyDefinition(property) ? property.options : [];
     const matched = findOptionByName(existing, trimmed);
     const option = matched ?? createPropertyOption(trimmed, existing.length);
 
     if (!matched) {
-      await editDocumentTypeProperty({
-        ...property,
-        options: [...existing, option],
-      });
+      await editDocumentTypeProperty(
+        sanitizePropertyDefinition({
+          ...property,
+          options: [...existing, option],
+        }),
+      );
     }
 
     if (property.type === "multi_select") {
@@ -517,14 +529,14 @@ export function useDocumentSync(
       const prop = documentType.value.properties.find((entry) => entry.id === propertyId);
       if (!prop) return;
       const duplicateKey = `${prop.key}_copy_${Date.now().toString().slice(-4)}`;
-      const newProp: PropertyDefinition = {
+      const duplicate = sanitizePropertyDefinition({
         ...prop,
         id: crypto.randomUUID() as PropertyDefinition["id"],
         key: duplicateKey,
         name: `${prop.name} (Copy)`,
         order: (prop.order ?? 0) + 1,
-      };
-      const updated = [...documentType.value.properties, newProp];
+      });
+      const updated = [...documentType.value.properties, duplicate];
       await patchDocTypeMutation.mutateAsync({ properties: updated });
     },
     addDocumentTypeProperty: async (prop: {
@@ -537,19 +549,17 @@ export function useDocumentSync(
       if (!documentType.value) return;
       await ensureDocumentTypeFresh();
       const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
-      const isSelect = prop.type === "select" || prop.type === "multi_select";
-      const newProp: PropertyDefinition = {
+      const newProp = buildPropertyDefinition({
         id: crypto.randomUUID() as PropertyDefinition["id"],
         key,
         name: prop.name,
         type: prop.type,
-        required: false,
-        options: isSelect ? (prop.options ?? []) : prop.options,
+        order: documentType.value.properties.length,
+        options: prop.options,
         relationSpaceId:
           prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
         allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,
-        order: documentType.value.properties.length,
-      };
+      });
       const updated = [...documentType.value.properties, newProp];
       await patchDocTypeMutation.mutateAsync({ properties: updated });
     },

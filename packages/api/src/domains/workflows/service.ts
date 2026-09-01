@@ -5,6 +5,7 @@ import type {
   SpaceId,
   WorkflowView,
 } from "@denser/contracts";
+import { sanitizePropertyDefinitions } from "@denser/contracts";
 import {
   findDocumentTypeById,
   listDocumentTypesForSpace,
@@ -69,7 +70,9 @@ export async function patchDocumentType(
 
   const updated = await updateDocumentTypeProperties(id, {
     ...(input.name !== undefined ? { name: input.name } : {}),
-    ...(input.properties !== undefined ? { properties: input.properties } : {}),
+    ...(input.properties !== undefined
+      ? { properties: sanitizePropertyDefinitions(input.properties) }
+      : {}),
   });
 
   if (!updated) {

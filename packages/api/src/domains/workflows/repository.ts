@@ -81,6 +81,7 @@ export const DEFAULT_SPEC_PROPERTIES: PropertyDefinition[] = [
     name: "Labels",
     type: "multi_select",
     required: false,
+    options: [],
     order: 1,
   },
 ];
@@ -92,6 +93,7 @@ export const DEFAULT_DOC_PROPERTIES: PropertyDefinition[] = [
     name: "Labels",
     type: "multi_select",
     required: false,
+    options: [],
     order: 0,
   },
 ];

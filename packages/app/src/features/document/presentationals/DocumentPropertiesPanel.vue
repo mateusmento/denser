@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ArtifactId, PropertyDefinition, PropertyOption, SpaceId } from "@denser/contracts";
+import { propertyDefinitionHasEditor, sanitizePropertyDefinition } from "@denser/contracts";
 import {
   Button,
   Dialog,
@@ -15,11 +16,11 @@ import {
   PropertyList,
   PropertyRow,
 } from "@denser/design-system";
-import { PlusIcon, XIcon } from "@lucide/vue";
+import { PlusIcon } from "@lucide/vue";
 import { ref, watch } from "vue";
 import type { DocumentPropertiesView } from "../types";
-import { createPropertyOption } from "../lib/property-options";
 import PropertyAddMenu, { type AddPropertyPayload } from "./PropertyAddMenu.vue";
+import PropertyDefinitionEditDialog from "./PropertyDefinitionEditDialog.vue";
 import PropertyMultiSelectValue from "./PropertyMultiSelectValue.vue";
 import PropertyPersonValue from "./PropertyPersonValue.vue";
 import PropertyRelationValue from "./PropertyRelationValue.vue";
@@ -52,8 +53,6 @@ const renameValue = ref("");
 
 const editDialogOpen = ref(false);
 const editingProperty = ref<PropertyDefinition | null>(null);
-const editingOptions = ref<{ id: string; name: string; color?: string }[]>([]);
-const newOptionName = ref("");
 
 function selectedOptionNames(key: string): string[] {
   const raw = props.view.values[key];
@@ -101,6 +100,7 @@ function relationSpaceTitle(spaceId: SpaceId | null | undefined): string {
 }
 
 function onSelectRelation(prop: PropertyDefinition, documentId: ArtifactId) {
+  if (prop.type !== "relation") return;
   const current = relationIds(prop.key);
   emit(
     "updateValue",
@@ -110,6 +110,7 @@ function onSelectRelation(prop: PropertyDefinition, documentId: ArtifactId) {
 }
 
 function onRemoveRelation(prop: PropertyDefinition, documentId: ArtifactId) {
+  if (prop.type !== "relation") return;
   const current = relationIds(prop.key);
   const next = current.filter((id) => id !== documentId);
   emit(
@@ -120,7 +121,7 @@ function onRemoveRelation(prop: PropertyDefinition, documentId: ArtifactId) {
 }
 
 watch(
-  () => props.view.schema.filter((prop) => prop.type === "relation" && prop.relationSpaceId),
+  () => props.view.schema.filter((prop) => prop.type === "relation"),
   (relationProps) => {
     for (const prop of relationProps) {
       if (prop.relationSpaceId && relationIds(prop.key).length > 0) {
@@ -146,30 +147,13 @@ function submitRename() {
 
 function startEdit(property: PropertyDefinition) {
   editingProperty.value = property;
-  editingOptions.value = property.options ? [...property.options] : [];
-  newOptionName.value = "";
   editDialogOpen.value = true;
 }
 
-function addEditingOption() {
-  const name = newOptionName.value.trim();
-  if (!name) return;
-  editingOptions.value.push(createPropertyOption(name, editingOptions.value.length));
-  newOptionName.value = "";
-}
-
-function removeEditingOption(id: string) {
-  editingOptions.value = editingOptions.value.filter((entry) => entry.id !== id);
-}
-
-function submitEdit() {
-  if (editingProperty.value) {
-    emit("editProperty", {
-      ...editingProperty.value,
-      options: editingOptions.value,
-    });
-    editDialogOpen.value = false;
-  }
+function submitEdit(property: PropertyDefinition) {
+  emit("editProperty", sanitizePropertyDefinition(property));
+  editDialogOpen.value = false;
+  editingProperty.value = null;
 }
 </script>
 
@@ -202,6 +186,7 @@ function submitEdit() {
         :key="prop.id"
         :property="prop"
         :can-manage="view.canManage"
+        :show-edit="propertyDefinitionHasEditor(prop.type)"
         @edit="startEdit(prop)"
         @rename="startRename(prop)"
         @duplicate="emit('duplicateProperty', prop.id)"
@@ -302,53 +287,11 @@ function submitEdit() {
       </DialogContent>
     </Dialog>
 
-    <Dialog v-model:open="editDialogOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit {{ editingProperty?.name }} Options</DialogTitle>
-          <DialogDescription>
-            Add, customize, or remove available options for this property.
-          </DialogDescription>
-        </DialogHeader>
-        <div class="space-y-3 py-2">
-          <div class="flex items-center gap-2">
-            <Input
-              v-model="newOptionName"
-              placeholder="New option name..."
-              class="h-8 text-xs"
-              @keydown.enter.prevent="addEditingOption"
-            />
-            <Button size="sm" variant="secondary" @click="addEditingOption">Add Option</Button>
-          </div>
-          <div class="max-h-48 space-y-1.5 overflow-y-auto pt-1">
-            <div
-              v-for="opt in editingOptions"
-              :key="opt.id"
-              class="flex items-center justify-between rounded-md border border-border px-2.5 py-1.5 text-xs"
-            >
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="opt.color"
-                  class="size-2.5 rounded-full"
-                  :style="{ backgroundColor: opt.color }"
-                />
-                <span class="font-medium">{{ opt.name }}</span>
-              </div>
-              <button
-                type="button"
-                class="text-muted-foreground hover:text-destructive"
-                @click="removeEditingOption(opt.id)"
-              >
-                <XIcon class="size-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" @click="editDialogOpen = false">Cancel</Button>
-          <Button @click="submitEdit">Save Changes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <PropertyDefinitionEditDialog
+      v-model:open="editDialogOpen"
+      :property="editingProperty"
+      :relation-spaces="view.relationSpaces"
+      @save="submitEdit"
+    />
   </div>
 </template>

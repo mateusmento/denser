@@ -40,6 +40,7 @@ export const NotionStyleProperties: Story = {
           key: "labels",
           name: "Labels",
           type: "multi_select",
+          options: [],
           order: 2,
         },
         {
@@ -47,6 +48,8 @@ export const NotionStyleProperties: Story = {
           key: "parent_epic",
           name: "Parent Epic",
           type: "relation",
+          relationSpaceId: null,
+          allowMultiple: true,
           order: 3,
         },
         {

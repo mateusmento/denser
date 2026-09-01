@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { PropertyDefinition, PropertyOption } from "@denser/contracts";
+import type { PropertyOption, SelectPropertyDefinition } from "@denser/contracts";
 import { DropdownMenu, DropdownMenuTrigger } from "@denser/design-system";
 import { ChevronDownIcon } from "@lucide/vue";
 import PropertyOptionPickerMenu from "./PropertyOptionPickerMenu.vue";
 
 const props = defineProps<{
-  prop: PropertyDefinition;
+  prop: SelectPropertyDefinition;
   value: unknown;
   editable: boolean;
   open: boolean;

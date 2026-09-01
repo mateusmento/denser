@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { PropertyDefinition, PropertyOption } from "@denser/contracts";
+import type { MultiSelectPropertyDefinition, PropertyOption } from "@denser/contracts";
 import { Badge, DropdownMenu, DropdownMenuTrigger } from "@denser/design-system";
 import { PlusIcon, XIcon } from "@lucide/vue";
 import PropertyOptionPickerMenu from "./PropertyOptionPickerMenu.vue";
 
 const props = defineProps<{
-  prop: PropertyDefinition;
+  prop: MultiSelectPropertyDefinition;
   value: unknown;
   editable: boolean;
   open: boolean;

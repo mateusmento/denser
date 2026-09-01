@@ -2,12 +2,12 @@ import { z } from "zod";
 import {
   ArtifactId,
   DocumentTypeId,
-  PropertyDefinitionId,
   SpaceId,
   UserId,
   WorkflowId,
   WorkflowStageId,
 } from "./ids.js";
+import { PropertyDefinition, PropertyOption, PropertyType } from "./property-definition.js";
 
 /** Stable dev seed IDs — safe for fixtures and e2e. */
 export const SEED_USER_ALICE = "00000000-0000-4000-8000-000000000001" as UserId;
@@ -102,37 +102,24 @@ export const SpaceIcon = z.enum([
 ]);
 export type SpaceIcon = z.infer<typeof SpaceIcon>;
 
-export const PropertyType = z.enum([
-  "text",
-  "number",
-  "select",
-  "multi_select",
-  "date",
-  "person",
-  "relation",
-]);
-export type PropertyType = z.infer<typeof PropertyType>;
-
-export const PropertyOption = z.object({
-  id: z.string(),
-  name: z.string(),
-  color: z.string().optional(),
-});
-export type PropertyOption = z.infer<typeof PropertyOption>;
-
-export const PropertyDefinition = z.object({
-  id: PropertyDefinitionId,
-  key: z.string(),
-  name: z.string(),
-  type: PropertyType,
-  required: z.boolean().default(false),
-  defaultValue: z.unknown().optional(),
-  options: z.array(PropertyOption).optional(),
-  relationSpaceId: SpaceId.nullable().optional(),
-  allowMultiple: z.boolean().optional(),
-  order: z.number().int().default(0),
-});
-export type PropertyDefinition = z.infer<typeof PropertyDefinition>;
+export {
+  PropertyType,
+  PropertyOption,
+  PropertyDefinition,
+  type TextPropertyDefinition,
+  type NumberPropertyDefinition,
+  type DatePropertyDefinition,
+  type PersonPropertyDefinition,
+  type SelectPropertyDefinition,
+  type MultiSelectPropertyDefinition,
+  type RelationPropertyDefinition,
+  sanitizePropertyDefinition,
+  sanitizePropertyDefinitions,
+  propertyDefinitionHasEditor,
+  isSelectPropertyDefinition,
+  isRelationPropertyDefinition,
+  buildPropertyDefinition,
+} from "./property-definition.js";
 
 export const SpaceSummary = z.object({
   id: SpaceId,
@@ -239,7 +226,7 @@ export type DocumentTypeView = z.infer<typeof DocumentTypeView>;
 
 export const PatchDocumentTypeInput = z.object({
   name: z.string().trim().min(1).max(100).optional(),
-  properties: z.array(PropertyDefinition).optional(),
+  properties: z.array(z.unknown()).optional(),
 });
 export type PatchDocumentTypeInput = z.infer<typeof PatchDocumentTypeInput>;
 
