@@ -1,127 +1,66 @@
 <script setup lang="ts">
-import type { ArtifactSummary } from "@denser/contracts";
-import {
-  AlertCircleIcon,
-  ArrowDownIcon,
-  ArrowUpIcon,
-  CircleIcon,
-  FileTextIcon,
-} from "@lucide/vue";
-import type { Component } from "vue";
+import type { ArtifactSummary, PropertyDefinition } from "@denser/contracts";
+import { FileTextIcon } from "@lucide/vue";
 import { computed } from "vue";
+import { projectIssueCardDisplay } from "../lib/issue-card-properties";
 
 const props = defineProps<{
   document: ArtifactSummary;
+  propertiesSchema?: readonly PropertyDefinition[];
   preview?: boolean;
 }>();
 
-const properties = computed(() => props.document.properties ?? {});
-
-const priority = computed(() => {
-  const p = properties.value.priority;
-  if (typeof p === "string") return p.toLowerCase();
-  return null;
-});
-
-const priorityMeta = computed<{
-  label: string;
-  class: string;
-  dotClass: string;
-  icon?: Component;
-} | null>(() => {
-  switch (priority.value) {
-    case "urgent":
-      return {
-        label: "Urgent",
-        class: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
-        dotClass: "bg-red-500",
-        icon: AlertCircleIcon,
-      };
-    case "high":
-      return {
-        label: "High",
-        class: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-        dotClass: "bg-orange-500",
-        icon: ArrowUpIcon,
-      };
-    case "medium":
-      return {
-        label: "Medium",
-        class: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-        dotClass: "bg-amber-500",
-        icon: CircleIcon,
-      };
-    case "low":
-      return {
-        label: "Low",
-        class: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-        dotClass: "bg-blue-500",
-        icon: ArrowDownIcon,
-      };
-    default:
-      return null;
-  }
-});
-
-const labels = computed<string[]>(() => {
-  const l = properties.value.labels;
-  if (Array.isArray(l)) return l.filter((item): item is string => typeof item === "string");
-  return [];
-});
-
-const estimate = computed<number | null>(() => {
-  const e = properties.value.estimate;
-  if (typeof e === "number") return e;
-  return null;
-});
-
-const assignee = computed<string | null>(() => {
-  const a = properties.value.assignee;
-  if (typeof a === "string" && a.trim()) return a.trim();
-  return null;
-});
+const display = computed(() => projectIssueCardDisplay(props.document, props.propertiesSchema));
 
 const assigneeInitial = computed(() => {
-  if (!assignee.value) return "?";
-  return assignee.value.slice(0, 1).toUpperCase();
+  const assignee = display.value.assignee;
+  if (!assignee) return "?";
+  return assignee.slice(0, 1).toUpperCase();
 });
 
-const hasBottomRow = computed(() => labels.value.length > 0 || estimate.value !== null || assignee.value !== null);
+const hasBottomRow = computed(
+  () =>
+    display.value.tags.length > 0 ||
+    display.value.estimate !== null ||
+    display.value.assignee !== null,
+);
 </script>
 
 <template>
   <div
-    class="flex w-full min-w-0 flex-col gap-1.5 rounded-lg border border-border bg-background p-2.5 text-left text-sm transition-all shadow-xs hover:border-border/80 hover:shadow-sm select-none"
+    class="flex w-full min-w-0 flex-col gap-1.5 rounded-lg border border-border bg-background p-2.5 text-left text-sm shadow-xs transition-all select-none hover:border-border/80 hover:shadow-sm"
     :class="preview ? 'shadow-lg ring-1 ring-primary/20' : ''"
     data-slot="issue-card"
   >
-    <!-- Top Row: Type Key & Priority -->
     <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+      <div
+        class="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+      >
         <FileTextIcon class="size-3 text-muted-foreground/70" />
         <span>{{ document.documentTypeKey ?? "issue" }}</span>
       </div>
 
       <div
-        v-if="priorityMeta"
-        class="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold border leading-none"
-        :class="priorityMeta.class"
+        v-if="display.priorityChip"
+        class="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] leading-none font-semibold"
+        :class="display.priorityChip.class"
       >
-        <span class="size-1.5 rounded-full" :class="priorityMeta.dotClass" />
-        <span>{{ priorityMeta.label }}</span>
+        <span class="size-1.5 rounded-full" :class="display.priorityChip.dotClass" />
+        <span>{{ display.priorityChip.label }}</span>
       </div>
     </div>
 
-    <!-- Middle: Title -->
-    <div class="font-medium text-foreground text-xs leading-snug line-clamp-2 wrap-break-word">
+    <div class="line-clamp-2 wrap-break-word text-xs leading-snug font-medium text-foreground">
       {{ document.title || "Untitled" }}
     </div>
 
-    <!-- Bottom Row: Tags, Estimate & Assignee -->
-    <div v-if="hasBottomRow" class="mt-0.5 flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-border/40">
+    <div
+      v-if="hasBottomRow"
+      class="mt-0.5 flex flex-wrap items-center justify-between gap-1.5 border-t border-border/40 pt-1"
+    >
       <div class="flex flex-wrap items-center gap-1">
         <span
-          v-for="tag in labels"
+          v-for="tag in display.tags"
           :key="tag"
           class="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
         >
@@ -131,16 +70,16 @@ const hasBottomRow = computed(() => labels.value.length > 0 || estimate.value !=
 
       <div class="ml-auto flex items-center gap-1.5">
         <span
-          v-if="estimate !== null"
-          class="rounded-sm bg-muted/60 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground"
+          v-if="display.estimate !== null"
+          class="rounded-sm bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground"
         >
-          {{ estimate }} pts
+          {{ display.estimate }} pts
         </span>
 
         <div
-          v-if="assignee"
+          v-if="display.assignee"
           class="inline-flex size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary"
-          :title="assignee"
+          :title="display.assignee"
         >
           {{ assigneeInitial }}
         </div>

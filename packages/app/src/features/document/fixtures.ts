@@ -1,5 +1,7 @@
+import type { ArtifactId, ArtifactSummary, PropertyDefinition, SpaceId, SpaceMember } from "@denser/contracts";
 import { emptyDoc, featureTourDoc, type MentionCandidate } from "@/modules/rich-text";
-import type { DocumentDraftView, DocumentSurfaceView } from "./types";
+import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
+import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } from "./types";
 
 export const mentionPeople: readonly MentionCandidate[] = [
   { id: "u-ava", label: "Ava Chen" },
@@ -13,6 +15,60 @@ export function documentMentionItems(query: string): MentionCandidate[] {
   return mentionPeople.filter((person) => person.label.toLowerCase().includes(q));
 }
 
+export const issuePropertiesSchema: PropertyDefinition[] = [
+  {
+    id: "prop-priority" as PropertyDefinition["id"],
+    key: "priority",
+    name: "Priority",
+    type: "select",
+    required: false,
+    options: [
+      { id: "urgent", name: "Urgent", color: "#ef4444" },
+      { id: "high", name: "High", color: "#f97316" },
+      { id: "medium", name: "Medium", color: "#eab308" },
+      { id: "low", name: "Low", color: "#3b82f6" },
+    ],
+    order: 0,
+  },
+  {
+    id: "prop-assignee" as PropertyDefinition["id"],
+    key: "assignee",
+    name: "Assignee",
+    type: "person",
+    required: false,
+    order: 1,
+  },
+  {
+    id: "prop-labels" as PropertyDefinition["id"],
+    key: "labels",
+    name: "Labels",
+    type: "multi_select",
+    required: false,
+    options: [
+      { id: "frontend", name: "Frontend", color: "#8b5cf6" },
+      { id: "backend", name: "Backend", color: "#06b6d4" },
+      { id: "design", name: "Design", color: "#ec4899" },
+      { id: "bug", name: "Bug", color: "#ef4444" },
+    ],
+    order: 2,
+  },
+  {
+    id: "prop-estimate" as PropertyDefinition["id"],
+    key: "estimate",
+    name: "Estimate",
+    type: "number",
+    required: false,
+    order: 3,
+  },
+];
+
+export const samplePropertyValues: Record<string, unknown> = {
+  priority: "High",
+  assignee: "Ava Chen",
+  labels: ["Frontend", "Design"],
+  estimate: 3,
+};
+
 export const readyDocumentView: DocumentSurfaceView = {
   state: "ready",
   canEdit: true,
@@ -20,6 +76,7 @@ export const readyDocumentView: DocumentSurfaceView = {
   titlePlaceholder: "Untitled",
   bodyPlaceholder: "Start writing…",
   mentionItems: [],
+  propertiesSchema: issuePropertiesSchema,
 };
 
 export const readOnlyDocumentView: DocumentSurfaceView = {
@@ -47,9 +104,62 @@ export const forbiddenDocumentView: DocumentSurfaceView = {
 export const emptyDraft: DocumentDraftView = {
   title: "",
   body: emptyDoc(),
+  properties: {},
 };
 
 export const seededDraft: DocumentDraftView = {
   title: "Onboarding notes",
   body: featureTourDoc,
+  properties: samplePropertyValues,
+};
+
+export const spaceMembersFixture: SpaceMember[] = [
+  {
+    userId: "u-ava" as SpaceMember["userId"],
+    username: "ava",
+    name: "Ava Chen",
+    role: "member",
+    createdAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    userId: "u-jon" as SpaceMember["userId"],
+    username: "jon",
+    name: "Jon Park",
+    role: "member",
+    createdAt: "2024-01-01T00:00:00.000Z",
+  },
+];
+
+export const fixtureEngSpaceId = "eng" as SpaceId;
+export const fixtureAcmeSpaceId = "acme" as SpaceId;
+export const fixtureDesignSpaceId = "design" as SpaceId;
+
+export const relationSpacesFixture: SpaceMoveNode[] = [
+  { id: fixtureAcmeSpaceId, title: "Acme", parentId: null },
+  { id: fixtureEngSpaceId, title: "Engineering", parentId: fixtureAcmeSpaceId },
+  { id: fixtureDesignSpaceId, title: "Design", parentId: fixtureAcmeSpaceId },
+];
+
+export const relationDocumentsFixture: Partial<Record<SpaceId, ArtifactSummary[]>> = {
+  [fixtureEngSpaceId]: [
+    {
+      id: "doc-1" as ArtifactId,
+      kind: "document",
+      title: "Auth spec",
+      spaceId: fixtureEngSpaceId,
+    },
+    {
+      id: "doc-2" as ArtifactId,
+      kind: "document",
+      title: "Dashboard polish",
+      spaceId: fixtureEngSpaceId,
+    },
+  ] as ArtifactSummary[],
+};
+
+export const relationDocumentsBySpaceIdFixture: Partial<Record<SpaceId, RelationDocumentsEntry>> = {
+  [fixtureEngSpaceId]: {
+    loading: false,
+    items: relationDocumentsFixture[fixtureEngSpaceId] ?? [],
+  },
 };

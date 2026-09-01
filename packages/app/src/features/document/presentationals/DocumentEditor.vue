@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Button, Skeleton } from "@denser/design-system";
-import type { PropertyDefinition } from "@denser/contracts";
 import type { DocumentDraftView, DocumentEditorView } from "../types";
-import type { AddPropertyPayload } from "./PropertyAddMenu.vue";
 import DocumentComposer from "./DocumentComposer.vue";
-import DocumentPropertiesPanel from "./DocumentPropertiesPanel.vue";
 import PermissionEmpty from "./PermissionEmpty.vue";
 import TitleEditor from "./TitleEditor.vue";
 
@@ -18,21 +15,7 @@ defineProps<{
 const emit = defineEmits<{
   retry: [];
   mentionSearch: [query: string];
-  updateProperty: [key: string, value: unknown];
-  addProperty: [payload: AddPropertyPayload];
-  deleteProperty: [propertyId: string];
-  renameProperty: [propertyId: string, newName: string];
-  duplicateProperty: [propertyId: string];
-  editProperty: [property: PropertyDefinition];
 }>();
-
-function onUpdatePropertyValue(key: string, value: unknown) {
-  if (!draft.value.properties) {
-    draft.value.properties = {};
-  }
-  draft.value.properties[key] = value;
-  emit("updateProperty", key, value);
-}
 </script>
 
 <template>
@@ -57,24 +40,7 @@ function onUpdatePropertyValue(key: string, value: unknown) {
         :placeholder="view.titlePlaceholder"
         :editable="view.canEdit"
       />
-      <DocumentPropertiesPanel
-        :properties="view.propertiesSchema"
-        :values="draft.properties ?? {}"
-        :can-manage="view.canManage ?? true"
-        :editable="view.canEdit"
-        :members="view.members ?? []"
-        :current-space-id="view.currentSpaceId"
-        :current-document-id="view.currentDocumentId"
-        :relation-spaces="view.relationSpaces ?? []"
-        :get-relation-documents="view.getRelationDocuments"
-        :on-explore-relation-space="view.onExploreRelationSpace"
-        @update-value="onUpdatePropertyValue"
-        @add-property="emit('addProperty', $event)"
-        @delete-property="emit('deleteProperty', $event)"
-        @rename-property="(id, name) => emit('renameProperty', id, name)"
-        @duplicate-property="emit('duplicateProperty', $event)"
-        @edit-property="emit('editProperty', $event)"
-      />
+      <slot name="properties" />
       <DocumentComposer
         v-model="draft.body"
         :placeholder="view.bodyPlaceholder"

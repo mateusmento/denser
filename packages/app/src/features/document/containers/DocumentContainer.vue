@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import type { ArtifactId } from "@denser/contracts";
+import type { ArtifactId, PropertyDefinition } from "@denser/contracts";
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import type { MentionCandidate } from "@/modules/rich-text";
 import { documentMentionItems } from "../fixtures";
 import { createDocumentDraftState, useDocumentSync } from "../composables/useDocumentSync";
-import { toDocumentEditorView } from "../types";
-import DocumentEditorContainer from "./DocumentEditorContainer.vue";
+import { toDocumentEditorView, type DocumentPropertiesView } from "../types";
+import { toDocumentPropertiesView } from "../lib/document-properties-view";
+import DocumentEditor from "../presentationals/DocumentEditor.vue";
 import DocumentHeaderContainer from "./DocumentHeaderContainer.vue";
+import DocumentPropertiesPanel from "../presentationals/DocumentPropertiesPanel.vue";
 import DocumentSurface from "../presentationals/DocumentSurface.vue";
 
 const route = useRoute();
 const artifactId = computed(() => route.params.documentId as ArtifactId);
 
 const { draft, dirty } = createDocumentDraftState();
+const sync = useDocumentSync(artifactId);
+
 const {
   surfaceView,
   spaceMembers,
   relationSpaces,
   exploreRelationSpace,
-  getRelationDocuments,
+  relationDocumentsBySpaceId,
+  loadRelationDocuments,
   currentSpaceId,
   currentDocumentId,
   bindDraft,
@@ -28,8 +33,9 @@ const {
   deleteDocumentTypeProperty,
   renameDocumentTypeProperty,
   duplicateDocumentTypeProperty,
-  patchDocumentTypeProperties,
-} = useDocumentSync(artifactId);
+  editDocumentTypeProperty,
+  addDocumentTypeOptionAndSetValue,
+} = sync;
 
 bindDraft(draft, dirty);
 
@@ -38,16 +44,44 @@ const mentionItems = ref<MentionCandidate[]>([]);
 const editorView = computed(() => ({
   ...toDocumentEditorView(surfaceView.value),
   mentionItems: mentionItems.value,
-  members: spaceMembers.value,
-  currentSpaceId: currentSpaceId.value,
-  currentDocumentId: currentDocumentId.value,
-  relationSpaces: relationSpaces.value,
-  getRelationDocuments,
-  onExploreRelationSpace: exploreRelationSpace,
 }));
+
+const propertiesView = computed((): DocumentPropertiesView =>
+  toDocumentPropertiesView({
+    schema: surfaceView.value.propertiesSchema ?? [],
+    values: draft.value.properties ?? {},
+    canManage: surfaceView.value.canManage ?? true,
+    editable: surfaceView.value.canEdit,
+    members: spaceMembers.value,
+    currentSpaceId: currentSpaceId.value,
+    currentDocumentId: currentDocumentId.value,
+    relationSpaces: relationSpaces.value,
+    relationDocumentsBySpaceId: relationDocumentsBySpaceId.value,
+  }),
+);
 
 function onMentionSearch(query: string) {
   mentionItems.value = documentMentionItems(query);
+}
+
+function setDraftProperty(key: string, value: unknown) {
+  if (!draft.value.properties) {
+    draft.value.properties = {};
+  }
+  draft.value.properties[key] = value;
+}
+
+async function uploadImage(file: File) {
+  return URL.createObjectURL(file);
+}
+
+async function onCreateOptionAndSelect(property: PropertyDefinition, name: string) {
+  await addDocumentTypeOptionAndSetValue(
+    property,
+    name,
+    draft.value.properties?.[property.key],
+    setDraftProperty,
+  );
 }
 </script>
 
@@ -57,16 +91,27 @@ function onMentionSearch(query: string) {
       <DocumentHeaderContainer :header="surfaceView.header" />
     </template>
 
-    <DocumentEditorContainer
+    <DocumentEditor
       v-model="draft"
       :view="editorView"
+      :upload-image="uploadImage"
       @retry="reload"
       @mention-search="onMentionSearch"
-      @add-property="addDocumentTypeProperty"
-      @delete-property="deleteDocumentTypeProperty"
-      @rename-property="renameDocumentTypeProperty"
-      @duplicate-property="duplicateDocumentTypeProperty"
-      @edit-property="(prop) => patchDocumentTypeProperties((editorView.propertiesSchema ?? []).map((p) => p.id === prop.id ? prop : p))"
-    />
+    >
+      <template #properties>
+        <DocumentPropertiesPanel
+          :view="propertiesView"
+          @update-value="setDraftProperty"
+          @add-property="addDocumentTypeProperty"
+          @delete-property="deleteDocumentTypeProperty"
+          @rename-property="renameDocumentTypeProperty"
+          @duplicate-property="duplicateDocumentTypeProperty"
+          @edit-property="editDocumentTypeProperty"
+          @create-option-and-select="onCreateOptionAndSelect"
+          @load-relation-documents="loadRelationDocuments"
+          @explore-relation-space="exploreRelationSpace"
+        />
+      </template>
+    </DocumentEditor>
   </DocumentSurface>
 </template>

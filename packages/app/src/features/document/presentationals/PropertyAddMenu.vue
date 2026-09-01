@@ -12,6 +12,7 @@ import { ArrowLeftIcon, ChevronRightIcon, PlusIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import RelationSpacePickerMenu from "@/modules/spaces/presentationals/RelationSpacePickerMenu.vue";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
+import { createPropertyOption } from "../lib/property-options";
 
 export type AddPropertyPayload = {
   name: string;
@@ -34,16 +35,6 @@ const emit = defineEmits<{
 }>();
 
 type Step = "types" | "relation-space" | "name" | "options";
-
-const OPTION_COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
-];
 
 const propertyTypes: { type: PropertyType; label: string; description: string }[] = [
   { type: "text", label: "Text", description: "Single-line text" },
@@ -153,14 +144,7 @@ function addDraftOption(event?: Event) {
   event?.preventDefault();
   const name = optionInput.value.trim();
   if (!name || !canAddOption.value) return;
-  draftOptions.value = [
-    ...draftOptions.value,
-    {
-      id: `opt-${crypto.randomUUID()}`,
-      name,
-      color: OPTION_COLORS[draftOptions.value.length % OPTION_COLORS.length],
-    },
-  ];
+  draftOptions.value = [...draftOptions.value, createPropertyOption(name, draftOptions.value.length)];
   optionInput.value = "";
 }
 

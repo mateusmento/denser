@@ -161,6 +161,10 @@ const showBacklog = computed(
 const showBoard = computed(
   () => spaceView.value === "board" && detail.value?.space.showBoard === true,
 );
+
+const issuePropertiesSchema = computed(
+  () => detail.value?.documentTypes.find((type) => type.key === "issue")?.properties ?? [],
+);
 </script>
 
 <template>
@@ -172,6 +176,7 @@ const showBoard = computed(
     :has-active-sprint="detail?.space.activeSprintId != null"
     :is-starting="isStartingSprint"
     :is-completing="isCompletingSprint"
+    :properties-schema="issuePropertiesSchema"
     @open="openArtifact"
     @create="(id) => openPeek('document', id as SpaceId)"
     @move="onBacklogMove"
@@ -187,6 +192,7 @@ const showBoard = computed(
     "
     :can-manage="detail?.canManage"
     :is-starting="isStartingSprint"
+    :properties-schema="issuePropertiesSchema"
     @open="openArtifact"
     @drop="onBoardDrop"
     @start="startSprint"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactSummary } from "@denser/contracts";
+import type { ArtifactSummary, PropertyDefinition } from "@denser/contracts";
 import {
   Button,
   cn,
@@ -19,6 +19,7 @@ const props = defineProps<{
   emptyUntilStart?: boolean;
   canManage?: boolean;
   isStarting?: boolean;
+  propertiesSchema?: readonly PropertyDefinition[];
 }>();
 
 const emit = defineEmits<{
@@ -134,14 +135,14 @@ function onOpen(document: ArtifactSummary) {
               class="w-full min-w-0 cursor-grab select-none data-dragging:cursor-grabbing"
               @click="onOpen(document)"
             >
-              <IssueCard :document="document" />
+              <IssueCard :document="document" :properties-schema="propertiesSchema" />
             </DndItem>
           </DndList>
         </ScrollArea>
       </section>
       <DndOverlay #default="{ sourceId }">
         <div v-if="documentById[sourceId]" class="w-full rotate-1 shadow-xl">
-          <IssueCard :document="documentById[sourceId]" preview />
+          <IssueCard :document="documentById[sourceId]" :properties-schema="propertiesSchema" preview />
         </div>
         <div
           v-else

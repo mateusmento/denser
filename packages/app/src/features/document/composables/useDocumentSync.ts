@@ -1,4 +1,12 @@
-import type { ArtifactId, ArtifactSummary, PropertyType, SpaceId, SpaceMember, TipTapDoc } from "@denser/contracts";
+import type {
+  ArtifactId,
+  ArtifactSummary,
+  PropertyDefinition,
+  PropertyOption,
+  PropertyType,
+  SpaceId,
+  TipTapDoc,
+} from "@denser/contracts";
 import { ApiConflictError, ApiError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
@@ -18,8 +26,9 @@ import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import { useSpaceMoveTree } from "@/modules/spaces/composables/useSpaceMoveTree";
-import type { DocumentDraftView, DocumentSurfaceView } from "../types";
+import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } from "../types";
 import { isEmptyDocumentDraft } from "../lib/document-content";
+import { createPropertyOption, findOptionByName } from "../lib/property-options";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 
 export type DocumentSyncOptions = {
@@ -167,7 +176,7 @@ export function useDocumentSync(
     return spaceQuery.data.value?.documentTypes?.find((dt) => dt.id === currentDoc.documentTypeId);
   });
 
-  async function getRelationDocuments(targetSpaceId: SpaceId): Promise<ArtifactSummary[]> {
+  async function fetchRelationDocuments(targetSpaceId: SpaceId): Promise<ArtifactSummary[]> {
     const detail = await queryClient.fetchQuery({
       queryKey: queryKeys.space(targetSpaceId),
       queryFn: async () => apiClient.getSpace(targetSpaceId),
@@ -175,8 +184,46 @@ export function useDocumentSync(
     return detail.artifacts.filter((artifact) => artifact.kind === "document");
   }
 
+  const relationDocumentsBySpaceId = ref<Partial<Record<SpaceId, RelationDocumentsEntry>>>({});
+  const relationLoadsInFlight = new Set<SpaceId>();
+
+  async function loadRelationDocuments(targetSpaceId: SpaceId) {
+    const existing = relationDocumentsBySpaceId.value[targetSpaceId];
+    if (existing?.items.length && !existing.loading) return;
+    if (relationLoadsInFlight.has(targetSpaceId)) return;
+
+    relationLoadsInFlight.add(targetSpaceId);
+    relationDocumentsBySpaceId.value = {
+      ...relationDocumentsBySpaceId.value,
+      [targetSpaceId]: { loading: true, items: existing?.items ?? [] },
+    };
+
+    try {
+      const items = await fetchRelationDocuments(targetSpaceId);
+      relationDocumentsBySpaceId.value = {
+        ...relationDocumentsBySpaceId.value,
+        [targetSpaceId]: { loading: false, items },
+      };
+    } catch {
+      relationDocumentsBySpaceId.value = {
+        ...relationDocumentsBySpaceId.value,
+        [targetSpaceId]: { loading: false, items: [] },
+      };
+    } finally {
+      relationLoadsInFlight.delete(targetSpaceId);
+    }
+  }
+
+  async function ensureDocumentTypeFresh() {
+    if (!spaceId.value) return;
+    await queryClient.ensureQueryData({
+      queryKey: queryKeys.space(spaceId.value),
+      queryFn: async () => apiClient.getSpace(spaceId.value!),
+    });
+  }
+
   const patchDocTypeMutation = useMutation({
-    mutationFn: async (input: { name?: string; properties?: any[] }) => {
+    mutationFn: async (input: { name?: string; properties?: PropertyDefinition[] }) => {
       if (!documentType.value?.id) return;
       const res = await apiClient.patchDocumentType(documentType.value.id, input);
       return res.documentType;
@@ -187,6 +234,53 @@ export function useDocumentSync(
       }
     },
   });
+
+  async function patchDocumentTypeProperties(properties: PropertyDefinition[]) {
+    await ensureDocumentTypeFresh();
+    await patchDocTypeMutation.mutateAsync({ properties });
+  }
+
+  async function editDocumentTypeProperty(property: PropertyDefinition) {
+    if (!documentType.value) return;
+    await ensureDocumentTypeFresh();
+    const current = documentType.value.properties;
+    const updated = current.map((entry) => (entry.id === property.id ? property : entry));
+    await patchDocTypeMutation.mutateAsync({ properties: updated });
+  }
+
+  async function addDocumentTypeOptionAndSetValue(
+    property: PropertyDefinition,
+    optionName: string,
+    currentValue: unknown,
+    setPropertyValue: (key: string, value: unknown) => void,
+  ) {
+    const trimmed = optionName.trim();
+    if (!trimmed) return;
+
+    const existing = property.options ?? [];
+    const matched = findOptionByName(existing, trimmed);
+    const option = matched ?? createPropertyOption(trimmed, existing.length);
+
+    if (!matched) {
+      await editDocumentTypeProperty({
+        ...property,
+        options: [...existing, option],
+      });
+    }
+
+    if (property.type === "multi_select") {
+      const current = Array.isArray(currentValue)
+        ? (currentValue as string[])
+        : typeof currentValue === "string" && currentValue
+          ? [currentValue]
+          : [];
+      if (current.includes(option.name)) return;
+      setPropertyValue(property.key, [...current, option.name]);
+      return;
+    }
+
+    setPropertyValue(property.key, option.name);
+  }
 
   const view = computed((): DocumentSurfaceView => {
     if (isCompose.value) {
@@ -400,29 +494,32 @@ export function useDocumentSync(
     spaceMembers: computed(() => spaceQuery.data.value?.members ?? []),
     bindDraft,
     reload: () => documentQuery.refetch(),
-    patchDocumentTypeProperties: async (properties: any[]) => {
-      await patchDocTypeMutation.mutateAsync({ properties });
-    },
+    patchDocumentTypeProperties,
+    editDocumentTypeProperty,
+    addDocumentTypeOptionAndSetValue,
     renameDocumentTypeProperty: async (propertyId: string, newName: string) => {
       if (!documentType.value) return;
-      const updated = documentType.value.properties.map((p) =>
-        p.id === propertyId ? { ...p, name: newName } : p,
+      await ensureDocumentTypeFresh();
+      const updated = documentType.value.properties.map((entry) =>
+        entry.id === propertyId ? { ...entry, name: newName } : entry,
       );
       await patchDocTypeMutation.mutateAsync({ properties: updated });
     },
     deleteDocumentTypeProperty: async (propertyId: string) => {
       if (!documentType.value) return;
-      const updated = documentType.value.properties.filter((p) => p.id !== propertyId);
+      await ensureDocumentTypeFresh();
+      const updated = documentType.value.properties.filter((entry) => entry.id !== propertyId);
       await patchDocTypeMutation.mutateAsync({ properties: updated });
     },
     duplicateDocumentTypeProperty: async (propertyId: string) => {
       if (!documentType.value) return;
-      const prop = documentType.value.properties.find((p) => p.id === propertyId);
+      await ensureDocumentTypeFresh();
+      const prop = documentType.value.properties.find((entry) => entry.id === propertyId);
       if (!prop) return;
       const duplicateKey = `${prop.key}_copy_${Date.now().toString().slice(-4)}`;
-      const newProp = {
+      const newProp: PropertyDefinition = {
         ...prop,
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID() as PropertyDefinition["id"],
         key: duplicateKey,
         name: `${prop.name} (Copy)`,
         order: (prop.order ?? 0) + 1,
@@ -435,13 +532,14 @@ export function useDocumentSync(
       type: PropertyType;
       relationSpaceId?: SpaceId | null;
       allowMultiple?: boolean;
-      options?: { id: string; name: string; color?: string }[];
+      options?: PropertyOption[];
     }) => {
       if (!documentType.value) return;
+      await ensureDocumentTypeFresh();
       const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
       const isSelect = prop.type === "select" || prop.type === "multi_select";
-      const newProp = {
-        id: crypto.randomUUID(),
+      const newProp: PropertyDefinition = {
+        id: crypto.randomUUID() as PropertyDefinition["id"],
         key,
         name: prop.name,
         type: prop.type,
@@ -457,7 +555,8 @@ export function useDocumentSync(
     },
     relationSpaces,
     exploreRelationSpace,
-    getRelationDocuments,
+    relationDocumentsBySpaceId,
+    loadRelationDocuments,
     currentSpaceId: spaceId,
     currentDocumentId: documentId,
     isSaving,

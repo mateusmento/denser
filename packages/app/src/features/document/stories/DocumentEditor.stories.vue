@@ -7,12 +7,16 @@ import {
   emptyDraft,
   errorDocumentView,
   forbiddenDocumentView,
+  issuePropertiesSchema,
   loadingDocumentView,
   readOnlyDocumentView,
   readyDocumentView,
   seededDraft,
+  spaceMembersFixture,
 } from "../fixtures";
+import { toDocumentPropertiesView } from "../lib/document-properties-view";
 import DocumentEditor from "../presentationals/DocumentEditor.vue";
+import DocumentPropertiesPanel from "../presentationals/DocumentPropertiesPanel.vue";
 import { toDocumentEditorView, type DocumentDraftView } from "../types";
 
 const { Story } = defineMeta({
@@ -89,6 +93,29 @@ async function onMentionSearch(query: string) {
     :parameters="storyDocs('Inline load error and Retry; draft is not wiped.')"
   >
     <DocumentEditor v-model="readyDraft" :view="toDocumentEditorView(errorDocumentView)" />
+  </Story>
+  <Story
+    as-child
+    name="WithProperties"
+    :parameters="storyDocs('Editor with properties panel filled via slot.')"
+  >
+    <DocumentEditor v-model="readyDraft" :view="view" @mention-search="onMentionSearch">
+      <template #properties>
+        <DocumentPropertiesPanel
+          :view="
+            toDocumentPropertiesView({
+              schema: issuePropertiesSchema,
+              values: readyDraft.properties ?? {},
+              canManage: true,
+              editable: true,
+              members: spaceMembersFixture,
+              relationSpaces: [],
+              relationDocumentsBySpaceId: {},
+            })
+          "
+        />
+      </template>
+    </DocumentEditor>
   </Story>
   <Story
     as-child

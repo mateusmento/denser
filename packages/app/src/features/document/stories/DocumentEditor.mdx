@@ -5,7 +5,7 @@ import * as DocumentEditorStories from "./DocumentEditor.stories.vue";
 
 # DocumentEditor
 
-Title + body region for documents: loading skeleton, error/retry, forbidden, and edit-ready states. Wired by `DocumentEditorContainer`; composed inside `DocumentSurface` (with or without a header slot).
+Title + body region for documents: loading skeleton, error/retry, forbidden, and edit-ready states. Wired by `DocumentContainer`; composed inside `DocumentSurface` (with or without a header slot). Properties are filled via the `#properties` slot.
 
 <Canvas of={DocumentEditorStories.Ready} />
 

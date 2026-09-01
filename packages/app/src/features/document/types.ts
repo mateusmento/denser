@@ -1,6 +1,5 @@
-import type { ArtifactId, ArtifactSummary, PropertyDefinition, SpaceId } from "@denser/contracts";
+import type { PropertyDefinition } from "@denser/contracts";
 import type { JSONContent, MentionCandidate } from "@/modules/rich-text";
-import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
 
 export type DocumentSurfaceState = "loading" | "ready" | "error" | "forbidden";
 
@@ -18,12 +17,6 @@ export type DocumentEditorView = {
   errorMessage?: string;
   mentionItems?: readonly MentionCandidate[];
   propertiesSchema?: PropertyDefinition[];
-  members?: any[];
-  currentSpaceId?: SpaceId | null;
-  currentDocumentId?: ArtifactId | null;
-  relationSpaces?: readonly SpaceMoveNode[];
-  getRelationDocuments?: (spaceId: SpaceId) => Promise<ArtifactSummary[]>;
-  onExploreRelationSpace?: (spaceId: string) => void | Promise<void>;
 };
 
 export type DocumentSurfaceView = DocumentEditorView & {
@@ -40,3 +33,5 @@ export function toDocumentEditorView(view: DocumentSurfaceView): DocumentEditorV
   const { header: _header, ...editor } = view;
   return editor;
 }
+
+export type { DocumentPropertiesView, RelationDocumentsEntry } from "./lib/document-properties-view";
