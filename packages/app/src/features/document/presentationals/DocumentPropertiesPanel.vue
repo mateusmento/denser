@@ -3,7 +3,7 @@ import type {
   ArtifactId,
   ArtifactSummary,
   PropertyDefinition,
-  PropertyType,
+  PropertyOption,
   SpaceId,
   SpaceMember,
 } from "@denser/contracts";
@@ -22,9 +22,6 @@ import {
   DropdownMenuTrigger,
   Input,
   Label,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   PropertyList,
   PropertyRow,
 } from "@denser/design-system";
@@ -37,6 +34,7 @@ import {
 } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import PropertyAddMenu, { type AddPropertyPayload } from "./PropertyAddMenu.vue";
+import PropertyOptionPickerMenu from "./PropertyOptionPickerMenu.vue";
 import RelationDocumentPickerMenu from "./RelationDocumentPickerMenu.vue";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
 
@@ -72,8 +70,8 @@ const emit = defineEmits<{
   editProperty: [property: PropertyDefinition];
 }>();
 
-const newTagInput = ref<Record<string, string>>({});
 const addPropertyOpen = ref(false);
+const optionPickerOpen = ref<Record<string, boolean>>({});
 const relationPickerOpen = ref<Record<string, boolean>>({});
 const relationDocuments = ref<Record<string, ArtifactSummary[]>>({});
 const relationDocumentsLoading = ref<Record<string, boolean>>({});
@@ -87,28 +85,71 @@ const editingProperty = ref<PropertyDefinition | null>(null);
 const editingOptions = ref<{ id: string; name: string; color?: string }[]>([]);
 const newOptionName = ref("");
 
-function onSelectOption(key: string, optionName: string) {
-  emit("updateValue", key, optionName);
+const OPTION_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+];
+
+function selectedOptionNames(key: string): string[] {
+  const raw = props.values[key];
+  if (Array.isArray(raw)) return raw as string[];
+  if (typeof raw === "string" && raw) return [raw];
+  return [];
 }
 
-function onAddTag(key: string) {
-  const input = newTagInput.value[key]?.trim();
-  if (!input) return;
-  const current = Array.isArray(props.values[key])
-    ? [...(props.values[key] as string[])]
-    : [];
-  if (!current.includes(input)) {
-    current.push(input);
-    emit("updateValue", key, current);
+function optionColor(prop: PropertyDefinition, name: string): string | undefined {
+  return prop.options?.find((opt) => opt.name === name)?.color;
+}
+
+function onSelectOption(prop: PropertyDefinition, option: PropertyOption) {
+  if (prop.type === "multi_select") {
+    const current = selectedOptionNames(prop.key);
+    if (current.includes(option.name)) return;
+    emit("updateValue", prop.key, [...current, option.name]);
+    return;
   }
-  newTagInput.value[key] = "";
+  emit("updateValue", prop.key, option.name);
 }
 
-function onRemoveTag(key: string, tag: string) {
-  const current = Array.isArray(props.values[key])
-    ? (props.values[key] as string[]).filter((t) => t !== tag)
-    : [];
-  emit("updateValue", key, current);
+function onRemoveOption(prop: PropertyDefinition, optionName: string) {
+  if (prop.type === "multi_select") {
+    emit(
+      "updateValue",
+      prop.key,
+      selectedOptionNames(prop.key).filter((name) => name !== optionName),
+    );
+    return;
+  }
+  emit("updateValue", prop.key, null);
+}
+
+function onCreateOption(prop: PropertyDefinition, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  const existing = prop.options ?? [];
+  if (existing.some((opt) => opt.name.toLowerCase() === trimmed.toLowerCase())) {
+    onSelectOption(prop, existing.find((opt) => opt.name.toLowerCase() === trimmed.toLowerCase())!);
+    return;
+  }
+  const option: PropertyOption = {
+    id: `opt-${crypto.randomUUID()}`,
+    name: trimmed,
+    color: OPTION_COLORS[existing.length % OPTION_COLORS.length],
+  };
+  emit("editProperty", {
+    ...prop,
+    options: [...existing, option],
+  });
+  onSelectOption(prop, option);
+}
+
+function onOptionPickerOpenChange(key: string, open: boolean) {
+  optionPickerOpen.value = { ...optionPickerOpen.value, [key]: open };
 }
 
 function onNumberInput(key: string, event: Event) {
@@ -329,7 +370,11 @@ const activeProperties = computed<PropertyDefinition[]>(() => {
       >
         <!-- Select / Single Option (e.g. Priority) -->
         <template v-if="prop.type === 'select'">
-          <DropdownMenu v-if="editable">
+          <DropdownMenu
+            v-if="editable"
+            :open="optionPickerOpen[prop.key] ?? false"
+            @update:open="onOptionPickerOpenChange(prop.key, $event)"
+          >
             <DropdownMenuTrigger as-child>
               <button
                 type="button"
@@ -337,33 +382,25 @@ const activeProperties = computed<PropertyDefinition[]>(() => {
               >
                 <span
                   v-if="values[prop.key]"
-                  class="size-1.5 rounded-full bg-primary"
+                  class="size-1.5 rounded-full"
+                  :style="{
+                    backgroundColor: optionColor(prop, String(values[prop.key])) ?? 'var(--primary)',
+                  }"
                 />
                 <span>{{ values[prop.key] || "Empty" }}</span>
                 <ChevronDownIcon class="size-3 text-muted-foreground ml-0.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" class="w-40">
-              <DropdownMenuItem
-                v-for="opt in prop.options ?? []"
-                :key="opt.id"
-                class="flex items-center justify-between text-xs"
-                @select="onSelectOption(prop.key, opt.name)"
-              >
-                <div class="flex items-center gap-1.5">
-                  <span
-                    v-if="opt.color"
-                    class="size-2 rounded-full"
-                    :style="{ backgroundColor: opt.color }"
-                  />
-                  <span>{{ opt.name }}</span>
-                </div>
-                <CheckIcon
-                  v-if="values[prop.key] === opt.name"
-                  class="size-3.5 text-primary"
-                />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+            <PropertyOptionPickerMenu
+              :open="optionPickerOpen[prop.key] ?? false"
+              :options="prop.options ?? []"
+              :selected-names="selectedOptionNames(prop.key)"
+              placeholder="Search options…"
+              @update:open="onOptionPickerOpenChange(prop.key, $event)"
+              @select="onSelectOption(prop, $event)"
+              @remove="onRemoveOption(prop, $event)"
+              @create="onCreateOption(prop, $event)"
+            />
           </DropdownMenu>
           <span v-else class="text-xs text-muted-foreground">{{ values[prop.key] || "Empty" }}</span>
         </template>
@@ -372,58 +409,60 @@ const activeProperties = computed<PropertyDefinition[]>(() => {
         <template v-else-if="prop.type === 'multi_select'">
           <div class="flex flex-wrap items-center gap-1">
             <Badge
-              v-for="tag in (Array.isArray(values[prop.key]) ? (values[prop.key] as string[]) : [])"
+              v-for="tag in selectedOptionNames(prop.key)"
               :key="tag"
               variant="secondary"
               class="gap-1 text-xs py-0 h-5"
             >
+              <span
+                v-if="optionColor(prop, tag)"
+                class="size-1.5 rounded-full"
+                :style="{ backgroundColor: optionColor(prop, tag) }"
+              />
               <span>{{ tag }}</span>
               <button
                 v-if="editable"
                 type="button"
                 class="rounded-full hover:bg-muted-foreground/20 p-0.5"
-                @click="onRemoveTag(prop.key, tag)"
+                @click="onRemoveOption(prop, tag)"
               >
                 <XIcon class="size-2.5" />
               </button>
             </Badge>
 
-            <Popover v-if="editable">
-              <PopoverTrigger as-child>
+            <DropdownMenu
+              v-if="editable"
+              :open="optionPickerOpen[prop.key] ?? false"
+              @update:open="onOptionPickerOpenChange(prop.key, $event)"
+            >
+              <DropdownMenuTrigger as-child>
                 <button
                   type="button"
                   class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 >
                   <PlusIcon class="size-3" />
-                  Add
+                  {{ selectedOptionNames(prop.key).length ? "Add" : "Empty" }}
                 </button>
-              </PopoverTrigger>
-              <PopoverContent align="start" class="w-48 p-2">
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-1">
-                    <Input
-                      v-model="newTagInput[prop.key]"
-                      placeholder="New label..."
-                      class="h-7 text-xs"
-                      @keydown.enter.prevent="onAddTag(prop.key)"
-                    />
-                    <Button size="xs" variant="secondary" @click="onAddTag(prop.key)">Add</Button>
-                  </div>
-                  <div v-if="prop.options?.length" class="flex flex-col gap-0.5 pt-1 border-t border-border">
-                    <button
-                      v-for="opt in prop.options"
-                      :key="opt.id"
-                      type="button"
-                      class="flex items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted text-muted-foreground hover:text-foreground"
-                      @click="onSelectOption(prop.key, opt.name)"
-                    >
-                      <span v-if="opt.color" class="size-2 rounded-full" :style="{ backgroundColor: opt.color }" />
-                      <span>{{ opt.name }}</span>
-                    </button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+              </DropdownMenuTrigger>
+              <PropertyOptionPickerMenu
+                :open="optionPickerOpen[prop.key] ?? false"
+                :options="prop.options ?? []"
+                :selected-names="selectedOptionNames(prop.key)"
+                allow-multiple
+                placeholder="Search or create…"
+                @update:open="onOptionPickerOpenChange(prop.key, $event)"
+                @select="onSelectOption(prop, $event)"
+                @remove="onRemoveOption(prop, $event)"
+                @create="onCreateOption(prop, $event)"
+              />
+            </DropdownMenu>
+
+            <span
+              v-else-if="!selectedOptionNames(prop.key).length"
+              class="text-xs text-muted-foreground"
+            >
+              Empty
+            </span>
           </div>
         </template>
 

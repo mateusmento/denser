@@ -439,20 +439,14 @@ export function useDocumentSync(
     }) => {
       if (!documentType.value) return;
       const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
+      const isSelect = prop.type === "select" || prop.type === "multi_select";
       const newProp = {
         id: crypto.randomUUID(),
         key,
         name: prop.name,
         type: prop.type,
         required: false,
-        options:
-          prop.options ??
-          (prop.type === "select" || prop.type === "multi_select"
-            ? [
-                { id: "opt-1", name: "Option 1", color: "#3b82f6" },
-                { id: "opt-2", name: "Option 2", color: "#10b981" },
-              ]
-            : undefined),
+        options: isSelect ? (prop.options ?? []) : prop.options,
         relationSpaceId:
           prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
         allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,

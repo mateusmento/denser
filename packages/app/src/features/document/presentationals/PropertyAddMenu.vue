@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropertyType, SpaceId } from "@denser/contracts";
+import type { PropertyOption, PropertyType, SpaceId } from "@denser/contracts";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -8,7 +8,7 @@ import {
   Input,
   PropertyTypeIcon,
 } from "@denser/design-system";
-import { ArrowLeftIcon, ChevronRightIcon } from "@lucide/vue";
+import { ArrowLeftIcon, ChevronRightIcon, PlusIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import RelationSpacePickerMenu from "@/modules/spaces/presentationals/RelationSpacePickerMenu.vue";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
@@ -18,6 +18,7 @@ export type AddPropertyPayload = {
   type: PropertyType;
   relationSpaceId?: SpaceId | null;
   allowMultiple?: boolean;
+  options?: PropertyOption[];
 };
 
 const props = defineProps<{
@@ -32,7 +33,17 @@ const emit = defineEmits<{
   exploreSpace: [spaceId: string];
 }>();
 
-type Step = "types" | "relation-space" | "name";
+type Step = "types" | "relation-space" | "name" | "options";
+
+const OPTION_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+];
 
 const propertyTypes: { type: PropertyType; label: string; description: string }[] = [
   { type: "text", label: "Text", description: "Single-line text" },
@@ -48,7 +59,13 @@ const step = ref<Step>("types");
 const selectedType = ref<PropertyType | null>(null);
 const selectedRelationSpaceId = ref<SpaceId | null>(null);
 const propertyName = ref("");
+const draftOptions = ref<PropertyOption[]>([]);
+const optionInput = ref("");
 const direction = ref<"forward" | "back">("forward");
+
+const isSelectType = computed(
+  () => selectedType.value === "select" || selectedType.value === "multi_select",
+);
 
 const selectedTypeLabel = computed(() => {
   if (!selectedType.value) return "";
@@ -62,11 +79,19 @@ const selectedSpaceTitle = computed(() => {
   );
 });
 
+const canAddOption = computed(() => {
+  const name = optionInput.value.trim();
+  if (!name) return false;
+  return !draftOptions.value.some((opt) => opt.name.toLowerCase() === name.toLowerCase());
+});
+
 function reset() {
   step.value = "types";
   selectedType.value = null;
   selectedRelationSpaceId.value = null;
   propertyName.value = "";
+  draftOptions.value = [];
+  optionInput.value = "";
   direction.value = "forward";
 }
 
@@ -81,6 +106,8 @@ function onSelectType(event: Event, type: PropertyType) {
   event.preventDefault();
   direction.value = "forward";
   selectedType.value = type;
+  draftOptions.value = [];
+  optionInput.value = "";
   if (type === "relation") {
     selectedRelationSpaceId.value = props.currentSpaceId ?? null;
     step.value = "relation-space";
@@ -98,6 +125,10 @@ function onSelectRelationSpace(spaceId: SpaceId) {
 function goBack(event: Event) {
   event.preventDefault();
   direction.value = "back";
+  if (step.value === "options") {
+    step.value = "name";
+    return;
+  }
   if (step.value === "name") {
     step.value = selectedType.value === "relation" ? "relation-space" : "types";
     return;
@@ -107,8 +138,38 @@ function goBack(event: Event) {
   }
 }
 
-function submitName(event: Event) {
+function continueFromName(event: Event) {
   event.preventDefault();
+  if (!propertyName.value.trim() || !selectedType.value) return;
+  if (isSelectType.value) {
+    direction.value = "forward";
+    step.value = "options";
+    return;
+  }
+  submit();
+}
+
+function addDraftOption(event?: Event) {
+  event?.preventDefault();
+  const name = optionInput.value.trim();
+  if (!name || !canAddOption.value) return;
+  draftOptions.value = [
+    ...draftOptions.value,
+    {
+      id: `opt-${crypto.randomUUID()}`,
+      name,
+      color: OPTION_COLORS[draftOptions.value.length % OPTION_COLORS.length],
+    },
+  ];
+  optionInput.value = "";
+}
+
+function removeDraftOption(id: string) {
+  draftOptions.value = draftOptions.value.filter((opt) => opt.id !== id);
+}
+
+function submit(event?: Event) {
+  event?.preventDefault();
   const name = propertyName.value.trim();
   if (!name || !selectedType.value) return;
   emit("addProperty", {
@@ -119,6 +180,7 @@ function submitName(event: Event) {
         ? (selectedRelationSpaceId.value ?? props.currentSpaceId ?? null)
         : undefined,
     allowMultiple: selectedType.value === "relation" ? true : undefined,
+    options: isSelectType.value ? draftOptions.value : undefined,
   });
   emit("update:open", false);
 }
@@ -184,7 +246,7 @@ function submitName(event: Event) {
         </DropdownMenuItem>
       </template>
 
-      <template v-else>
+      <template v-else-if="step === 'name'">
         <DropdownMenuItem class="text-xs" @select="goBack">
           <ArrowLeftIcon class="size-3.5" />
           {{ selectedType === "relation" ? selectedSpaceTitle : "Property types" }}
@@ -195,7 +257,7 @@ function submitName(event: Event) {
             <PropertyTypeIcon v-if="selectedType" :type="selectedType" class="size-3.5" />
             <span class="capitalize">{{ selectedTypeLabel }}</span>
           </DropdownMenuLabel>
-          <form @submit="submitName">
+          <form @submit="continueFromName">
             <Input
               v-model="propertyName"
               placeholder="Property name"
@@ -204,13 +266,75 @@ function submitName(event: Event) {
               @keydown.stop
               @pointerdown.stop
             />
-            <button type="submit" class="sr-only">Create property</button>
+            <button type="submit" class="sr-only">
+              {{ isSelectType ? "Continue" : "Create property" }}
+            </button>
           </form>
           <DropdownMenuItem
             class="justify-center text-xs font-medium"
             :disabled="!propertyName.trim()"
-            @select="submitName"
+            @select="continueFromName"
           >
+            {{ isSelectType ? "Continue" : "Create property" }}
+          </DropdownMenuItem>
+        </div>
+      </template>
+
+      <template v-else-if="step === 'options'">
+        <DropdownMenuItem class="text-xs" @select="goBack">
+          <ArrowLeftIcon class="size-3.5" />
+          {{ propertyName || "Property name" }}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div class="space-y-2 px-3 py-1.5">
+          <DropdownMenuLabel class="px-0 py-0 text-xs font-medium text-muted-foreground">
+            Options
+          </DropdownMenuLabel>
+          <form class="flex items-center gap-1" @submit="addDraftOption">
+            <Input
+              v-model="optionInput"
+              placeholder="Add an option…"
+              class="h-8 text-xs"
+              autofocus
+              @keydown.stop
+              @pointerdown.stop
+            />
+            <button type="submit" class="sr-only">Add option</button>
+          </form>
+          <DropdownMenuItem
+            v-if="canAddOption"
+            class="gap-2 text-xs"
+            @select="addDraftOption"
+          >
+            <PlusIcon class="size-3.5 shrink-0 text-muted-foreground" />
+            <span class="min-w-0 truncate">Create “{{ optionInput.trim() }}”</span>
+          </DropdownMenuItem>
+          <div v-if="draftOptions.length" class="flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+            <div
+              v-for="opt in draftOptions"
+              :key="opt.id"
+              class="mx-1 flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs"
+            >
+              <span
+                v-if="opt.color"
+                class="size-2 shrink-0 rounded-full"
+                :style="{ backgroundColor: opt.color }"
+              />
+              <span class="min-w-0 flex-1 truncate">{{ opt.name }}</span>
+              <button
+                type="button"
+                class="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                @click.stop.prevent="removeDraftOption(opt.id)"
+                @pointerdown.stop
+              >
+                <XIcon class="size-3.5" />
+              </button>
+            </div>
+          </div>
+          <p v-else class="px-1 text-[11px] text-muted-foreground">
+            Add options now, or create the property empty and add them later.
+          </p>
+          <DropdownMenuItem class="justify-center text-xs font-medium" @select="submit">
             Create property
           </DropdownMenuItem>
         </div>
