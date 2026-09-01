@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ContextMenuItem, ContextMenuLabel } from "@denser/design-system";
+import {
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+} from "@denser/design-system";
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "@lucide/vue";
 import { computed, ref } from "vue";
 import {
@@ -77,7 +81,7 @@ function onMoveHere() {
 
 <template>
   <div class="w-56" data-slot="space-move-menu">
-    <label class="flex items-center gap-2 px-2">
+    <label class="mx-1 flex items-center gap-2 px-2">
       <SearchIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
       <input
         v-model="search"
@@ -89,8 +93,8 @@ function onMoveHere() {
         @pointerdown.stop
       />
     </label>
-    <div class="h-px bg-border" />
-    <div class="overflow-hidden p-1">
+    <ContextMenuSeparator />
+    <div class="overflow-hidden">
       <div
         :key="location"
         class="flex flex-col"
@@ -116,7 +120,7 @@ function onMoveHere() {
         </ContextMenuItem>
         <p
           v-if="!items.length && !canMoveHere && !canGoBack"
-          class="px-2 py-1.5 text-xs text-muted-foreground"
+          class="px-3 py-1.5 text-xs text-muted-foreground"
         >
           No spaces
         </p>

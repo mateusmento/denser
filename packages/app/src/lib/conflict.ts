@@ -3,10 +3,11 @@ import type { DocumentView, PatchDocumentInput, TipTapDoc } from "@denser/contra
 export type DocumentDirtyFields = {
   title: boolean;
   body: boolean;
+  properties?: boolean;
 };
 
 export function buildDocumentPatch(
-  draft: { title: string; body: TipTapDoc },
+  draft: { title: string; body: TipTapDoc; properties?: Record<string, unknown> },
   baseVersion: number,
   dirty: DocumentDirtyFields,
 ): PatchDocumentInput | null {
@@ -19,6 +20,10 @@ export function buildDocumentPatch(
   }
   if (dirty.body) {
     patch.body = draft.body;
+    hasChange = true;
+  }
+  if (dirty.properties && draft.properties) {
+    patch.properties = draft.properties;
     hasChange = true;
   }
 
@@ -38,6 +43,9 @@ export function mergeDocumentConflict(
   if (pending.body !== undefined) {
     sameFieldConflict = true;
   }
+  if (pending.properties !== undefined) {
+    sameFieldConflict = true;
+  }
 
   return {
     sameFieldConflict,
@@ -45,6 +53,7 @@ export function mergeDocumentConflict(
       version: server.version,
       ...(pending.title !== undefined ? { title: pending.title } : {}),
       ...(pending.body !== undefined ? { body: pending.body } : {}),
+      ...(pending.properties !== undefined ? { properties: pending.properties } : {}),
     },
   };
 }

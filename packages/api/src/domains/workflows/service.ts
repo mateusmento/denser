@@ -1,5 +1,16 @@
-import type { DocumentTypeView, SpaceId, WorkflowView } from "@denser/contracts";
-import { listDocumentTypesForSpace, listWorkflowsForSpace } from "./repository.js";
+import type {
+  DocumentTypeId,
+  DocumentTypeView,
+  PatchDocumentTypeInput,
+  SpaceId,
+  WorkflowView,
+} from "@denser/contracts";
+import {
+  findDocumentTypeById,
+  listDocumentTypesForSpace,
+  listWorkflowsForSpace,
+  updateDocumentTypeProperties,
+} from "./repository.js";
 
 export function toWorkflowView(
   row: Awaited<ReturnType<typeof listWorkflowsForSpace>>[number],
@@ -45,4 +56,25 @@ export async function loadPlanningForSpace(spaceId: SpaceId): Promise<{
     workflow: issue ? toWorkflowView(issue) : null,
     documentTypes: types.map(toDocumentTypeView),
   };
+}
+
+export async function patchDocumentType(
+  id: DocumentTypeId,
+  input: PatchDocumentTypeInput,
+): Promise<{ ok: true; documentType: DocumentTypeView } | { ok: false; reason: "not_found" }> {
+  const existing = await findDocumentTypeById(id);
+  if (!existing) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  const updated = await updateDocumentTypeProperties(id, {
+    ...(input.name !== undefined ? { name: input.name } : {}),
+    ...(input.properties !== undefined ? { properties: input.properties } : {}),
+  });
+
+  if (!updated) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  return { ok: true, documentType: toDocumentTypeView(updated) };
 }

@@ -1,23 +1,11 @@
 <script setup lang="ts">
 import type { SpaceIcon, SprintRole } from "@denser/contracts";
-import {
-  Badge,
-  Card,
-  CardContent,
-  cn,
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuTrigger,
-} from "@denser/design-system";
+import { Badge, Card, CardContent, cn, ContextMenu, ContextMenuTrigger } from "@denser/design-system";
 import { computed } from "vue";
 import { resolveSpaceIcon } from "@/modules/spaces/lib/space-icons";
 import { sprintRoleLabel } from "@/modules/spaces/lib/sprint-role";
 import type { SpaceGallerySpaceAction } from "@/modules/spaces/types";
+import SpaceContextMenuContent from "./SpaceContextMenuContent.vue";
 
 const props = defineProps<{
   title: string;
@@ -33,10 +21,6 @@ const emit = defineEmits<{
 }>();
 
 const roleLabel = computed(() => sprintRoleLabel(props.sprintRole));
-
-function onAction(action: SpaceGallerySpaceAction) {
-  emit("action", action);
-}
 </script>
 
 <template>
@@ -99,18 +83,10 @@ function onAction(action: SpaceGallerySpaceAction) {
       </button>
     </ContextMenuTrigger>
 
-    <ContextMenuContent>
-      <ContextMenuItem @select="onAction('open')">Open</ContextMenuItem>
-      <ContextMenuItem @select="onAction('rename')">Rename</ContextMenuItem>
-      <ContextMenuSub v-if="$slots['move-to']">
-        <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
-        <ContextMenuSubContent class="min-w-56 p-0">
-          <slot name="move-to" />
-        </ContextMenuSubContent>
-      </ContextMenuSub>
-      <ContextMenuItem @select="onAction('openSettings')">Space settings</ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem variant="destructive" @select="onAction('delete')">Delete</ContextMenuItem>
-    </ContextMenuContent>
+    <SpaceContextMenuContent @action="emit('action', $event)">
+      <template v-if="$slots['move-to']" #move-to>
+        <slot name="move-to" />
+      </template>
+    </SpaceContextMenuContent>
   </ContextMenu>
 </template>

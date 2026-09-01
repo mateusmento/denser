@@ -15,22 +15,28 @@ import {
   PlusIcon,
   RocketIcon,
 } from "@lucide/vue";
+import { computed } from "vue";
 import type { WorkspaceCreateAction } from "../types";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     variant?: "default" | "sidebar";
     size?: "default" | "sm" | "icon";
+    allowedKinds?: readonly ("document" | "conversation")[] | null;
   }>(),
   {
     variant: "default",
     size: "sm",
+    allowedKinds: null,
   },
 );
 
 const emit = defineEmits<{
   create: [action: WorkspaceCreateAction];
 }>();
+
+const allowDoc = computed(() => !props.allowedKinds || props.allowedKinds.includes("document"));
+const allowConv = computed(() => !props.allowedKinds || props.allowedKinds.includes("conversation"));
 </script>
 
 <template>
@@ -64,12 +70,12 @@ const emit = defineEmits<{
         <RocketIcon class="size-3.5" />
         New Scrum project
       </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem @select="emit('create', 'document')">
+      <DropdownMenuSeparator v-if="allowDoc || allowConv" />
+      <DropdownMenuItem v-if="allowDoc" @select="emit('create', 'document')">
         <FileTextIcon class="size-3.5" />
         Document
       </DropdownMenuItem>
-      <DropdownMenuItem @select="emit('create', 'conversation')">
+      <DropdownMenuItem v-if="allowConv" @select="emit('create', 'conversation')">
         <MessageCircleIcon class="size-3.5" />
         Conversation
       </DropdownMenuItem>

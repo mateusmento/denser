@@ -20,11 +20,14 @@ import {
   HomeResponse,
   PatchDocumentInput,
   PatchDocumentResponse,
+  PatchDocumentTypeInput,
+  PatchDocumentTypeResponse,
   PatchSpaceInput,
   PatchSpaceResponse,
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SpaceDetailResponse,
   type ArtifactId,
+  type DocumentTypeId,
   type SpaceId,
   type UserId,
 } from "@denser/contracts";
@@ -249,6 +252,20 @@ export class ApiClient {
     if (!res.ok) {
       throw new ApiError("remove space member failed", res.status, await this.parseJson(res));
     }
+  }
+
+  async patchDocumentType(
+    documentTypeId: DocumentTypeId,
+    input: PatchDocumentTypeInput,
+  ): Promise<PatchDocumentTypeResponse> {
+    const res = await this.request(`/api/document-types/${documentTypeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("patch document type failed", res.status, body);
+    return PatchDocumentTypeResponse.parse(body);
   }
 
   async createDocument(input: CreateDocumentInput = {}): Promise<CreateDocumentResponse> {

@@ -12,6 +12,7 @@ import {
 import { PlusIcon } from "@lucide/vue";
 import { computed } from "vue";
 import { neighborsAfterSort, type BacklogSection, type PlaceNeighbors } from "../lib/planning";
+import IssueCard from "./IssueCard.vue";
 
 const props = defineProps<{
   sections: readonly BacklogSection[];
@@ -29,6 +30,14 @@ const emit = defineEmits<{
   start: [];
   complete: [];
 }>();
+
+const documentById = computed(() =>
+  Object.fromEntries(
+    props.sections.flatMap((section) =>
+      section.documents.map((document) => [document.id, document] as const),
+    ),
+  ),
+);
 
 const titleById = computed(() =>
   Object.fromEntries(
@@ -117,7 +126,7 @@ function onOpen(document: ArtifactSummary) {
           <DndList
             :list-id="section.spaceId"
             as="ul"
-            class="m-0 flex min-h-16 list-none flex-col gap-1 p-0"
+            class="m-0 flex min-h-16 list-none flex-col gap-1.5 p-0"
           >
             <DndItem
               v-for="(document, index) in section.documents"
@@ -126,10 +135,10 @@ function onOpen(document: ArtifactSummary) {
               :item-id="document.id"
               :list-id="section.spaceId"
               :index="index"
-              class="w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2 text-sm wrap-break-word select-none data-dragging:cursor-grabbing"
+              class="w-full min-w-0 cursor-grab select-none data-dragging:cursor-grabbing"
               @click="onOpen(document)"
             >
-              {{ document.title || "Untitled" }}
+              <IssueCard :document="document" />
             </DndItem>
             <li
               v-if="!section.documents.length"
@@ -140,7 +149,11 @@ function onOpen(document: ArtifactSummary) {
           </DndList>
         </section>
         <DndOverlay #default="{ sourceId }">
+          <div v-if="documentById[sourceId]" class="w-full rotate-1 shadow-xl">
+            <IssueCard :document="documentById[sourceId]" preview />
+          </div>
           <div
+            v-else
             class="w-full rotate-1 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word shadow-lg select-none"
           >
             {{ titleById[sourceId] }}

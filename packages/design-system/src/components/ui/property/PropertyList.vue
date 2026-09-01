@@ -23,6 +23,11 @@ const props = withDefaults(
 const emit = defineEmits<{
   addProperty: [type: PropertyType];
 }>();
+
+defineSlots<{
+  "add-property"?: () => unknown;
+  default?: () => unknown;
+}>();
 </script>
 
 <template>
@@ -34,20 +39,22 @@ const emit = defineEmits<{
 
     <!-- Add Property Row -->
     <div v-if="canManage" class="mt-1 flex items-center py-1">
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <button
-            type="button"
-            class="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground outline-none select-none"
-          >
-            <PlusIcon class="size-3.5" />
-            Add a property
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" class="w-56">
-          <PropertyTypeMenu @select="emit('addProperty', $event)" />
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <slot name="add-property">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <button
+              type="button"
+              class="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground outline-none select-none"
+            >
+              <PlusIcon class="size-3.5" />
+              Add a property
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" class="w-56">
+            <PropertyTypeMenu @select="emit('addProperty', $event)" />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </slot>
     </div>
   </div>
 </template>

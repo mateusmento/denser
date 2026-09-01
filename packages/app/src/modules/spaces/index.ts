@@ -28,6 +28,7 @@ export { useWorkspaceCommandPrompts } from "./composables/useWorkspaceCommandPro
 
 export { default as SpaceGallery } from "./presentationals/SpaceGallery.vue";
 export { default as SpaceMoveMenu } from "./presentationals/SpaceMoveMenu.vue";
+export { default as SpaceContextMenuContent } from "./presentationals/SpaceContextMenuContent.vue";
 export type { SpaceMoveDestination, SpaceMoveNode } from "./lib/space-move-menu.js";
 export { default as SpaceFolderTile } from "./presentationals/SpaceFolderTile.vue";
 export { default as SpaceArtifactTile } from "./presentationals/SpaceArtifactTile.vue";

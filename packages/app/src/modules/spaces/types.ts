@@ -1,8 +1,19 @@
-import type { ArtifactSummary, SpaceIcon, SpaceSummary } from "@denser/contracts";
+import type {
+  ArtifactKind,
+  ArtifactSummary,
+  DocumentTypeId,
+  DocumentTypeView,
+  SpaceIcon,
+  SpaceSummary,
+} from "@denser/contracts";
 
 export type SpaceGeneralView = {
   title: string;
   icon: SpaceIcon | null;
+  allowedArtifactKinds?: ArtifactKind[] | null;
+  allowedDocumentTypeIds?: DocumentTypeId[] | null;
+  defaultDocumentTypeId?: DocumentTypeId | null;
+  availableDocumentTypes?: DocumentTypeView[];
   canManage: boolean;
   isSaving: boolean;
 };

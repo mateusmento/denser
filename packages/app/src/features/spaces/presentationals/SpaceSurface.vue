@@ -8,13 +8,26 @@ import type {
   SpaceMoveDestination,
   SpaceMoveNode,
 } from "@/modules/spaces";
-import { Badge, Button, ScrollArea, Skeleton } from "@denser/design-system";
+import {
+  Badge,
+  Button,
+  ContextMenu,
+  ContextMenuTrigger,
+  ScrollArea,
+  Skeleton,
+} from "@denser/design-system";
 import { ChevronLeftIcon } from "@lucide/vue";
+import { computed } from "vue";
 import { RouterLink } from "vue-router";
-import { SpaceGallery, sprintRoleLabel } from "@/modules/spaces";
+import {
+  SpaceContextMenuContent,
+  SpaceGallery,
+  SpaceMoveMenu,
+  sprintRoleLabel,
+} from "@/modules/spaces";
 import { WorkspaceCreateMenu, type WorkspaceCreateAction } from "@/modules/workspace";
 
-defineProps<{
+const props = defineProps<{
   view: SpaceSurfaceView;
   content?: SpaceContentView;
   backLink?: SpaceBackLink;
@@ -32,6 +45,28 @@ const emit = defineEmits<{
   move: [payload: { artifactId: string; to: SpaceMoveDestination }];
   moveSpace: [payload: { spaceId: string; to: SpaceMoveDestination }];
 }>();
+
+const activeSpace = computed((): SpaceGallerySpace | undefined => {
+  if (!props.content) return undefined;
+  const { space } = props.content;
+  return {
+    id: space.id,
+    title: space.title,
+    icon: space.icon,
+    parentSpaceId: space.parentSpaceId,
+    sprintRole: space.sprintRole,
+  };
+});
+
+function onActiveSpaceAction(action: SpaceGallerySpaceAction) {
+  if (!activeSpace.value) return;
+  emit("spaceAction", action, activeSpace.value);
+}
+
+function onActiveSpaceMove(to: SpaceMoveDestination) {
+  if (!activeSpace.value) return;
+  emit("moveSpace", { spaceId: activeSpace.value.id, to });
+}
 </script>
 
 <template>
@@ -56,17 +91,40 @@ const emit = defineEmits<{
         </Button>
 
         <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0 space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <p v-if="content.space.parentSpaceId" class="text-xs text-muted-foreground">Space</p>
-              <Badge v-if="sprintRoleLabel(content.space.sprintRole)" variant="outline">
-                {{ sprintRoleLabel(content.space.sprintRole) }}
-              </Badge>
-              <Badge variant="outline">{{ content.space.visibility }}</Badge>
-            </div>
-            <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>
-          </div>
-          <WorkspaceCreateMenu @create="emit('create', $event)" />
+          <ContextMenu>
+            <ContextMenuTrigger as-child>
+              <div
+                class="min-w-0 space-y-2 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                data-slot="active-space-context-trigger"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <p v-if="content.space.parentSpaceId" class="text-xs text-muted-foreground">
+                    Space
+                  </p>
+                  <Badge v-if="sprintRoleLabel(content.space.sprintRole)" variant="outline">
+                    {{ sprintRoleLabel(content.space.sprintRole) }}
+                  </Badge>
+                  <Badge variant="outline">{{ content.space.visibility }}</Badge>
+                </div>
+                <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>
+              </div>
+            </ContextMenuTrigger>
+            <SpaceContextMenuContent :show-open="false" @action="onActiveSpaceAction">
+              <template #move-to>
+                <SpaceMoveMenu
+                  :spaces="moveSpaces ?? []"
+                  :current-destination="content.space.parentSpaceId"
+                  :blocked-ids="[content.space.id]"
+                  @explore="emit('explore', $event)"
+                  @select="onActiveSpaceMove"
+                />
+              </template>
+            </SpaceContextMenuContent>
+          </ContextMenu>
+          <WorkspaceCreateMenu
+            :allowed-kinds="content.space.allowedArtifactKinds"
+            @create="emit('create', $event)"
+          />
         </div>
 
         <SpaceGallery

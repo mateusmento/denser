@@ -1,4 +1,4 @@
-import type { ArtifactId, SpaceId, TipTapDoc } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, PropertyType, SpaceId, SpaceMember, TipTapDoc } from "@denser/contracts";
 import { ApiConflictError, ApiError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
@@ -17,6 +17,7 @@ import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
+import { useSpaceMoveTree } from "@/modules/spaces/composables/useSpaceMoveTree";
 import type { DocumentDraftView, DocumentSurfaceView } from "../types";
 import { isEmptyDocumentDraft } from "../lib/document-content";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
@@ -146,6 +147,47 @@ export function useDocumentSync(
     },
   });
 
+  const spaceId = computed(() => canonical.value?.spaceId ?? peekSpaceId.value ?? undefined);
+  const documentId = computed(() => canonical.value?.id ?? undefined);
+
+  const { spaces: relationSpaces, explore: exploreRelationSpace } = useSpaceMoveTree();
+
+  const spaceQuery = useQuery({
+    queryKey: computed(() => queryKeys.space(spaceId.value ?? "")),
+    enabled: computed(() => !!spaceId.value),
+    queryFn: async () => {
+      const detail = await apiClient.getSpace(spaceId.value!);
+      return detail;
+    },
+  });
+
+  const documentType = computed(() => {
+    const currentDoc = canonical.value;
+    if (!currentDoc?.documentTypeId) return spaceQuery.data.value?.documentTypes?.[0];
+    return spaceQuery.data.value?.documentTypes?.find((dt) => dt.id === currentDoc.documentTypeId);
+  });
+
+  async function getRelationDocuments(targetSpaceId: SpaceId): Promise<ArtifactSummary[]> {
+    const detail = await queryClient.fetchQuery({
+      queryKey: queryKeys.space(targetSpaceId),
+      queryFn: async () => apiClient.getSpace(targetSpaceId),
+    });
+    return detail.artifacts.filter((artifact) => artifact.kind === "document");
+  }
+
+  const patchDocTypeMutation = useMutation({
+    mutationFn: async (input: { name?: string; properties?: any[] }) => {
+      if (!documentType.value?.id) return;
+      const res = await apiClient.patchDocumentType(documentType.value.id, input);
+      return res.documentType;
+    },
+    onSuccess: async () => {
+      if (spaceId.value) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.space(spaceId.value) });
+      }
+    },
+  });
+
   const view = computed((): DocumentSurfaceView => {
     if (isCompose.value) {
       return {
@@ -158,6 +200,7 @@ export function useDocumentSync(
         titlePlaceholder: "Untitled",
         bodyPlaceholder: "Start writing…",
         errorMessage: saveError.value,
+        propertiesSchema: documentType.value?.properties ?? [],
       };
     }
 
@@ -201,17 +244,19 @@ export function useDocumentSync(
       };
     }
 
-    const doc = canonical.value;
+    const currentDoc = canonical.value;
     return {
       state: "ready",
       canEdit: true,
+      canManage: spaceQuery.data.value?.canManage ?? true,
       header: {
-        title: doc?.title ?? "",
-        spaceLabel: doc?.spaceId ? "In space" : undefined,
+        title: currentDoc?.title ?? "",
+        spaceLabel: currentDoc?.spaceId ? "In space" : undefined,
       },
       titlePlaceholder: "Untitled",
       bodyPlaceholder: "Start writing…",
       errorMessage: saveError.value,
+      propertiesSchema: documentType.value?.properties ?? [],
     };
   });
 
@@ -239,15 +284,16 @@ export function useDocumentSync(
 
     watch(id, (nextId, prevId) => {
       if (!nextId || isCompose.value || nextId === prevId) return;
-      dirty.value = { title: false, body: false };
+      dirty.value = { title: false, body: false, properties: false };
       const doc = canonical.value;
       if (!doc || doc.id !== nextId) return;
       syncing = true;
       draft.value = {
         title: doc.title,
         body: cloneDoc(doc.body as JSONContent),
+        properties: { ...(doc.properties ?? {}) },
       };
-      dirty.value = { title: false, body: false };
+      dirty.value = { title: false, body: false, properties: false };
       syncing = false;
     });
 
@@ -255,13 +301,14 @@ export function useDocumentSync(
       canonical,
       (doc) => {
         if (!doc || isCompose.value) return;
-        if (dirty.value.title || dirty.value.body) return;
+        if (dirty.value.title || dirty.value.body || dirty.value.properties) return;
         syncing = true;
         draft.value = {
           title: doc.title,
           body: cloneDoc(doc.body as JSONContent),
+          properties: { ...(doc.properties ?? {}) },
         };
-        dirty.value = { title: false, body: false };
+        dirty.value = { title: false, body: false, properties: false };
         syncing = false;
       },
       { immediate: true },
@@ -285,11 +332,21 @@ export function useDocumentSync(
       },
       { deep: true },
     );
+
+    watch(
+      () => draft.value.properties,
+      () => {
+        if (syncing) return;
+        dirty.value.properties = true;
+        scheduleSave(draft, dirty);
+      },
+      { deep: true },
+    );
   }
 
   const scheduleSave = useDebounceFn(
     async (draft: Ref<DocumentDraftView>, dirty: Ref<DocumentDirtyFields>) => {
-      if (!dirty.value.title && !dirty.value.body) return;
+      if (!dirty.value.title && !dirty.value.body && !dirty.value.properties) return;
       if (isEmptyDocumentDraft(draft.value)) return;
 
       if (isCompose.value) {
@@ -302,7 +359,7 @@ export function useDocumentSync(
             body: draft.value.body as TipTapDoc,
             spaceId: peekSpaceId.value ?? undefined,
           });
-          dirty.value = { title: false, body: false };
+          dirty.value = { title: false, body: false, properties: false };
         } finally {
           isCreating.value = false;
           isSaving.value = false;
@@ -315,7 +372,11 @@ export function useDocumentSync(
       if (isEmptyDocumentDraft(draft.value) && isEmptyDocumentDraft(doc)) return;
 
       const patch = buildDocumentPatch(
-        { title: draft.value.title, body: draft.value.body as TipTapDoc },
+        {
+          title: draft.value.title,
+          body: draft.value.body as TipTapDoc,
+          properties: draft.value.properties,
+        },
         doc.version,
         dirty.value,
       );
@@ -324,7 +385,7 @@ export function useDocumentSync(
       isSaving.value = true;
       try {
         await patchMutation.mutateAsync({ patch, dirty: { ...dirty.value } });
-        dirty.value = { title: false, body: false };
+        dirty.value = { title: false, body: false, properties: false };
       } finally {
         isSaving.value = false;
       }
@@ -335,15 +396,83 @@ export function useDocumentSync(
   return {
     surfaceView: view,
     canonical,
+    documentType,
+    spaceMembers: computed(() => spaceQuery.data.value?.members ?? []),
     bindDraft,
     reload: () => documentQuery.refetch(),
+    patchDocumentTypeProperties: async (properties: any[]) => {
+      await patchDocTypeMutation.mutateAsync({ properties });
+    },
+    renameDocumentTypeProperty: async (propertyId: string, newName: string) => {
+      if (!documentType.value) return;
+      const updated = documentType.value.properties.map((p) =>
+        p.id === propertyId ? { ...p, name: newName } : p,
+      );
+      await patchDocTypeMutation.mutateAsync({ properties: updated });
+    },
+    deleteDocumentTypeProperty: async (propertyId: string) => {
+      if (!documentType.value) return;
+      const updated = documentType.value.properties.filter((p) => p.id !== propertyId);
+      await patchDocTypeMutation.mutateAsync({ properties: updated });
+    },
+    duplicateDocumentTypeProperty: async (propertyId: string) => {
+      if (!documentType.value) return;
+      const prop = documentType.value.properties.find((p) => p.id === propertyId);
+      if (!prop) return;
+      const duplicateKey = `${prop.key}_copy_${Date.now().toString().slice(-4)}`;
+      const newProp = {
+        ...prop,
+        id: crypto.randomUUID(),
+        key: duplicateKey,
+        name: `${prop.name} (Copy)`,
+        order: (prop.order ?? 0) + 1,
+      };
+      const updated = [...documentType.value.properties, newProp];
+      await patchDocTypeMutation.mutateAsync({ properties: updated });
+    },
+    addDocumentTypeProperty: async (prop: {
+      name: string;
+      type: PropertyType;
+      relationSpaceId?: SpaceId | null;
+      allowMultiple?: boolean;
+      options?: { id: string; name: string; color?: string }[];
+    }) => {
+      if (!documentType.value) return;
+      const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
+      const newProp = {
+        id: crypto.randomUUID(),
+        key,
+        name: prop.name,
+        type: prop.type,
+        required: false,
+        options:
+          prop.options ??
+          (prop.type === "select" || prop.type === "multi_select"
+            ? [
+                { id: "opt-1", name: "Option 1", color: "#3b82f6" },
+                { id: "opt-2", name: "Option 2", color: "#10b981" },
+              ]
+            : undefined),
+        relationSpaceId:
+          prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
+        allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,
+        order: documentType.value.properties.length,
+      };
+      const updated = [...documentType.value.properties, newProp];
+      await patchDocTypeMutation.mutateAsync({ properties: updated });
+    },
+    relationSpaces,
+    exploreRelationSpace,
+    getRelationDocuments,
+    currentSpaceId: spaceId,
+    currentDocumentId: documentId,
     isSaving,
   };
 }
 
 export function createDocumentDraftState() {
   return {
-    draft: ref<DocumentDraftView>({ title: "", body: emptyDoc() }),
-    dirty: ref<DocumentDirtyFields>({ title: false, body: false }),
+    draft: ref<DocumentDraftView>({ title: "", body: emptyDoc(), properties: {} }),
+    dirty: ref<DocumentDirtyFields>({ title: false, body: false, properties: false }),
   };
 }

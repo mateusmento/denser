@@ -117,6 +117,21 @@ export async function findDocumentTypeById(id: DocumentTypeId) {
   return db.query.documentType.findFirst({ where: eq(documentType.id, id) });
 }
 
+export async function updateDocumentTypeProperties(
+  id: DocumentTypeId,
+  input: { name?: string; properties?: PropertyDefinition[] },
+) {
+  const [updated] = await db
+    .update(documentType)
+    .set({
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.properties !== undefined ? { properties: input.properties } : {}),
+    })
+    .where(eq(documentType.id, id))
+    .returning();
+  return updated ?? null;
+}
+
 export async function findStageById(id: WorkflowStageId) {
   return db.query.workflowStage.findFirst({ where: eq(workflowStage.id, id) });
 }

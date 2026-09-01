@@ -12,6 +12,7 @@ import {
 } from "@denser/design-system";
 import { computed } from "vue";
 import { neighborsAfterSort, type BoardColumn, type PlaceNeighbors } from "../lib/planning";
+import IssueCard from "./IssueCard.vue";
 
 const props = defineProps<{
   columns: readonly BoardColumn[];
@@ -25,6 +26,14 @@ const emit = defineEmits<{
   drop: [payload: { artifactId: string; stageId: string } & PlaceNeighbors];
   start: [];
 }>();
+
+const documentById = computed(() =>
+  Object.fromEntries(
+    props.columns.flatMap((column) =>
+      column.documents.map((document) => [document.id, document] as const),
+    ),
+  ),
+);
 
 const titleById = computed(() =>
   Object.fromEntries(
@@ -118,26 +127,24 @@ function onOpen(document: ArtifactSummary) {
             <DndItem
               v-for="(document, index) in column.documents"
               :key="document.id"
-              as="button"
-              type="button"
+              as="div"
               :item-id="document.id"
               :list-id="column.stageId"
               :index="index"
-              :class="
-                cn([
-                  'w-full min-w-0 cursor-grab rounded-lg border border-border bg-background px-3 py-2',
-                  'line-clamp-2 text-left text-sm wrap-break-word select-none data-dragging:cursor-grabbing',
-                ])
-              "
+              class="w-full min-w-0 cursor-grab select-none data-dragging:cursor-grabbing"
               @click="onOpen(document)"
             >
-              {{ document.title || "Untitled" }}
+              <IssueCard :document="document" />
             </DndItem>
           </DndList>
         </ScrollArea>
       </section>
       <DndOverlay #default="{ sourceId }">
+        <div v-if="documentById[sourceId]" class="w-full rotate-1 shadow-xl">
+          <IssueCard :document="documentById[sourceId]" preview />
+        </div>
         <div
+          v-else
           class="w-full rotate-1 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm wrap-break-word shadow-lg select-none"
         >
           {{ titleById[sourceId] }}

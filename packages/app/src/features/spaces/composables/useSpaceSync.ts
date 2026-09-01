@@ -102,7 +102,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
   });
 
   const patchGeneralMutation = useMutation({
-    mutationFn: (input: Pick<PatchSpaceInput, "title" | "icon">) =>
+    mutationFn: (input: PatchSpaceInput) =>
       apiClient.patchSpace(id.value!, input),
     onSuccess: async ({ space }) => {
       applySpacePatch(space);
@@ -161,6 +161,10 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     return {
       title: space.title,
       icon: space.icon,
+      allowedArtifactKinds: space.allowedArtifactKinds,
+      allowedDocumentTypeIds: space.allowedDocumentTypeIds,
+      defaultDocumentTypeId: space.defaultDocumentTypeId,
+      availableDocumentTypes: data.documentTypes ?? [],
       canManage: data.canManage,
       isSaving: patchGeneralMutation.isPending.value,
     };
@@ -300,7 +304,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
       }),
     addMember: (username: string) => addMemberMutation.mutateAsync(username),
     removeMember: (memberUserId: UserId) => removeMemberMutation.mutateAsync(memberUserId),
-    updateGeneral: (input: { title: string; icon: SpaceIcon }) =>
+    updateGeneral: (input: PatchSpaceInput) =>
       patchGeneralMutation.mutateAsync(input),
     updateVisibility: (visibility: SpaceVisibility) =>
       patchVisibilityMutation.mutateAsync(visibility),

@@ -237,6 +237,32 @@ export const DocumentTypeView = z.object({
 });
 export type DocumentTypeView = z.infer<typeof DocumentTypeView>;
 
+export const PatchDocumentTypeInput = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  properties: z.array(PropertyDefinition).optional(),
+});
+export type PatchDocumentTypeInput = z.infer<typeof PatchDocumentTypeInput>;
+
+export const PatchDocumentTypeResponse = z.object({
+  documentType: DocumentTypeView,
+});
+export type PatchDocumentTypeResponse = z.infer<typeof PatchDocumentTypeResponse>;
+
+export const AddDocumentTypePropertyInput = z.object({
+  name: z.string().trim().min(1).max(100),
+  key: z.string().trim().min(1).max(100).optional(),
+  type: PropertyType,
+  options: z.array(PropertyOption).optional(),
+  relationSpaceId: SpaceId.nullable().optional(),
+  allowMultiple: z.boolean().optional(),
+});
+export type AddDocumentTypePropertyInput = z.infer<typeof AddDocumentTypePropertyInput>;
+
+export const AddDocumentTypePropertyResponse = z.object({
+  documentType: DocumentTypeView,
+});
+export type AddDocumentTypePropertyResponse = z.infer<typeof AddDocumentTypePropertyResponse>;
+
 export const HomeResponse = z.object({
   spaces: z.array(SpaceSummary),
   artifacts: z.array(ArtifactSummary),

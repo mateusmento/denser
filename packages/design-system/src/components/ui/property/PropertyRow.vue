@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { CopyIcon, Edit3Icon, Trash2Icon } from "@lucide/vue";
+import { CopyIcon, Edit3Icon, Settings2Icon, Trash2Icon } from "@lucide/vue";
 import PropertyTypeIcon from "./PropertyTypeIcon.vue";
 
 const props = withDefaults(
@@ -58,10 +58,11 @@ const emit = defineEmits<{
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="w-48">
           <DropdownMenuItem @select="emit('edit', property)">
-            <Edit3Icon class="size-3.5 text-muted-foreground" />
+            <Settings2Icon class="size-3.5 text-muted-foreground" />
             Edit property
           </DropdownMenuItem>
           <DropdownMenuItem @select="emit('rename', property)">
+            <Edit3Icon class="size-3.5 text-muted-foreground" />
             Rename
           </DropdownMenuItem>
           <DropdownMenuItem @select="emit('duplicate', property)">

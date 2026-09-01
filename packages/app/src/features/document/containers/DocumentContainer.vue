@@ -14,7 +14,22 @@ const route = useRoute();
 const artifactId = computed(() => route.params.documentId as ArtifactId);
 
 const { draft, dirty } = createDocumentDraftState();
-const { surfaceView, bindDraft, reload } = useDocumentSync(artifactId);
+const {
+  surfaceView,
+  spaceMembers,
+  relationSpaces,
+  exploreRelationSpace,
+  getRelationDocuments,
+  currentSpaceId,
+  currentDocumentId,
+  bindDraft,
+  reload,
+  addDocumentTypeProperty,
+  deleteDocumentTypeProperty,
+  renameDocumentTypeProperty,
+  duplicateDocumentTypeProperty,
+  patchDocumentTypeProperties,
+} = useDocumentSync(artifactId);
 
 bindDraft(draft, dirty);
 
@@ -23,6 +38,12 @@ const mentionItems = ref<MentionCandidate[]>([]);
 const editorView = computed(() => ({
   ...toDocumentEditorView(surfaceView.value),
   mentionItems: mentionItems.value,
+  members: spaceMembers.value,
+  currentSpaceId: currentSpaceId.value,
+  currentDocumentId: currentDocumentId.value,
+  relationSpaces: relationSpaces.value,
+  getRelationDocuments,
+  onExploreRelationSpace: exploreRelationSpace,
 }));
 
 function onMentionSearch(query: string) {
@@ -41,6 +62,11 @@ function onMentionSearch(query: string) {
       :view="editorView"
       @retry="reload"
       @mention-search="onMentionSearch"
+      @add-property="addDocumentTypeProperty"
+      @delete-property="deleteDocumentTypeProperty"
+      @rename-property="renameDocumentTypeProperty"
+      @duplicate-property="duplicateDocumentTypeProperty"
+      @edit-property="(prop) => patchDocumentTypeProperties((editorView.propertiesSchema ?? []).map((p) => p.id === prop.id ? prop : p))"
     />
   </DocumentSurface>
 </template>
