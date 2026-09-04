@@ -2,10 +2,12 @@ import type {
   DocumentTypeId,
   PropertyDefinition,
   SpaceId,
+  UserId,
   WorkflowId,
   WorkflowStageId,
 } from "@denser/contracts";
 import { boolean, index, integer, jsonb, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { user } from "./auth.js";
 import { space } from "./space.js";
 
 export const stageKindEnum = pgEnum("stage_kind", [
@@ -57,8 +59,10 @@ export const documentType = pgTable(
     id: uuid("id").primaryKey().$type<DocumentTypeId>().defaultRandom(),
     spaceId: uuid("space_id")
       .$type<SpaceId>()
-      .notNull()
       .references(() => space.id, { onDelete: "cascade" }),
+    createdBy: uuid("created_by")
+      .$type<UserId>()
+      .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     key: documentTypeKeyEnum("key").notNull(),
     builtin: boolean("builtin").notNull().default(true),
@@ -70,5 +74,8 @@ export const documentType = pgTable(
       .notNull()
       .default([]),
   },
-  (table) => [index("document_type_space_id_idx").on(table.spaceId)],
+  (table) => [
+    index("document_type_space_id_idx").on(table.spaceId),
+    index("document_type_created_by_idx").on(table.createdBy),
+  ],
 );

@@ -1,40 +1,46 @@
-import type { ArtifactSummary, PropertyDefinition, PropertyOption } from "@denser/contracts";
+import type {
+  ArtifactId,
+  ArtifactSummary,
+  DatePropertyDefinition,
+  PropertyDefinition,
+  PropertyOption,
+  SpaceMember,
+  UserId,
+} from "@denser/contracts";
+import {
+  isDatePropertyDefinition,
+  memberDisplayLabel,
+  parsePersonPropertyValue,
+  resolvePropertyByRole,
+} from "@denser/contracts";
+import { formatDatePropertyDisplay } from "@/features/document/lib/date-property-display";
 
 export type IssueCardPriorityChip = {
   label: string;
-  class: string;
-  dotClass: string;
-};
-
-export type IssueCardField = {
-  key: string;
-  name: string;
-  type: PropertyDefinition["type"];
-  value: unknown;
   color?: string;
 };
 
-const LEGACY_PRIORITY: Record<string, IssueCardPriorityChip> = {
-  urgent: {
-    label: "Urgent",
-    class: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
-    dotClass: "bg-red-500",
-  },
-  high: {
-    label: "High",
-    class: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-    dotClass: "bg-orange-500",
-  },
-  medium: {
-    label: "Medium",
-    class: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    dotClass: "bg-amber-500",
-  },
-  low: {
-    label: "Low",
-    class: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-    dotClass: "bg-blue-500",
-  },
+export type IssueCardLabelChip = {
+  name: string;
+  color?: string;
+};
+
+export type IssueCardRelationLink = {
+  title: string;
+};
+
+export type IssueCardView = {
+  identifier: string | null;
+  typeLabel: string | null;
+  title: string;
+  stage: string | null;
+  priority: IssueCardPriorityChip | null;
+  assignee: { userId: UserId; label: string; initial: string } | null;
+  dueDate: string | null;
+  estimate: number | null;
+  labels: IssueCardLabelChip[];
+  blockedBy: IssueCardRelationLink | null;
+  parentEpic: IssueCardRelationLink | null;
 };
 
 function optionColor(options: PropertyOption[] | undefined, name: string): string | undefined {
@@ -47,98 +53,106 @@ function asStringArray(value: unknown): string[] {
   return [];
 }
 
-export function projectIssueCardDisplay(
+function relationLink(
+  value: unknown,
+  relationTitles?: Partial<Record<ArtifactId, string>>,
+): IssueCardRelationLink | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== "string" || !raw) return null;
+  return {
+    title: relationTitles?.[raw as ArtifactId] ?? "Linked issue",
+  };
+}
+
+function resolveAssignee(
+  properties: Record<string, unknown>,
+  prop: PropertyDefinition | undefined,
+  members: readonly SpaceMember[],
+): IssueCardView["assignee"] {
+  if (!prop || prop.type !== "person") return null;
+  const userIds = parsePersonPropertyValue(properties[prop.key], prop.allowMultiple);
+  const userId = userIds[0];
+  if (!userId) return null;
+  const member = members.find((entry) => entry.userId === userId);
+  const label = member ? memberDisplayLabel(member) : userId;
+  return { userId, label, initial: label.slice(0, 1).toUpperCase() };
+}
+
+function resolvePriority(
+  properties: Record<string, unknown>,
+  prop: PropertyDefinition | undefined,
+): IssueCardPriorityChip | null {
+  if (!prop || prop.type !== "select") return null;
+  const value = properties[prop.key];
+  if (typeof value !== "string" || !value) return null;
+  return {
+    label: value,
+    color: optionColor(prop.options, value),
+  };
+}
+
+function resolveLabels(
+  properties: Record<string, unknown>,
+  prop: PropertyDefinition | undefined,
+): IssueCardLabelChip[] {
+  if (!prop || prop.type !== "multi_select") return [];
+  return asStringArray(properties[prop.key]).map((name) => ({
+    name,
+    color: optionColor(prop.options, name),
+  }));
+}
+
+function resolveDueDate(
+  properties: Record<string, unknown>,
+  prop: PropertyDefinition | undefined,
+): string | null {
+  if (!prop || !isDatePropertyDefinition(prop)) return null;
+  const value = properties[prop.key];
+  if (value == null || value === "") return null;
+  return formatDatePropertyDisplay(value, prop);
+}
+
+export function projectIssueCardView(
   document: ArtifactSummary,
-  schema?: readonly PropertyDefinition[],
-) {
+  schema: readonly PropertyDefinition[],
+  members: readonly SpaceMember[],
+  options: {
+    variant: "backlog" | "board";
+    relationTitles?: Partial<Record<ArtifactId, string>>;
+  },
+): IssueCardView {
   const properties = document.properties ?? {};
+  const priorityProp = resolvePropertyByRole(schema, "priority");
+  const assigneeProp = resolvePropertyByRole(schema, "assignee");
+  const labelsProp = resolvePropertyByRole(schema, "labels");
+  const estimateProp = resolvePropertyByRole(schema, "estimate");
+  const dueDateProp = resolvePropertyByRole(schema, "due_date");
+  const blockedByProp = resolvePropertyByRole(schema, "blocked_by");
+  const parentEpicProp = resolvePropertyByRole(schema, "parent_epic");
 
-  if (!schema?.length) {
-    const priorityRaw = properties.priority;
-    const priorityKey =
-      typeof priorityRaw === "string" ? priorityRaw.toLowerCase() : null;
-    const labels = asStringArray(properties.labels);
-    const estimate = typeof properties.estimate === "number" ? properties.estimate : null;
-    const assignee =
-      typeof properties.assignee === "string" && properties.assignee.trim()
-        ? properties.assignee.trim()
-        : null;
+  const estimateValue = estimateProp ? properties[estimateProp.key] : undefined;
+  const estimate = typeof estimateValue === "number" ? estimateValue : null;
 
-    return {
-      priorityChip: priorityKey ? (LEGACY_PRIORITY[priorityKey] ?? null) : null,
-      tags: labels,
-      estimate,
-      assignee,
-      fields: [] as IssueCardField[],
-    };
-  }
+  const identifier =
+    typeof (document as ArtifactSummary & { identifier?: string }).identifier === "string"
+      ? (document as ArtifactSummary & { identifier?: string }).identifier!
+      : null;
 
-  const fields: IssueCardField[] = [];
-  let priorityChip: IssueCardPriorityChip | null = null;
-  const tags: string[] = [];
-  let estimate: number | null = null;
-  let assignee: string | null = null;
-
-  for (const prop of schema) {
-    const value = properties[prop.key];
-    if (value == null || value === "") continue;
-
-    if (prop.type === "select" && typeof value === "string") {
-      const color = optionColor(prop.options, value);
-      fields.push({ key: prop.key, name: prop.name, type: prop.type, value, color });
-      if (prop.key === "priority" || prop.name.toLowerCase() === "priority") {
-        priorityChip = LEGACY_PRIORITY[value.toLowerCase()] ?? {
-          label: value,
-          class: "bg-muted text-muted-foreground border-border/60",
-          dotClass: color ? "" : "bg-primary",
-        };
-        if (color) {
-          priorityChip = {
-            ...priorityChip,
-            dotClass: "",
-            class: "border-border/60 bg-muted text-foreground",
-          };
-        }
-      }
-      continue;
-    }
-
-    if (prop.type === "multi_select") {
-      const names = asStringArray(value);
-      tags.push(...names);
-      for (const name of names) {
-        fields.push({
-          key: prop.key,
-          name: prop.name,
-          type: prop.type,
-          value: name,
-          color: optionColor(prop.options, name),
-        });
-      }
-      continue;
-    }
-
-    if (prop.type === "number" && typeof value === "number") {
-      estimate = value;
-      fields.push({ key: prop.key, name: prop.name, type: prop.type, value });
-      continue;
-    }
-
-    if (prop.type === "person" && typeof value === "string" && value.trim()) {
-      assignee = value.trim();
-      fields.push({ key: prop.key, name: prop.name, type: prop.type, value: assignee });
-      continue;
-    }
-
-    if (prop.type === "person" && Array.isArray(value) && value.length > 0) {
-      const names = value.filter((item): item is string => typeof item === "string");
-      assignee = names[0] ?? null;
-      fields.push({ key: prop.key, name: prop.name, type: prop.type, value: names });
-      continue;
-    }
-
-    fields.push({ key: prop.key, name: prop.name, type: prop.type, value });
-  }
-
-  return { priorityChip, tags, estimate, assignee, fields };
+  return {
+    identifier,
+    typeLabel: document.documentTypeKey ?? null,
+    title: document.title || "Untitled",
+    stage: options.variant === "backlog" ? (document.stageName ?? null) : null,
+    priority: resolvePriority(properties, priorityProp),
+    assignee: resolveAssignee(properties, assigneeProp, members),
+    dueDate: resolveDueDate(properties, dueDateProp as DatePropertyDefinition | undefined),
+    estimate,
+    labels: resolveLabels(properties, labelsProp),
+    blockedBy: blockedByProp
+      ? relationLink(properties[blockedByProp.key], options.relationTitles)
+      : null,
+    parentEpic: parentEpicProp
+      ? relationLink(properties[parentEpicProp.key], options.relationTitles)
+      : null,
+  };
 }

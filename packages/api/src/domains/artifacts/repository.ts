@@ -60,6 +60,7 @@ export async function listArtifactSummariesInSpaces(
       stageName: workflowStage.name,
       stageKind: workflowStage.kind,
       documentTypeKey: documentType.key,
+      properties: document.fields,
     })
     .from(artifact)
     .leftJoin(conversation, eq(conversation.artifactId, artifact.id))
@@ -85,6 +86,7 @@ export async function listArtifactSummariesInSpaces(
             stageKind: row.stageKind ?? null,
             documentTypeId: row.documentTypeId ?? null,
             documentTypeKey: row.documentTypeKey ?? null,
+            properties: (row.properties as Record<string, unknown> | null) ?? {},
           }
         : undefined,
     ),

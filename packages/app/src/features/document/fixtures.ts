@@ -29,6 +29,7 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
       { id: "low", name: "Low", color: "#3b82f6" },
     ],
     order: 0,
+    semanticRole: "priority",
   },
   {
     id: "prop-assignee" as PropertyDefinition["id"],
@@ -38,6 +39,7 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
     required: false,
     allowMultiple: false,
     order: 1,
+    semanticRole: "assignee",
   },
   {
     id: "prop-labels" as PropertyDefinition["id"],
@@ -52,6 +54,7 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
       { id: "bug", name: "Bug", color: "#ef4444" },
     ],
     order: 2,
+    semanticRole: "labels",
   },
   {
     id: "prop-estimate" as PropertyDefinition["id"],
@@ -60,6 +63,7 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
     type: "number",
     required: false,
     order: 3,
+    semanticRole: "estimate",
   },
   {
     id: "prop-due-date" as PropertyDefinition["id"],
@@ -67,10 +71,11 @@ export const issuePropertiesSchema: PropertyDefinition[] = [
     name: "Due date",
     type: "date",
     required: false,
-    dateFormat: "locale",
-    timeFormat: "none",
-    notification: { enabled: false, preset: "on_date" },
+    dateFormat: "full_date",
+    timeFormat: "hidden",
+    notification: { preset: "none" },
     order: 4,
+    semanticRole: "due_date",
   },
 ];
 

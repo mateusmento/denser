@@ -32,6 +32,9 @@ import { XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
 import { createPropertyOption } from "../lib/property-options";
+import PropertySettingSelect from "./PropertySettingSelect.vue";
+
+const NO_RELATION_SPACE = "__none__";
 
 const props = defineProps<{
   open: boolean;
@@ -51,32 +54,33 @@ const newOptionName = ref("");
 const relationSpaceId = ref<SpaceId | null>(null);
 const allowMultiple = ref(true);
 const personSelectionMode = ref<"single" | "multiple">("single");
-const dateFormat = ref<DateFormat>("locale");
-const timeFormat = ref<TimeFormat>("none");
-const notificationEnabled = ref(false);
-const notificationPreset = ref<DateReminderPreset>("on_date");
+const dateFormat = ref<DateFormat>("full_date");
+const timeFormat = ref<TimeFormat>("hidden");
+const notificationPreset = ref<DateReminderPreset>("none");
 const notificationCustomAmount = ref(1);
 const notificationCustomUnit = ref<DateReminderUnit>("hours");
 
 const dateFormatOptions: { value: DateFormat; label: string }[] = [
-  { value: "locale", label: "Locale default" },
-  { value: "iso", label: "ISO (YYYY-MM-DD)" },
-  { value: "mdy", label: "Month / Day / Year" },
-  { value: "dmy", label: "Day / Month / Year" },
+  { value: "full_date", label: "Full date" },
+  { value: "short_date", label: "Short date" },
+  { value: "mdy", label: "Month/Day/Year" },
+  { value: "dmy", label: "Day/Month/Year" },
+  { value: "ymd", label: "Year/Month/Day" },
+  { value: "relative", label: "Relative" },
 ];
 
 const timeFormatOptions: { value: TimeFormat; label: string }[] = [
-  { value: "none", label: "Date only" },
-  { value: "12h", label: "12-hour time" },
-  { value: "24h", label: "24-hour time" },
+  { value: "hidden", label: "Hidden" },
+  { value: "12h", label: "12 hour" },
+  { value: "24h", label: "24 hour" },
 ];
 
 const reminderPresetOptions: { value: DateReminderPreset; label: string }[] = [
-  { value: "on_date", label: "On the date" },
-  { value: "5_min_before", label: "5 minutes before" },
+  { value: "none", label: "None" },
+  { value: "on_date", label: "On day of event" },
+  { value: "1_min_before", label: "1 minute before" },
   { value: "1_hour_before", label: "1 hour before" },
   { value: "1_day_before", label: "1 day before" },
-  { value: "2_days_before", label: "2 days before" },
   { value: "custom", label: "Custom…" },
 ];
 
@@ -105,7 +109,6 @@ watch(
     if (isDatePropertyDefinition(property)) {
       dateFormat.value = property.dateFormat;
       timeFormat.value = property.timeFormat;
-      notificationEnabled.value = property.notification.enabled;
       notificationPreset.value = property.notification.preset;
       notificationCustomAmount.value = property.notification.customAmount ?? 1;
       notificationCustomUnit.value = property.notification.customUnit ?? "hours";
@@ -166,6 +169,23 @@ const showDateEditor = computed(
 
 const showCustomReminder = computed(() => notificationPreset.value === "custom");
 
+const relationSpaceOptions = computed(() => [
+  { value: NO_RELATION_SPACE, label: "No space selected" },
+  ...(props.relationSpaces ?? []).map((space) => ({ value: space.id, label: space.title })),
+]);
+
+const relationSpaceModel = computed({
+  get: () => relationSpaceId.value ?? NO_RELATION_SPACE,
+  set: (value: string) => {
+    relationSpaceId.value = value === NO_RELATION_SPACE ? null : (value as SpaceId);
+  },
+});
+
+const personSelectionOptions = [
+  { value: "single", label: "Single member" },
+  { value: "multiple", label: "Multiple members" },
+] as const;
+
 function addOption() {
   const trimmed = newOptionName.value.trim();
   if (!trimmed) return;
@@ -182,18 +202,14 @@ function removeOption(id: string) {
 }
 
 function buildNotificationConfig(): DateNotificationConfig {
-  if (!notificationEnabled.value) {
-    return { enabled: false, preset: "on_date" };
-  }
   if (notificationPreset.value === "custom") {
     return {
-      enabled: true,
       preset: "custom",
       customAmount: Math.max(1, notificationCustomAmount.value),
       customUnit: notificationCustomUnit.value,
     };
   }
-  return { enabled: true, preset: notificationPreset.value };
+  return { preset: notificationPreset.value };
 }
 
 function submit() {
@@ -321,16 +337,11 @@ function buildDraftProperty(trimmedName: string): PropertyDefinition {
         <div v-if="showRelationEditor" class="space-y-3">
           <div class="space-y-2">
             <Label for="property-edit-relation-space">Target space</Label>
-            <select
+            <PropertySettingSelect
               id="property-edit-relation-space"
-              v-model="relationSpaceId"
-              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option :value="null">No space selected</option>
-              <option v-for="space in relationSpaces ?? []" :key="space.id" :value="space.id">
-                {{ space.title }}
-              </option>
-            </select>
+              v-model="relationSpaceModel"
+              :options="relationSpaceOptions"
+            />
           </div>
           <label class="flex items-center gap-2 text-sm">
             <Checkbox v-model:checked="allowMultiple" />
@@ -340,92 +351,57 @@ function buildDraftProperty(trimmedName: string): PropertyDefinition {
 
         <div v-if="showPersonEditor" class="space-y-2">
           <Label for="property-edit-person-selection">Selection</Label>
-          <select
+          <PropertySettingSelect
             id="property-edit-person-selection"
             v-model="personSelectionMode"
-            class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="single">Single member</option>
-            <option value="multiple">Multiple members</option>
-          </select>
+            :options="personSelectionOptions"
+          />
         </div>
 
         <div v-if="showDateEditor" class="space-y-3">
           <div class="space-y-2">
             <Label for="property-edit-date-format">Date format</Label>
-            <select
+            <PropertySettingSelect
               id="property-edit-date-format"
               v-model="dateFormat"
-              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option v-for="opt in dateFormatOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              :options="dateFormatOptions"
+            />
           </div>
           <div class="space-y-2">
             <Label for="property-edit-time-format">Time format</Label>
-            <select
+            <PropertySettingSelect
               id="property-edit-time-format"
               v-model="timeFormat"
-              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option v-for="opt in timeFormatOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              :options="timeFormatOptions"
+            />
           </div>
-          <div class="space-y-2 rounded-md border border-border p-3">
-            <label class="flex items-center gap-2 text-sm">
-              <Checkbox v-model:checked="notificationEnabled" />
-              Reminder notification
-            </label>
-            <template v-if="notificationEnabled">
-              <div class="space-y-2 pt-1">
-                <Label for="property-edit-reminder-preset">When to remind</Label>
-                <select
-                  id="property-edit-reminder-preset"
-                  v-model="notificationPreset"
-                  class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option
-                    v-for="opt in reminderPresetOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </div>
-              <div v-if="showCustomReminder" class="flex items-end gap-2">
-                <div class="flex-1 space-y-2">
-                  <Label for="property-edit-reminder-amount">Amount</Label>
-                  <Input
-                    id="property-edit-reminder-amount"
-                    v-model.number="notificationCustomAmount"
-                    type="number"
-                    min="1"
-                    class="h-9"
-                  />
-                </div>
-                <div class="flex-1 space-y-2">
-                  <Label for="property-edit-reminder-unit">Unit</Label>
-                  <select
-                    id="property-edit-reminder-unit"
-                    v-model="notificationCustomUnit"
-                    class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option
-                      v-for="opt in reminderUnitOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                    >
-                      {{ opt.label }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </template>
+          <div class="space-y-2">
+            <Label for="property-edit-notifications">Notifications</Label>
+            <PropertySettingSelect
+              id="property-edit-notifications"
+              v-model="notificationPreset"
+              :options="reminderPresetOptions"
+            />
+          </div>
+          <div v-if="showCustomReminder" class="flex items-end gap-2 rounded-md border border-border p-3">
+            <div class="flex-1 space-y-2">
+              <Label for="property-edit-reminder-amount">Amount</Label>
+              <Input
+                id="property-edit-reminder-amount"
+                v-model.number="notificationCustomAmount"
+                type="number"
+                min="1"
+                class="h-9"
+              />
+            </div>
+            <div class="flex-1 space-y-2">
+              <Label for="property-edit-reminder-unit">Unit</Label>
+              <PropertySettingSelect
+                id="property-edit-reminder-unit"
+                v-model="notificationCustomUnit"
+                :options="reminderUnitOptions"
+              />
+            </div>
           </div>
         </div>
       </div>

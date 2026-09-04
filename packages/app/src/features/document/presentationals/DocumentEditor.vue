@@ -35,6 +35,9 @@ const emit = defineEmits<{
     <PermissionEmpty v-else-if="view.state === 'forbidden'" />
 
     <template v-else>
+      <p v-if="view.errorMessage" class="text-sm text-destructive">
+        {{ view.errorMessage }}
+      </p>
       <TitleEditor
         v-model="draft.title"
         :placeholder="view.titlePlaceholder"

@@ -1,6 +1,9 @@
 import type {
   ArtifactId,
   ArtifactSummary,
+  DocumentTypeId,
+  DocumentTypeView,
+  DocumentView,
   PropertyDefinition,
   PropertyOption,
   PropertyType,
@@ -32,8 +35,10 @@ import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
 import { useSpaceMoveTree } from "@/modules/spaces/composables/useSpaceMoveTree";
+import { resolveAssignableSpaceMembers } from "@/modules/spaces/lib/assignable-space-members";
 import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } from "../types";
 import { isEmptyDocumentDraft } from "../lib/document-content";
+import { resolveDocumentTypeFromCatalog, documentSupportsPropertySchema } from "../lib/resolve-document-type";
 import { createPropertyOption, findOptionByName } from "../lib/property-options";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 
@@ -43,6 +48,11 @@ export type DocumentSyncOptions = {
   onPeekCreated?: (id: ArtifactId) => void;
   navigateOnCreate?: boolean;
   onPeekComplete?: () => void;
+};
+
+type DocumentQueryData = {
+  document: DocumentView;
+  documentType: DocumentTypeView | null;
 };
 
 export function useDocumentSync(
@@ -60,10 +70,13 @@ export function useDocumentSync(
   const documentQuery = useQuery({
     queryKey: computed(() => queryKeys.document(id.value ?? "")),
     enabled: computed(() => id.value != null && !isCompose.value),
-    queryFn: async () => {
-      const { document } = await apiClient.getDocument(id.value!);
-      upsertInCollection(documentsCollection, document);
-      return document;
+    queryFn: async (): Promise<DocumentQueryData> => {
+      const response = await apiClient.getDocument(id.value!);
+      upsertInCollection(documentsCollection, response.document);
+      return {
+        document: response.document,
+        documentType: response.documentType ?? null,
+      };
     },
   });
 
@@ -77,7 +90,9 @@ export function useDocumentSync(
     [id, isCompose],
   );
 
-  const canonical = computed(() => liveDocument.data.value?.[0] ?? documentQuery.data.value);
+  const canonical = computed(
+    () => liveDocument.data.value?.[0] ?? documentQuery.data.value?.document,
+  );
 
   const saveError = ref<string | undefined>();
   const isSaving = ref(false);
@@ -172,14 +187,33 @@ export function useDocumentSync(
     enabled: computed(() => !!spaceId.value),
     queryFn: async () => {
       const detail = await apiClient.getSpace(spaceId.value!);
-      return detail;
+      const assignableMembers = await resolveAssignableSpaceMembers(detail);
+      return { ...detail, assignableMembers };
     },
   });
 
   const documentType = computed(() => {
-    const currentDoc = canonical.value;
-    if (!currentDoc?.documentTypeId) return spaceQuery.data.value?.documentTypes?.[0];
-    return spaceQuery.data.value?.documentTypes?.find((dt) => dt.id === currentDoc.documentTypeId);
+    const fromQuery = documentQuery.data.value?.documentType;
+    if (fromQuery) return fromQuery;
+    return resolveDocumentTypeFromCatalog(
+      canonical.value,
+      spaceQuery.data.value?.documentTypes ?? [],
+    );
+  });
+
+  const supportsPropertySchema = computed(() => {
+    if (isCompose.value && peekSpaceId.value) return true;
+    return documentSupportsPropertySchema(canonical.value);
+  });
+
+  /** User may edit the document type schema (add/rename/delete property definitions). */
+  const canManagePropertySchema = computed(() => {
+    if (!supportsPropertySchema.value) return false;
+    if (!spaceId.value) {
+      return true;
+    }
+    if (spaceQuery.isPending.value) return false;
+    return spaceQuery.data.value?.canManage ?? false;
   });
 
   async function fetchRelationDocuments(targetSpaceId: SpaceId): Promise<ArtifactSummary[]> {
@@ -224,37 +258,106 @@ export function useDocumentSync(
     if (!spaceId.value) return;
     await queryClient.ensureQueryData({
       queryKey: queryKeys.space(spaceId.value),
-      queryFn: async () => apiClient.getSpace(spaceId.value!),
+      queryFn: async () => {
+        const detail = await apiClient.getSpace(spaceId.value!);
+        const assignableMembers = await resolveAssignableSpaceMembers(detail);
+        return { ...detail, assignableMembers };
+      },
     });
   }
 
+  async function resolveEditableDocumentType(): Promise<DocumentTypeView | null> {
+    if (documentType.value?.id) return documentType.value;
+
+    if (spaceId.value) {
+      await ensureDocumentTypeFresh();
+      const fromCatalog = resolveDocumentTypeFromCatalog(
+        canonical.value,
+        spaceQuery.data.value?.documentTypes ?? [],
+      );
+      if (fromCatalog?.id) return fromCatalog;
+    }
+
+    if (!id.value) return null;
+
+    const response = await apiClient.getDocument(id.value);
+    const next: DocumentQueryData = {
+      document: response.document,
+      documentType: response.documentType ?? null,
+    };
+    queryClient.setQueryData(queryKeys.document(id.value), next);
+    upsertInCollection(documentsCollection, response.document);
+
+    if (response.documentType?.id) return response.documentType;
+
+    if (spaceId.value) {
+      await ensureDocumentTypeFresh();
+    }
+
+    return (
+      resolveDocumentTypeFromCatalog(
+        response.document,
+        spaceQuery.data.value?.documentTypes ?? [],
+      ) ?? null
+    );
+  }
+
+  function failDocumentTypeResolution(): void {
+    saveError.value = "Couldn’t resolve the document type for this page.";
+  }
+
   const patchDocTypeMutation = useMutation({
-    mutationFn: async (input: { name?: string; properties?: PropertyDefinition[] }) => {
-      if (!documentType.value?.id) return;
-      const res = await apiClient.patchDocumentType(documentType.value.id, input);
+    mutationFn: async (input: {
+      documentTypeId: DocumentTypeId;
+      name?: string;
+      properties?: PropertyDefinition[];
+    }) => {
+      const res = await apiClient.patchDocumentType(input.documentTypeId, {
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.properties !== undefined ? { properties: input.properties } : {}),
+      });
       return res.documentType;
     },
-    onSuccess: async () => {
+    onSuccess: async (updated) => {
+      if (updated && id.value) {
+        queryClient.setQueryData<DocumentQueryData>(queryKeys.document(id.value), (old) =>
+          old ? { ...old, documentType: updated } : old,
+        );
+      }
       if (spaceId.value) {
         await queryClient.invalidateQueries({ queryKey: queryKeys.space(spaceId.value) });
       }
     },
+    onError: () => {
+      saveError.value = "Couldn’t update property schema.";
+    },
   });
 
   async function patchDocumentTypeProperties(properties: PropertyDefinition[]) {
+    const type = await resolveEditableDocumentType();
+    if (!type?.id) {
+      failDocumentTypeResolution();
+      return;
+    }
     await ensureDocumentTypeFresh();
     await patchDocTypeMutation.mutateAsync({
+      documentTypeId: type.id,
       properties: sanitizePropertyDefinitions(properties),
     });
   }
 
   async function editDocumentTypeProperty(property: PropertyDefinition) {
-    if (!documentType.value) return;
+    const type = await resolveEditableDocumentType();
+    if (!type?.id) {
+      failDocumentTypeResolution();
+      return;
+    }
     await ensureDocumentTypeFresh();
     const sanitized = sanitizePropertyDefinition(property);
-    const current = documentType.value.properties;
-    const updated = current.map((entry) => (entry.id === sanitized.id ? sanitized : entry));
-    await patchDocTypeMutation.mutateAsync({ properties: updated });
+    const updated = type.properties.map((entry) =>
+      entry.id === sanitized.id ? sanitized : entry,
+    );
+    await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
   }
 
   async function addDocumentTypeOptionAndSetValue(
@@ -299,6 +402,8 @@ export function useDocumentSync(
       return {
         state: "ready",
         canEdit: true,
+        canManage: canManagePropertySchema.value,
+        supportsPropertySchema: supportsPropertySchema.value,
         header: {
           title: "",
           spaceLabel: peekSpaceId.value ? "In space" : undefined,
@@ -354,7 +459,8 @@ export function useDocumentSync(
     return {
       state: "ready",
       canEdit: true,
-      canManage: spaceQuery.data.value?.canManage ?? true,
+      canManage: canManagePropertySchema.value,
+      supportsPropertySchema: supportsPropertySchema.value,
       header: {
         title: currentDoc?.title ?? "",
         spaceLabel: currentDoc?.spaceId ? "In space" : undefined,
@@ -389,6 +495,9 @@ export function useDocumentSync(
     );
 
     watch(id, (nextId, prevId) => {
+      if (nextId !== prevId) {
+        saveError.value = undefined;
+      }
       if (!nextId || isCompose.value || nextId === prevId) return;
       dirty.value = { title: false, body: false, properties: false };
       const doc = canonical.value;
@@ -503,30 +612,42 @@ export function useDocumentSync(
     surfaceView: view,
     canonical,
     documentType,
-    spaceMembers: computed(() => spaceQuery.data.value?.members ?? []),
+    spaceMembers: computed(() => spaceQuery.data.value?.assignableMembers ?? []),
     bindDraft,
     reload: () => documentQuery.refetch(),
     patchDocumentTypeProperties,
     editDocumentTypeProperty,
     addDocumentTypeOptionAndSetValue,
     renameDocumentTypeProperty: async (propertyId: string, newName: string) => {
-      if (!documentType.value) return;
+      const type = await resolveEditableDocumentType();
+      if (!type?.id) {
+        failDocumentTypeResolution();
+        return;
+      }
       await ensureDocumentTypeFresh();
-      const updated = documentType.value.properties.map((entry) =>
+      const updated = type.properties.map((entry) =>
         entry.id === propertyId ? { ...entry, name: newName } : entry,
       );
-      await patchDocTypeMutation.mutateAsync({ properties: updated });
+      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
     },
     deleteDocumentTypeProperty: async (propertyId: string) => {
-      if (!documentType.value) return;
+      const type = await resolveEditableDocumentType();
+      if (!type?.id) {
+        failDocumentTypeResolution();
+        return;
+      }
       await ensureDocumentTypeFresh();
-      const updated = documentType.value.properties.filter((entry) => entry.id !== propertyId);
-      await patchDocTypeMutation.mutateAsync({ properties: updated });
+      const updated = type.properties.filter((entry) => entry.id !== propertyId);
+      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
     },
     duplicateDocumentTypeProperty: async (propertyId: string) => {
-      if (!documentType.value) return;
+      const type = await resolveEditableDocumentType();
+      if (!type?.id) {
+        failDocumentTypeResolution();
+        return;
+      }
       await ensureDocumentTypeFresh();
-      const prop = documentType.value.properties.find((entry) => entry.id === propertyId);
+      const prop = type.properties.find((entry) => entry.id === propertyId);
       if (!prop) return;
       const duplicateKey = `${prop.key}_copy_${Date.now().toString().slice(-4)}`;
       const duplicate = sanitizePropertyDefinition({
@@ -536,8 +657,8 @@ export function useDocumentSync(
         name: `${prop.name} (Copy)`,
         order: (prop.order ?? 0) + 1,
       });
-      const updated = [...documentType.value.properties, duplicate];
-      await patchDocTypeMutation.mutateAsync({ properties: updated });
+      const updated = [...type.properties, duplicate];
+      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
     },
     addDocumentTypeProperty: async (prop: {
       name: string;
@@ -546,7 +667,12 @@ export function useDocumentSync(
       allowMultiple?: boolean;
       options?: PropertyOption[];
     }) => {
-      if (!documentType.value) return;
+      saveError.value = undefined;
+      const type = await resolveEditableDocumentType();
+      if (!type?.id) {
+        failDocumentTypeResolution();
+        return;
+      }
       await ensureDocumentTypeFresh();
       const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
       const newProp = buildPropertyDefinition({
@@ -554,18 +680,17 @@ export function useDocumentSync(
         key,
         name: prop.name,
         type: prop.type,
-        order: documentType.value.properties.length,
+        order: type.properties.length,
         options: prop.options,
         relationSpaceId:
           prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
         allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,
-        dateFormat: prop.type === "date" ? "locale" : undefined,
-        timeFormat: prop.type === "date" ? "none" : undefined,
-        notification:
-          prop.type === "date" ? { enabled: false, preset: "on_date" as const } : undefined,
+        dateFormat: prop.type === "date" ? "full_date" : undefined,
+        timeFormat: prop.type === "date" ? "hidden" : undefined,
+        notification: prop.type === "date" ? { preset: "none" as const } : undefined,
       });
-      const updated = [...documentType.value.properties, newProp];
-      await patchDocTypeMutation.mutateAsync({ properties: updated });
+      const updated = [...type.properties, newProp];
+      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
     },
     relationSpaces,
     exploreRelationSpace,

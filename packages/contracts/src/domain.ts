@@ -7,7 +7,12 @@ import {
   WorkflowId,
   WorkflowStageId,
 } from "./ids.js";
-import { PropertyDefinition, PropertyOption, PropertyType } from "./property-definition.js";
+import {
+  PropertyDefinition,
+  PropertyDefinitionsFromStorage,
+  PropertyOption,
+  PropertyType,
+} from "./property-definition.js";
 
 /** Stable dev seed IDs — safe for fixtures and e2e. */
 export const SEED_USER_ALICE = "00000000-0000-4000-8000-000000000001" as UserId;
@@ -106,6 +111,7 @@ export {
   PropertyType,
   PropertyOption,
   PropertyDefinition,
+  PropertySemanticRole,
   DateFormat,
   TimeFormat,
   DateReminderPreset,
@@ -120,6 +126,8 @@ export {
   type RelationPropertyDefinition,
   sanitizePropertyDefinition,
   sanitizePropertyDefinitions,
+  PropertyDefinitionsFromStorage,
+  resolvePropertyByRole,
   propertyDefinitionHasEditor,
   isSelectPropertyDefinition,
   isRelationPropertyDefinition,
@@ -229,7 +237,7 @@ export const DocumentTypeView = z.object({
   name: z.string(),
   key: DocumentTypeKey,
   workflowId: WorkflowId.nullable(),
-  properties: z.array(PropertyDefinition).default([]),
+  properties: PropertyDefinitionsFromStorage.default([]),
 });
 export type DocumentTypeView = z.infer<typeof DocumentTypeView>;
 
@@ -270,6 +278,7 @@ export const SpaceDetailResponse = z.object({
   childSpaces: z.array(SpaceSummary),
   artifacts: z.array(ArtifactSummary),
   members: z.array(SpaceMember),
+  assignableMembers: z.array(SpaceMember).optional(),
   canManage: z.boolean(),
   workflow: WorkflowView.nullable(),
   documentTypes: z.array(DocumentTypeView),
@@ -354,6 +363,7 @@ export type PatchDocumentInput = z.infer<typeof PatchDocumentInput>;
 
 export const GetDocumentResponse = z.object({
   document: DocumentView,
+  documentType: DocumentTypeView.nullable().optional(),
 });
 export type GetDocumentResponse = z.infer<typeof GetDocumentResponse>;
 

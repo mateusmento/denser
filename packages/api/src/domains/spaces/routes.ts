@@ -43,6 +43,7 @@ export const spaceRoutes = new Hono<{ Variables: Variables }>()
       childSpaces: result.childSpaces,
       artifacts: result.artifacts,
       members: result.members,
+      assignableMembers: result.assignableMembers,
       canManage: result.canManage,
       workflow: result.workflow,
       documentTypes: result.documentTypes,

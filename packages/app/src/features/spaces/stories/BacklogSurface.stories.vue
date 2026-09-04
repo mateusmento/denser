@@ -7,10 +7,15 @@ import {
   SEED_USER_ALICE,
   type ArtifactId,
   type ArtifactSummary,
+  type DocumentTypeId,
+  type DocumentTypeView,
+  type SpaceMember,
+  type UserId,
 } from "@denser/contracts";
 import { defineMeta } from "sb-addon-vue-csf";
 import { action } from "storybook/actions";
 import { ref } from "vue";
+import { issuePropertiesSchema } from "@/features/document/fixtures";
 import BacklogSurface from "../presentationals/BacklogSurface.vue";
 import { placeInBacklog, type BacklogSection } from "../lib/planning";
 
@@ -23,8 +28,34 @@ const { Story } = defineMeta({
 
 const now = "2026-01-01T00:00:00.000Z";
 const plannedId = "00000000-0000-4000-8000-000000000022" as ArtifactId;
+const issueTypeId = "00000000-0000-4000-8000-000000000020" as DocumentTypeId;
 
-function card(id: ArtifactId, title: string, spaceId: ArtifactSummary["spaceId"]): ArtifactSummary {
+const documentTypes: DocumentTypeView[] = [
+  {
+    id: issueTypeId,
+    name: "Issue",
+    key: "issue",
+    workflowId: null,
+    properties: issuePropertiesSchema,
+  },
+];
+
+const members: SpaceMember[] = [
+  {
+    userId: SEED_USER_ALICE,
+    name: "Alice Chen",
+    username: "alice",
+    role: "owner",
+    createdAt: now,
+  },
+];
+
+function issueCard(
+  id: ArtifactId,
+  title: string,
+  spaceId: ArtifactSummary["spaceId"],
+  overrides: Partial<ArtifactSummary> = {},
+): ArtifactSummary {
   return {
     id,
     kind: "document",
@@ -36,6 +67,17 @@ function card(id: ArtifactId, title: string, spaceId: ArtifactSummary["spaceId"]
     createdAt: now,
     updatedAt: now,
     rank: 0,
+    documentTypeKey: "issue",
+    documentTypeId: issueTypeId,
+    stageName: "In progress",
+    properties: {
+      priority: "High",
+      assignee: SEED_USER_ALICE as UserId,
+      labels: ["Frontend"],
+      estimate: 3,
+      due_date: "2026-03-15",
+    },
+    ...overrides,
   };
 }
 
@@ -45,15 +87,17 @@ const scrumSections = ref<BacklogSection[]>([
     title: "Upcoming",
     subtitle: "Sprint 1",
     spaceId: SEED_SPACE_ENGINEERING,
-    documents: [card(plannedId, "Planned issue", SEED_SPACE_ENGINEERING)],
+    documents: [issueCard(plannedId, "Planned issue", SEED_SPACE_ENGINEERING)],
   },
   {
     key: "unscheduled",
     title: "This space",
     spaceId: SEED_SPACE_ACME,
     documents: [
-      card(SEED_ARTIFACT_ONBOARDING_NOTES, "Onboarding notes", SEED_SPACE_ACME),
-      card(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", SEED_SPACE_ACME),
+      issueCard(SEED_ARTIFACT_ONBOARDING_NOTES, "Onboarding notes", SEED_SPACE_ACME),
+      issueCard(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", SEED_SPACE_ACME, {
+        properties: { priority: "Medium", assignee: SEED_USER_ALICE, labels: [], estimate: 1 },
+      }),
     ],
   },
 ]);
@@ -64,8 +108,8 @@ const kanbanSections = ref<BacklogSection[]>([
     title: "Backlog",
     spaceId: SEED_SPACE_ACME,
     documents: [
-      card(SEED_ARTIFACT_ONBOARDING_NOTES, "Onboarding notes", SEED_SPACE_ACME),
-      card(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", SEED_SPACE_ACME),
+      issueCard(SEED_ARTIFACT_ONBOARDING_NOTES, "Onboarding notes", SEED_SPACE_ACME),
+      issueCard(SEED_ARTIFACT_PERSONAL_NOTES, "Personal notes", SEED_SPACE_ACME),
     ],
   },
 ]);
@@ -97,6 +141,8 @@ function onKanbanMove(payload: {
       :sections="scrumSections"
       can-manage
       sprinting-enabled
+      :document-types="documentTypes"
+      :members="members"
       @open="action('open')($event)"
       @create="action('create')($event)"
       @move="onScrumMove"
@@ -107,6 +153,8 @@ function onKanbanMove(payload: {
   <Story as-child name="Kanban">
     <BacklogSurface
       :sections="kanbanSections"
+      :document-types="documentTypes"
+      :members="members"
       @open="action('open')($event)"
       @create="action('create')($event)"
       @move="onKanbanMove"

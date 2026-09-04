@@ -19,18 +19,25 @@ export const PropertyOption = z.object({
 });
 export type PropertyOption = z.infer<typeof PropertyOption>;
 
-export const DateFormat = z.enum(["locale", "iso", "mdy", "dmy"]);
+export const DateFormat = z.enum([
+  "full_date",
+  "short_date",
+  "mdy",
+  "dmy",
+  "ymd",
+  "relative",
+]);
 export type DateFormat = z.infer<typeof DateFormat>;
 
-export const TimeFormat = z.enum(["none", "12h", "24h"]);
+export const TimeFormat = z.enum(["hidden", "12h", "24h"]);
 export type TimeFormat = z.infer<typeof TimeFormat>;
 
 export const DateReminderPreset = z.enum([
+  "none",
   "on_date",
-  "5_min_before",
+  "1_min_before",
   "1_hour_before",
   "1_day_before",
-  "2_days_before",
   "custom",
 ]);
 export type DateReminderPreset = z.infer<typeof DateReminderPreset>;
@@ -38,13 +45,42 @@ export type DateReminderPreset = z.infer<typeof DateReminderPreset>;
 export const DateReminderUnit = z.enum(["minutes", "hours", "days", "weeks"]);
 export type DateReminderUnit = z.infer<typeof DateReminderUnit>;
 
-export const DateNotificationConfig = z.object({
-  enabled: z.boolean().default(false),
-  preset: DateReminderPreset.default("on_date"),
-  customAmount: z.number().int().positive().optional(),
-  customUnit: DateReminderUnit.optional(),
-});
+export const DateNotificationConfig = z
+  .object({
+    preset: DateReminderPreset.default("none"),
+    customAmount: z.number().int().positive().optional(),
+    customUnit: DateReminderUnit.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.preset === "custom") {
+      if (value.customAmount == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "customAmount is required when preset is custom",
+          path: ["customAmount"],
+        });
+      }
+      if (value.customUnit == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "customUnit is required when preset is custom",
+          path: ["customUnit"],
+        });
+      }
+    }
+  });
 export type DateNotificationConfig = z.infer<typeof DateNotificationConfig>;
+
+export const PropertySemanticRole = z.enum([
+  "priority",
+  "assignee",
+  "labels",
+  "estimate",
+  "due_date",
+  "blocked_by",
+  "parent_epic",
+]);
+export type PropertySemanticRole = z.infer<typeof PropertySemanticRole>;
 
 const PropertyDefinitionCore = z.object({
   id: PropertyDefinitionId,
@@ -53,6 +89,7 @@ const PropertyDefinitionCore = z.object({
   required: z.boolean().default(false),
   defaultValue: z.unknown().optional(),
   order: z.number().int().default(0),
+  semanticRole: PropertySemanticRole.optional(),
 });
 
 export const TextPropertyDefinition = PropertyDefinitionCore.extend({
@@ -67,11 +104,10 @@ export type NumberPropertyDefinition = z.infer<typeof NumberPropertyDefinition>;
 
 export const DatePropertyDefinition = PropertyDefinitionCore.extend({
   type: z.literal("date"),
-  dateFormat: DateFormat.default("locale"),
-  timeFormat: TimeFormat.default("none"),
+  dateFormat: DateFormat.default("full_date"),
+  timeFormat: TimeFormat.default("hidden"),
   notification: DateNotificationConfig.default({
-    enabled: false,
-    preset: "on_date",
+    preset: "none",
   }),
 });
 export type DatePropertyDefinition = z.infer<typeof DatePropertyDefinition>;
@@ -121,30 +157,92 @@ export const PropertyDefinitionLoose = z.object({
   required: z.boolean().optional(),
   defaultValue: z.unknown().optional(),
   order: z.number().int().optional(),
+  semanticRole: PropertySemanticRole.optional(),
   options: z.array(PropertyOption).optional(),
   relationSpaceId: SpaceId.nullable().optional(),
   allowMultiple: z.boolean().optional(),
-  dateFormat: DateFormat.optional(),
-  timeFormat: TimeFormat.optional(),
-  notification: DateNotificationConfig.optional(),
+  dateFormat: z.string().optional(),
+  timeFormat: z.string().optional(),
+  notification: z
+    .object({
+      enabled: z.boolean().optional(),
+      preset: z.string().optional(),
+      customAmount: z.number().int().positive().optional(),
+      customUnit: DateReminderUnit.optional(),
+    })
+    .optional(),
 });
 
-function normalizeDateNotification(
-  notification: z.infer<typeof DateNotificationConfig> | undefined,
-): DateNotificationConfig {
-  const base = notification ?? { enabled: false, preset: "on_date" as const };
-  if (base.preset !== "custom") {
+function normalizeDateFormat(value: string | undefined): DateFormat {
+  switch (value) {
+    case "full_date":
+    case "short_date":
+    case "mdy":
+    case "dmy":
+    case "ymd":
+    case "relative":
+      return value;
+    case "locale":
+      return "full_date";
+    case "iso":
+      return "ymd";
+    default:
+      return "full_date";
+  }
+}
+
+function normalizeTimeFormat(value: string | undefined): TimeFormat {
+  switch (value) {
+    case "hidden":
+    case "12h":
+    case "24h":
+      return value;
+    case "none":
+      return "hidden";
+    default:
+      return "hidden";
+  }
+}
+
+function normalizeDateNotification(raw: unknown): DateNotificationConfig {
+  const legacy =
+    typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+
+  let preset = typeof legacy.preset === "string" ? legacy.preset : undefined;
+
+  if (legacy.enabled === false && preset == null) {
+    preset = "none";
+  }
+
+  if (preset === "5_min_before") preset = "1_min_before";
+  if (preset === "2_days_before") preset = "1_day_before";
+
+  const valid: DateReminderPreset[] = [
+    "none",
+    "on_date",
+    "1_min_before",
+    "1_hour_before",
+    "1_day_before",
+    "custom",
+  ];
+
+  if (!preset || !valid.includes(preset as DateReminderPreset)) {
+    preset = "none";
+  }
+
+  if (preset === "custom") {
     return DateNotificationConfig.parse({
-      enabled: base.enabled ?? false,
-      preset: base.preset ?? "on_date",
+      preset: "custom",
+      customAmount:
+        typeof legacy.customAmount === "number" && legacy.customAmount > 0
+          ? legacy.customAmount
+          : 1,
+      customUnit:
+        typeof legacy.customUnit === "string" ? legacy.customUnit : "hours",
     });
   }
-  return DateNotificationConfig.parse({
-    enabled: base.enabled ?? false,
-    preset: "custom",
-    customAmount: base.customAmount ?? 1,
-    customUnit: base.customUnit ?? "hours",
-  });
+
+  return DateNotificationConfig.parse({ preset });
 }
 
 export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
@@ -156,6 +254,7 @@ export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
     required: loose.required ?? false,
     order: loose.order ?? 0,
     ...(loose.defaultValue !== undefined ? { defaultValue: loose.defaultValue } : {}),
+    ...(loose.semanticRole !== undefined ? { semanticRole: loose.semanticRole } : {}),
   };
 
   switch (loose.type) {
@@ -183,8 +282,8 @@ export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
       return PropertyDefinition.parse({
         ...core,
         type: "date",
-        dateFormat: loose.dateFormat ?? "locale",
-        timeFormat: loose.timeFormat ?? "none",
+        dateFormat: normalizeDateFormat(loose.dateFormat),
+        timeFormat: normalizeTimeFormat(loose.timeFormat),
         notification: normalizeDateNotification(loose.notification),
       });
     default:
@@ -198,6 +297,19 @@ export function sanitizePropertyDefinition(input: unknown): PropertyDefinition {
 export function sanitizePropertyDefinitions(input: unknown[]): PropertyDefinition[] {
   return input.map((entry) => sanitizePropertyDefinition(entry));
 }
+
+export function resolvePropertyByRole(
+  schema: readonly PropertyDefinition[],
+  role: PropertySemanticRole,
+): PropertyDefinition | undefined {
+  return schema.find((property) => property.semanticRole === role);
+}
+
+/** Accepts persisted / legacy property payloads when parsing API responses. */
+export const PropertyDefinitionsFromStorage = z.preprocess(
+  (val) => sanitizePropertyDefinitions(Array.isArray(val) ? val : []),
+  z.array(PropertyDefinition),
+);
 
 export function propertyDefinitionHasEditor(type: PropertyType): boolean {
   switch (type) {
@@ -253,6 +365,7 @@ export function buildPropertyDefinition(input: {
   dateFormat?: DateFormat;
   timeFormat?: TimeFormat;
   notification?: DateNotificationConfig;
+  semanticRole?: PropertySemanticRole;
 }): PropertyDefinition {
   return sanitizePropertyDefinition({
     id: input.id,
@@ -267,6 +380,7 @@ export function buildPropertyDefinition(input: {
     dateFormat: input.dateFormat,
     timeFormat: input.timeFormat,
     notification: input.notification,
+    semanticRole: input.semanticRole,
   });
 }
 

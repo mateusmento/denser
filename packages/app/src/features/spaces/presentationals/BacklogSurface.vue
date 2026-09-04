@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactSummary, PropertyDefinition } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, DocumentTypeView, SpaceMember } from "@denser/contracts";
 import {
   Button,
   DndItem,
@@ -12,7 +12,7 @@ import {
 import { PlusIcon } from "@lucide/vue";
 import { computed } from "vue";
 import { neighborsAfterSort, type BacklogSection, type PlaceNeighbors } from "../lib/planning";
-import IssueCard from "./IssueCard.vue";
+import PlanningCard from "./PlanningCard.vue";
 
 const props = defineProps<{
   sections: readonly BacklogSection[];
@@ -21,7 +21,9 @@ const props = defineProps<{
   hasActiveSprint?: boolean;
   isStarting?: boolean;
   isCompleting?: boolean;
-  propertiesSchema?: readonly PropertyDefinition[];
+  documentTypes?: readonly DocumentTypeView[];
+  members?: readonly SpaceMember[];
+  relationTitles?: Partial<Record<ArtifactId, string>>;
 }>();
 
 const emit = defineEmits<{
@@ -139,7 +141,13 @@ function onOpen(document: ArtifactSummary) {
               class="w-full min-w-0 cursor-grab select-none data-dragging:cursor-grabbing"
               @click="onOpen(document)"
             >
-              <IssueCard :document="document" :properties-schema="propertiesSchema" />
+              <PlanningCard
+                :document="document"
+                :document-types="documentTypes ?? []"
+                :members="members ?? []"
+                variant="backlog"
+                :relation-titles="relationTitles"
+              />
             </DndItem>
             <li
               v-if="!section.documents.length"
@@ -151,7 +159,15 @@ function onOpen(document: ArtifactSummary) {
         </section>
         <DndOverlay #default="{ sourceId }">
           <div v-if="documentById[sourceId]" class="w-full rotate-1 shadow-xl">
-            <IssueCard :document="documentById[sourceId]" :properties-schema="propertiesSchema" preview />
+            <PlanningCard
+              v-if="documentById[sourceId]"
+              :document="documentById[sourceId]"
+              :document-types="documentTypes ?? []"
+              :members="members ?? []"
+              variant="backlog"
+              :relation-titles="relationTitles"
+              preview
+            />
           </div>
           <div
             v-else

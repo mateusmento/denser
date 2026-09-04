@@ -1,28 +1,37 @@
 <script setup lang="ts">
-import type { ArtifactSummary, PropertyDefinition } from "@denser/contracts";
-import { FileTextIcon } from "@lucide/vue";
+import type { ArtifactSummary, PropertyDefinition, SpaceMember } from "@denser/contracts";
+import { LinkIcon } from "@lucide/vue";
 import { computed } from "vue";
-import { projectIssueCardDisplay } from "../lib/issue-card-properties";
+import { projectIssueCardView } from "../lib/issue-card-properties";
 
 const props = defineProps<{
   document: ArtifactSummary;
-  propertiesSchema?: readonly PropertyDefinition[];
+  schema: readonly PropertyDefinition[];
+  members: readonly SpaceMember[];
+  variant: "backlog" | "board";
+  relationTitles?: Partial<Record<string, string>>;
   preview?: boolean;
 }>();
 
-const display = computed(() => projectIssueCardDisplay(props.document, props.propertiesSchema));
+const view = computed(() =>
+  projectIssueCardView(props.document, props.schema, props.members, {
+    variant: props.variant,
+    relationTitles: props.relationTitles,
+  }),
+);
 
-const assigneeInitial = computed(() => {
-  const assignee = display.value.assignee;
-  if (!assignee) return "?";
-  return assignee.slice(0, 1).toUpperCase();
-});
-
-const hasBottomRow = computed(
+const hasMetaRow = computed(
   () =>
-    display.value.tags.length > 0 ||
-    display.value.estimate !== null ||
-    display.value.assignee !== null,
+    view.value.assignee != null ||
+    view.value.dueDate != null ||
+    view.value.estimate != null,
+);
+
+const hasFooter = computed(
+  () =>
+    view.value.labels.length > 0 ||
+    view.value.blockedBy != null ||
+    view.value.parentEpic != null,
 );
 </script>
 
@@ -32,58 +41,78 @@ const hasBottomRow = computed(
     :class="preview ? 'shadow-lg ring-1 ring-primary/20' : ''"
     data-slot="issue-card"
   >
-    <div class="flex items-center justify-between gap-2">
+    <div class="flex items-start justify-between gap-2">
       <div
-        class="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+        class="flex min-w-0 flex-wrap items-center gap-2 text-[11px] font-medium tracking-wider text-muted-foreground uppercase"
       >
-        <FileTextIcon class="size-3 text-muted-foreground/70" />
-        <span>{{ document.documentTypeKey ?? "issue" }}</span>
+        <span v-if="view.identifier">{{ view.identifier }}</span>
+        <span v-if="view.identifier && view.typeLabel" class="text-muted-foreground/50">·</span>
+        <span v-if="view.typeLabel">{{ view.typeLabel }}</span>
+        <div
+          v-if="view.stage"
+          class="inline-flex w-fit rounded-sm bg-muted/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+        >
+          {{ view.stage }}
+        </div>
       </div>
 
+
       <div
-        v-if="display.priorityChip"
-        class="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] leading-none font-semibold"
-        :class="display.priorityChip.class"
+        v-if="view.priority"
+        class="inline-flex shrink-0 items-center gap-1 rounded-sm border border-border/60 bg-muted px-1.5 py-0.5 text-[10px] leading-none font-semibold text-foreground"
       >
-        <span class="size-1.5 rounded-full" :class="display.priorityChip.dotClass" />
-        <span>{{ display.priorityChip.label }}</span>
+        <span
+          class="size-1.5 rounded-full"
+          :style="view.priority.color ? { backgroundColor: view.priority.color } : undefined"
+          :class="view.priority.color ? '' : 'bg-primary'"
+        />
+        <span>{{ view.priority.label }}</span>
       </div>
     </div>
 
     <div class="line-clamp-2 wrap-break-word text-xs leading-snug font-medium text-foreground">
-      {{ document.title || "Untitled" }}
+      {{ view.title }}
     </div>
 
     <div
-      v-if="hasBottomRow"
-      class="mt-0.5 flex flex-wrap items-center justify-between gap-1.5 border-t border-border/40 pt-1"
+      v-if="hasMetaRow"
+      class="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground"
     >
-      <div class="flex flex-wrap items-center gap-1">
+      <span v-if="view.assignee" class="inline-flex items-center gap-1">
         <span
-          v-for="tag in display.tags"
-          :key="tag"
-          class="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-        >
-          {{ tag }}
-        </span>
-      </div>
-
-      <div class="ml-auto flex items-center gap-1.5">
-        <span
-          v-if="display.estimate !== null"
-          class="rounded-sm bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground"
-        >
-          {{ display.estimate }} pts
-        </span>
-
-        <div
-          v-if="display.assignee"
           class="inline-flex size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary"
-          :title="display.assignee"
+          :title="view.assignee.label"
         >
-          {{ assigneeInitial }}
-        </div>
+          {{ view.assignee.initial }}
+        </span>
+        <span class="max-w-24 truncate text-foreground">{{ view.assignee.label }}</span>
+      </span>
+      <span v-if="view.dueDate">{{ view.dueDate }}</span>
+      <span v-if="view.estimate != null" class="font-mono">{{ view.estimate }} pts</span>
+    </div>
+
+    <div
+      v-if="hasFooter"
+      class="mt-0.5 flex flex-col gap-1 border-t border-border/40 pt-1"
+    >
+      <div v-if="view.labels.length" class="flex flex-wrap items-center gap-1">
+        <span
+          v-for="label in view.labels"
+          :key="label.name"
+          class="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+          :style="label.color ? { color: label.color } : undefined"
+        >
+          {{ label.name }}
+        </span>
       </div>
+      <p v-if="view.parentEpic" class="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+        <LinkIcon class="size-3 shrink-0" />
+        <span class="truncate">{{ view.parentEpic.title }}</span>
+      </p>
+      <p v-if="view.blockedBy" class="inline-flex items-center gap-1 text-[10px] text-destructive/80">
+        <LinkIcon class="size-3 shrink-0" />
+        <span class="truncate">{{ view.blockedBy.title }}</span>
+      </p>
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactSummary, PropertyDefinition } from "@denser/contracts";
+import type { ArtifactId, ArtifactSummary, DocumentTypeView, SpaceMember } from "@denser/contracts";
 import {
   Button,
   cn,
@@ -12,14 +12,16 @@ import {
 } from "@denser/design-system";
 import { computed } from "vue";
 import { neighborsAfterSort, type BoardColumn, type PlaceNeighbors } from "../lib/planning";
-import IssueCard from "./IssueCard.vue";
+import PlanningCard from "./PlanningCard.vue";
 
 const props = defineProps<{
   columns: readonly BoardColumn[];
   emptyUntilStart?: boolean;
   canManage?: boolean;
   isStarting?: boolean;
-  propertiesSchema?: readonly PropertyDefinition[];
+  documentTypes?: readonly DocumentTypeView[];
+  members?: readonly SpaceMember[];
+  relationTitles?: Partial<Record<ArtifactId, string>>;
 }>();
 
 const emit = defineEmits<{
@@ -135,14 +137,27 @@ function onOpen(document: ArtifactSummary) {
               class="w-full min-w-0 cursor-grab select-none data-dragging:cursor-grabbing"
               @click="onOpen(document)"
             >
-              <IssueCard :document="document" :properties-schema="propertiesSchema" />
+              <PlanningCard
+                :document="document"
+                :document-types="documentTypes ?? []"
+                :members="members ?? []"
+                variant="board"
+                :relation-titles="relationTitles"
+              />
             </DndItem>
           </DndList>
         </ScrollArea>
       </section>
       <DndOverlay #default="{ sourceId }">
         <div v-if="documentById[sourceId]" class="w-full rotate-1 shadow-xl">
-          <IssueCard :document="documentById[sourceId]" :properties-schema="propertiesSchema" preview />
+          <PlanningCard
+            :document="documentById[sourceId]"
+            :document-types="documentTypes ?? []"
+            :members="members ?? []"
+            variant="board"
+            :relation-titles="relationTitles"
+            preview
+          />
         </div>
         <div
           v-else

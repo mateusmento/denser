@@ -128,6 +128,10 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
 
   const detail = computed(() => spaceQuery.data.value);
 
+  const assignableMembers = computed(
+    () => detail.value?.assignableMembers ?? detail.value?.members ?? [],
+  );
+
   const content = computed((): SpaceContentView | undefined => {
     const data = spaceQuery.data.value;
     if (!data) return undefined;
@@ -293,6 +297,7 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     content,
     backLink,
     detail,
+    assignableMembers,
     generalView,
     membersView,
     reload: () => spaceQuery.refetch(),

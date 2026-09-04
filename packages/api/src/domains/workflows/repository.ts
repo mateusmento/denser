@@ -4,10 +4,11 @@ import type {
   PropertyDefinition,
   PropertyDefinitionId,
   SpaceId,
+  UserId,
   WorkflowId,
   WorkflowStageId,
 } from "@denser/contracts";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { documentType, workflow, workflowStage } from "../../db/schema/workflow.js";
 
@@ -25,6 +26,7 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
       { id: "low", name: "Low", color: "#3b82f6" },
     ],
     order: 0,
+    semanticRole: "priority",
   },
   {
     id: "00000000-0000-4000-8000-000000000082" as PropertyDefinitionId,
@@ -34,6 +36,7 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
     required: false,
     allowMultiple: false,
     order: 1,
+    semanticRole: "assignee",
   },
   {
     id: "00000000-0000-4000-8000-000000000083" as PropertyDefinitionId,
@@ -48,6 +51,7 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
       { id: "bug", name: "Bug", color: "#ef4444" },
     ],
     order: 2,
+    semanticRole: "labels",
   },
   {
     id: "00000000-0000-4000-8000-000000000084" as PropertyDefinitionId,
@@ -56,6 +60,7 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
     type: "number",
     required: false,
     order: 3,
+    semanticRole: "estimate",
   },
   {
     id: "00000000-0000-4000-8000-000000000085" as PropertyDefinitionId,
@@ -63,10 +68,11 @@ export const DEFAULT_ISSUE_PROPERTIES: PropertyDefinition[] = [
     name: "Due date",
     type: "date",
     required: false,
-    dateFormat: "locale",
-    timeFormat: "none",
-    notification: { enabled: false, preset: "on_date" },
+    dateFormat: "full_date",
+    timeFormat: "hidden",
+    notification: { preset: "none" },
     order: 4,
+    semanticRole: "due_date",
   },
 ];
 
@@ -122,6 +128,54 @@ export async function findDocumentTypeByKey(spaceId: SpaceId, key: DocumentTypeK
 
 export async function findDocumentTypeById(id: DocumentTypeId) {
   return db.query.documentType.findFirst({ where: eq(documentType.id, id) });
+}
+
+export async function findHomeDocumentTypeByKey(userId: UserId, key: DocumentTypeKey) {
+  return db.query.documentType.findFirst({
+    where: and(
+      isNull(documentType.spaceId),
+      eq(documentType.createdBy, userId),
+      eq(documentType.key, key),
+    ),
+  });
+}
+
+export async function listHomeDocumentTypesForUser(userId: UserId) {
+  return db
+    .select()
+    .from(documentType)
+    .where(and(isNull(documentType.spaceId), eq(documentType.createdBy, userId)));
+}
+
+/** Doc-only types for folder workspaces that are not full planning projects. */
+export async function provisionDefaultDocumentTypes(spaceId: SpaceId): Promise<void> {
+  const existing = await listDocumentTypesForSpace(spaceId);
+  if (existing.length > 0) return;
+
+  await db.insert(documentType).values({
+    spaceId,
+    name: "Doc",
+    key: "doc",
+    builtin: true,
+    workflowId: null,
+    properties: DEFAULT_DOC_PROPERTIES,
+  });
+}
+
+/** Home-scoped Doc type (document_type.space_id IS NULL). */
+export async function provisionHomeDocumentTypes(userId: UserId): Promise<void> {
+  const existing = await findHomeDocumentTypeByKey(userId, "doc");
+  if (existing) return;
+
+  await db.insert(documentType).values({
+    spaceId: null,
+    createdBy: userId,
+    name: "Doc",
+    key: "doc",
+    builtin: true,
+    workflowId: null,
+    properties: DEFAULT_DOC_PROPERTIES,
+  });
 }
 
 export async function updateDocumentTypeProperties(

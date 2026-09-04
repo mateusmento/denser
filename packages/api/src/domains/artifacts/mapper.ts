@@ -18,6 +18,7 @@ export type ArtifactPlanningFields = {
   stageKind?: StageKind | null;
   documentTypeId?: DocumentTypeId | null;
   documentTypeKey?: DocumentTypeKey | null;
+  properties?: Record<string, unknown>;
 };
 
 export function toArtifactSummary(
@@ -42,5 +43,6 @@ export function toArtifactSummary(
     ...(planning?.documentTypeKey !== undefined
       ? { documentTypeKey: planning.documentTypeKey }
       : {}),
+    ...(planning?.properties !== undefined ? { properties: planning.properties } : {}),
   };
 }

@@ -13,19 +13,24 @@ export interface PropertyOption {
   color?: string;
 }
 
-export type DateFormat = "locale" | "iso" | "mdy" | "dmy";
-export type TimeFormat = "none" | "12h" | "24h";
+export type DateFormat =
+  | "full_date"
+  | "short_date"
+  | "mdy"
+  | "dmy"
+  | "ymd"
+  | "relative";
+export type TimeFormat = "hidden" | "12h" | "24h";
 export type DateReminderPreset =
+  | "none"
   | "on_date"
-  | "5_min_before"
+  | "1_min_before"
   | "1_hour_before"
   | "1_day_before"
-  | "2_days_before"
   | "custom";
 export type DateReminderUnit = "minutes" | "hours" | "days" | "weeks";
 
 export interface DateNotificationConfig {
-  enabled: boolean;
   preset: DateReminderPreset;
   customAmount?: number;
   customUnit?: DateReminderUnit;

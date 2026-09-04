@@ -116,6 +116,10 @@ export const documentTypeRelations = relations(documentType, ({ one }) => ({
     fields: [documentType.spaceId],
     references: [space.id],
   }),
+  createdByUser: one(user, {
+    fields: [documentType.createdBy],
+    references: [user.id],
+  }),
   workflow: one(workflow, {
     fields: [documentType.workflowId],
     references: [workflow.id],

@@ -160,7 +160,11 @@ function submitEdit(property: PropertyDefinition) {
 </script>
 
 <template>
-  <div class="border-b border-border/60 pb-3" data-slot="document-properties-panel">
+  <div
+    v-if="view.schema.length > 0 || view.supportsPropertySchema"
+    class="border-b border-border/60 pb-3"
+    data-slot="document-properties-panel"
+  >
     <PropertyList :can-manage="view.canManage">
       <template #add-property>
         <DropdownMenu v-if="view.canManage" v-model:open="addPropertyOpen">

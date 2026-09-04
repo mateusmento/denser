@@ -9,7 +9,7 @@ import {
   PropertyTypeIcon,
 } from "@denser/design-system";
 import { ArrowLeftIcon, ChevronRightIcon, PlusIcon, XIcon } from "@lucide/vue";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import RelationSpacePickerMenu from "@/modules/spaces/presentationals/RelationSpacePickerMenu.vue";
 import type { SpaceMoveNode } from "@/modules/spaces/lib/space-move-menu";
 import { createPropertyOption } from "../lib/property-options";
@@ -129,8 +129,9 @@ function goBack(event: Event) {
   }
 }
 
-function continueFromName(event: Event) {
+async function continueFromName(event: Event) {
   event.preventDefault();
+  await nextTick();
   if (!propertyName.value.trim() || !selectedType.value) return;
   if (isSelectType.value) {
     direction.value = "forward";

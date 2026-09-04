@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { user } from "../../db/schema/auth.js";
 import { spaceMembership } from "../../db/schema/space.js";
+import { findSpaceById } from "./repository.js";
 
 function toIso(value: Date): string {
   return value.toISOString();
@@ -37,6 +38,21 @@ export async function listSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow
     role: row.role,
     createdAt: toIso(row.createdAt),
   }));
+}
+
+/** Walks parent spaces until a roster is found — for person property assignees. */
+export async function listInheritedSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow[]> {
+  let cursor: SpaceId | null = spaceId;
+
+  while (cursor) {
+    const members = await listSpaceMembers(cursor);
+    if (members.length > 0) return members;
+
+    const spaceRow = await findSpaceById(cursor);
+    cursor = spaceRow?.parentSpaceId ?? null;
+  }
+
+  return [];
 }
 
 export async function findUserByUsername(username: string): Promise<{ id: UserId } | undefined> {

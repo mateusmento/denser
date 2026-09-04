@@ -9,16 +9,19 @@ import type {
 } from "@denser/contracts";
 import * as artifactRepository from "../artifacts/repository.js";
 import { findSpaceById, type SpaceRow } from "../spaces/repository.js";
-import { isDocumentOnBoard, planningOwnerSpaceId } from "../spaces/planning.js";
+import { isDocumentOnBoard, planningOwnerSpaceId, resolvePlanningSpaceId } from "../spaces/planning.js";
 import { resolveTenantRootSpaceId } from "../spaces/service.js";
 import { requireArtifactAccess, requireSpaceAccess } from "../tenancy/access.js";
 import { canTransitionStage } from "../workflows/transitions.js";
 import {
   findDocumentTypeById,
   findDocumentTypeByKey,
+  findHomeDocumentTypeByKey,
   findStageById,
   firstIdleStage,
+  provisionHomeDocumentTypes,
 } from "../workflows/repository.js";
+import { toDocumentTypeView } from "../workflows/service.js";
 import { EMPTY_TIPTAP_DOC } from "./constants.js";
 import { toDocumentView } from "./mapper.js";
 import {
@@ -30,6 +33,76 @@ import {
   strideRank,
 } from "./rank.js";
 import * as documentRepository from "./repository.js";
+
+type DocumentTypeRow = NonNullable<Awaited<ReturnType<typeof findDocumentTypeById>>>;
+
+async function ensureDocumentTypeAssigned(
+  artifactRow: Parameters<typeof toDocumentView>[0],
+  documentRow: documentRepository.DocumentRow,
+  preferredKey: DocumentTypeKey = "doc",
+): Promise<DocumentTypeRow | null> {
+  if (documentRow.documentTypeId) {
+    const existing = await findDocumentTypeById(documentRow.documentTypeId);
+    if (existing) return existing;
+  }
+
+  let typeRow: DocumentTypeRow | null = null;
+
+  if (artifactRow.spaceId) {
+    const ownerId = await resolvePlanningSpaceId(artifactRow.spaceId);
+    typeRow =
+      (await findDocumentTypeByKey(ownerId, preferredKey)) ??
+      (preferredKey !== "doc" ? await findDocumentTypeByKey(ownerId, "doc") : null) ??
+      null;
+  } else {
+    const ownerId = artifactRow.createdBy as UserId;
+    await provisionHomeDocumentTypes(ownerId);
+    typeRow =
+      (await findHomeDocumentTypeByKey(ownerId, preferredKey)) ??
+      (preferredKey !== "doc" ? await findHomeDocumentTypeByKey(ownerId, "doc") : null) ??
+      null;
+  }
+
+  if (!typeRow) return null;
+
+  await documentRepository.updateDocumentBody({
+    artifactId: artifactRow.id,
+    documentTypeId: typeRow.id,
+  });
+
+  return typeRow;
+}
+
+async function resolveDocumentTypeRowForDocument(
+  artifactRow: Parameters<typeof toDocumentView>[0],
+  documentRow: documentRepository.DocumentRow,
+  documentTypeKey: DocumentTypeKey | null | undefined,
+): Promise<DocumentTypeRow | null> {
+  if (documentRow.documentTypeId) {
+    const byId = await findDocumentTypeById(documentRow.documentTypeId);
+    if (byId) return byId;
+  }
+  if (!documentTypeKey || !artifactRow.spaceId) return null;
+
+  const visited = new Set<SpaceId>();
+  let spaceRow = await findSpaceById(artifactRow.spaceId);
+  while (spaceRow && !visited.has(spaceRow.id)) {
+    visited.add(spaceRow.id);
+    const byKey = await findDocumentTypeByKey(spaceRow.id, documentTypeKey);
+    if (byKey) return byKey;
+
+    const planningId = planningOwnerSpaceId(spaceRow);
+    if (planningId !== spaceRow.id) {
+      spaceRow = await findSpaceById(planningId);
+      continue;
+    }
+
+    if (!spaceRow.parentSpaceId) break;
+    spaceRow = await findSpaceById(spaceRow.parentSpaceId);
+  }
+
+  return null;
+}
 
 async function mapDocument(
   artifactRow: Parameters<typeof toDocumentView>[0],
@@ -48,13 +121,24 @@ async function mapDocument(
 }
 
 async function resolveCreateType(input: {
+  userId: UserId;
   space: SpaceRow | null;
   documentTypeKey?: DocumentTypeKey;
 }) {
-  if (!input.space) return { documentTypeId: null, stageId: null };
-  const ownerId = planningOwnerSpaceId(input.space);
   const key =
-    input.documentTypeKey ?? (input.space.showBacklog || input.space.showBoard ? "issue" : "doc");
+    input.documentTypeKey ??
+    (input.space && (input.space.showBacklog || input.space.showBoard) ? "issue" : "doc");
+
+  if (!input.space) {
+    await provisionHomeDocumentTypes(input.userId);
+    const type = await findHomeDocumentTypeByKey(input.userId, key);
+    if (!type) return { documentTypeId: null, stageId: null };
+    if (!type.workflowId) return { documentTypeId: type.id, stageId: null };
+    const idle = await firstIdleStage(type.workflowId);
+    return { documentTypeId: type.id, stageId: idle?.id ?? null };
+  }
+
+  const ownerId = await resolvePlanningSpaceId(input.space.id);
   const type = await findDocumentTypeByKey(ownerId, key);
   if (!type) return { documentTypeId: null, stageId: null };
   if (!type.workflowId) return { documentTypeId: type.id, stageId: null };
@@ -80,6 +164,7 @@ export async function createDocument(userId: UserId, input: CreateDocumentInput)
   }
 
   const planning = await resolveCreateType({
+    userId,
     space: parentSpace,
     ...(input.documentTypeKey ? { documentTypeKey: input.documentTypeKey } : {}),
   });
@@ -131,7 +216,22 @@ export async function getDocument(userId: UserId, artifactId: ArtifactId) {
     return { ok: false as const, reason: "not_found" as const };
   }
 
-  return { ok: true as const, document: await mapDocument(artifactRow, documentRow) };
+  await ensureDocumentTypeAssigned(artifactRow, documentRow);
+  const resolvedDocumentRow =
+    (await documentRepository.findDocumentBody(artifactRow.id)) ?? documentRow;
+
+  const document = await mapDocument(artifactRow, resolvedDocumentRow);
+  const typeRow = await resolveDocumentTypeRowForDocument(
+    artifactRow,
+    resolvedDocumentRow,
+    document.documentTypeKey,
+  );
+
+  return {
+    ok: true as const,
+    document,
+    documentType: typeRow ? toDocumentTypeView(typeRow) : null,
+  };
 }
 
 async function placeInSpace(input: {

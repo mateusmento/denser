@@ -34,7 +34,7 @@ export const documentRoutes = new Hono<{ Variables: Variables }>()
       return c.json({ error: "Document not found" }, 404);
     }
 
-    return c.json({ document: result.document });
+    return c.json({ document: result.document, documentType: result.documentType ?? null });
   })
   .post("/documents/:artifactId/duplicate", async (c) => {
     const userId = c.get("user").id as UserId;

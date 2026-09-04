@@ -162,9 +162,19 @@ const showBoard = computed(
   () => spaceView.value === "board" && detail.value?.space.showBoard === true,
 );
 
-const issuePropertiesSchema = computed(
-  () => detail.value?.documentTypes.find((type) => type.key === "issue")?.properties ?? [],
+const assignableMembers = computed(
+  () => detail.value?.assignableMembers ?? detail.value?.members ?? [],
 );
+
+const documentTypes = computed(() => detail.value?.documentTypes ?? []);
+
+const relationTitles = computed(() => {
+  const map: Partial<Record<ArtifactId, string>> = {};
+  for (const artifact of detail.value?.artifacts ?? []) {
+    map[artifact.id] = artifact.title || "Untitled";
+  }
+  return map;
+});
 </script>
 
 <template>
@@ -176,7 +186,9 @@ const issuePropertiesSchema = computed(
     :has-active-sprint="detail?.space.activeSprintId != null"
     :is-starting="isStartingSprint"
     :is-completing="isCompletingSprint"
-    :properties-schema="issuePropertiesSchema"
+    :document-types="documentTypes"
+    :members="assignableMembers"
+    :relation-titles="relationTitles"
     @open="openArtifact"
     @create="(id) => openPeek('document', id as SpaceId)"
     @move="onBacklogMove"
@@ -192,7 +204,9 @@ const issuePropertiesSchema = computed(
     "
     :can-manage="detail?.canManage"
     :is-starting="isStartingSprint"
-    :properties-schema="issuePropertiesSchema"
+    :document-types="documentTypes"
+    :members="assignableMembers"
+    :relation-titles="relationTitles"
     @open="openArtifact"
     @drop="onBoardDrop"
     @start="startSprint"

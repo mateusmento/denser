@@ -16,6 +16,7 @@ export type DocumentPropertiesView = {
   schema: PropertyDefinition[];
   values: Record<string, unknown>;
   canManage: boolean;
+  supportsPropertySchema: boolean;
   editable: boolean;
   members: SpaceMember[];
   currentSpaceId?: SpaceId | null;
@@ -28,6 +29,7 @@ export function toDocumentPropertiesView(input: {
   schema: PropertyDefinition[];
   values: Record<string, unknown>;
   canManage: boolean;
+  supportsPropertySchema: boolean;
   editable: boolean;
   members: SpaceMember[];
   currentSpaceId?: SpaceId | null;
@@ -39,6 +41,7 @@ export function toDocumentPropertiesView(input: {
     schema: input.schema,
     values: input.values,
     canManage: input.canManage,
+    supportsPropertySchema: input.supportsPropertySchema,
     editable: input.editable,
     members: input.members,
     currentSpaceId: input.currentSpaceId,

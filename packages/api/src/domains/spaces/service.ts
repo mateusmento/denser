@@ -15,10 +15,10 @@ import {
   requireSpaceManagement,
 } from "../tenancy/access.js";
 import * as artifactRepository from "../artifacts/repository.js";
-import { provisionProjectPlanning } from "../workflows/repository.js";
+import { provisionDefaultDocumentTypes, provisionProjectPlanning } from "../workflows/repository.js";
 import { loadPlanningForSpace } from "../workflows/service.js";
 import { toSpaceMember, toSpaceSummary } from "./mapper.js";
-import { planningOwnerSpaceId } from "./planning.js";
+import { planningOwnerSpaceId, resolvePlanningSpaceId } from "./planning.js";
 import {
   copyRootMembersToSpace,
   countOwners,
@@ -26,6 +26,7 @@ import {
   findUserByUsername,
   insertSpaceMember,
   listSpaceMembers,
+  listInheritedSpaceMembers,
   removeSpaceMember,
 } from "./membership-repository.js";
 import {
@@ -89,6 +90,8 @@ async function applyCreatedSpacePlanning(
 ): Promise<SpaceRow> {
   if (needsProjectPlanning(preset)) {
     await provisionProjectPlanning(created.id);
+  } else if (created.parentSpaceId == null) {
+    await provisionDefaultDocumentTypes(created.id);
   }
   if (preset === "scrum") {
     await createUpcomingSprint(created, userId);
@@ -171,16 +174,17 @@ export async function getSpaceDetail(userId: UserId, spaceId: SpaceId) {
     }
   }
 
-  const planningSpaceId = planningOwnerSpaceId(row);
+  const planningSpaceId = await resolvePlanningSpaceId(spaceId);
   const artifactSpaceIds = [spaceId];
   if (row.sprintingEnabled) {
     if (row.activeSprintId) artifactSpaceIds.push(row.activeSprintId);
     if (row.upcomingSprintId) artifactSpaceIds.push(row.upcomingSprintId);
   }
 
-  const [artifacts, members, canManage, planning] = await Promise.all([
+  const [artifacts, members, assignableMembers, canManage, planning] = await Promise.all([
     artifactRepository.listArtifactSummariesInSpaces(artifactSpaceIds),
     listSpaceMembers(spaceId),
+    listInheritedSpaceMembers(spaceId),
     canManageSpace(userId, spaceId),
     loadPlanningForSpace(planningSpaceId),
   ]);
@@ -191,6 +195,7 @@ export async function getSpaceDetail(userId: UserId, spaceId: SpaceId) {
     childSpaces: accessibleChildren.map(toSpaceSummary),
     artifacts,
     members: members.map(toSpaceMember),
+    assignableMembers: assignableMembers.map(toSpaceMember),
     canManage,
     workflow: planning.workflow,
     documentTypes: planning.documentTypes,
