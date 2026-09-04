@@ -161,7 +161,7 @@ function submitEdit(property: PropertyDefinition) {
 
 <template>
   <div
-    v-if="view.schema.length > 0 || view.supportsPropertySchema"
+    v-if="view.schema.length > 0 || view.canManage"
     class="border-b border-border/60 pb-3"
     data-slot="document-properties-panel"
   >

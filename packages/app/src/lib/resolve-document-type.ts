@@ -1,9 +1,6 @@
 import type { ArtifactSummary, DocumentTypeKey, DocumentTypeView } from "@denser/contracts";
 
-type DocumentTypeLookup = Pick<
-  ArtifactSummary,
-  "documentTypeId" | "documentTypeKey" | "spaceId"
->;
+type DocumentTypeLookup = Pick<ArtifactSummary, "documentTypeId" | "documentTypeKey">;
 
 export function resolveDocumentTypeFromCatalog(
   document: DocumentTypeLookup | null | undefined,
@@ -34,11 +31,4 @@ export function defaultDocumentTypeForKey(
   key: DocumentTypeKey,
 ): DocumentTypeView | undefined {
   return types.find((type) => type.key === key);
-}
-
-/** Whether this document participates in a property schema (all documents do once loaded). */
-export function documentSupportsPropertySchema(
-  document: DocumentTypeLookup | null | undefined,
-): boolean {
-  return document != null;
 }

@@ -1,20 +1,10 @@
 import type {
   ArtifactId,
   ArtifactSummary,
-  DocumentTypeId,
   DocumentTypeView,
   DocumentView,
-  PropertyDefinition,
-  PropertyOption,
-  PropertyType,
   SpaceId,
   TipTapDoc,
-} from "@denser/contracts";
-import {
-  buildPropertyDefinition,
-  isSelectPropertyDefinition,
-  sanitizePropertyDefinition,
-  sanitizePropertyDefinitions,
 } from "@denser/contracts";
 import { ApiConflictError, ApiError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
@@ -30,6 +20,7 @@ import {
 } from "@/lib/conflict";
 import { artifactsCollection, documentsCollection, upsertInCollection } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
+import { resolveDocumentTypeFromCatalog } from "@/lib/resolve-document-type";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { useSpaceTabsStore } from "@/features/shell/composables/useSpaceTabsStore";
@@ -38,8 +29,7 @@ import { useSpaceMoveTree } from "@/modules/spaces/composables/useSpaceMoveTree"
 import { resolveAssignableSpaceMembers } from "@/modules/spaces/lib/assignable-space-members";
 import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } from "../types";
 import { isEmptyDocumentDraft } from "../lib/document-content";
-import { resolveDocumentTypeFromCatalog, documentSupportsPropertySchema } from "../lib/resolve-document-type";
-import { createPropertyOption, findOptionByName } from "../lib/property-options";
+import { useDocumentTypeSchema } from "./useDocumentTypeSchema";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
 
 export type DocumentSyncOptions = {
@@ -201,21 +191,6 @@ export function useDocumentSync(
     );
   });
 
-  const supportsPropertySchema = computed(() => {
-    if (isCompose.value && peekSpaceId.value) return true;
-    return documentSupportsPropertySchema(canonical.value);
-  });
-
-  /** User may edit the document type schema (add/rename/delete property definitions). */
-  const canManagePropertySchema = computed(() => {
-    if (!supportsPropertySchema.value) return false;
-    if (!spaceId.value) {
-      return true;
-    }
-    if (spaceQuery.isPending.value) return false;
-    return spaceQuery.data.value?.canManage ?? false;
-  });
-
   async function fetchRelationDocuments(targetSpaceId: SpaceId): Promise<ArtifactSummary[]> {
     const detail = await queryClient.fetchQuery({
       queryKey: queryKeys.space(targetSpaceId),
@@ -266,144 +241,27 @@ export function useDocumentSync(
     });
   }
 
-  async function resolveEditableDocumentType(): Promise<DocumentTypeView | null> {
-    if (documentType.value?.id) return documentType.value;
-
-    if (spaceId.value) {
-      await ensureDocumentTypeFresh();
-      const fromCatalog = resolveDocumentTypeFromCatalog(
-        canonical.value,
-        spaceQuery.data.value?.documentTypes ?? [],
-      );
-      if (fromCatalog?.id) return fromCatalog;
-    }
-
-    if (!id.value) return null;
-
-    const response = await apiClient.getDocument(id.value);
-    const next: DocumentQueryData = {
-      document: response.document,
-      documentType: response.documentType ?? null,
-    };
-    queryClient.setQueryData(queryKeys.document(id.value), next);
-    upsertInCollection(documentsCollection, response.document);
-
-    if (response.documentType?.id) return response.documentType;
-
-    if (spaceId.value) {
-      await ensureDocumentTypeFresh();
-    }
-
-    return (
-      resolveDocumentTypeFromCatalog(
-        response.document,
-        spaceQuery.data.value?.documentTypes ?? [],
-      ) ?? null
-    );
-  }
-
-  function failDocumentTypeResolution(): void {
-    saveError.value = "Couldn’t resolve the document type for this page.";
-  }
-
-  const patchDocTypeMutation = useMutation({
-    mutationFn: async (input: {
-      documentTypeId: DocumentTypeId;
-      name?: string;
-      properties?: PropertyDefinition[];
-    }) => {
-      const res = await apiClient.patchDocumentType(input.documentTypeId, {
-        ...(input.name !== undefined ? { name: input.name } : {}),
-        ...(input.properties !== undefined ? { properties: input.properties } : {}),
-      });
-      return res.documentType;
-    },
-    onSuccess: async (updated) => {
-      if (updated && id.value) {
-        queryClient.setQueryData<DocumentQueryData>(queryKeys.document(id.value), (old) =>
-          old ? { ...old, documentType: updated } : old,
-        );
-      }
-      if (spaceId.value) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.space(spaceId.value) });
-      }
-    },
-    onError: () => {
-      saveError.value = "Couldn’t update property schema.";
-    },
+  const typeSchema = useDocumentTypeSchema({
+    artifactId: id,
+    document: canonical,
+    documentType,
+    spaceId,
+    catalogTypes: computed(() => spaceQuery.data.value?.documentTypes ?? []),
+    canManageSpace: computed(() => spaceQuery.data.value?.canManage),
+    spacePending: computed(() => spaceQuery.isPending.value),
+    allowHomeManage: computed(
+      () => Boolean(canonical.value) || (isCompose.value && Boolean(peekSpaceId.value)),
+    ),
+    ensureSpaceFresh: ensureDocumentTypeFresh,
+    saveError,
   });
-
-  async function patchDocumentTypeProperties(properties: PropertyDefinition[]) {
-    const type = await resolveEditableDocumentType();
-    if (!type?.id) {
-      failDocumentTypeResolution();
-      return;
-    }
-    await ensureDocumentTypeFresh();
-    await patchDocTypeMutation.mutateAsync({
-      documentTypeId: type.id,
-      properties: sanitizePropertyDefinitions(properties),
-    });
-  }
-
-  async function editDocumentTypeProperty(property: PropertyDefinition) {
-    const type = await resolveEditableDocumentType();
-    if (!type?.id) {
-      failDocumentTypeResolution();
-      return;
-    }
-    await ensureDocumentTypeFresh();
-    const sanitized = sanitizePropertyDefinition(property);
-    const updated = type.properties.map((entry) =>
-      entry.id === sanitized.id ? sanitized : entry,
-    );
-    await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
-  }
-
-  async function addDocumentTypeOptionAndSetValue(
-    property: PropertyDefinition,
-    optionName: string,
-    currentValue: unknown,
-    setPropertyValue: (key: string, value: unknown) => void,
-  ) {
-    if (!isSelectPropertyDefinition(property)) return;
-    const trimmed = optionName.trim();
-    if (!trimmed) return;
-
-    const existing = isSelectPropertyDefinition(property) ? property.options : [];
-    const matched = findOptionByName(existing, trimmed);
-    const option = matched ?? createPropertyOption(trimmed, existing.length);
-
-    if (!matched) {
-      await editDocumentTypeProperty(
-        sanitizePropertyDefinition({
-          ...property,
-          options: [...existing, option],
-        }),
-      );
-    }
-
-    if (property.type === "multi_select") {
-      const current = Array.isArray(currentValue)
-        ? (currentValue as string[])
-        : typeof currentValue === "string" && currentValue
-          ? [currentValue]
-          : [];
-      if (current.includes(option.name)) return;
-      setPropertyValue(property.key, [...current, option.name]);
-      return;
-    }
-
-    setPropertyValue(property.key, option.name);
-  }
 
   const view = computed((): DocumentSurfaceView => {
     if (isCompose.value) {
       return {
         state: "ready",
         canEdit: true,
-        canManage: canManagePropertySchema.value,
-        supportsPropertySchema: supportsPropertySchema.value,
+        canManage: typeSchema.canManage.value,
         header: {
           title: "",
           spaceLabel: peekSpaceId.value ? "In space" : undefined,
@@ -459,8 +317,7 @@ export function useDocumentSync(
     return {
       state: "ready",
       canEdit: true,
-      canManage: canManagePropertySchema.value,
-      supportsPropertySchema: supportsPropertySchema.value,
+      canManage: typeSchema.canManage.value,
       header: {
         title: currentDoc?.title ?? "",
         spaceLabel: currentDoc?.spaceId ? "In space" : undefined,
@@ -615,83 +472,13 @@ export function useDocumentSync(
     spaceMembers: computed(() => spaceQuery.data.value?.assignableMembers ?? []),
     bindDraft,
     reload: () => documentQuery.refetch(),
-    patchDocumentTypeProperties,
-    editDocumentTypeProperty,
-    addDocumentTypeOptionAndSetValue,
-    renameDocumentTypeProperty: async (propertyId: string, newName: string) => {
-      const type = await resolveEditableDocumentType();
-      if (!type?.id) {
-        failDocumentTypeResolution();
-        return;
-      }
-      await ensureDocumentTypeFresh();
-      const updated = type.properties.map((entry) =>
-        entry.id === propertyId ? { ...entry, name: newName } : entry,
-      );
-      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
-    },
-    deleteDocumentTypeProperty: async (propertyId: string) => {
-      const type = await resolveEditableDocumentType();
-      if (!type?.id) {
-        failDocumentTypeResolution();
-        return;
-      }
-      await ensureDocumentTypeFresh();
-      const updated = type.properties.filter((entry) => entry.id !== propertyId);
-      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
-    },
-    duplicateDocumentTypeProperty: async (propertyId: string) => {
-      const type = await resolveEditableDocumentType();
-      if (!type?.id) {
-        failDocumentTypeResolution();
-        return;
-      }
-      await ensureDocumentTypeFresh();
-      const prop = type.properties.find((entry) => entry.id === propertyId);
-      if (!prop) return;
-      const duplicateKey = `${prop.key}_copy_${Date.now().toString().slice(-4)}`;
-      const duplicate = sanitizePropertyDefinition({
-        ...prop,
-        id: crypto.randomUUID() as PropertyDefinition["id"],
-        key: duplicateKey,
-        name: `${prop.name} (Copy)`,
-        order: (prop.order ?? 0) + 1,
-      });
-      const updated = [...type.properties, duplicate];
-      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
-    },
-    addDocumentTypeProperty: async (prop: {
-      name: string;
-      type: PropertyType;
-      relationSpaceId?: SpaceId | null;
-      allowMultiple?: boolean;
-      options?: PropertyOption[];
-    }) => {
-      saveError.value = undefined;
-      const type = await resolveEditableDocumentType();
-      if (!type?.id) {
-        failDocumentTypeResolution();
-        return;
-      }
-      await ensureDocumentTypeFresh();
-      const key = prop.name.toLowerCase().replace(/[^a-z0-9_]/g, "_") || `prop_${Date.now()}`;
-      const newProp = buildPropertyDefinition({
-        id: crypto.randomUUID() as PropertyDefinition["id"],
-        key,
-        name: prop.name,
-        type: prop.type,
-        order: type.properties.length,
-        options: prop.options,
-        relationSpaceId:
-          prop.type === "relation" ? (prop.relationSpaceId ?? spaceId.value ?? null) : undefined,
-        allowMultiple: prop.type === "relation" ? (prop.allowMultiple ?? true) : undefined,
-        dateFormat: prop.type === "date" ? "full_date" : undefined,
-        timeFormat: prop.type === "date" ? "hidden" : undefined,
-        notification: prop.type === "date" ? { preset: "none" as const } : undefined,
-      });
-      const updated = [...type.properties, newProp];
-      await patchDocTypeMutation.mutateAsync({ documentTypeId: type.id, properties: updated });
-    },
+    patchDocumentTypeProperties: typeSchema.patchDocumentTypeProperties,
+    editDocumentTypeProperty: typeSchema.editDocumentTypeProperty,
+    addDocumentTypeOptionAndSetValue: typeSchema.addDocumentTypeOptionAndSetValue,
+    renameDocumentTypeProperty: typeSchema.renameDocumentTypeProperty,
+    deleteDocumentTypeProperty: typeSchema.deleteDocumentTypeProperty,
+    duplicateDocumentTypeProperty: typeSchema.duplicateDocumentTypeProperty,
+    addDocumentTypeProperty: typeSchema.addDocumentTypeProperty,
     relationSpaces,
     exploreRelationSpace,
     relationDocumentsBySpaceId,

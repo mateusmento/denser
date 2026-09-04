@@ -67,7 +67,6 @@ const propertiesView = computed((): DocumentPropertiesView =>
     schema: surfaceView.value.propertiesSchema ?? [],
     values: draft.value.properties ?? {},
     canManage: surfaceView.value.canManage ?? false,
-    supportsPropertySchema: surfaceView.value.supportsPropertySchema ?? false,
     editable: surfaceView.value.canEdit,
     members: spaceMembers.value,
     currentSpaceId: currentSpaceId.value ?? peekSpaceId.value,
@@ -100,10 +99,6 @@ async function onCreateOptionAndSelect(property: PropertyDefinition, name: strin
     setDraftProperty,
   );
 }
-
-async function onAddProperty(payload: Parameters<typeof addDocumentTypeProperty>[0]) {
-  await addDocumentTypeProperty(payload);
-}
 </script>
 
 <template>
@@ -119,7 +114,7 @@ async function onAddProperty(payload: Parameters<typeof addDocumentTypeProperty>
         <DocumentPropertiesPanel
           :view="propertiesView"
           @update-value="setDraftProperty"
-          @add-property="onAddProperty"
+          @add-property="addDocumentTypeProperty"
           @delete-property="deleteDocumentTypeProperty"
           @rename-property="renameDocumentTypeProperty"
           @duplicate-property="duplicateDocumentTypeProperty"

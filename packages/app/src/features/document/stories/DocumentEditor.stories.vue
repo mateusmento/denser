@@ -107,7 +107,6 @@ async function onMentionSearch(query: string) {
               schema: issuePropertiesSchema,
               values: readyDraft.properties ?? {},
               canManage: true,
-              supportsPropertySchema: true,
               editable: true,
               members: spaceMembersFixture,
               relationSpaces: [],

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ArtifactId, ArtifactSummary, DocumentTypeView, SpaceMember } from "@denser/contracts";
 import { computed } from "vue";
+import { resolveDocumentTypeFromCatalog } from "@/lib/resolve-document-type";
 import DocumentCard from "./DocumentCard.vue";
 import IssueCard from "./IssueCard.vue";
 
@@ -13,16 +14,9 @@ const props = defineProps<{
   preview?: boolean;
 }>();
 
-const schema = computed(() => {
-  const byId = props.document.documentTypeId
-    ? props.documentTypes.find((type) => type.id === props.document.documentTypeId)
-    : undefined;
-  const byKey =
-    byId == null && props.document.documentTypeKey
-      ? props.documentTypes.find((type) => type.key === props.document.documentTypeKey)
-      : undefined;
-  return (byId ?? byKey)?.properties ?? [];
-});
+const schema = computed(
+  () => resolveDocumentTypeFromCatalog(props.document, props.documentTypes)?.properties ?? [],
+);
 </script>
 
 <template>

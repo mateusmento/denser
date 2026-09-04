@@ -12,7 +12,6 @@ export type DocumentEditorView = {
   state: DocumentSurfaceState;
   canEdit: boolean;
   canManage?: boolean;
-  supportsPropertySchema?: boolean;
   titlePlaceholder: string;
   bodyPlaceholder: string;
   errorMessage?: string;
