@@ -38,11 +38,11 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Open thread from message action loads thread messages
-- [ ] Desktop: split + resize + fade-in; mobile: full-replace + fade-in
-- [ ] Thread composer posts with `threadId`
-- [ ] Thread list separate from main around-focus / jump state
+- [x] Open thread from message action loads thread messages
+- [x] Desktop: split + resize + fade-in; mobile: full-replace + fade-in
+- [x] Thread composer posts with `threadId`
+- [x] Thread list separate from main around-focus / jump state
 
 ## PR
 
-- [ ] `[messaging 07] ThreadPane UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] [#18](https://github.com/mateusmento/denser/pull/18) `[messaging 07] ThreadPane UI` — open, awaiting review
