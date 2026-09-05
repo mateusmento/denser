@@ -13,6 +13,9 @@ export const CONVERSATION_PRESENCE_EVENT = "conversation.presence" as const;
 /** Server → client: workspace online/offline for a user. */
 export const WORKSPACE_PRESENCE_EVENT = "workspace.presence" as const;
 
+/** Server → client: full online roster for a workspace (on subscribe). */
+export const WORKSPACE_PRESENCE_SNAPSHOT_EVENT = "workspace.presence.snapshot" as const;
+
 export const CONVERSATION_SUBSCRIBE_EVENT = "conversation.subscribe" as const;
 export const CONVERSATION_UNSUBSCRIBE_EVENT = "conversation.unsubscribe" as const;
 export const CONVERSATION_PRESENCE_PULSE_EVENT = "conversation.presence.pulse" as const;
@@ -62,5 +65,11 @@ export const WorkspacePresenceEvent = z.object({
 });
 export type WorkspacePresenceEvent = z.infer<typeof WorkspacePresenceEvent>;
 
+export const WorkspacePresenceSnapshotEvent = z.object({
+  rootSpaceId: SpaceId,
+  userIds: z.array(UserId),
+});
+export type WorkspacePresenceSnapshotEvent = z.infer<typeof WorkspacePresenceSnapshotEvent>;
+
 /** Default typing TTL (ms) — receiver drops user when `until` passes. */
-export const TYPING_TTL_MS = 5_500;
+export const TYPING_TTL_MS = 2_000;

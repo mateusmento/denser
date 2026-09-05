@@ -22,6 +22,8 @@
 
 Sidebar **hide DM** UX; soft-archive conversation chrome if not already in shell; verify create/open DM flows use peer APIs from **14**.
 
+**DM placement (product):** direct conversations belong to a **private root space** — listed in the sidebar **Direct messages** section whenever the user is inside that workspace (any nested space or artifact). Sidebar labels are **peer-relative** (1:1 shows the other person’s name; not a fixed artifact title). Group DMs show combined title; no presence dot on group rows. Only **conversation members** may access a DM. DMs never appear on global Home.
+
 **Owns:** shell/sidebar conversation chrome for DM preferences.
 
 **Must not touch:** peer migration internals (**14**); message list.
@@ -41,6 +43,8 @@ _N/A_
 - [ ] DM hide from sidebar (per-user preference)
 - [ ] Soft-archive conversation UI if not in shell
 - [ ] Verify create/open DM flows call peer APIs
+- [ ] DMs only in root-space sidebar (not Home gallery / nav artifacts)
+- [ ] Peer-relative DM labels for all members (not creator-static titles)
 
 ## PR
 

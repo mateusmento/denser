@@ -239,6 +239,8 @@ export function useConversationSync(
 
   return {
     headerView,
+    conversation: canonical,
+    isDirect: computed(() => canonical.value?.conversationKind === "direct"),
     isCompose,
     saveError,
     isCreating,

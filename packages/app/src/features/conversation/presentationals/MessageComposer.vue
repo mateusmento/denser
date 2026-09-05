@@ -27,7 +27,7 @@ import {
   SendIcon,
 } from "@lucide/vue";
 import { useElementSize, useFileDialog } from "@vueuse/core";
-import { computed, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef, watch } from "vue";
 import {
   RichTextComposer,
   emptyDoc,
@@ -61,6 +61,8 @@ const emit = defineEmits<{
   action: [id: ComposerActionId];
   schedule: [payload: ScheduleCommitPayload];
   mentionSearch: [query: string];
+  typing: [];
+  "typing-stop": [];
   removeAttachment: [attachmentId: string];
   cancelUpload: [clientId: string];
   retryUpload: [clientId: string];
@@ -75,6 +77,30 @@ const composer = useTemplateRef<{
 }>("composer");
 const { width } = useElementSize(root);
 const scheduleOpen = defineModel<boolean>("scheduleOpen", { default: false });
+const isFocused = ref(false);
+
+watch(body, (value) => {
+  if (!isFocused.value || props.view.disabled || props.view.sending) return;
+  const text = JSON.stringify(value);
+  if (text.length > JSON.stringify(emptyDoc()).length) emit("typing");
+  else emit("typing-stop");
+});
+
+function onFocusIn() {
+  isFocused.value = true;
+  const text = JSON.stringify(body.value);
+  if (text.length > JSON.stringify(emptyDoc()).length) emit("typing");
+}
+
+function onFocusOut() {
+  isFocused.value = false;
+  emit("typing-stop");
+}
+
+function onSend() {
+  emit("typing-stop");
+  emit("send");
+}
 
 const { open: openAttachDialog, onChange: onAttachFiles } = useFileDialog({ multiple: true });
 
@@ -166,6 +192,8 @@ function onDrop(event: DragEvent) {
     "
     data-slot="message-composer"
     :data-shape="view.shape"
+    @focusin="onFocusIn"
+    @focusout="onFocusOut"
     @dragover.prevent
     @drop="onDrop"
   >
@@ -191,7 +219,7 @@ function onDrop(event: DragEvent) {
           :mention-items="mentionItems"
           :upload-image="uploadImage"
           :on-stage-files="onStageFiles"
-          @submit="canSend && emit('send')"
+          @submit="canSend && onSend()"
           @mention-search="emit('mentionSearch', $event)"
         />
       </ScrollArea>
@@ -263,7 +291,7 @@ function onDrop(event: DragEvent) {
 
           <span class="ms-auto" />
 
-          <Button size="sm" :disabled="!canSend" @click="emit('send')">
+          <Button size="sm" :disabled="!canSend" @click="onSend">
             <SendIcon class="size-3.5" />
             {{ view.sendLabel }}
           </Button>

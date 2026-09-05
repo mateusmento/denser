@@ -16,4 +16,9 @@ const { Story } = defineMeta({
       <ChannelHeader :channel="channelHeader" />
     </div>
   </Story>
+  <Story as-child name="WithPresence">
+    <div class="h-surface-header w-[36rem]">
+      <ChannelHeader :channel="{ ...channelHeader, members: channelHeader.members.slice(0, 2) }" />
+    </div>
+  </Story>
 </template>

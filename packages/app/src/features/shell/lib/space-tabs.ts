@@ -29,6 +29,7 @@ export type SpaceTabHostInput = {
   activeTabHostId: SpaceId | null;
   documentSpaceId?: SpaceId | null;
   conversationSpaceId?: SpaceId | null;
+  conversationRootSpaceId?: SpaceId | null;
   conversationKind?: string | null;
 };
 
@@ -37,7 +38,7 @@ export function resolveSpaceTabHostId(input: SpaceTabHostInput): SpaceId | undef
   if (input.routeName === "home") return undefined;
 
   if (input.routeName === "conversation" && input.conversationKind === "direct") {
-    return undefined;
+    return input.conversationRootSpaceId ?? undefined;
   }
 
   if (input.activeTabHostId) return input.activeTabHostId;

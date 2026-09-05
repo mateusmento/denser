@@ -21,6 +21,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
 import { applySpacePatch, invalidateSpaceProjections } from "@/modules/spaces";
+import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
 import type { SpaceGeneralView } from "@/modules/spaces";
 import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
 import {
@@ -58,6 +59,17 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     () => liveSpace.value?.parentSpaceId ?? spaceQuery.data.value?.space.parentSpaceId ?? undefined,
   );
   const liveParent = useLiveSpace(parentSpaceId);
+
+  const presenceRootId = computed((): SpaceId | null => {
+    const data = spaceQuery.data.value;
+    if (!data) return null;
+    const space = liveSpace.value ?? data.space;
+    if (space.rootSpaceId) return space.rootSpaceId;
+    if (space.parentSpaceId == null && space.visibility === "private") return space.id;
+    return null;
+  });
+
+  const { isUserOnline } = useWorkspacePresence(presenceRootId);
 
   const invalidateSpace = async (space?: Pick<SpaceSummary, "id" | "parentSpaceId">) => {
     if (!id.value && !space) return;
@@ -179,7 +191,10 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     if (!data) return undefined;
     const space = liveSpace.value ?? data.space;
     return {
-      members: data.members,
+      members: data.members.map((member) => ({
+        ...member,
+        online: presenceRootId.value ? isUserOnline(member.userId) : undefined,
+      })),
       canManage: data.canManage,
       isNested: space.parentSpaceId != null,
       visibility: space.visibility,

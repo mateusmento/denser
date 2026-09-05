@@ -41,7 +41,9 @@ export function useHomeSync() {
   const spaces = useLiveSpacesInWindow(
     computed(() => homeQuery.data.value?.spaces ?? ([] as SpaceSummary[])),
   );
-  const artifacts = computed(() => homeQuery.data.value?.artifacts ?? ([] as ArtifactSummary[]));
+  const artifacts = computed(
+    () => homeQuery.data.value?.artifacts.filter((a) => a.kind !== "conversation") ?? [],
+  );
 
   return {
     view,

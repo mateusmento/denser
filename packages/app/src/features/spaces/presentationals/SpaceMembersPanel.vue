@@ -9,6 +9,7 @@ import {
   Skeleton,
 } from "@denser/design-system";
 import { computed } from "vue";
+import PresenceDot from "@/modules/presence/presentationals/PresenceDot.vue";
 import type { SpaceMembersView } from "../types";
 
 const props = defineProps<{
@@ -79,11 +80,21 @@ const visibilityModel = computed({
           :key="member.userId"
           class="flex items-center justify-between gap-3 px-4 py-3"
         >
-          <div class="min-w-0">
-            <p class="truncate font-medium">{{ member.name }}</p>
-            <p v-if="member.username" class="truncate text-xs text-muted-foreground">
-              @{{ member.username }}
-            </p>
+          <div class="flex min-w-0 items-center gap-3">
+            <span class="relative shrink-0">
+              <span
+                class="inline-flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium"
+              >
+                {{ member.name.slice(0, 2).toUpperCase() }}
+              </span>
+              <PresenceDot :online="member.online" class="border-background" />
+            </span>
+            <div class="min-w-0">
+              <p class="truncate font-medium">{{ member.name }}</p>
+              <p v-if="member.username" class="truncate text-xs text-muted-foreground">
+                @{{ member.username }}
+              </p>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <Badge variant="secondary">{{ member.role }}</Badge>

@@ -1,7 +1,10 @@
 import {
+  SEED_ARTIFACT_DM_CAROL,
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SEED_SPACE_ACME,
   SEED_SPACE_ENGINEERING,
+  SEED_USER_ALICE,
+  SEED_USER_CAROL,
 } from "@denser/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { startHarness, type E2eHarness } from "./harness.js";
@@ -227,6 +230,27 @@ describe("domain api", () => {
     expect(engineering.artifacts.map((artifact) => artifact.id)).not.toContain(
       first.conversation.id,
     );
+  });
+
+  it("lists direct conversations with peer-relative titles", async () => {
+    const aliceClient = await harness.createAuthedClient("alice");
+    const carolClient = await harness.createAuthedClient("carol");
+
+    const aliceDms = await aliceClient.listDirectConversations(SEED_SPACE_ACME);
+    const carolDm = aliceDms.conversations.find((conversation) => conversation.id === SEED_ARTIFACT_DM_CAROL);
+    expect(carolDm?.title).toBe("Carol Vance");
+    expect(carolDm?.peerUserId).toBe(SEED_USER_CAROL);
+
+    const carolDms = await carolClient.listDirectConversations(SEED_SPACE_ACME);
+    const aliceDm = carolDms.conversations.find((conversation) => conversation.id === SEED_ARTIFACT_DM_CAROL);
+    expect(aliceDm?.title).toBe("Alice Chen");
+    expect(aliceDm?.peerUserId).toBe(SEED_USER_ALICE);
+  });
+
+  it("excludes direct conversations from home artifacts", async () => {
+    const aliceClient = await harness.createAuthedClient("alice");
+    const home = await aliceClient.home();
+    expect(home.artifacts.some((artifact) => artifact.kind === "conversation")).toBe(false);
   });
 
   it("allows direct messages when the peer is a nested-space member only", async () => {

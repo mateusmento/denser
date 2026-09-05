@@ -1,15 +1,18 @@
 import type {
   ArtifactId,
   ArtifactSummary,
+  ConversationView,
   SpaceId,
   SpacePreset,
   SpaceSummary,
+  UserId,
 } from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
 import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
+import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
 import {
   artifactsCollection,
   documentsCollection,
@@ -19,6 +22,12 @@ import {
 } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import type { WorkspaceNavHomeButton, WorkspaceNavLink, WorkspaceNavView } from "../types";
+import { truncateInSpaceNavItems } from "../lib/nav-section-items";
+import {
+  documentQueryKey,
+  fetchDocumentQueryData,
+  readDocumentFromQueryData,
+} from "@/features/document/lib/document-query";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 
 function spaceLink(
@@ -70,12 +79,23 @@ function sectionItems(
 }
 
 function directMessageLinks(
-  conversations: readonly Pick<ArtifactSummary, "id" | "title" | "kind">[],
+  conversations: readonly ConversationView[],
   activeArtifactId: ArtifactId | undefined,
+  isUserOnline: (userId: string) => boolean,
 ): WorkspaceNavLink[] {
-  return conversations.map((conversation) =>
-    artifactLink(conversation, activeArtifactId === conversation.id),
-  );
+  return conversations.map((conversation) => {
+    const link = artifactLink(
+      { ...conversation, title: conversation.title },
+      activeArtifactId === conversation.id,
+    );
+    const peerUserId = conversation.peerUserId ?? undefined;
+    return {
+      ...link,
+      label: conversation.title,
+      peerUserId,
+      peerOnline: peerUserId ? isUserOnline(peerUserId) : undefined,
+    };
+  });
 }
 
 export function useWorkspaceNavSync() {
@@ -114,14 +134,9 @@ export function useWorkspaceNavSync() {
   });
 
   const documentQuery = useQuery({
-    queryKey: computed(() => queryKeys.document(activeDocumentId.value ?? "")),
+    queryKey: computed(() => documentQueryKey(activeDocumentId.value)),
     enabled: computed(() => activeDocumentId.value != null),
-    queryFn: async () => {
-      const { document } = await apiClient.getDocument(activeDocumentId.value!);
-      upsertInCollection(documentsCollection, document);
-      upsertInCollection(artifactsCollection, document);
-      return document;
-    },
+    queryFn: () => fetchDocumentQueryData(activeDocumentId.value!),
   });
 
   const conversationQuery = useQuery({
@@ -135,7 +150,10 @@ export function useWorkspaceNavSync() {
   });
 
   const artifactSpaceId = computed(
-    () => documentQuery.data.value?.spaceId ?? conversationQuery.data.value?.spaceId ?? undefined,
+    () =>
+      readDocumentFromQueryData(documentQuery.data.value)?.spaceId ??
+      conversationQuery.data.value?.spaceId ??
+      undefined,
   );
 
   const artifactSpaceQuery = useQuery({
@@ -150,20 +168,13 @@ export function useWorkspaceNavSync() {
     },
   });
 
-  const contextDetail = computed(
-    () => routeSpaceQuery.data.value ?? artifactSpaceQuery.data.value ?? null,
-  );
-
-  const liveRootSpaces = useLiveSpacesInWindow(computed(() => homeQuery.data.value?.spaces ?? []));
-  const liveContextChildSpaces = useLiveSpacesInWindow(
-    computed(() => contextDetail.value?.childSpaces ?? []),
-  );
-  const contextSpaceId = computed(() => contextDetail.value?.space.id);
-  const liveContextSpace = useLiveSpace(contextSpaceId);
-
   const workspaceRootId = computed((): SpaceId | null => {
-    if (contextDetail.value) {
-      const space = contextDetail.value.space;
+    if (routeSpaceQuery.data.value) {
+      const space = routeSpaceQuery.data.value.space;
+      return space.rootSpaceId ?? space.id;
+    }
+    if (artifactSpaceQuery.data.value) {
+      const space = artifactSpaceQuery.data.value.space;
       return space.rootSpaceId ?? space.id;
     }
     if (conversationQuery.data.value?.rootSpaceId) {
@@ -174,6 +185,38 @@ export function useWorkspaceNavSync() {
     }
     return null;
   });
+
+  const workspaceRootDetailQuery = useQuery({
+    queryKey: computed(() => queryKeys.space(workspaceRootId.value ?? "")),
+    enabled: computed(
+      () =>
+        workspaceRootId.value != null &&
+        routeSpaceQuery.data.value == null &&
+        artifactSpaceQuery.data.value == null,
+    ),
+    queryFn: async () => {
+      const detail = await apiClient.getSpace(workspaceRootId.value!);
+      upsertInCollection(spacesCollection, detail.space);
+      upsertMany(spacesCollection, detail.childSpaces);
+      upsertMany(artifactsCollection, detail.artifacts);
+      return detail;
+    },
+  });
+
+  const contextDetail = computed(
+    () =>
+      routeSpaceQuery.data.value ??
+      artifactSpaceQuery.data.value ??
+      workspaceRootDetailQuery.data.value ??
+      null,
+  );
+
+  const liveRootSpaces = useLiveSpacesInWindow(computed(() => homeQuery.data.value?.spaces ?? []));
+  const liveContextChildSpaces = useLiveSpacesInWindow(
+    computed(() => contextDetail.value?.childSpaces ?? []),
+  );
+  const contextSpaceId = computed(() => contextDetail.value?.space.id);
+  const liveContextSpace = useLiveSpace(contextSpaceId);
 
   const liveWorkspaceRoot = useLiveSpace(computed(() => workspaceRootId.value ?? undefined));
 
@@ -213,6 +256,8 @@ export function useWorkspaceNavSync() {
     },
   });
 
+  const { isUserOnline } = useWorkspacePresence(workspaceRootId);
+
   const view = computed((): WorkspaceNavView => {
     const emptyHomeSection = {
       label: "Home",
@@ -236,26 +281,38 @@ export function useWorkspaceNavSync() {
     const activeSpace = activeSpaceId.value;
     const activeArtifact = activeArtifactId.value;
 
+    const homeArtifacts = home.artifacts.filter((artifact) => artifact.kind !== "conversation");
     const homeSection = inPrivateWorkspace.value
       ? undefined
       : {
           label: "Home",
-          items: sectionItems(liveRootSpaces.value, home.artifacts, activeSpace, activeArtifact),
+          items: sectionItems(liveRootSpaces.value, homeArtifacts, activeSpace, activeArtifact),
           scopeSpaceId: null,
         };
 
     const detail = contextDetail.value;
     const inSpaceSection = detail
-      ? {
-          label: `In ${(liveContextSpace.value ?? detail.space).title}`,
-          items: sectionItems(
+      ? (() => {
+          const space = liveContextSpace.value ?? detail.space;
+          const allItems = sectionItems(
             liveContextChildSpaces.value,
             detail.artifacts,
             activeSpace,
             activeArtifact,
-          ),
-          scopeSpaceId: detail.space.id,
-        }
+          );
+          const { items, seeAllLink } = truncateInSpaceNavItems(allItems, {
+            scopeSpaceId: detail.space.id,
+            scopeSpaceTitle: space.title,
+            activeSpaceId: activeSpace,
+            activeArtifactId: activeArtifact,
+          });
+          return {
+            label: `In ${space.title}`,
+            items,
+            seeAllLink,
+            scopeSpaceId: detail.space.id,
+          };
+        })()
       : undefined;
 
     const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
@@ -263,7 +320,11 @@ export function useWorkspaceNavSync() {
       rootSpaceId && directMessagesQuery.data.value
         ? {
             label: "Direct messages",
-            items: directMessageLinks(directMessagesQuery.data.value, activeArtifact),
+            items: directMessageLinks(
+              directMessagesQuery.data.value,
+              activeArtifact,
+              isUserOnline,
+            ),
             scopeSpaceId: rootSpaceId,
           }
         : rootSpaceId && directMessagesQuery.isLoading.value
@@ -293,6 +354,7 @@ export function useWorkspaceNavSync() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.space(artifactSpaceId.value) });
     }
     if (workspaceRootId.value) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.space(workspaceRootId.value) });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.directMessages(workspaceRootId.value),
       });

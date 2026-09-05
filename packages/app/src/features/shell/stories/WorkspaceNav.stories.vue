@@ -57,6 +57,29 @@ const inWorkspaceView: WorkspaceNavView = {
   activeRootSpaceId: SEED_SPACE_ACME,
 };
 
+const truncatedInSpaceView: WorkspaceNavView = {
+  state: "ready",
+  homeButton: { label: "Acme", showBackHint: true },
+  inSpaceSection: {
+    label: "In Acme",
+    scopeSpaceId: SEED_SPACE_ACME,
+    items: Array.from({ length: 7 }, (_, index) => ({
+      id: `space-${index}`,
+      label: `Channel ${index + 1}`,
+      artifactKind: "conversation" as const,
+      to: { name: "conversation" as const, params: { conversationId: `space-${index}` } },
+      isActive: index === 0,
+    })),
+    seeAllLink: {
+      id: `see-all-${SEED_SPACE_ACME}`,
+      label: "See all in Acme",
+      to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
+      isActive: false,
+    },
+  },
+  activeRootSpaceId: SEED_SPACE_ACME,
+};
+
 const onHomeView: WorkspaceNavView = {
   state: "ready",
   homeButton: { label: "Home", showBackHint: false },
@@ -80,6 +103,29 @@ const onHomeView: WorkspaceNavView = {
         </SidebarHeader>
         <WorkspaceNav
           :view="inWorkspaceView"
+          :is-home-active="false"
+          @create="(kind) => action('create')(kind)"
+          @retry="action('retry')()"
+          @space-action="(kind, link) => action('spaceAction')(kind, link)"
+          @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
+        />
+      </Sidebar>
+      <SidebarInset class="p-6">
+        <p class="text-sm text-muted-foreground">Main content</p>
+      </SidebarInset>
+    </SidebarProvider>
+  </Story>
+
+  <Story as-child name="In space truncated">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader
+          class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+        >
+          <span class="text-sm font-semibold">Denser</span>
+        </SidebarHeader>
+        <WorkspaceNav
+          :view="truncatedInSpaceView"
           :is-home-active="false"
           @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"

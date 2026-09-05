@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import type { ArtifactId, MessageId } from "@denser/contracts";
+import type { ArtifactId, MessageId, SpaceId, UserId } from "@denser/contracts";
 import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
+import { useQuery } from "@tanstack/vue-query";
 import { computed, nextTick, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { apiClient } from "@/lib/api";
+import { buildPersonRoster, personFromUserId } from "@/modules/presence/lib/person-label";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
 import { useConversationMessages } from "../composables/useConversationMessages";
+import { useConversationPresence } from "../composables/useConversationPresence";
 import { useConversationSync } from "../composables/useConversationSync";
 import { useThreadMessages } from "../composables/useThreadMessages";
 import { channelIntro, conversationMentionItems, schedulePresets } from "../fixtures";
+import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
-import TitleEditor from "@/features/document/presentationals/TitleEditor.vue";
+import TypingBanner from "../presentationals/TypingBanner.vue";
 import type { ComposerActionId, ScheduleCommitPayload } from "../types";
 
 const route = useRoute();
@@ -26,6 +31,37 @@ conversationSync.bindComposeTitle(conversationTitle);
 
 const messagesSync = useConversationMessages(conversationId);
 const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
+
+const workspaceMembersQuery = useQuery({
+  queryKey: computed(() => ["conversation-roster", conversationId.value] as const),
+  enabled: computed(() => conversationId.value != null),
+  queryFn: async () => {
+    const { conversation } = await apiClient.getConversation(conversationId.value!);
+    const rootSpaceId = conversation.rootSpaceId;
+    if (!rootSpaceId) return { members: [], rootSpaceId: null as SpaceId | null };
+    const detail = await apiClient.getSpace(rootSpaceId);
+    return { members: detail.assignableMembers ?? detail.members, rootSpaceId };
+  },
+});
+
+const roster = computed(() =>
+  buildPersonRoster(
+    workspaceMembersQuery.data.value?.members ?? [],
+    messagesSync.messages.value,
+  ),
+);
+
+const displayMessages = computed(() =>
+  messagesSync.messages.value.map((message) => ({
+    ...message,
+    author: personFromUserId(message.author.id as UserId, roster.value),
+  })),
+);
+
+const presence = useConversationPresence(conversationId, {
+  members: computed(() => workspaceMembersQuery.data.value?.members ?? []),
+  messages: computed(() => messagesSync.messages.value),
+});
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
@@ -57,6 +93,19 @@ const threadAttachments = useComposerAttachments({
   body: threadDraft,
 });
 
+const channelHeader = computed(() => {
+  const viewers = presence.viewers.value;
+  return {
+    ...conversationSync.headerView.value,
+    title: conversationTitle.value || conversationSync.headerView.value.title,
+    members: viewers.slice(0, 3),
+    presenceLabel: presence.presenceLabel.value,
+    extraMemberCount: viewers.length > 3 ? viewers.length - 3 : undefined,
+  };
+});
+
+const showChannelIntro = computed(() => !conversationSync.isDirect.value);
+
 const channelComposer = computed(() =>
   defaultChannelComposerView({
     schedulePresets,
@@ -79,6 +128,7 @@ function onMentionSearch(query: string) {
 }
 
 async function onChannelSend() {
+  presence.stopTyping();
   if (channelAttachments.hasBlockingUpload.value) return;
   const attachmentIds = channelAttachments.collectAttachmentIds(channelDraft.value);
 
@@ -195,15 +245,15 @@ async function onThreadJumpToLatest() {
 <template>
   <ConversationSurface>
     <template #header>
-      <div class="flex h-full w-full items-center px-2">
-        <TitleEditor v-model="conversationTitle" placeholder="Untitled" editable />
+      <div class="h-full w-full">
+        <ChannelHeader :channel="channelHeader" />
       </div>
     </template>
     <template #messages>
       <ConversationTimeline
         ref="timelineRef"
-        :messages="messagesSync.messages.value"
-        :intro="channelIntro"
+        :messages="displayMessages"
+        :intro="showChannelIntro ? channelIntro : undefined"
         :previous-page="messagesSync.previousPage.value"
         :next-page="messagesSync.nextPage.value"
         :show-jump-to-latest="messagesSync.showJumpToLatest.value"
@@ -223,23 +273,29 @@ async function onThreadJumpToLatest() {
       />
     </template>
     <template #composer>
-      <MessageComposer
-        v-model="channelDraft"
-        :view="channelComposer"
-        :mention-items="mentionItems"
-        :upload-image="channelAttachments.uploadInlineImage"
-        :on-stage-files="(files) => channelAttachments.stageFiles(files)"
-        :can-send="channelAttachments.hasSendableContent(channelDraft)"
-        @mention-search="onMentionSearch"
-        @send="onChannelSend"
-        @retry="onRetry"
-        @schedule="onSchedule"
-        @action="onAction"
-        @remove-attachment="channelAttachments.removeTile"
-        @cancel-upload="channelAttachments.cancelUpload"
-        @retry-upload="channelAttachments.retryUpload"
-        @dismiss-upload="channelAttachments.dismissFailed"
-      />
+      <div class="flex min-h-0 flex-1 flex-col">
+        <TypingBanner v-if="presence.typingLabel.value" :label="presence.typingLabel.value" />
+        <MessageComposer
+          v-model="channelDraft"
+          :view="channelComposer"
+          :mention-items="mentionItems"
+          class="min-h-0 flex-1"
+          :upload-image="channelAttachments.uploadInlineImage"
+          :on-stage-files="(files) => channelAttachments.stageFiles(files)"
+          :can-send="channelAttachments.hasSendableContent(channelDraft)"
+          @mention-search="onMentionSearch"
+          @send="onChannelSend"
+          @retry="onRetry"
+          @schedule="onSchedule"
+          @action="onAction"
+          @typing="presence.notifyTyping()"
+          @typing-stop="presence.stopTyping()"
+          @remove-attachment="channelAttachments.removeTile"
+          @cancel-upload="channelAttachments.cancelUpload"
+          @retry-upload="channelAttachments.retryUpload"
+          @dismiss-upload="channelAttachments.dismissFailed"
+        />
+      </div>
     </template>
     <template v-if="activeThreadId && threadSync.thread.value" #thread>
       <ThreadPane

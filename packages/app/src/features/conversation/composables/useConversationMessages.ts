@@ -11,13 +11,12 @@ import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
   MESSAGE_UPDATED_EVENT,
-  CONVERSATION_SUBSCRIBE_EVENT,
-  CONVERSATION_UNSUBSCRIBE_EVENT,
 } from "@denser/contracts";
-import type { DenserSocket } from "@denser/api-client";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onScopeDispose, ref, watch } from "vue";
 import { apiClient } from "@/lib/api";
+import { useConversationRoom } from "@/lib/realtime/useConversationRoom";
+import { useRealtimeSocket } from "@/lib/realtime/useRealtimeSocket";
 import { toNextPageState, toPreviousPageState } from "@/lib/async";
 import { messagesCollection, upsertInCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
@@ -157,38 +156,21 @@ export function useConversationMessages(
     syncQueryData(applyMessageDeleted(current, event));
   }
 
-  let socket: DenserSocket | null = null;
+  useConversationRoom(id);
+  const { ensureSocket } = useRealtimeSocket();
   let cancelled = false;
 
-  onMounted(() => {
-    void apiClient.connectRealtime().then((connected) => {
-      if (cancelled) return;
-      socket = connected;
-      socket.on(MESSAGE_CREATED_EVENT, ingestMessage);
-      socket.on(MESSAGE_UPDATED_EVENT, ingestUpdate);
-      socket.on(MESSAGE_DELETED_EVENT, ingestDelete);
-      if (id.value) {
-        socket.emit(CONVERSATION_SUBSCRIBE_EVENT, { conversationId: id.value });
-      }
-    });
+  void ensureSocket().then((socket) => {
+    if (cancelled) return;
+    socket.on(MESSAGE_CREATED_EVENT, ingestMessage);
+    socket.on(MESSAGE_UPDATED_EVENT, ingestUpdate);
+    socket.on(MESSAGE_DELETED_EVENT, ingestDelete);
   });
 
-  watch(id, (conversationId, previous) => {
-    if (!socket) return;
-    if (previous) {
-      socket.emit(CONVERSATION_UNSUBSCRIBE_EVENT, { conversationId: previous });
-    }
-    if (conversationId) {
-      socket.emit(CONVERSATION_SUBSCRIBE_EVENT, { conversationId });
-    }
-  });
-
-  onUnmounted(() => {
+  onScopeDispose(() => {
     cancelled = true;
+    const socket = useRealtimeSocket().socket.value;
     if (!socket) return;
-    if (id.value) {
-      socket.emit(CONVERSATION_UNSUBSCRIBE_EVENT, { conversationId: id.value });
-    }
     socket.off(MESSAGE_CREATED_EVENT, ingestMessage);
     socket.off(MESSAGE_UPDATED_EVENT, ingestUpdate);
     socket.off(MESSAGE_DELETED_EVENT, ingestDelete);

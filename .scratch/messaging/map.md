@@ -35,7 +35,8 @@ Complete implementation of the four messaging domain docs with **explicit backen
 6. Implement **only** that ticket’s API and/or App criteria.
 7. `pnpm typecheck` (+ tests for touched packages). App tickets: add/update Storybook stories for touched presentationals.
 8. Commit, push, `gh pr create` — title `[messaging NN] …` — **do not merge**.
-9. After maintainer merges: `Status: resolved`; note in Decisions-so-far.
+9. **Release the branch in the main clone:** remove your isolated worktree (`git worktree remove /tmp/opencode/wt/NN --force`) or implement directly in `/home/mateus/workspace/denser` when not running parallel agents. A branch checked out only under `/tmp/...` blocks `git checkout` in the main repo.
+10. After maintainer merges: `Status: resolved`; note in Decisions-so-far.
 
 ## Session handoff (opencode / long runs)
 
@@ -66,6 +67,7 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 - Drafts v1 server-authoritative; scheduling typed payloads + `next_run_at`.
 - **Task pack v2** (29 tickets) merged archive 16-ticket pack — see **Updates** section in each issue for renumber map.
 - Parallel agents run in **isolated git worktrees** (`/tmp/opencode/wt/NN`), one per ticket/branch — never share a working tree (tangled-commit incident on first parallel run).
+- **After opening a PR, remove the worktree** (or never create one for solo work) so `agent/messaging-*` branches remain checkout-able in the main clone at `/home/mateus/workspace/denser`.
 - Tickets 16 + 17 both own `domains/attachments/`; reconciled by merging disjoint function sets into shared `repository.ts` / `orphan-sweep.ts`.
 
 ### Archive → v2 renumber map
