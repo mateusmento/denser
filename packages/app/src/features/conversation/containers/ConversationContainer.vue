@@ -22,7 +22,7 @@ import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
-import type { ComposerActionId, ConversationMessageView, ScheduleCommitPayload } from "../types";
+import type { ComposerActionId, ConversationIntroView, ConversationMessageView, ScheduleCommitPayload } from "../types";
 
 const route = useRoute();
 const conversationId = computed(() => route.params.conversationId as ArtifactId);
@@ -161,12 +161,26 @@ const channelHeader = computed(() => {
   };
 });
 
-const showChannelIntro = computed(
+const conversationIntro = computed((): ConversationIntroView | undefined => {
+  if (conversationSync.isDirect.value) {
+    const title = conversationTitle.value || conversationSync.headerView.value.title;
+    if (!title || title === "Loading…") return undefined;
+    return {
+      kind: "direct",
+      title,
+      body: `This is the beginning of your direct message history with ${title}.`,
+    };
+  }
+
+  return channelIntro;
+});
+
+const showConversationIntro = computed(
   () =>
-    !conversationSync.isDirect.value &&
     !messagesSync.isLoading.value &&
     !messagesSync.isFetching.value &&
-    messagesSync.atStartOfHistory.value,
+    messagesSync.atStartOfHistory.value &&
+    conversationIntro.value != null,
 );
 
 const channelComposer = computed(() =>
@@ -395,7 +409,7 @@ async function onThreadJumpToLatest() {
       <ConversationTimeline
         ref="timelineRef"
         :messages="displayMessages"
-        :intro="showChannelIntro ? channelIntro : undefined"
+        :intro="showConversationIntro ? conversationIntro : undefined"
         :previous-page="messagesSync.previousPage.value"
         :next-page="messagesSync.nextPage.value"
         :show-jump-to-latest="messagesSync.showJumpToLatest.value"

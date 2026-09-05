@@ -16,6 +16,7 @@ export const channelHeader: ConversationChannelHeaderView = {
 };
 
 export const channelIntro: ConversationIntroView = {
+  kind: "channel",
   title: "launch",
   body: "You created this public channel on August 10, 2026. This is the very beginning of the #launch channel — a place for ship-week coordination and callouts.",
   editDescriptionLabel: "(Edit description)",

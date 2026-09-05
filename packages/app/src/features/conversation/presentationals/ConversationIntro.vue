@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button, cn } from "@denser/design-system";
 import { UserPlusIcon } from "@lucide/vue";
+import { computed } from "vue";
 import type { ConversationIntroView } from "../types";
 import type { HTMLAttributes } from "vue";
 
@@ -8,6 +9,8 @@ const props = defineProps<{
   intro: ConversationIntroView;
   class?: HTMLAttributes["class"];
 }>();
+
+const isDirect = computed(() => props.intro.kind === "direct");
 
 const emit = defineEmits<{
   editDescription: [];
@@ -21,11 +24,13 @@ const emit = defineEmits<{
     data-slot="conversation-intro"
   >
     <div class="flex flex-col gap-2">
-      <h2 class="text-3xl font-semibold tracking-tight">#{{ intro.title }}</h2>
+      <h2 class="text-3xl font-semibold tracking-tight">
+        {{ isDirect ? intro.title : `#${intro.title}` }}
+      </h2>
       <p class="max-w-prose text-sm text-muted-foreground">
         {{ intro.body }}
         <button
-          v-if="intro.editDescriptionLabel"
+          v-if="!isDirect && intro.editDescriptionLabel"
           type="button"
           class="ms-1 text-primary hover:underline"
           @click="emit('editDescription')"
@@ -34,7 +39,7 @@ const emit = defineEmits<{
         </button>
       </p>
     </div>
-    <div v-if="intro.addPeopleLabel">
+    <div v-if="!isDirect && intro.addPeopleLabel">
       <Button variant="outline" size="sm" @click="emit('addPeople')">
         <UserPlusIcon class="size-3.5" />
         {{ intro.addPeopleLabel }}

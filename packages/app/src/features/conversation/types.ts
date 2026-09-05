@@ -64,6 +64,7 @@ export type ConversationChannelHeaderView = {
 
 /** Start-of-history block (Slack “channel beginning”) — not the sticky ChannelHeader chrome. */
 export type ConversationIntroView = {
+  kind?: "channel" | "direct";
   title: string;
   body: string;
   editDescriptionLabel?: string;
