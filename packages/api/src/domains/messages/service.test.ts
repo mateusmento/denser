@@ -4,6 +4,7 @@ import type {
   ArtifactId,
   ClientId,
   MessageDto,
+  AttachmentId,
   MessageId,
   PostMessageInput,
   SpaceId,
@@ -58,6 +59,7 @@ function makeHarness(opts: { forbidBob?: boolean } = {}): Harness {
     access,
     attachments: {
       commitSync: async () => undefined,
+      commitRelease: async () => undefined,
       loadByIds: async () => [],
     },
     reactions: {
@@ -254,6 +256,53 @@ test("edit: empty body is forbidden", async () => {
     content: [],
   });
   assert.deepEqual(result, { ok: false, reason: "forbidden" });
+});
+
+
+test("delete: releases message attachment anchor after soft delete", async () => {
+  const releases: { messageId: MessageId; userId: UserId }[] = [];
+  const { repo, state } = createInMemoryMessageRepository();
+  const emitted: Harness["emitted"] = [];
+  const service = createMessageService({
+    repo,
+    access: async (_userId, conversationId) => ({ conversationId, rootSpaceId: SPACE }),
+    attachments: {
+      commitSync: async ({ messageId, attachmentIds }) => {
+        state.attachmentIds.set(messageId, [...attachmentIds]);
+      },
+      commitRelease: async ({ messageId, actor }) => {
+        releases.push({ messageId, userId: actor.userId });
+        state.attachmentIds.delete(messageId);
+      },
+      loadByIds: async () => [],
+    },
+    reactions: {
+      loadForMessages: async (messageIds) => new Map(messageIds.map((id) => [id, []])),
+    },
+    emit: (_conversationId, event, message) => emitted.push({ event, message }),
+    loadAuthorDisplay: async (userIds) => {
+      const out = new Map<UserId, { name: string; avatarUrl: string | null }>();
+      for (const id of userIds) {
+        const author = AUTHORS.get(id);
+        if (author) out.set(id, author);
+      }
+      return out;
+    },
+  });
+
+  const att = "00000000-0000-4000-8000-0000000000f1" as AttachmentId;
+  const created = await service.postMessage(ALICE, {
+    ...postInput(),
+    attachmentIds: [att],
+  });
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+
+  const deleted = await service.deleteMessage(ALICE, created.message.id);
+  assert.equal(deleted.ok, true);
+  if (!deleted.ok) return;
+  assert.deepEqual(releases, [{ messageId: created.message.id, userId: ALICE }]);
+  assert.equal(deleted.message.attachments?.length ?? 0, 0);
 });
 
 test("delete: author can soft-delete, others are forbidden", async () => {

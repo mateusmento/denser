@@ -70,6 +70,7 @@ export type MessageAttachmentCoordinator = {
     attachmentIds: AttachmentId[];
     actor: { userId: UserId };
   }): Promise<void>;
+  commitRelease(args: { messageId: MessageId; actor: { userId: UserId } }): Promise<void>;
   loadByIds(ids: readonly AttachmentId[]): Promise<AttachmentDto[]>;
 };
 
@@ -299,6 +300,9 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     if (!updated) {
       return { ok: false as const, reason: "not_found" as const };
     }
+
+    await deps.attachments.commitRelease({ messageId, actor: { userId } });
+
     const dto = await messageDtoFor(updated);
     deps.emit(updated.conversationId, "deleted", dto);
     return { ok: true as const, message: dto };
