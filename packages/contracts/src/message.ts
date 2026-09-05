@@ -60,6 +60,23 @@ export const PostMessageInput = z.object({
 });
 export type PostMessageInput = z.infer<typeof PostMessageInput>;
 
+export const EditMessageInput = z.object({
+  body: z.unknown(),
+});
+export type EditMessageInput = z.infer<typeof EditMessageInput>;
+
+export const ListMessagesResponse = z.object({
+  messages: z.array(MessageDto),
+  nextCursor: z.string().nullable(),
+  prevCursor: z.string().nullable(),
+});
+export type ListMessagesResponse = z.infer<typeof ListMessagesResponse>;
+
+export const PostMessageResponse = z.object({
+  message: MessageDto,
+});
+export type PostMessageResponse = z.infer<typeof PostMessageResponse>;
+
 export const MESSAGE_CREATED_EVENT = "message.created" as const;
 export const MESSAGE_UPDATED_EVENT = "message.updated" as const;
 export const MESSAGE_DELETED_EVENT = "message.deleted" as const;
