@@ -71,6 +71,41 @@ export function createInMemoryMessageRepository(): {
     return all.slice(-opts.size);
   }
 
+  async function listThreadMessages(
+    threadId: MessageId,
+    opts: {
+      size: number;
+      cursor?: MessageCursor | null;
+      direction: "next" | "prev";
+    },
+  ): Promise<MessageRow[]> {
+    const all = [...rows.values()]
+      .filter((row) => row.threadId === threadId)
+      .sort((a, b) => cursorKey(a).localeCompare(cursorKey(b)));
+
+    if (opts.direction === "prev" && opts.cursor) {
+      return all.filter((r) => afterCursor(r, opts.cursor)).slice(0, opts.size);
+    }
+
+    if (opts.direction === "next" && opts.cursor) {
+      return all.filter((r) => beforeCursor(r, opts.cursor)).slice(-opts.size);
+    }
+
+    return all.slice(-opts.size);
+  }
+
+  async function countThreadReplies(threadId: MessageId): Promise<{
+    replyCount: number;
+    lastReplyAt: Date | null;
+  }> {
+    const replies = [...rows.values()].filter((row) => row.threadId === threadId);
+    const lastReply = replies.at(-1);
+    return {
+      replyCount: replies.length,
+      lastReplyAt: lastReply?.createdAt ?? null,
+    };
+  }
+
   async function findMessageById(id: MessageId): Promise<MessageRow | undefined> {
     return rows.get(id);
   }
@@ -150,6 +185,8 @@ export function createInMemoryMessageRepository(): {
 
   const repo: MessageRepository = {
     listMessages,
+    listThreadMessages,
+    countThreadReplies,
     findMessageById,
     findClientMessage,
     insertMessage,

@@ -19,8 +19,21 @@ export type MessageListOptions = {
   anchorId?: MessageId;
 };
 
+export type ThreadListOptions = {
+  size: number;
+  cursor?: MessageCursor | null;
+  direction: "next" | "prev";
+};
+
+export type ThreadSummaryRow = {
+  replyCount: number;
+  lastReplyAt: Date | null;
+};
+
 export type MessageRepository = {
   listMessages(conversationId: ArtifactId, opts: MessageListOptions): Promise<MessageRow[]>;
+  listThreadMessages(threadId: MessageId, opts: ThreadListOptions): Promise<MessageRow[]>;
+  countThreadReplies(threadId: MessageId): Promise<ThreadSummaryRow>;
   findMessageById(id: MessageId): Promise<MessageRow | undefined>;
   findClientMessage(
     conversationId: ArtifactId,
