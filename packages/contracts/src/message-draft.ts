@@ -27,3 +27,19 @@ export const UpsertMessageDraftInput = z.object({
   version: z.number().int().nonnegative(),
 });
 export type UpsertMessageDraftInput = z.infer<typeof UpsertMessageDraftInput>;
+
+export const GetMessageDraftResponse = z.object({
+  draft: MessageDraftDto.nullable(),
+});
+export type GetMessageDraftResponse = z.infer<typeof GetMessageDraftResponse>;
+
+export const UpsertMessageDraftResponse = z.object({
+  draft: MessageDraftDto,
+});
+export type UpsertMessageDraftResponse = z.infer<typeof UpsertMessageDraftResponse>;
+
+export const MessageDraftConflictResponse = z.object({
+  error: z.literal("conflict"),
+  draft: MessageDraftDto.nullable(),
+});
+export type MessageDraftConflictResponse = z.infer<typeof MessageDraftConflictResponse>;

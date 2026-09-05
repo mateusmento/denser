@@ -3,7 +3,7 @@
 **Chunk:** 4  
 **Layer:** app  
 **Domain:** [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** claimed  
+**Status:** done  
 **Blocked by:** 22 — Drafts API; 03 — Timeline app  
 **Branch:** `agent/messaging-23-drafts-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -38,12 +38,12 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Hydrate composer on open (main + thread)
-- [ ] Debounce upsert (~300–500ms)
-- [ ] 409 → replace editor with server draft (server wins)
-- [ ] Clear local state on successful send
-- [ ] No dual-write localStorage SoT
+- [x] Hydrate composer on open (main + thread)
+- [x] Debounce upsert (~300–500ms)
+- [x] 409 → replace editor with server draft (server wins)
+- [x] Clear local state on successful send
+- [x] No dual-write localStorage SoT
 
 ## PR
 
-- [ ] `[messaging 23] Composer draft sync UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 23] Composer draft sync UI` — [PR-POLICY.md](../PR-POLICY.md)
