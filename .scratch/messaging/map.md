@@ -95,13 +95,13 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 ## Frontier
 
-Wave-3 parallel batch **claimed** — worktrees at `/tmp/opencode/wt/{05,07,09,11,19}` from `f0133b6`:
+Wave-3 parallel batch **complete** — all five PRs open for review:
 
 | Ticket | Branch | PR |
 | --- | --- | --- |
 | **05** quotes-app | `agent/messaging-05-quotes-app` | [#17](https://github.com/mateusmento/denser/pull/17) |
 | **07** threads-app | `agent/messaging-07-threads-app` | [#18](https://github.com/mateusmento/denser/pull/18) |
-| **09** message-actions-app | `agent/messaging-09-message-actions-app` | — |
+| **09** message-actions-app | `agent/messaging-09-message-actions-app` | [#21](https://github.com/mateusmento/denser/pull/21) |
 | **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | [#20](https://github.com/mateusmento/denser/pull/20) |
 | **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | [#19](https://github.com/mateusmento/denser/pull/19) |
 

@@ -38,10 +38,10 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Wire `MessageHoverMenu` / `MessageContextMenu` (quote, thread, edit, delete)
-- [ ] Edit flow calls EditMessage; delete calls DeleteMessage
-- [ ] Permission-gated actions (own message / canManage rules)
+- [x] Wire `MessageHoverMenu` / `MessageContextMenu` (quote, thread, edit, delete)
+- [x] Edit flow calls EditMessage; delete calls DeleteMessage
+- [x] Permission-gated actions (own message / canManage rules)
 
 ## PR
 
-- [ ] `[messaging 09] Message hover actions UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] [#21](https://github.com/mateusmento/denser/pull/21) `[messaging 09] Message hover actions UI` — open, awaiting review
