@@ -142,6 +142,8 @@ export type MessageComposerView = {
   disabled: boolean;
   sending: boolean;
   failed: boolean;
+  /** Composer is saving an in-place message edit. */
+  isEditing?: boolean;
   schedulePresets: readonly SchedulePreset[];
   attachments?: ComposerAttachmentsView;
 };

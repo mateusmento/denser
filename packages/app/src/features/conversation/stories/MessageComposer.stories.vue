@@ -76,6 +76,22 @@ const attachmentTiles: ComposerAttachmentTileView[] = [
       />
     </div>
   </Story>
+  <Story as-child name="Editing">
+    <div class="h-40 w-[36rem]">
+      <MessageComposer
+        v-model="draft"
+        :view="
+          defaultChannelComposerView({
+            isEditing: true,
+            sendLabel: 'Save',
+            schedulePresets,
+          })
+        "
+        :mention-items="mentionItems"
+        @mention-search="onMentionSearch"
+      />
+    </div>
+  </Story>
   <Story as-child name="Narrow">
     <div class="h-40 w-64">
       <MessageComposer

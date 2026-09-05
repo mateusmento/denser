@@ -39,6 +39,7 @@ function onJumpQuote(messageId: string) {
 const lead = channelMessages[0]!;
 const withThread = channelMessages[1]!;
 const withAttachments = channelMessages.find((message) => message.id === "m-attachments")!;
+const editable = channelMessages[4] ?? channelMessages[0]!;
 const shortQuote = messageWithShortQuote;
 const longQuote = messageWithLongQuote;
 const attachmentQuote = messageWithAttachmentQuote;
@@ -84,6 +85,23 @@ const attachmentQuote = messageWithAttachmentQuote;
           :message="withAttachments"
           @react="onReact"
           @thread="onThread"
+          @edit="onEdit"
+          @delete="onDelete"
+        />
+      </ConversationMessageGroup>
+    </div>
+  </Story>
+  <Story as-child name="Editable">
+    <div class="w-lg">
+      <ConversationMessageGroup
+        :author="editable.author"
+        :created-at-label="editable.createdAtLabel"
+      >
+        <ConversationMessage
+          :message="editable"
+          @react="onReact"
+          @thread="onThread"
+          @quote="toast('Quote')"
           @edit="onEdit"
           @delete="onDelete"
         />

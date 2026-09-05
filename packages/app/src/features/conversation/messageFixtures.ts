@@ -102,6 +102,8 @@ export const channelMessages: ConversationMessageView[] = [
     author: ava,
     createdAt: "2026-08-11T09:18:00.000Z",
     createdAtLabel: "9:18 AM",
+    canEdit: true,
+    canDelete: true,
     body: {
       type: "doc",
       content: [
