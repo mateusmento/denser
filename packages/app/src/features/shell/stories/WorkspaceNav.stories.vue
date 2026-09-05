@@ -80,6 +80,34 @@ const truncatedInSpaceView: WorkspaceNavView = {
   activeRootSpaceId: SEED_SPACE_ACME,
 };
 
+const unreadBadgesView: WorkspaceNavView = {
+  state: "ready",
+  homeButton: { label: "Home", showBackHint: false },
+  inSpaceSection: {
+    label: "In Engineering",
+    scopeSpaceId: SEED_SPACE_ENGINEERING,
+    items: [
+      {
+        id: "conv-launch",
+        label: "launch",
+        artifactKind: "conversation",
+        unreadCount: 3,
+        to: { name: "conversation", params: { conversationId: "conv-launch" } },
+        isActive: false,
+      },
+      {
+        id: "conv-ship",
+        label: "ship-week",
+        artifactKind: "conversation",
+        unreadCount: 120,
+        to: { name: "conversation", params: { conversationId: "conv-ship" } },
+        isActive: true,
+      },
+    ],
+  },
+  activeRootSpaceId: SEED_SPACE_ENGINEERING,
+};
+
 const onHomeView: WorkspaceNavView = {
   state: "ready",
   homeButton: { label: "Home", showBackHint: false },
@@ -150,6 +178,28 @@ const onHomeView: WorkspaceNavView = {
         <WorkspaceNav
           :view="onHomeView"
           :is-home-active="true"
+          @create="(kind) => action('create')(kind)"
+          @retry="action('retry')()"
+          @space-action="(kind, link) => action('spaceAction')(kind, link)"
+          @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
+        />
+      </Sidebar>
+      <SidebarInset class="p-6">
+        <p class="text-sm text-muted-foreground">Main content</p>
+      </SidebarInset>
+    </SidebarProvider>
+  </Story>
+  <Story as-child name="Unread badges">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader
+          class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+        >
+          <span class="text-sm font-semibold">Denser</span>
+        </SidebarHeader>
+        <WorkspaceNav
+          :view="unreadBadgesView"
+          :is-home-active="false"
           @create="(kind) => action('create')(kind)"
           @retry="action('retry')()"
           @space-action="(kind, link) => action('spaceAction')(kind, link)"

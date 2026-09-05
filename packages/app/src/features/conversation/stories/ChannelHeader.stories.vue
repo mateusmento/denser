@@ -21,4 +21,9 @@ const { Story } = defineMeta({
       <ChannelHeader :channel="{ ...channelHeader, members: channelHeader.members.slice(0, 2) }" />
     </div>
   </Story>
+  <Story as-child name="WithUnread">
+    <div class="h-surface-header w-[36rem]">
+      <ChannelHeader :channel="{ ...channelHeader, unreadCount: 12 }" />
+    </div>
+  </Story>
 </template>

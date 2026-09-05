@@ -5,6 +5,8 @@ import { defineMeta } from "sb-addon-vue-csf";
 import { channelIntro, channelMessages } from "../fixtures";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 
+const firstMessageId = channelMessages[0]?.id ?? "msg-1";
+
 const { Story } = defineMeta({
   title: "features/conversation/ConversationTimeline",
   component: ConversationTimeline,
@@ -79,6 +81,19 @@ function onDelete(messageId: string) {
         :messages="channelMessages"
         :intro="channelIntro"
         :previous-page="toPreviousPageState({ hasPrevious: true, loadingPrevious: true })"
+        @react="onReact"
+        @thread="onThread"
+        @edit="onEdit"
+        @delete="onDelete"
+      />
+    </div>
+  </Story>
+  <Story as-child name="Unread divider">
+    <div class="h-[28rem] w-[36rem]">
+      <ConversationTimeline
+        :messages="channelMessages"
+        :intro="channelIntro"
+        :unread-divider-before-message-id="firstMessageId"
         @react="onReact"
         @thread="onThread"
         @edit="onEdit"
