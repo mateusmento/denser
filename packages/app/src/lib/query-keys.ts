@@ -6,5 +6,7 @@ export const queryKeys = {
   conversation: (artifactId: string) => ["conversation", artifactId] as const,
   conversationMessages: (conversationId: string) =>
     ["conversation", conversationId, "messages"] as const,
+  threadMessages: (conversationId: string, threadId: string) =>
+    ["conversation", conversationId, "thread", threadId, "messages"] as const,
   directMessages: (rootSpaceId: string) => ["directMessages", rootSpaceId] as const,
 };

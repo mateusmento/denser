@@ -2,17 +2,13 @@
 import type { ArtifactId, MessageId } from "@denser/contracts";
 import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationSync } from "../composables/useConversationSync";
-import {
-  channelIntro,
-  conversationMentionItems,
-  schedulePresets,
-  threadView,
-} from "../fixtures";
+import { useThreadMessages } from "../composables/useThreadMessages";
+import { channelIntro, conversationMentionItems, schedulePresets } from "../fixtures";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
@@ -32,8 +28,22 @@ const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
-const threadOpen = ref(false);
+const activeThreadId = ref<MessageId | null>(null);
+
+const threadParent = computed(() =>
+  activeThreadId.value
+    ? messagesSync.messages.value.find((message) => message.id === activeThreadId.value)
+    : undefined,
+);
+
+const threadSync = useThreadMessages(conversationId, activeThreadId, threadParent);
+
 const mentionItems = ref<MentionCandidate[]>([]);
+
+watch(conversationId, () => {
+  activeThreadId.value = null;
+  threadDraft.value = emptyDoc();
+});
 
 const channelComposer = computed(() =>
   defaultChannelComposerView({
@@ -42,7 +52,12 @@ const channelComposer = computed(() =>
     failed: messagesSync.failed.value,
   }),
 );
-const threadComposer = defaultThreadComposerView();
+const threadComposer = computed(() =>
+  defaultThreadComposerView({
+    sending: threadSync.isSending.value,
+    failed: threadSync.failed.value,
+  }),
+);
 
 function onMentionSearch(query: string) {
   mentionItems.value = conversationMentionItems(query);
@@ -58,7 +73,8 @@ async function onChannelSend() {
   channelDraft.value = emptyDoc();
 }
 
-function onThreadSend() {
+async function onThreadSend() {
+  await threadSync.send(threadDraft.value);
   threadDraft.value = emptyDoc();
 }
 
@@ -77,8 +93,12 @@ function onReact(messageId: string, emoji: string) {
 }
 
 function onOpenThread(messageId: string) {
-  toast(`Thread · ${messageId}`);
-  threadOpen.value = true;
+  activeThreadId.value = messageId as MessageId;
+}
+
+function onCloseThread() {
+  activeThreadId.value = null;
+  threadDraft.value = emptyDoc();
 }
 
 function onEdit(messageId: string) {
@@ -125,12 +145,20 @@ async function onRetry() {
   await messagesSync.retrySend();
 }
 
+async function onThreadRetry() {
+  await threadSync.retrySend();
+}
+
 function onAction(id: ComposerActionId) {
   toast(`Coming soon · ${id}`);
 }
 
 async function onJumpToLatest() {
   await messagesSync.jumpToLatest();
+}
+
+async function onThreadJumpToLatest() {
+  await threadSync.jumpToLatest();
 }
 </script>
 
@@ -176,16 +204,19 @@ async function onJumpToLatest() {
         @action="onAction"
       />
     </template>
-    <template v-if="threadOpen" #thread>
+    <template v-if="activeThreadId && threadSync.thread.value" #thread>
       <ThreadPane
         v-model="threadDraft"
-        :thread="threadView"
+        :thread="threadSync.thread.value"
         :composer="threadComposer"
         :mention-items="mentionItems"
+        :previous-page="threadSync.previousPage.value"
+        :next-page="threadSync.nextPage.value"
+        :show-jump-to-latest="threadSync.showJumpToLatest.value"
         @mention-search="onMentionSearch"
-        @close="threadOpen = false"
+        @close="onCloseThread"
         @send="onThreadSend"
-        @retry="onRetry"
+        @retry="onThreadRetry"
         @schedule="onThreadSchedule"
         @action="onAction"
         @react="onReact"
@@ -196,6 +227,8 @@ async function onJumpToLatest() {
         @jump-quote="onJumpQuote"
         @edit="onEdit"
         @delete="onDelete"
+        @load-previous="threadSync.loadPrevious()"
+        @jump-to-latest="onThreadJumpToLatest"
       />
     </template>
   </ConversationSurface>
