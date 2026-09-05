@@ -89,6 +89,22 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 | 16 | **29** | Recording (+ Loom spec) |
 | — | **08**, **09**, **18**–**20** | New splits (reactions, actions, upload chain) |
 
+## Wave-2 status (2026-09-05)
+
+**Merged to `main`:** 03 timeline (#15), 04 quotes (#13), 06 threads (#12), 10 typing/presence (#14), 18 upload (#16). Timeline uses `lib/async` `PreviousPageState`/`NextPageState`; realtime subscribe via `conversation.subscribe` (not duplicate watch events).
+
 ## Frontier
 
-Wave-2 parallel batch complete — all five PRs open for review: **03** [#15](https://github.com/mateusmento/denser/pull/15); **04** [#13](https://github.com/mateusmento/denser/pull/13) → **05**; **06** [#12](https://github.com/mateusmento/denser/pull/12) → **07**; **10** [#14](https://github.com/mateusmento/denser/pull/14) → **11** (**requires [30](./issues/30-realtime-scaling-ports.md) before multi-instance**); **18** [#16](https://github.com/mateusmento/denser/pull/16) → **19**.
+Wave-3 parallel batch **claimed** — worktrees at `/tmp/opencode/wt/{05,07,09,11,19}` from `f0133b6`:
+
+| Ticket | Branch | Blockers (merged) |
+| --- | --- | --- |
+| **05** quotes-app | `agent/messaging-05-quotes-app` | 04, 03 |
+| **07** threads-app | `agent/messaging-07-threads-app` | 06, 03 |
+| **09** message-actions-app | `agent/messaging-09-message-actions-app` | 03 |
+| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | 10, 03 |
+| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | 18, 03 (23 drafts optional stub) |
+
+**Next api lane (unclaimed):** 08 reactions, 12 unread-api, 14 dm-peers-api, 25 schedule-message-api — rebase worktrees from `144c0a6` → `main` before starting.
+
+**Scaling:** ticket **30** before multi-instance deploy for presence (#14).

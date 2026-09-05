@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-10-typing-presence-api`  
 **Specs:** [REALTIME-SCALING.md](../REALTIME-SCALING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)

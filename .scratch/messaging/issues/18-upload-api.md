@@ -3,7 +3,7 @@
 **Chunk:** 3b — Upload API (backend)  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 16 — BlobStore; 17 — Attachment refs; 22 — Drafts API  
 **Branch:** `agent/messaging-18-upload-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
