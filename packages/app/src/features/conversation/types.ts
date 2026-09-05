@@ -96,6 +96,41 @@ export type ScheduleCommitPayload = {
   customIso?: string;
 };
 
+export type ComposerAttachmentTileView =
+  | {
+      key: string;
+      kind: "uploaded";
+      id: string;
+      name: string;
+      mimeType: string;
+      url: string;
+      byteSize: number;
+    }
+  | {
+      key: string;
+      kind: "uploading";
+      clientId: string;
+      name: string;
+      mimeType: string;
+      previewUrl: string;
+      progress: number;
+    }
+  | {
+      key: string;
+      kind: "failed";
+      clientId: string;
+      name: string;
+      mimeType: string;
+      previewUrl: string;
+      message?: string;
+    };
+
+export type ComposerAttachmentsView = {
+  tiles: readonly ComposerAttachmentTileView[];
+  disabled: boolean;
+  hasBlockingUpload: boolean;
+};
+
 export type MessageComposerView = {
   shape: ComposerShape;
   placeholder: string;
@@ -104,6 +139,7 @@ export type MessageComposerView = {
   sending: boolean;
   failed: boolean;
   schedulePresets: readonly SchedulePreset[];
+  attachments?: ComposerAttachmentsView;
 };
 
 export type ConversationThreadView = {

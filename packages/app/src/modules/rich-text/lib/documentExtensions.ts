@@ -51,7 +51,21 @@ export function createRichTextDocumentExtensions(): Extensions {
       lowlight,
       HTMLAttributes: { class: "rt-code-block" },
     }),
-    Image.configure({
+    Image.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          attachmentId: {
+            default: null,
+            parseHTML: (element) => element.getAttribute("data-attachment-id"),
+            renderHTML: (attributes) => {
+              if (!attributes.attachmentId) return {};
+              return { "data-attachment-id": String(attributes.attachmentId) };
+            },
+          },
+        };
+      },
+    }).configure({
       inline: false,
       allowBase64: false,
       HTMLAttributes: { class: "rt-image" },

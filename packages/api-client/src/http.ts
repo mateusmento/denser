@@ -1,6 +1,8 @@
 import {
   AddSpaceMemberInput,
   AddSpaceMemberResponse,
+  AttachmentDto,
+  CompleteConversationUploadResponse,
   ConversationConflictResponse,
   CreateConversationInput,
   CreateConversationResponse,
@@ -17,6 +19,7 @@ import {
   ListMessagesQuery,
   ListMessagesResponse,
   ListThreadMessagesQuery,
+  MessageDraftDto,
   PatchConversationInput,
   PostMessageInput,
   PostMessageResponse,
@@ -31,7 +34,11 @@ import {
   PatchSpaceResponse,
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SpaceDetailResponse,
+  StartConversationUploadInput,
+  StartConversationUploadResponse,
+  UpsertMessageDraftInput,
   type ArtifactId,
+  type AttachmentId,
   type ClientId,
   type DocumentTypeId,
   type MessageId,
@@ -76,6 +83,16 @@ export class ApiConversationConflictError extends ApiError {
     super("conflict", 409, body);
     this.name = "ApiConversationConflictError";
     this.conflict = body;
+  }
+}
+
+export class ApiMessageDraftConflictError extends ApiError {
+  readonly draft: MessageDraftDto | null;
+
+  constructor(body: { draft?: MessageDraftDto | null }) {
+    super("conflict", 409, body);
+    this.name = "ApiMessageDraftConflictError";
+    this.draft = body.draft ?? null;
   }
 }
 
@@ -435,6 +452,119 @@ export class ApiClient {
     return ListMessagesResponse.parse(body);
   }
 
+  async startConversationUpload(
+    conversationId: ArtifactId,
+    input: StartConversationUploadInput,
+  ): Promise<StartConversationUploadResponse> {
+    const payload = StartConversationUploadInput.parse(input);
+    const res = await this.request(`/api/conversations/${conversationId}/attachments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("start conversation upload failed", res.status, body);
+    return StartConversationUploadResponse.parse(body);
+  }
+
+  async listDraftAttachments(
+    conversationId: ArtifactId,
+    input: { threadId?: MessageId | null } = {},
+  ): Promise<{ attachments: AttachmentDto[] }> {
+    const params = new URLSearchParams();
+    if (input.threadId) params.set("threadId", input.threadId);
+    const query = params.toString();
+    const res = await this.request(
+      `/api/conversations/${conversationId}/attachments${query ? `?${query}` : ""}`,
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list draft attachments failed", res.status, body);
+    const parsed = body as { attachments?: unknown };
+    return {
+      attachments: (parsed.attachments ?? []).map((row) => AttachmentDto.parse(row)),
+    };
+  }
+
+  async uploadConversationPart(
+    conversationId: ArtifactId,
+    uploadId: string,
+    part: number,
+    data: Uint8Array,
+  ): Promise<void> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/attachments/${uploadId}?part=${part}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: data,
+      },
+    );
+    if (!res.ok) {
+      throw new ApiError("upload conversation part failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async completeConversationUpload(
+    conversationId: ArtifactId,
+    uploadId: string,
+  ): Promise<CompleteConversationUploadResponse> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/attachments/${uploadId}/complete`,
+      { method: "POST" },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("complete conversation upload failed", res.status, body);
+    return CompleteConversationUploadResponse.parse(body);
+  }
+
+  async abortConversationUpload(conversationId: ArtifactId, uploadId: string): Promise<void> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/attachments/${uploadId}`,
+      { method: "DELETE" },
+    );
+    if (!res.ok) {
+      throw new ApiError("abort conversation upload failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async getMessageDraft(
+    conversationId: ArtifactId,
+    input: { threadId?: MessageId | null } = {},
+  ): Promise<{ draft: MessageDraftDto | null }> {
+    const params = new URLSearchParams();
+    if (input.threadId) params.set("threadId", input.threadId);
+    const query = params.toString();
+    const res = await this.request(
+      `/api/conversations/${conversationId}/draft${query ? `?${query}` : ""}`,
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get message draft failed", res.status, body);
+    const parsed = body as { draft?: unknown };
+    return {
+      draft: parsed.draft ? MessageDraftDto.parse(parsed.draft) : null,
+    };
+  }
+
+  async upsertMessageDraft(
+    conversationId: ArtifactId,
+    input: UpsertMessageDraftInput,
+  ): Promise<{ draft: MessageDraftDto; created: boolean }> {
+    const payload = UpsertMessageDraftInput.parse(input);
+    const res = await this.request(`/api/conversations/${conversationId}/draft`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await this.parseJson(res);
+    if (res.status === 409) {
+      const conflict = body as { draft?: MessageDraftDto | null };
+      throw new ApiMessageDraftConflictError(conflict);
+    }
+    if (!res.ok) throw new ApiError("upsert message draft failed", res.status, body);
+    const parsed = body as { draft: unknown };
+    return { draft: MessageDraftDto.parse(parsed.draft), created: res.status === 201 };
+  }
+
   async postMessage(
     conversationId: ArtifactId,
     input: {
@@ -442,7 +572,7 @@ export class ApiClient {
       clientId: ClientId;
       quotesId?: MessageId | null;
       threadId?: MessageId | null;
-      attachmentIds?: string[];
+      attachmentIds?: AttachmentId[];
     },
   ): Promise<PostMessageResponse> {
     const payload = PostMessageInput.parse({

@@ -1,5 +1,5 @@
 import type { InfiniteData } from "@tanstack/vue-query";
-import type { ArtifactId, ClientId, MessageDto, MessageId } from "@denser/contracts";
+import type { ArtifactId, ClientId, AttachmentId, MessageDto, MessageId } from "@denser/contracts";
 import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
@@ -188,12 +188,17 @@ export function useConversationMessages(
   });
 
   const sendMutation = useMutation({
-    mutationFn: async (input: { body: JSONContent; clientId: ClientId }) => {
+    mutationFn: async (input: {
+      body: JSONContent;
+      clientId: ClientId;
+      attachmentIds: AttachmentId[];
+    }) => {
       const conversation = id.value;
       if (!conversation) throw new Error("no conversation");
       return apiClient.postMessage(conversation, {
         body: input.body,
         clientId: input.clientId,
+        ...(input.attachmentIds.length > 0 ? { attachmentIds: input.attachmentIds } : {}),
       });
     },
     onMutate: async (input) => {
@@ -216,7 +221,7 @@ export function useConversationMessages(
         createdAt: new Date().toISOString(),
         editedAt: null,
         deletedAt: null,
-        attachmentIds: [],
+        attachmentIds: input.attachmentIds,
       };
 
       syncQueryData(applyMessageCreated(previous, optimistic));
@@ -234,9 +239,9 @@ export function useConversationMessages(
     },
   });
 
-  async function send(body: JSONContent) {
-    if (isEmptyBody(body)) return;
-    await sendMutation.mutateAsync({ body, clientId: createClientId() });
+  async function send(body: JSONContent, attachmentIds: AttachmentId[] = []) {
+    if (isEmptyBody(body) && attachmentIds.length === 0) return;
+    await sendMutation.mutateAsync({ body, attachmentIds, clientId: createClientId() });
   }
 
   async function retrySend() {
@@ -245,6 +250,7 @@ export function useConversationMessages(
     if (!current?.body) return;
     await sendMutation.mutateAsync({
       body: current.body as JSONContent,
+      attachmentIds: (current.attachmentIds ?? []) as AttachmentId[],
       clientId: failedClientId.value,
     });
   }

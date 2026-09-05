@@ -4,7 +4,7 @@ import { EditorContent, useEditor } from "@tiptap/vue-3";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { useFileDialog } from "@vueuse/core";
 import { watch } from "vue";
-import { createRichTextExtensions } from "../lib/extensions";
+import { createRichTextExtensions, type RichTextUploadResult } from "../lib/extensions";
 import type { MentionCandidate, SlashCommandItem } from "../types";
 import { emptyDoc } from "../types";
 import RichTextSelectionMenu from "./RichTextSelectionMenu.vue";
@@ -16,7 +16,8 @@ const props = withDefaults(
     disabled?: boolean;
     submitOnEnter?: boolean;
     mentionItems?: readonly MentionCandidate[];
-    uploadImage?: (file: File) => Promise<string>;
+    uploadImage?: (file: File) => Promise<RichTextUploadResult>;
+    onStageFiles?: (files: File[]) => void;
     slashExtras?: readonly SlashCommandItem[];
   }>(),
   {
@@ -48,7 +49,11 @@ const editor = useEditor({
     placeholder: props.placeholder,
     mentionItems: () => props.mentionItems,
     onMentionSearch: (query) => emit("mentionSearch", query),
-    uploadImage: (file) => props.uploadImage?.(file) ?? Promise.resolve(""),
+    uploadImage: async (file) => {
+      const result = await props.uploadImage?.(file);
+      return result ?? "";
+    },
+    onStageFiles: (files) => props.onStageFiles?.(files),
     requestImage: () => openImageDialog(),
     slashExtras: props.slashExtras,
   }),
@@ -82,8 +87,13 @@ onImageFiles(async (files) => {
   const file = files?.[0];
   const instance = editor.value;
   if (!file || !instance || !props.uploadImage) return;
-  const src = await props.uploadImage(file);
-  if (src) instance.chain().focus().setImage({ src, alt: file.name }).run();
+  const result = await props.uploadImage(file);
+  const src = typeof result === "string" ? result : result.src;
+  if (!src) return;
+  const attachmentId =
+    typeof result === "object" && result.attachmentId ? result.attachmentId : undefined;
+  const attrs = attachmentId ? { src, alt: file.name, attachmentId } : { src, alt: file.name };
+  instance.chain().focus().setImage(attrs).run();
 });
 
 watch(

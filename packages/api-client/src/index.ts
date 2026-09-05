@@ -2,6 +2,7 @@ export {
   ApiClient,
   ApiConflictError,
   ApiConversationConflictError,
+  ApiMessageDraftConflictError,
   ApiError,
   createApiClient,
   type ApiClientOptions,
