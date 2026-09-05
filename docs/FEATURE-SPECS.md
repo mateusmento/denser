@@ -4,7 +4,7 @@
 
 **Audience:** Product, backend, and frontend when agreeing what a feature _is_ before (or while) building it.
 
-**Related:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) (v1 filing model), [CONVERSATIONS.md](./CONVERSATIONS.md), [MEETINGS.md](./MEETINGS.md), [SCHEDULING.md](./SCHEDULING.md), [ATTACHMENTS.md](./ATTACHMENTS.md), [MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md), [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md), [WORKFLOW.md](./WORKFLOW.md), [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ONTHOLOGY.md](./ONTHOLOGY.md), [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), `@denser/contracts`.
+**Related:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) (v1 filing model), [CONVERSATIONS.md](./CONVERSATIONS.md), [MEETINGS.md](./MEETINGS.md), [SCHEDULING.md](./SCHEDULING.md), [ATTACHMENTS.md](./ATTACHMENTS.md), [MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md), agent tickets: [`.scratch/messaging/`](../.scratch/messaging/), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md), [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md), [WORKFLOW.md](./WORKFLOW.md), [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ONTHOLOGY.md](./ONTHOLOGY.md), [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), `@denser/contracts`.
 
 Deep domain specs (decisions, commands/queries, constraints) live in dedicated files — **FEATURE-SPECS** is the **index** for those plus smaller features still drafted inline.
 
@@ -99,6 +99,7 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 | ---------------- | ----- |
 | Status           | Active (shell + UI shipped; messaging phased) |
 | Full domain spec | **[CONVERSATIONS.md](./CONVERSATIONS.md)** — decisions, model, features, commands/queries, constraints, events, quote preview, messaging cut |
+| Agent tickets    | **[`.scratch/messaging/`](../.scratch/messaging/)** — scaffold + parallel PR pack ([map.md](../.scratch/messaging/map.md), [interfaces.md](../.scratch/messaging/interfaces.md)) |
 | Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
 | Filing           | [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — `kind = conversation` |
 | v1 scope         | Regular + direct artifacts; messaging with quotes ∥ threads; virtualized cursor windows |

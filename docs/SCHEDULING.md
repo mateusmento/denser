@@ -23,6 +23,7 @@ One **job runner** for due work across denser. Product surfaces (schedule a chat
 | Claim cursor | Materialized **`next_run_at`** (app computes recurrence) | Recurrence math inside claim SQL (epicstory) as denser default |
 | Delivery idempotency | **`occurrence_key`** unique on side effects | Rely only on “mark processed after emit” |
 | Port epicstory | **Semantics** of claim/lock/retry + joins; improve as above in denser | Runtime dependency on epicstory; invent weaker claim from scratch |
+| Payload typing | **Discriminated union** per `type` in `@denser/contracts`; **factories** on create, **parse** on read; handlers narrow by `type` | `Record<string, unknown>` payload at API/DB boundaries |
 
 ---
 
@@ -57,6 +58,32 @@ Meeting room / Meeting ──► meeting_start | meeting_reminder jobs
 | `meeting_reminder` | meetingId, notifyMinutesBefore | Soft notify (conversation card / inbox TBD) |
 
 Later (same runner, not blocking messaging): `due_document_reminder`, `workspace_purge`, etc.
+
+### Typed payload contract
+
+`payload` is **never** `Record<string, unknown>` at product boundaries. `@denser/contracts` owns:
+
+1. **Per-type Zod schemas** — each payload includes a literal **`type`** field matching the job row’s `type`.
+2. **`ScheduledJobPayload`** — `z.discriminatedUnion('type', [...])`.
+3. **`ScheduledJobDto`** — discriminated union on `type` with the matching payload shape (or generic `ScheduledJobDto<T>`).
+4. **Factories** — `createScheduledMessageJob(...)`, `createMeetingStartJob(...)`, etc. return a fully typed insert/DTO; callers cannot pass the wrong payload for a type.
+5. **Parse on read** — `parseScheduledJob(row)` / `parseScheduledJobPayload(type, rawJson)` validates DB/API JSON before handlers or list APIs use it.
+6. **Handler registry** — `registerScheduledJobHandler('scheduled_message', handler)` where `handler` receives `ScheduledJobDto<'scheduled_message'>`; dispatch `switch` is exhaustive (`assertNever`).
+
+```text
+Create path:  factory(type-specific input) → validated payload → INSERT
+Read path:    SELECT → parseScheduledJob(row) → typed handler / API mapper
+List path:    same parse — clients never see untyped payload
+```
+
+**Rules**
+
+- **`job.type` must equal `payload.type`.** Reject insert/update if they diverge.
+- **Attachment ids are not payload fields** — joins only ([ATTACHMENTS.md](./ATTACHMENTS.md)).
+- **Adding a job type** requires: payload schema + factory + handler + exhaustiveness update (TypeScript should fail if any step is missing).
+- **HTTP create** accepts only the factory’s input shape (or a dedicated command DTO), not raw `{ type, payload }` blobs.
+
+Reference pattern: epicstory `buildScheduledJobPayload` + per-type payload classes — denser uses **Zod + discriminated unions** instead of class-validator classes, same seam.
 
 ---
 
@@ -244,7 +271,7 @@ Attachments on meetings (recordings, agenda files) use meeting / message anchors
 | id | JobId |
 | root_space_id | Workspace boundary |
 | type | enum above |
-| payload | jsonb — **no attachment id SoT** |
+| payload | jsonb — **typed union** per `type` (validated on read/write); **no attachment id SoT** |
 | due_at | Series anchor / user-facing “scheduled for” (especially once) |
 | next_run_at | **Claim cursor** — next UTC instant to fire; maintained by app |
 | timezone | IANA zone for preset expansion (required when recurring) |
@@ -272,6 +299,7 @@ Join only — see [ATTACHMENTS.md](./ATTACHMENTS.md).
 5. Meeting start job respects ≤1 live Meeting per room.
 6. Cancelled / ended meetings must not start from a stale job (reaction checks Meeting status).
 7. Claim SQL does not re-implement recurrence math when `next_run_at` is present.
+8. `job.type` === `payload.type`; all reads/writes go through **parse** / **factory** from `@denser/contracts` — no untyped payload at handlers or public HTTP.
 
 ---
 
@@ -315,5 +343,6 @@ Join only — see [ATTACHMENTS.md](./ATTACHMENTS.md).
 
 | Date | Change |
 | --- | --- |
+| 2026-09-05 | Typed payload contract: discriminated union, factories, parse-on-read, exhaustive handlers. |
 | 2026-09-04 | Port policy + improvements: `next_run_at`, timezone, occurrence_key, concurrency; epicstory verdict. |
 | 2026-09-04 | Initial Scheduling domain from epicstory runner + denser conversation/meeting wiring. |
