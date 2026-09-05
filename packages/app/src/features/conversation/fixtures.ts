@@ -2,8 +2,8 @@ import type {
   ConversationChannelHeaderView,
   ConversationIntroView,
   ConversationThreadView,
-  SchedulePreset,
 } from "./types";
+import { buildDefaultSchedulePresets } from "./lib/schedule-due-at";
 import { ava, channelMessages, jon, mia, threadReplyMessages } from "./messageFixtures";
 
 export { channelMessages } from "./messageFixtures";
@@ -23,13 +23,7 @@ export const channelIntro: ConversationIntroView = {
   addPeopleLabel: "Add people to the channel",
 };
 
-const tomorrowMorning = new Date(Date.now() + 86_400_000);
-tomorrowMorning.setHours(9, 0, 0, 0);
-
-export const schedulePresets: readonly SchedulePreset[] = [
-  { id: "morning", label: "Tomorrow morning", whenLabel: "Tomorrow, 9:00 AM" },
-  { id: "afternoon", label: "Tomorrow afternoon", whenLabel: "Tomorrow, 2:00 PM" },
-];
+export const schedulePresets = buildDefaultSchedulePresets(new Date("2026-08-10T12:00:00.000Z"));
 
 export const threadView: ConversationThreadView = {
   parent: channelMessages[1]!,

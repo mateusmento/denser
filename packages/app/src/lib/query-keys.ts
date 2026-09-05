@@ -10,6 +10,8 @@ export const queryKeys = {
     ["conversation", conversationId, "messages"] as const,
   threadMessages: (conversationId: string, threadId: string) =>
     ["conversation", conversationId, "thread", threadId, "messages"] as const,
+  conversationScheduledMessages: (conversationId: string) =>
+    ["conversation", conversationId, "scheduled-messages"] as const,
   directMessages: (rootSpaceId: string) => ["directMessages", rootSpaceId] as const,
   unreadSummary: (rootSpaceId: string) => ["unreadSummary", rootSpaceId] as const,
   conversationUnread: (conversationId: string) =>

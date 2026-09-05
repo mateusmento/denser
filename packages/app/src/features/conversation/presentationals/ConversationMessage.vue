@@ -67,6 +67,12 @@ const emit = defineEmits<{
                 <RichTextPreview :doc="message.body" class="w-fit" />
               </BubbleContent>
             </Bubble>
+            <p
+              v-if="message.scheduledCaption"
+              class="text-[11px] text-muted-foreground"
+            >
+              {{ message.scheduledCaption }}
+            </p>
             <MessageAttachmentList
               v-if="message.attachments?.length"
               :attachments="message.attachments"

@@ -35,7 +35,9 @@ function commitPreset(preset: SchedulePreset) {
     dueAtIso,
     timezone: resolvedTimezone.value,
     recurrence: recurrence.value,
+    presetId: preset.id,
   });
+  emit("update:open", false);
 }
 
 function commitCustom() {
@@ -48,6 +50,7 @@ function commitCustom() {
     recurrence: recurrence.value,
     customIso: customIso.value,
   });
+  emit("update:open", false);
 }
 </script>
 

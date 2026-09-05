@@ -43,12 +43,18 @@ import {
   StartConversationUploadInput,
   StartConversationUploadResponse,
   UpsertMessageDraftInput,
+  ListScheduledMessagesResponse,
+  ScheduleMessageInput,
+  ScheduleMessageResponse,
+  UpdateScheduledMessageInput,
+
   type ArtifactId,
   type AttachmentId,
   type ClientId,
   type DocumentTypeId,
   type MessageId,
   type SpaceId,
+  type ScheduledJobId,
   type UserId,
 } from "@denser/contracts";
 import { HealthResponse, MeResponse, Session, type SignInInput } from "@denser/contracts";
@@ -697,6 +703,65 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("toggle reaction failed", res.status, body);
     return ToggleReactionResponse.parse(body);
+  }
+
+
+  async listScheduledMessages(
+    conversationId: ArtifactId,
+  ): Promise<ListScheduledMessagesResponse> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/scheduled-messages`,
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list scheduled messages failed", res.status, body);
+    return ListScheduledMessagesResponse.parse(body);
+  }
+
+  async scheduleMessage(
+    conversationId: ArtifactId,
+    input: ScheduleMessageInput,
+  ): Promise<ScheduleMessageResponse> {
+    const payload = ScheduleMessageInput.parse(input);
+    const res = await this.request(`/api/conversations/${conversationId}/scheduled-messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("schedule message failed", res.status, body);
+    return ScheduleMessageResponse.parse(body);
+  }
+
+  async updateScheduledMessage(
+    conversationId: ArtifactId,
+    jobId: ScheduledJobId,
+    input: UpdateScheduledMessageInput,
+  ): Promise<ScheduleMessageResponse> {
+    const payload = UpdateScheduledMessageInput.parse(input);
+    const res = await this.request(
+      `/api/conversations/${conversationId}/scheduled-messages/${jobId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("update scheduled message failed", res.status, body);
+    return ScheduleMessageResponse.parse(body);
+  }
+
+  async cancelScheduledMessage(
+    conversationId: ArtifactId,
+    jobId: ScheduledJobId,
+  ): Promise<ScheduleMessageResponse> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/scheduled-messages/${jobId}`,
+      { method: "DELETE" },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("cancel scheduled message failed", res.status, body);
+    return ScheduleMessageResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

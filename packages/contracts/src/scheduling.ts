@@ -17,7 +17,7 @@ import { ArtifactId, MessageId, ScheduledJobId, SpaceId, UserId } from "./ids.js
 export const ScheduledJobIdSchema = ScheduledJobId;
 export type { ScheduledJobId };
 
-const ScheduledMessagePayloadSchema = z.object({
+export const ScheduledMessagePayloadSchema = z.object({
   type: z.literal("scheduled_message"),
   conversationId: ArtifactId,
   senderId: UserId,
