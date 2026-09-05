@@ -38,10 +38,10 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Quote preview in `ConversationMessage` (`max-h-40` + gradient on overflow)
-- [ ] Click quote → `around` recenter; around-focus owns scroll until live edge
-- [ ] `RichTextPreview` on joined quote body
+- [x] Quote preview in `ConversationMessage` (`max-h-40` + gradient on overflow)
+- [x] Click quote → `around` recenter; around-focus owns scroll until live edge
+- [x] `RichTextPreview` on joined quote body
 
 ## PR
 
-- [ ] `[messaging 05] Quote card UI + jump` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] [#17](https://github.com/mateusmento/denser/pull/17) `[messaging 05] Quote card UI + jump` — open, awaiting review

@@ -97,13 +97,13 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 Wave-3 parallel batch **claimed** — worktrees at `/tmp/opencode/wt/{05,07,09,11,19}` from `f0133b6`:
 
-| Ticket | Branch | Blockers (merged) |
+| Ticket | Branch | PR |
 | --- | --- | --- |
-| **05** quotes-app | `agent/messaging-05-quotes-app` | 04, 03 |
-| **07** threads-app | `agent/messaging-07-threads-app` | 06, 03 |
-| **09** message-actions-app | `agent/messaging-09-message-actions-app` | 03 |
-| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | 10, 03 |
-| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | 18, 03 (23 drafts optional stub) |
+| **05** quotes-app | `agent/messaging-05-quotes-app` | [#17](https://github.com/mateusmento/denser/pull/17) |
+| **07** threads-app | `agent/messaging-07-threads-app` | [#18](https://github.com/mateusmento/denser/pull/18) |
+| **09** message-actions-app | `agent/messaging-09-message-actions-app` | — |
+| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | — |
+| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | — |
 
 **Next api lane (unclaimed):** 08 reactions, 12 unread-api, 14 dm-peers-api, 25 schedule-message-api — rebase worktrees from `144c0a6` → `main` before starting.
 
