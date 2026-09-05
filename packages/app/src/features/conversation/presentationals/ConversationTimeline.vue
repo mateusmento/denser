@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import {
   MessageScroller,
-  MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
   StickyMarker,
 } from "@denser/design-system";
+import {
+  emptyNextPageState,
+  emptyPreviousPageState,
+  type NextPageState,
+  type PreviousPageState,
+} from "@/lib/async";
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from "vue";
 import { conversationDayGroups } from "../messageGrouping";
 import type { ConversationIntroView, ConversationMessageView } from "../types";
 import ConversationIntro from "./ConversationIntro.vue";
 import ConversationMessage from "./ConversationMessage.vue";
 import ConversationMessageGroup from "./ConversationMessageGroup.vue";
+import ConversationTimelineEdges from "./ConversationTimelineEdges.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -25,10 +31,19 @@ const props = withDefaults(
     threadActions?: boolean;
     /** Sticky day chip fill — match the surrounding surface (channel vs card). */
     dayClass?: string;
+    /** Toward earlier messages in date order. */
+    previousPage?: PreviousPageState;
+    /** Toward later messages in date order (live edge). */
+    nextPage?: NextPageState;
+    /** Force jump-to-latest pill visibility (e.g. around-focus / off live edge). */
+    showJumpToLatest?: boolean;
   }>(),
   {
     threadActions: true,
     dayClass: "bg-background",
+    previousPage: () => emptyPreviousPageState(),
+    nextPage: () => emptyNextPageState(),
+    showJumpToLatest: false,
   },
 );
 
@@ -43,6 +58,8 @@ const emit = defineEmits<{
   delete: [messageId: string];
   editDescription: [];
   addPeople: [];
+  loadPrevious: [];
+  jumpToLatest: [];
 }>();
 
 defineSlots<{
@@ -129,7 +146,13 @@ watch(
           {{ emptyLabel ?? "No messages yet. Say hello." }}
         </p>
       </MessageScrollerViewport>
-      <MessageScrollerButton />
+      <ConversationTimelineEdges
+        :previous-page="previousPage"
+        :next-page="nextPage"
+        :show-jump-to-latest="showJumpToLatest"
+        @load-previous="emit('loadPrevious')"
+        @jump-to-latest="emit('jumpToLatest')"
+      />
     </MessageScroller>
   </MessageScrollerProvider>
 </template>

@@ -1,4 +1,4 @@
-import type { ArtifactSummary, DocumentView, SpaceSummary } from "@denser/contracts";
+import type { ArtifactSummary, DocumentView, MessageDto, SpaceSummary } from "@denser/contracts";
 import { createCollection, localOnlyCollectionOptions, type Collection } from "@tanstack/vue-db";
 
 export const spacesCollection = createCollection(
@@ -19,6 +19,13 @@ export const documentsCollection = createCollection(
   localOnlyCollectionOptions<DocumentView, DocumentView["id"]>({
     id: "documents",
     getKey: (document) => document.id,
+  }),
+);
+
+export const messagesCollection = createCollection(
+  localOnlyCollectionOptions<MessageDto, MessageDto["id"]>({
+    id: "messages",
+    getKey: (message) => message.id,
   }),
 );
 

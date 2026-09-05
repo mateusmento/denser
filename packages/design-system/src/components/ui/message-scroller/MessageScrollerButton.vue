@@ -15,6 +15,8 @@ const props = withDefaults(
     behavior?: ScrollBehavior;
     variant?: ButtonVariants["variant"];
     size?: ButtonVariants["size"];
+    /** When set, overrides scroll-derived visibility for the jump pill. */
+    active?: boolean;
   }>(),
   {
     direction: "end",
@@ -27,9 +29,14 @@ const props = withDefaults(
 const { scrollToEnd, scrollToStart } = useMessageScroller();
 const scrollable = useMessageScrollerScrollable();
 
-const active = computed(() =>
-  props.direction === "start" ? scrollable.value.start : scrollable.value.end,
-);
+const active = computed(() => {
+  if (props.active !== undefined) return props.active;
+  return props.direction === "start" ? scrollable.value.start : scrollable.value.end;
+});
+
+const emit = defineEmits<{
+  action: [];
+}>();
 
 function onClick(event: MouseEvent) {
   if (!active.value) return;
@@ -38,6 +45,7 @@ function onClick(event: MouseEvent) {
   if (event.defaultPrevented) return;
   if (props.direction === "start") scrollToStart({ behavior: props.behavior });
   else scrollToEnd({ behavior: props.behavior });
+  emit("action");
 }
 </script>
 

@@ -5,10 +5,10 @@ import { toast } from "@denser/design-system";
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
+import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationSync } from "../composables/useConversationSync";
 import {
   channelIntro,
-  channelMessages,
   conversationMentionItems,
   schedulePresets,
   threadView,
@@ -27,12 +27,20 @@ const conversationTitle = ref("");
 const conversationSync = useConversationSync(conversationId);
 conversationSync.bindComposeTitle(conversationTitle);
 
+const messagesSync = useConversationMessages(conversationId);
+
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
 const threadOpen = ref(false);
 const mentionItems = ref<MentionCandidate[]>([]);
 
-const channelComposer = defaultChannelComposerView({ schedulePresets });
+const channelComposer = computed(() =>
+  defaultChannelComposerView({
+    schedulePresets,
+    sending: messagesSync.isSending.value,
+    failed: messagesSync.failed.value,
+  }),
+);
 const threadComposer = defaultThreadComposerView();
 
 function onMentionSearch(query: string) {
@@ -40,7 +48,12 @@ function onMentionSearch(query: string) {
 }
 
 async function onChannelSend() {
-  await conversationSync.sendInitialMessage(channelDraft.value);
+  if (conversationSync.isCompose.value) {
+    await conversationSync.sendInitialMessage(channelDraft.value);
+    channelDraft.value = emptyDoc();
+    return;
+  }
+  await messagesSync.send(channelDraft.value);
   channelDraft.value = emptyDoc();
 }
 
@@ -99,12 +112,16 @@ function onAddPeople() {
   toast("Add people");
 }
 
-function onRetry() {
-  toast("Retrying…");
+async function onRetry() {
+  await messagesSync.retrySend();
 }
 
 function onAction(id: ComposerActionId) {
   toast(`Coming soon · ${id}`);
+}
+
+async function onJumpToLatest() {
+  await messagesSync.jumpToLatest();
 }
 </script>
 
@@ -117,8 +134,13 @@ function onAction(id: ComposerActionId) {
     </template>
     <template #messages>
       <ConversationTimeline
-        :messages="channelMessages"
+        :messages="messagesSync.messages.value"
         :intro="channelIntro"
+        :previous-page="messagesSync.previousPage.value"
+        :next-page="messagesSync.nextPage.value"
+        :show-jump-to-latest="messagesSync.showJumpToLatest.value"
+        @load-previous="messagesSync.loadPrevious()"
+        @jump-to-latest="onJumpToLatest"
         @react="onReact"
         @thread="onOpenThread"
         @copy-link="onCopyLink"
