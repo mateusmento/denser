@@ -7,6 +7,12 @@ import {
   MessageScrollerViewport,
   StickyMarker,
 } from "@denser/design-system";
+import {
+  emptyNextPageState,
+  emptyPreviousPageState,
+  type NextPageState,
+  type PreviousPageState,
+} from "@/lib/async";
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from "vue";
 import { conversationDayGroups } from "../messageGrouping";
 import type { ConversationIntroView, ConversationMessageView } from "../types";
@@ -25,21 +31,19 @@ const props = withDefaults(
     threadActions?: boolean;
     /** Sticky day chip fill — match the surrounding surface (channel vs card). */
     dayClass?: string;
-    /** Whether older pages exist beyond the loaded window. */
-    hasMoreOlder?: boolean;
-    /** Whether newer pages exist (off live edge). */
-    hasMoreNewer?: boolean;
-    /** Force jump-to-latest pill visibility (e.g. around-focus / hasMoreNewer). */
+    /** Toward earlier messages in date order. */
+    previousPage?: PreviousPageState;
+    /** Toward later messages in date order (live edge). */
+    nextPage?: NextPageState;
+    /** Force jump-to-latest pill visibility (e.g. around-focus / off live edge). */
     showJumpToLatest?: boolean;
-    loadingOlder?: boolean;
   }>(),
   {
     threadActions: true,
     dayClass: "bg-background",
-    hasMoreOlder: false,
-    hasMoreNewer: false,
+    previousPage: () => emptyPreviousPageState(),
+    nextPage: () => emptyNextPageState(),
     showJumpToLatest: false,
-    loadingOlder: false,
   },
 );
 
@@ -54,7 +58,7 @@ const emit = defineEmits<{
   delete: [messageId: string];
   editDescription: [];
   addPeople: [];
-  loadOlder: [];
+  loadPrevious: [];
   jumpToLatest: [];
 }>();
 
@@ -143,11 +147,10 @@ watch(
         </p>
       </MessageScrollerViewport>
       <ConversationTimelineEdges
-        :has-more-older="hasMoreOlder"
-        :has-more-newer="hasMoreNewer"
+        :previous-page="previousPage"
+        :next-page="nextPage"
         :show-jump-to-latest="showJumpToLatest"
-        :loading-older="loadingOlder"
-        @load-older="emit('loadOlder')"
+        @load-previous="emit('loadPrevious')"
         @jump-to-latest="emit('jumpToLatest')"
       />
     </MessageScroller>

@@ -11,6 +11,7 @@ import type { DenserSocket } from "@denser/api-client";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { apiClient } from "@/lib/api";
+import { toNextPageState, toPreviousPageState } from "@/lib/async";
 import { messagesCollection, upsertInCollection, upsertMany } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
@@ -105,9 +106,19 @@ export function useConversationMessages(
       .map((message) => toConversationMessageView(message, user.value)),
   );
 
-  const hasMoreOlder = computed(() => Boolean(query.hasNextPage.value));
-  const hasMoreNewer = computed(() => Boolean(query.hasPreviousPage.value));
-  const isAtLiveEdge = computed(() => !aroundFocus.value && !hasMoreNewer.value);
+  const previousPage = computed(() =>
+    toPreviousPageState({
+      hasPrevious: Boolean(query.hasNextPage.value),
+      loadingPrevious: query.isFetchingNextPage.value,
+    }),
+  );
+  const nextPage = computed(() =>
+    toNextPageState({
+      hasNext: Boolean(query.hasPreviousPage.value),
+      loadingNext: query.isFetchingPreviousPage.value,
+    }),
+  );
+  const isAtLiveEdge = computed(() => !aroundFocus.value && !nextPage.value.hasNext);
   const isLoading = computed(() => query.isLoading.value);
   const isSending = computed(() => sendMutation.isPending.value);
   const showJumpToLatest = computed(() => !isAtLiveEdge.value);
@@ -265,13 +276,13 @@ export function useConversationMessages(
     messages,
     isLoading,
     isSending,
-    hasMoreOlder,
-    hasMoreNewer,
+    previousPage,
+    nextPage,
     isAtLiveEdge,
     showJumpToLatest,
     failed: computed(() => failedClientId.value != null),
-    loadOlder: () => query.fetchNextPage(),
-    loadNewer: () => query.fetchPreviousPage(),
+    loadPrevious: () => query.fetchNextPage(),
+    loadNext: () => query.fetchPreviousPage(),
     jumpAround,
     jumpToLatest,
     send,

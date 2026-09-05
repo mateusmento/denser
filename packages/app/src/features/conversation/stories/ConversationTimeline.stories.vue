@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toast } from "@denser/design-system";
+import { toNextPageState, toPreviousPageState } from "@/lib/async";
 import { defineMeta } from "sb-addon-vue-csf";
 import { channelIntro, channelMessages } from "../fixtures";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
@@ -10,6 +11,8 @@ const { Story } = defineMeta({
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
 });
+
+const offLiveEdgeNextPage = toNextPageState({ hasNext: true, loadingNext: false });
 
 function onReact(messageId: string, emoji: string) {
   toast(`${emoji} on ${messageId}`);
@@ -61,12 +64,25 @@ function onDelete(messageId: string) {
         :messages="channelMessages"
         :intro="channelIntro"
         show-jump-to-latest
-        has-more-newer
+        :next-page="offLiveEdgeNextPage"
         @react="onReact"
         @thread="onThread"
         @edit="onEdit"
         @delete="onDelete"
         @jump-to-latest="toast('Jump to latest')"
+      />
+    </div>
+  </Story>
+  <Story as-child name="Loading previous page">
+    <div class="h-[28rem] w-[36rem]">
+      <ConversationTimeline
+        :messages="channelMessages"
+        :intro="channelIntro"
+        :previous-page="toPreviousPageState({ hasPrevious: true, loadingPrevious: true })"
+        @react="onReact"
+        @thread="onThread"
+        @edit="onEdit"
+        @delete="onDelete"
       />
     </div>
   </Story>

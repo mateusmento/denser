@@ -1,42 +1,43 @@
 <script setup lang="ts">
 import { MessageScrollerButton, useMessageScrollerScrollable } from "@denser/design-system";
+import { emptyNextPageState, emptyPreviousPageState, type NextPageState, type PreviousPageState } from "@/lib/async";
 import { useDebounceFn } from "@vueuse/core";
 import { computed, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    hasMoreOlder?: boolean;
-    hasMoreNewer?: boolean;
+    previousPage?: PreviousPageState;
+    nextPage?: NextPageState;
     showJumpToLatest?: boolean;
-    loadingOlder?: boolean;
   }>(),
   {
-    hasMoreOlder: false,
-    hasMoreNewer: false,
+    previousPage: () => emptyPreviousPageState(),
+    nextPage: () => emptyNextPageState(),
     showJumpToLatest: false,
-    loadingOlder: false,
   },
 );
 
 const emit = defineEmits<{
-  loadOlder: [];
+  loadPrevious: [];
   jumpToLatest: [];
 }>();
 
 const scrollable = useMessageScrollerScrollable();
 
 const jumpActive = computed(
-  () => props.showJumpToLatest || props.hasMoreNewer || scrollable.value.end,
+  () => props.showJumpToLatest || props.nextPage.hasNext || scrollable.value.end,
 );
 
-const scheduleLoadOlder = useDebounceFn(() => {
-  if (props.hasMoreOlder && !props.loadingOlder) emit("loadOlder");
+const scheduleLoadPrevious = useDebounceFn(() => {
+  if (props.previousPage.hasPrevious && !props.previousPage.loadingPrevious) {
+    emit("loadPrevious");
+  }
 }, 120);
 
 watch(
   () => scrollable.value.start,
   (nearTop) => {
-    if (nearTop) scheduleLoadOlder();
+    if (nearTop) scheduleLoadPrevious();
   },
 );
 
