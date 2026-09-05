@@ -13,6 +13,7 @@ import {
   CreateSpaceInput,
   CreateSpaceResponse,
   DocumentConflictResponse,
+  EditMessageInput,
   GetConversationResponse,
   GetDocumentResponse,
   ListDirectConversationsResponse,
@@ -586,6 +587,38 @@ export class ApiClient {
     });
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("post message failed", res.status, body);
+    return PostMessageResponse.parse(body);
+  }
+
+  async editMessage(
+    conversationId: ArtifactId,
+    messageId: MessageId,
+    input: { body: unknown },
+  ): Promise<PostMessageResponse> {
+    const payload = EditMessageInput.parse(input);
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages/${messageId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("edit message failed", res.status, body);
+    return PostMessageResponse.parse(body);
+  }
+
+  async deleteMessage(
+    conversationId: ArtifactId,
+    messageId: MessageId,
+  ): Promise<PostMessageResponse> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages/${messageId}`,
+      { method: "DELETE" },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("delete message failed", res.status, body);
     return PostMessageResponse.parse(body);
   }
 

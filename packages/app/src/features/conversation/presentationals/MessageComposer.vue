@@ -58,6 +58,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   send: [];
   retry: [];
+  cancelEdit: [];
   action: [id: ComposerActionId];
   schedule: [payload: ScheduleCommitPayload];
   mentionSearch: [query: string];
@@ -224,6 +225,11 @@ function onDrop(event: DragEvent) {
         />
       </ScrollArea>
     </CardContent>
+
+    <p v-if="view.isEditing" class="px-3 text-xs text-muted-foreground">
+      Editing message
+      <button type="button" class="ms-2 underline" @click="emit('cancelEdit')">Cancel</button>
+    </p>
 
     <p v-if="view.failed" class="px-3 text-xs text-destructive">
       Couldn’t send.

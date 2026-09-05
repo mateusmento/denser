@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ArtifactId, MessageId, SpaceId, UserId } from "@denser/contracts";
-import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
+import { emptyDoc, cloneDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
 import { useQuery } from "@tanstack/vue-query";
 import { computed, nextTick, ref, watch } from "vue";
@@ -20,7 +20,7 @@ import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
-import type { ComposerActionId, ScheduleCommitPayload } from "../types";
+import type { ComposerActionId, ConversationMessageView, ScheduleCommitPayload } from "../types";
 
 const route = useRoute();
 const conversationId = computed(() => route.params.conversationId as ArtifactId);
@@ -76,6 +76,8 @@ const threadParent = computed(() =>
 const threadSync = useThreadMessages(conversationId, activeThreadId, threadParent);
 
 const mentionItems = ref<MentionCandidate[]>([]);
+const editingMessageId = ref<MessageId | null>(null);
+const editingInThread = ref(false);
 
 watch(conversationId, () => {
   activeThreadId.value = null;
@@ -109,27 +111,57 @@ const showChannelIntro = computed(() => !conversationSync.isDirect.value);
 const channelComposer = computed(() =>
   defaultChannelComposerView({
     schedulePresets,
-    sending: messagesSync.isSending.value,
+    sending: messagesSync.isSending.value || messagesSync.isEditing.value,
     failed: messagesSync.failed.value,
     attachments: channelAttachments.view.value,
+    isEditing: editingMessageId.value != null && !editingInThread.value,
+    sendLabel: editingMessageId.value != null && !editingInThread.value ? "Save" : "Send",
   }),
 );
 
 const threadComposer = computed(() =>
   defaultThreadComposerView({
-    sending: threadSync.isSending.value,
+    sending: threadSync.isSending.value || messagesSync.isEditing.value,
     failed: threadSync.failed.value,
     attachments: threadAttachments.view.value,
+    isEditing: editingMessageId.value != null && editingInThread.value,
+    sendLabel: editingMessageId.value != null && editingInThread.value ? "Save" : "Reply",
   }),
 );
+
+function findMessage(messageId: string): ConversationMessageView | undefined {
+  const fromChannel = messagesSync.messages.value.find((message) => message.id === messageId);
+  if (fromChannel) return fromChannel;
+  const thread = threadSync.thread.value;
+  if (!thread) return undefined;
+  if (thread.parent.id === messageId) return thread.parent;
+  return thread.messages.find((message) => message.id === messageId);
+}
 
 function onMentionSearch(query: string) {
   mentionItems.value = conversationMentionItems(query);
 }
 
+function clearEdit() {
+  editingMessageId.value = null;
+  editingInThread.value = false;
+}
+
 async function onChannelSend() {
   presence.stopTyping();
   if (channelAttachments.hasBlockingUpload.value) return;
+
+  if (editingMessageId.value && !editingInThread.value) {
+    try {
+      await messagesSync.edit(editingMessageId.value, channelDraft.value);
+      channelDraft.value = emptyDoc();
+      clearEdit();
+    } catch {
+      toast("Couldn't save edit");
+    }
+    return;
+  }
+
   const attachmentIds = channelAttachments.collectAttachmentIds(channelDraft.value);
 
   if (conversationSync.isCompose.value) {
@@ -150,9 +182,31 @@ async function onChannelSend() {
 
 async function onThreadSend() {
   if (threadAttachments.hasBlockingUpload.value) return;
+
+  if (editingMessageId.value && editingInThread.value) {
+    try {
+      await messagesSync.edit(editingMessageId.value, threadDraft.value);
+      threadDraft.value = emptyDoc();
+      clearEdit();
+    } catch {
+      toast("Couldn't save edit");
+    }
+    return;
+  }
+
   await threadSync.send(threadDraft.value);
   threadDraft.value = emptyDoc();
   threadAttachments.clearAfterSend();
+}
+
+function onCancelChannelEdit() {
+  channelDraft.value = emptyDoc();
+  clearEdit();
+}
+
+function onCancelThreadEdit() {
+  threadDraft.value = emptyDoc();
+  clearEdit();
 }
 
 function onSchedule(payload: ScheduleCommitPayload) {
@@ -181,11 +235,40 @@ function onCloseThread() {
 }
 
 function onEdit(messageId: string) {
-  toast(`Edit · ${messageId}`);
+  const message = findMessage(messageId);
+  if (!message?.canEdit) return;
+
+  const thread = threadSync.thread.value;
+  const inThread =
+    activeThreadId.value != null &&
+    thread != null &&
+    (thread.parent.id === messageId ||
+      thread.messages.some((reply) => reply.id === messageId));
+
+  editingMessageId.value = messageId as MessageId;
+  editingInThread.value = inThread;
+
+  if (inThread) {
+    threadDraft.value = cloneDoc(message.body);
+    return;
+  }
+
+  channelDraft.value = cloneDoc(message.body);
 }
 
-function onDelete(messageId: string) {
-  toast(`Delete · ${messageId}`);
+async function onDelete(messageId: string) {
+  const message = findMessage(messageId);
+  if (!message?.canDelete) return;
+
+  try {
+    await messagesSync.remove(messageId as MessageId);
+  } catch {
+    toast("Couldn't delete message");
+  }
+}
+
+function onQuote(messageId: string) {
+  toast(`Quote · ${messageId}`);
 }
 
 function onCopyLink(messageId: string) {
@@ -198,10 +281,6 @@ function onBookmark(messageId: string) {
 
 function onForward(messageId: string) {
   toast(`Forward · ${messageId}`);
-}
-
-function onQuote(messageId: string) {
-  toast(`Quote · ${messageId}`);
 }
 
 async function onJumpQuote(messageId: string) {
@@ -285,6 +364,7 @@ async function onThreadJumpToLatest() {
           :can-send="channelAttachments.hasSendableContent(channelDraft)"
           @mention-search="onMentionSearch"
           @send="onChannelSend"
+          @cancel-edit="onCancelChannelEdit"
           @retry="onRetry"
           @schedule="onSchedule"
           @action="onAction"
@@ -312,6 +392,7 @@ async function onThreadJumpToLatest() {
         @mention-search="onMentionSearch"
         @close="onCloseThread"
         @send="onThreadSend"
+        @cancel-edit="onCancelThreadEdit"
         @retry="onThreadRetry"
         @schedule="onThreadSchedule"
         @action="onAction"

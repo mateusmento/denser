@@ -230,6 +230,79 @@ export function useConversationMessages(
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: async (input: { messageId: MessageId; body: JSONContent }) => {
+      const conversation = id.value;
+      if (!conversation) throw new Error("no conversation");
+      const response = await apiClient.editMessage(conversation, input.messageId, {
+        body: input.body,
+      });
+      return response.message;
+    },
+    onMutate: async (input) => {
+      const conversation = id.value;
+      if (!conversation || !user.value?.id) return;
+
+      const key = queryKeys.conversationMessages(conversation);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = readMessagesQuery(queryClient, conversation);
+      const current = dtos.value.find((message) => message.id === input.messageId);
+      if (!current) return { previous, key };
+
+      const optimistic: MessageDto = {
+        ...current,
+        body: input.body,
+        editedAt: new Date().toISOString(),
+      };
+
+      syncQueryData(applyMessageUpdated(previous, optimistic));
+      return { previous, key };
+    },
+    onError: (_error, _input, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(ctx.key, ctx.previous);
+      }
+    },
+    onSuccess: (message) => {
+      ingestUpdate(message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (messageId: MessageId) => {
+      const conversation = id.value;
+      if (!conversation) throw new Error("no conversation");
+      const response = await apiClient.deleteMessage(conversation, messageId);
+      return response.message;
+    },
+    onMutate: async (messageId) => {
+      const conversation = id.value;
+      if (!conversation) return;
+
+      const key = queryKeys.conversationMessages(conversation);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = readMessagesQuery(queryClient, conversation);
+      const current = dtos.value.find((message) => message.id === messageId);
+      if (!current) return { previous, key };
+
+      const optimistic: MessageDto = {
+        ...current,
+        deletedAt: new Date().toISOString(),
+      };
+
+      syncQueryData(applyMessageDeleted(previous, optimistic));
+      return { previous, key };
+    },
+    onError: (_error, _input, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(ctx.key, ctx.previous);
+      }
+    },
+    onSuccess: (message) => {
+      ingestDelete(message);
+    },
+  });
+
   async function send(
     body: JSONContent,
     attachmentIds: AttachmentId[] = [],
@@ -274,10 +347,21 @@ export function useConversationMessages(
     await query.refetch();
   }
 
+  async function edit(messageId: MessageId, body: JSONContent) {
+    if (isEmptyBody(body)) return;
+    await editMutation.mutateAsync({ messageId, body });
+  }
+
+  async function remove(messageId: MessageId) {
+    await deleteMutation.mutateAsync(messageId);
+  }
+
   return {
     messages,
     isLoading,
     isSending,
+    isEditing: computed(() => editMutation.isPending.value),
+    isDeleting: computed(() => deleteMutation.isPending.value),
     previousPage,
     nextPage,
     isAtLiveEdge,
@@ -288,6 +372,8 @@ export function useConversationMessages(
     jumpAround,
     jumpToLatest,
     send,
+    edit,
+    remove,
     retrySend,
     reload: () => query.refetch(),
   };

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMessageScrollerContextMaybe } from "@denser/design-system";
 import { autoUpdate, computePosition, offset, shift } from "@floating-ui/dom";
-import { SmileIcon, MessageCircleIcon, PencilIcon, TrashIcon } from "@lucide/vue";
+import { SmileIcon, MessageCircleIcon, PencilIcon, QuoteIcon, TrashIcon } from "@lucide/vue";
 import { useEventListener, useResizeObserver } from "@vueuse/core";
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import type { ConversationMessageView } from "../types";
@@ -18,6 +18,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   react: [emoji: string];
   thread: [];
+  quote: [];
   edit: [];
   delete: [];
 }>();
@@ -331,6 +332,14 @@ async function updatePosition() {
           @click="emit('thread')"
         >
           <MessageCircleIcon class="size-3.5" />
+        </Button>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label="Quote message"
+          @click="emit('quote')"
+        >
+          <QuoteIcon class="size-3.5" />
         </Button>
         <Button
           v-if="message.canEdit"

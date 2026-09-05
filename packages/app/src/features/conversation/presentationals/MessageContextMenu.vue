@@ -72,7 +72,7 @@ async function onCopy() {
         <MessageCircleIcon />
         Reply in thread
       </ContextMenuItem>
-      <template v-if="message.canEdit !== false">
+      <template v-if="message.canEdit">
         <ContextMenuSeparator />
         <ContextMenuItem @select="emit('edit')">
           <PencilIcon />
@@ -100,7 +100,7 @@ async function onCopy() {
         <QuoteIcon />
         Quote message
       </ContextMenuItem>
-      <template v-if="message.canDelete !== false">
+      <template v-if="message.canDelete">
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" @select="emit('delete')">
           <TrashIcon />

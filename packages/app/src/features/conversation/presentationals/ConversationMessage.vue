@@ -56,6 +56,7 @@ const emit = defineEmits<{
         :collision-boundary="collisionBoundary"
         @react="emit('react', $event)"
         @thread="emit('thread')"
+        @quote="emit('quote')"
         @edit="emit('edit')"
         @delete="emit('delete')"
       >

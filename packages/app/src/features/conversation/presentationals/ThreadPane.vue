@@ -45,6 +45,7 @@ const emit = defineEmits<{
   close: [];
   send: [];
   retry: [];
+  cancelEdit: [];
   schedule: [payload: ScheduleCommitPayload];
   action: [id: ComposerActionId];
   mentionSearch: [query: string];
@@ -132,6 +133,7 @@ const emit = defineEmits<{
         :can-send="canSend"
         @mention-search="emit('mentionSearch', $event)"
         @send="emit('send')"
+        @cancel-edit="emit('cancelEdit')"
         @retry="emit('retry')"
         @schedule="emit('schedule', $event)"
         @action="emit('action', $event)"
