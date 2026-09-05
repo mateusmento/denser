@@ -1,9 +1,11 @@
-import type {
-  AnyScheduledJobDto,
-  ScheduledJobHandler,
-  ScheduledJobHandlerMap,
-  ScheduledJobId,
-  ScheduledJobType,
+import {
+  resolveScheduleTiming,
+  type AnyScheduledJobDto,
+  type ScheduledJobHandler,
+  type ScheduledJobHandlerMap,
+  type ScheduledJobId,
+  type ScheduledJobRecurrence,
+  type ScheduledJobType,
 } from "@denser/contracts";
 import { getPort, registerPort } from "../../ports/container.js";
 import * as repo from "./repository.js";
@@ -79,7 +81,7 @@ async function dispatchOne(
   const handler = getHandler(occurrence.type);
   try {
     await handler(occurrence, { lockId });
-    await repo.markProcessed(occurrence.id, lockId);
+    await repo.markOccurrenceSuccess(occurrence.id, lockId, new Date(occurrence.nextRunAt));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await repo.markFailure(occurrence.id, lockId, message);
@@ -110,6 +112,39 @@ export function startSchedulingDispatcher(options: DispatcherOptions = {}): void
     void run();
   }, intervalMs);
   dispatcherHandle.unref?.();
+}
+
+
+
+export type JobScheduleInput = {
+  dueAt: string;
+  recurrence?: ScheduledJobRecurrence | null;
+  timezone?: string | null;
+  after?: string | null;
+};
+
+/** Compute `next_run_at` + normalized recurrence for create/update paths. */
+export function buildJobScheduleTiming(input: JobScheduleInput) {
+  return resolveScheduleTiming({
+    dueAt: input.dueAt,
+    recurrence: input.recurrence,
+    timezone: input.timezone,
+    after: input.after ?? null,
+  });
+}
+
+
+export async function createJobWithSchedule(
+  job: Omit<AnyScheduledJobDto, "dueAt" | "nextRunAt" | "timezone" | "recurrence" | "processed">,
+  schedule: JobScheduleInput,
+): Promise<ScheduledJobId> {
+  const timing = buildJobScheduleTiming(schedule);
+  return repo.insertScheduledJob({ ...job, ...timing, processed: false } as AnyScheduledJobDto);
+}
+
+export async function updateJobSchedule(jobId: ScheduledJobId, input: JobScheduleInput): Promise<void> {
+  const timing = buildJobScheduleTiming(input);
+  await repo.updateScheduledJobSchedule(jobId, timing);
 }
 
 export function stopSchedulingDispatcher(): void {

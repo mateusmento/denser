@@ -3,7 +3,12 @@ import type {
   ClaimDueJobs,
   ScheduledJobId,
 } from "@denser/contracts";
-import { parseScheduledJobRow } from "@denser/contracts";
+import {
+  computeNextRunAt,
+  parseScheduledJobRecurrence,
+  parseScheduledJobRow,
+  type ResolvedScheduleTiming,
+} from "@denser/contracts";
 import { randomUUID } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db/client.js";
@@ -89,7 +94,7 @@ export const claimDueJobs: ClaimDueJobs = async ({ now, limit, staleLockBefore }
       dueAt: dueAt.toISOString(),
       nextRunAt: nextRunAt.toISOString(),
       timezone: r.timezone,
-      recurrence: r.recurrence !== undefined ? r.recurrence : null,
+      recurrence: parseScheduledJobRecurrence(r.recurrence !== undefined ? r.recurrence : null),
       processed: r.processed,
       lastOccurrenceAt: r.last_occurrence_at ? toDate(r.last_occurrence_at).toISOString() : null,
     });
@@ -162,4 +167,88 @@ export async function markFailure(
 
   const retryCount = row?.retryCount ?? 0;
   return { retryCount, exceededMaxRetries: retryCount >= MAX_RETRIES };
+}
+
+export async function getScheduledJobById(jobId: ScheduledJobId): Promise<AnyScheduledJobDto | null> {
+  const row = await db.query.scheduledJob.findFirst({ where: eq(scheduledJob.id, jobId) });
+  if (!row) return null;
+  return parseScheduledJobRow({
+    id: row.id,
+    rootSpaceId: row.rootSpaceId,
+    type: row.type as AnyScheduledJobDto["type"],
+    payload: row.payload,
+    dueAt: row.dueAt.toISOString(),
+    nextRunAt: row.nextRunAt.toISOString(),
+    timezone: row.timezone,
+    recurrence: parseScheduledJobRecurrence(row.recurrence !== undefined ? row.recurrence : null),
+    processed: row.processed,
+    lastOccurrenceAt: row.lastOccurrenceAt ? row.lastOccurrenceAt.toISOString() : null,
+  });
+}
+
+export async function updateScheduledJobSchedule(
+  jobId: ScheduledJobId,
+  timing: ResolvedScheduleTiming,
+): Promise<void> {
+  await db
+    .update(scheduledJob)
+    .set({
+      dueAt: new Date(timing.dueAt),
+      nextRunAt: new Date(timing.nextRunAt),
+      timezone: timing.timezone,
+      recurrence: timing.recurrence,
+    })
+    .where(eq(scheduledJob.id, jobId));
+}
+
+/** After a successful fire: once jobs finish; recurring jobs advance `next_run_at`. */
+export async function markOccurrenceSuccess(
+  jobId: ScheduledJobId,
+  lockId: string,
+  occurrenceAt: Date,
+): Promise<void> {
+  const job = await getScheduledJobById(jobId);
+  if (!job) {
+    return;
+  }
+
+  const recurrence = job.recurrence ?? { frequency: "once" as const };
+  const isOnce = recurrence.frequency === "once";
+
+  if (isOnce) {
+    await db
+      .update(scheduledJob)
+      .set({
+        processed: true,
+        lastOccurrenceAt: occurrenceAt,
+        lockId: null,
+        lockedAt: null,
+        retryCount: 0,
+        lastError: null,
+        lastRetryAt: null,
+      })
+      .where(and(eq(scheduledJob.id, jobId), eq(scheduledJob.lockId, lockId)));
+    return;
+  }
+
+  const next = computeNextRunAt({
+    dueAt: job.dueAt,
+    recurrence,
+    timezone: job.timezone,
+    after: occurrenceAt,
+  });
+
+  await db
+    .update(scheduledJob)
+    .set({
+      processed: next === null,
+      lastOccurrenceAt: occurrenceAt,
+      nextRunAt: next ?? occurrenceAt,
+      lockId: null,
+      lockedAt: null,
+      retryCount: 0,
+      lastError: null,
+      lastRetryAt: null,
+    })
+    .where(and(eq(scheduledJob.id, jobId), eq(scheduledJob.lockId, lockId)));
 }

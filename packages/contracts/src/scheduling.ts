@@ -1,4 +1,17 @@
 import { z } from "zod";
+import type { ScheduledJobRecurrence } from "./scheduling-recurrence.js";
+export {
+  ScheduledJobRecurrenceSchema,
+  type ScheduledJobRecurrence,
+  type ScheduleRecurrencePreset,
+  type ResolveScheduleTimingInput,
+  type ResolvedScheduleTiming,
+  computeNextRunAt,
+  formatScheduleWallTime,
+  parseScheduledJobRecurrence,
+  recurrenceFromPreset,
+  resolveScheduleTiming,
+} from "./scheduling-recurrence.js";
 import { ArtifactId, MessageId, ScheduledJobId, SpaceId, UserId } from "./ids.js";
 
 export const ScheduledJobIdSchema = ScheduledJobId;
@@ -46,7 +59,7 @@ export type ScheduledJobDto<T extends ScheduledJobType = ScheduledJobType> = {
   dueAt: string;
   nextRunAt: string;
   timezone?: string | null;
-  recurrence?: unknown | null;
+  recurrence?: ScheduledJobRecurrence | null;
   processed: boolean;
   lastOccurrenceAt?: string | null;
 };
@@ -76,7 +89,7 @@ export function parseScheduledJobRow(row: {
   dueAt: string;
   nextRunAt: string;
   timezone?: string | null;
-  recurrence?: unknown | null;
+  recurrence?: ScheduledJobRecurrence | null;
   processed: boolean;
   lastOccurrenceAt?: string | null;
 }): AnyScheduledJobDto {
@@ -89,7 +102,7 @@ export type CreateScheduledJobBase = {
   dueAt: string;
   nextRunAt: string;
   timezone?: string | null;
-  recurrence?: unknown | null;
+  recurrence?: ScheduledJobRecurrence | null;
 };
 
 export function createScheduledMessageJob(
