@@ -268,3 +268,109 @@ test("missing message id is not_found for edit/delete", async () => {
     reason: "not_found",
   });
 });
+
+test("listThreadMessages: returns replies for a parent message", async () => {
+  const h = makeHarness();
+  const parent = await h.service.postMessage(ALICE, postInput({ clientId: "parent" as ClientId }));
+  if (!parent.ok) return;
+
+  await h.service.postMessage(
+    ALICE,
+    postInput({
+      clientId: "reply-1" as ClientId,
+      threadId: parent.message.id,
+      body: body("r1"),
+    }),
+  );
+  await h.service.postMessage(
+    ALICE,
+    postInput({
+      clientId: "reply-2" as ClientId,
+      threadId: parent.message.id,
+      body: body("r2"),
+    }),
+  );
+
+  const thread = await h.service.listThreadMessages(ALICE, {
+    conversationId: CONVERSATION,
+    threadId: parent.message.id,
+  });
+  assert.equal(thread.ok, true);
+  if (!thread.ok) return;
+  assert.deepEqual(thread.messages.map(textOf), ["r1", "r2"]);
+  assert.equal(thread.messages.every((m) => m.threadId === parent.message.id), true);
+});
+
+test("listThreadMessages: invalid parent rejected", async () => {
+  const h = makeHarness();
+  const result = await h.service.listThreadMessages(ALICE, {
+    conversationId: CONVERSATION,
+    threadId: MISSING,
+  });
+  assert.deepEqual(result, { ok: false, reason: "invalid_thread" });
+});
+
+test("listThreadMessages: paginates with next and prev", async () => {
+  const h = makeHarness();
+  const parent = await h.service.postMessage(ALICE, postInput({ clientId: "parent" as ClientId }));
+  if (!parent.ok) return;
+
+  for (let i = 0; i < 5; i += 1) {
+    await h.service.postMessage(
+      ALICE,
+      postInput({
+        clientId: `reply-${i}` as ClientId,
+        threadId: parent.message.id,
+        body: body(`r${i}`),
+      }),
+    );
+  }
+
+  const page = await h.service.listThreadMessages(ALICE, {
+    conversationId: CONVERSATION,
+    threadId: parent.message.id,
+    size: 2,
+  });
+  assert.equal(page.ok, true);
+  if (!page.ok) return;
+  assert.deepEqual(page.messages.map(textOf), ["r3", "r4"]);
+
+  const next = await h.service.listThreadMessages(ALICE, {
+    conversationId: CONVERSATION,
+    threadId: parent.message.id,
+    size: 2,
+    cursor: page.nextCursor ?? undefined,
+    direction: "next",
+  });
+  assert.equal(next.ok, true);
+  if (!next.ok) return;
+  assert.deepEqual(next.messages.map(textOf), ["r1", "r2"]);
+});
+
+test("post: threadId requires parent in same conversation", async () => {
+  const h = makeHarness();
+  const parent = await h.service.postMessage(ALICE, postInput({ clientId: "parent" as ClientId }));
+  if (!parent.ok) return;
+
+  const reply = await h.service.postMessage(
+    ALICE,
+    postInput({
+      clientId: "reply" as ClientId,
+      threadId: parent.message.id,
+      body: body("reply"),
+    }),
+  );
+  assert.equal(reply.ok, true);
+  if (!reply.ok) return;
+  assert.equal(reply.message.threadId, parent.message.id);
+
+  const missing = await h.service.postMessage(
+    ALICE,
+    postInput({
+      clientId: "bad-thread" as ClientId,
+      threadId: MISSING,
+      body: body("nope"),
+    }),
+  );
+  assert.deepEqual(missing, { ok: false, reason: "invalid_thread" });
+});

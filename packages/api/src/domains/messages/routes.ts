@@ -1,5 +1,5 @@
 import type { ArtifactId, AttachmentId, MessageId, UserId } from "@denser/contracts";
-import { EditMessageInput, ListMessagesQuery, PostMessageInput } from "@denser/contracts";
+import { EditMessageInput, ListMessagesQuery, ListThreadMessagesQuery, PostMessageInput } from "@denser/contracts";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requireArtifactAccess } from "../tenancy/access.js";
@@ -53,10 +53,46 @@ export const messageRoutes = new Hono<{ Variables: Variables }>()
         if (result.reason === "invalid_message") {
           return c.json({ error: "Message body or attachment is required" }, 400);
         }
+        if (result.reason === "invalid_thread") {
+          return c.json({ error: "Invalid thread" }, 400);
+        }
         return c.json({ error: "Conversation not found" }, 404);
       }
 
       return c.json({ message: result.message }, 201);
+    },
+  )
+  .get(
+    "/conversations/:conversationId/messages/:threadId/thread",
+    zValidator(
+      "query",
+      ListThreadMessagesQuery.pick({ size: true, cursor: true, direction: true }),
+    ),
+    async (c) => {
+      const userId = c.get("user").id as UserId;
+      const conversationId = c.req.param("conversationId") as ArtifactId;
+      const threadId = c.req.param("threadId") as MessageId;
+      const result = await defaultMessageService.listThreadMessages(userId, {
+        conversationId,
+        threadId,
+        ...c.req.valid("query"),
+      });
+
+      if (!result.ok) {
+        if (result.reason === "invalid_cursor") {
+          return c.json({ error: "Invalid cursor" }, 400);
+        }
+        if (result.reason === "invalid_thread") {
+          return c.json({ error: "Invalid thread" }, 400);
+        }
+        return c.json({ error: "Conversation not found" }, 404);
+      }
+
+      return c.json({
+        messages: result.messages,
+        nextCursor: result.nextCursor,
+        prevCursor: result.prevCursor,
+      });
     },
   )
   .patch(

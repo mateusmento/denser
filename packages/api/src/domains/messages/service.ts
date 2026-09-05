@@ -2,6 +2,7 @@ import type {
   ArtifactId,
   AttachmentId,
   ListMessagesQuery,
+  ListThreadMessagesQuery,
   MessageDto,
   MessageId,
   PostMessageInput,
@@ -25,9 +26,18 @@ export type ListMessagesResult =
     }
   | { ok: false; reason: "not_found" | "invalid_cursor" };
 
+export type ListThreadMessagesResult =
+  | {
+      ok: true;
+      messages: MessageDto[];
+      nextCursor: string | null;
+      prevCursor: string | null;
+    }
+  | { ok: false; reason: "not_found" | "invalid_cursor" | "invalid_thread" };
+
 export type PostMessageResult =
   | { ok: true; message: MessageDto }
-  | { ok: false; reason: "not_found" | "invalid_message" };
+  | { ok: false; reason: "not_found" | "invalid_message" | "invalid_thread" };
 
 export type EditMessageResult =
   | { ok: true; message: MessageDto }
@@ -76,6 +86,10 @@ export type MessageService = {
     userId: UserId,
     query: ListMessagesQuery,
   ): Promise<ListMessagesResult>;
+  listThreadMessages(
+    userId: UserId,
+    query: ListThreadMessagesQuery,
+  ): Promise<ListThreadMessagesResult>;
   postMessage(userId: UserId, input: PostMessageInput): Promise<PostMessageResult>;
   editMessage(userId: UserId, messageId: MessageId, body: unknown): Promise<EditMessageResult>;
   deleteMessage(userId: UserId, messageId: MessageId): Promise<DeleteMessageResult>;
@@ -107,6 +121,38 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       cursor,
       direction: query.direction ?? (query.around ? "around" : "next"),
       ...(query.around ? { anchorId: query.around } : {}),
+    });
+
+    return toListResult(rows);
+  }
+
+  async function listThreadMessages(
+    userId: UserId,
+    query: ListThreadMessagesQuery,
+  ): Promise<ListThreadMessagesResult> {
+    const ctx = await deps.access(userId, query.conversationId);
+    if (!ctx) {
+      return { ok: false as const, reason: "not_found" as const };
+    }
+
+    const parent = await repo.findMessageById(query.threadId);
+    if (!parent || parent.conversationId !== query.conversationId) {
+      return { ok: false as const, reason: "invalid_thread" as const };
+    }
+
+    const size = clampSize(query.size);
+    let cursor: MessageCursor | null = null;
+    if (query.cursor) {
+      cursor = decodeCursor(query.cursor);
+      if (!cursor) {
+        return { ok: false as const, reason: "invalid_cursor" as const };
+      }
+    }
+
+    const rows = await repo.listThreadMessages(query.threadId, {
+      size,
+      cursor,
+      direction: query.direction ?? "next",
     });
 
     return toListResult(rows);
@@ -148,10 +194,18 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       return { ok: true as const, message: await messageDtoFor(duplicate) };
     }
 
+    const threadId = input.threadId ?? null;
+    if (threadId !== null) {
+      const parent = await repo.findMessageById(threadId);
+      if (!parent || parent.conversationId !== input.conversationId) {
+        return { ok: false as const, reason: "invalid_thread" as const };
+      }
+    }
+
     const row = await repo.insertMessage({
       rootSpaceId: ctx.rootSpaceId,
       conversationId: input.conversationId,
-      threadId: input.threadId ?? null,
+      threadId,
       quotesId: input.quotesId ?? null,
       authorId: userId,
       body: input.body ?? null,
@@ -225,6 +279,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
 
   return {
     listMessagesForConversation,
+    listThreadMessages,
     postMessage,
     editMessage,
     deleteMessage,

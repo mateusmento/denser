@@ -6,12 +6,12 @@ import type {
   SpaceId,
   UserId,
 } from "@denser/contracts";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, max, sql } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { messageAttachment } from "../../db/schema/attachment.js";
 import { message } from "../../db/schema/message.js";
 import type { MessageCursor } from "./cursor.js";
-import type { MessageRepository, MessageRow } from "./types.js";
+import type { MessageRepository, MessageRow, ThreadListOptions, ThreadSummaryRow } from "./types.js";
 
 async function loadAttachmentIds(
   messageIds: readonly MessageId[],
@@ -44,6 +44,20 @@ async function fetchWindow(input: {
     .select()
     .from(message)
     .where(and(eq(message.conversationId, input.conversationId), input.where ?? undefined))
+    .orderBy(...input.orderBy)
+    .limit(input.size);
+}
+
+async function fetchThreadWindow(input: {
+  threadId: MessageId;
+  size: number;
+  where: ReturnType<typeof sql> | undefined;
+  orderBy: ReturnType<typeof sql>[];
+}): Promise<MessageRow[]> {
+  return db
+    .select()
+    .from(message)
+    .where(and(eq(message.threadId, input.threadId), input.where ?? undefined))
     .orderBy(...input.orderBy)
     .limit(input.size);
 }
@@ -133,6 +147,58 @@ async function listAround(
   return [...older.reverse(), anchor, ...newer];
 }
 
+/**
+ * List thread replies (messages where `thread_id` = parent), ascending by `(created_at, id)`.
+ *
+ * Same cursor semantics as `listMessages`, without the `around` direction.
+ */
+async function listThreadMessages(
+  threadId: MessageId,
+  opts: ThreadListOptions,
+): Promise<MessageRow[]> {
+  if (opts.direction === "prev" && opts.cursor) {
+    return fetchThreadWindow({
+      threadId,
+      size: opts.size,
+      where: sql`(${message.createdAt}, ${message.id}) > (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      orderBy: [asc(message.createdAt), asc(message.id)],
+    });
+  }
+
+  if (opts.direction === "next" && opts.cursor) {
+    const rows = await fetchThreadWindow({
+      threadId,
+      size: opts.size,
+      where: sql`(${message.createdAt}, ${message.id}) < (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      orderBy: [desc(message.createdAt), desc(message.id)],
+    });
+    return rows.reverse();
+  }
+
+  const rows = await fetchThreadWindow({
+    threadId,
+    size: opts.size,
+    where: undefined,
+    orderBy: [desc(message.createdAt), desc(message.id)],
+  });
+  return rows.reverse();
+}
+
+async function countThreadReplies(threadId: MessageId): Promise<ThreadSummaryRow> {
+  const [row] = await db
+    .select({
+      replyCount: count(),
+      lastReplyAt: max(message.createdAt),
+    })
+    .from(message)
+    .where(eq(message.threadId, threadId));
+
+  return {
+    replyCount: Number(row?.replyCount ?? 0),
+    lastReplyAt: row?.lastReplyAt ?? null,
+  };
+}
+
 async function findMessageById(id: MessageId): Promise<MessageRow | undefined> {
   return db.query.message.findFirst({ where: eq(message.id, id) });
 }
@@ -209,6 +275,8 @@ async function softDeleteMessage(id: MessageId, authorId: UserId): Promise<Messa
 
 export const messageRepository: MessageRepository = {
   listMessages,
+  listThreadMessages,
+  countThreadReplies,
   findMessageById,
   findClientMessage,
   insertMessage,

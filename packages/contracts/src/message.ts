@@ -77,6 +77,27 @@ export const PostMessageResponse = z.object({
 });
 export type PostMessageResponse = z.infer<typeof PostMessageResponse>;
 
+export const ListThreadMessagesQuery = z.object({
+  conversationId: ArtifactId,
+  threadId: MessageId,
+  size: z.number().int().positive().optional(),
+  cursor: z.string().optional(),
+  direction: ListMessagesDirection.optional(),
+});
+export type ListThreadMessagesQuery = z.infer<typeof ListThreadMessagesQuery>;
+
+export const ThreadSummaryDto = z.object({
+  threadId: MessageId,
+  replyCount: z.number().int().nonnegative(),
+  lastReplyAt: z.string().nullable(),
+});
+export type ThreadSummaryDto = z.infer<typeof ThreadSummaryDto>;
+
+export const ThreadSummaryResponse = z.object({
+  thread: ThreadSummaryDto,
+});
+export type ThreadSummaryResponse = z.infer<typeof ThreadSummaryResponse>;
+
 export const MESSAGE_CREATED_EVENT = "message.created" as const;
 export const MESSAGE_UPDATED_EVENT = "message.updated" as const;
 export const MESSAGE_DELETED_EVENT = "message.deleted" as const;
