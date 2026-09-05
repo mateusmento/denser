@@ -87,7 +87,7 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Me
 | Mention / image / attachment | MessageComposer action row                      |                                                                       |
 | Code block (expand/collapse) | Message / composer rich text                    | Long blocks peek; **floating Collapse** (Floating UI) — [below](#code-blocks-in-timeline) |
 | Poll insert                  | MessageComposer action row                      | Messaging cut (separate task)                                 |
-| Screen recording / schedule  | MessageComposer action row                      | Both in messaging cut (separate tasks); recording must **attach**, not download-only |
+| Screen recording / schedule  | MessageComposer action row                      | Recording: **Loom-style** pre-record layout + attach — [SCREEN-RECORDING.md](../SCREEN-RECORDING.md); schedule separate task |
 | React to message             | Message                                         |                                                                       |
 | Edit / delete own message    | Message actions                                 | Permission rules in feature spec                                      |
 | Open / reply in thread       | Message → ThreadPane                            | Desktop **split pane**; small viewports **full replace** — [below](#thread-layout) |

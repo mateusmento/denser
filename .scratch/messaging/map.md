@@ -1,71 +1,91 @@
 # Messaging effort — map
 
-**Effort:** messaging (conversations + attachments + drafts + scheduling foundation)  
-**Specs (SoT):** [CONVERSATIONS.md](../../docs/CONVERSATIONS.md) · [ATTACHMENTS.md](../../docs/ATTACHMENTS.md) · [MESSAGE-DRAFTS.md](../../docs/MESSAGE-DRAFTS.md) · [SCHEDULING.md](../../docs/SCHEDULING.md) · [ui-surfaces/conversation.md](../../docs/ui-surfaces/conversation.md)  
-**Interfaces:** [interfaces.md](./interfaces.md) — **scaffold fills these; parallel tickets consume them**  
-**Tracker:** local markdown under `.scratch/messaging/issues/`
+**Coverage matrix:** [COVERAGE.md](./COVERAGE.md) — full api + app task list for Conversations, Drafts, Attachments, Scheduling  
+**Delivery chunks:** [CHUNKS.md](./CHUNKS.md) — product-sized groupings, upload UI callouts, parallel lanes  
+**Interfaces:** [interfaces.md](./interfaces.md)  
+**PR policy:** [PR-POLICY.md](./PR-POLICY.md) — **every ticket → one PR for maintainer review**
 
 ## Goal
 
-Ship tracer-bullet work so **multiple agents can open PRs in parallel** after a thin **interface scaffold** lands. Prefer contracts/ports/schema seams over shared mutable implementation files.
+Complete implementation of the four messaging domain docs with **explicit backend and frontend tickets**. Presentational components exist in `packages/app/src/features/conversation/` — app tickets **wire real API/sync**, not rebuild chrome from scratch.
+
+**Frontend skill (app/full tickets):** agents **must** read [frontend-patterns](../../../.cursor/skills/frontend-patterns/SKILL.md) before implementing App criteria — presentational/container split, sync vs UI composables, TanStack Query/DB, 409 merge-retry, folder structure, Storybook for presentationals.
+
+**Backend skill (api/full tickets):** agents **must** read [codebase-design](../../../.cursor/skills/codebase-design/SKILL.md) before implementing API criteria — deep modules at clean seams (ports, handlers, repositories), thin HTTP layer, test through the interface. See [interfaces.md](./interfaces.md) for messaging port boundaries.
 
 ## Waves
 
-| Wave | Tickets | Parallel? |
+| Wave | Tickets | Notes |
 | --- | --- | --- |
-| **0 — Scaffold** | 01 → 02 | Sequential (02 after 01) |
-| **1 — Parallel** | 03–09 | Yes — only blocked by 02 |
-| **2 — Integration** | 10–13 | After listed blockers |
-| **3 — Later** | 14+ | After wave 2 / product phasing |
+| **0** | **01** scaffold | One combined PR (contracts + schema + ports) |
+| **1** | **02–15** | Conversations core (api then app pairs) |
+| **2** | **16–21** | Attachments (api chain + composer/timeline UI) |
+| **3** | **22–23** | Drafts api + app |
+| **4** | **24–27** | Scheduling api + app + recurrence |
+| **5** | **28–29** | Polls, recording (optional tail) |
 
-## Agent workflow (every ticket)
+## Agent workflow
 
-1. **Claim** — set `Status: claimed` on the issue file (first writer wins). Do not claim blocked tickets.
-2. **Branch** — from the latest default branch that already contains merged blockers:  
-   `git checkout -b agent/messaging-<NN>-<slug>`
-3. **Implement** — only this ticket’s acceptance criteria. Respect **Owns / Must not touch** below and in the issue.
-4. **Verify** — typecheck + targeted tests; full suite if feasible.
-5. **Commit** on the feature branch (user/agent may commit when asked).
-6. **Push + PR** — `git push -u origin HEAD` then `gh pr create` with:
-   - title: `[messaging <NN>] <ticket title>`
-   - body: link to `.scratch/messaging/issues/<file>`, checklist of acceptance criteria, note blockers already merged
-7. **Resolve** — after PR merge, set `Status: resolved` and append a one-line pointer under **Decisions-so-far** here.
+1. Pick an unblocked ticket from [COVERAGE.md](./COVERAGE.md) (`ready-for-agent`, not `claimed`).
+2. Set `Status: claimed` on the issue file.
+3. **If `Layer: api` or `full`:** read [codebase-design](../../../.cursor/skills/codebase-design/SKILL.md) — deep modules, seams, ports per [interfaces.md](./interfaces.md); thin handlers.
+4. **If `Layer: app` or `full`:** read [frontend-patterns](../../../.cursor/skills/frontend-patterns/SKILL.md) and load only the references/rules you need (e.g. `presentational-container`, `composables`, `folder-structure`, `async-ux`).
+5. Branch `agent/messaging-<NN>-<slug>` from `main` (with blockers merged).
+6. Implement **only** that ticket’s API and/or App criteria.
+7. `pnpm typecheck` (+ tests for touched packages). App tickets: add/update Storybook stories for touched presentationals.
+8. Commit, push, `gh pr create` — title `[messaging NN] …` — **do not merge**.
+9. After maintainer merges: `Status: resolved`; note in Decisions-so-far.
 
-Do **not** edit other open tickets’ owned paths. Do **not** “helpfully” expand scope into a sibling ticket.
+## Session handoff (opencode / long runs)
 
-## Ownership (conflict avoidance)
+Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,000 tokens** — answers get less reliable, context gets noisy, and the agent may contradict earlier decisions. **Do not keep pushing in the same session** once you notice that slide.
 
-| Area | Owner ticket(s) |
-| --- | --- |
-| `@denser/contracts` messaging modules | **01** (discriminated ScheduledJob payloads + factories + parse) |
-| `packages/api` drizzle messaging schema + migrations | **02** |
-| `BlobStore` port + S3/R2 adapters | **06** |
-| `AttachmentReferences` service + reclaim | **07** |
-| Message list/send/window API + timeline sync | **03** |
-| Quote preview join + jump | **04** |
-| Threads API + ThreadPane wiring | **05** |
-| Message drafts API + composer hydrate | **08** |
-| ScheduledJob runner (claim/`next_run_at`) | **09** |
-| Typing + presence sockets/UI | **10** (wave 2) |
-| Schedule message product (fire → PostMessage) | **11** |
-| Unread divider + mark-read-on-open | **12** |
-| `conversation_member` → `conversation_peer` | **13** |
+**Hand off to a fresh session instead:**
 
-If two tickets must touch the same file, prefer **expand** (new module) over editing the shared file; otherwise sequence them.
+1. **Stop** before making large or irreversible changes in a degraded session.
+2. **Persist state** on the branch: commit WIP if useful, or leave a clean partial state with a clear last-good commit.
+3. **Write a short handoff** (issue comment, PR draft, or `.scratch/messaging/handoffs/NN-<slug>.md`) with:
+   - Ticket + branch name
+   - What is **done** vs **remaining** (checklist from the issue)
+   - Files touched / key decisions
+   - Blockers, failing tests, or open questions
+   - PR link or “PR not opened yet”
+4. **New session starts from artifacts**, not chat history: read the **issue file**, [map.md](./map.md), [interfaces.md](./interfaces.md), and the handoff note — then continue on the **same branch**.
+
+**Signals to hand off early:** repeating mistakes, forgetting ticket scope, fighting merge/typecheck loops, or re-litigating decisions already in domain docs.
+
+## Scaffold status (2026-09-05)
+
+Opencode implemented **01** on `agent/messaging-02-scaffold-schema-ports` (uncommitted). **One PR** for combined scaffold recommended. Wave 1 starts after merge.
 
 ## Decisions-so-far
 
-- Domain grill locks live in the docs above (2026-09-04 commit `2656e48`).
-- Parallelism strategy: **interfaces first** (contracts + ports + schema), then vertical slices against frozen seams.
-- Drafts v1: server-authoritative (no dual-write). Scheduling: materialize `next_run_at`; occurrence_key for delivery.
-- Local tracker: `.scratch/messaging/issues/` (see denser issue-tracker-local convention).
+- Full-stack coverage via explicit api/app ticket pairs ([COVERAGE.md](./COVERAGE.md)).
+- Scaffold = single PR; wave-1+ = one PR per ticket.
+- Drafts v1 server-authoritative; scheduling typed payloads + `next_run_at`.
+- **Task pack v2** (29 tickets) merged archive 16-ticket pack — see **Updates** section in each issue for renumber map.
 
-## Fog / open
+### Archive → v2 renumber map
 
-- Exact TTL hours for drafts; upload size limits.
-- Whether 04/05 merge into 03 if agent context is large — keep separate for parallel PRs unless human merges tickets.
-- Meetings A/V tasks are **out of this pack** ([MEETINGS.md](../../docs/MEETINGS.md)).
+| Archive | v2 tickets | Change |
+| --- | --- | --- |
+| 01 + 02 | **01** | Combined scaffold |
+| 03 | **02** api + **03** app | Split list/send |
+| 04 | **04** api + **05** app | Split quotes |
+| 05 | **06** api + **07** app | Split threads |
+| 06 | **16** | BlobStore |
+| 07 | **17** | Attachment refs |
+| 08 | **22** api + **23** app | Split drafts |
+| 09 | **24** | Scheduler |
+| 10 | **10** api + **11** app | Split typing/presence |
+| 11 | **25** api + **26** app + **27** | Split schedule + recurrence |
+| 12 | **12** api + **13** app | Split unread |
+| 13 | **14** api + **15** app | Split DM peers |
+| 14 | **21** | Files pane |
+| 15 | **28** | Polls |
+| 16 | **29** | Recording (+ Loom spec) |
+| — | **08**, **09**, **18**–**20** | New splits (reactions, actions, upload chain) |
 
 ## Frontier
 
-Unblocked + `ready-for-agent` + not `claimed`/`resolved`. After scaffold merges, wave-1 tickets are the frontier.
+After **01** merges: **02, 16, 17, 22, 24** (api, parallel) → then dependent app tickets.

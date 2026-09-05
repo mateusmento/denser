@@ -7,7 +7,7 @@
 **Frontend window pattern:** [FRONTEND-ARCHITECTURE.md](./FRONTEND-ARCHITECTURE.md); FA ADR `0012-chat-window-and-quotes`  
 **Sources:** epicstory channels; frontend-architecture chat window; denser filing model  
 
-**Related:** [SCHEDULING.md](./SCHEDULING.md) (scheduled messages / jobs) · [ATTACHMENTS.md](./ATTACHMENTS.md) (blob pool + refs) · [MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md) · agent pack [`.scratch/messaging/`](../.scratch/messaging/)
+**Related:** [SCHEDULING.md](./SCHEDULING.md) (scheduled messages / jobs) · [ATTACHMENTS.md](./ATTACHMENTS.md) (blob pool + refs) · [MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md) · tasks [`.scratch/messaging/COVERAGE.md`](../.scratch/messaging/COVERAGE.md)
 
 Conversation is the denser messaging domain: **regular** (space-filed) and **direct** (DM) artifacts, messages, quotes, threads, reactions, presence, and related messaging-cut objects. Voice/video lives in [MEETINGS.md](./MEETINGS.md), not here.
 
@@ -296,15 +296,18 @@ Prefer socket rooms for **conversations the user can read** (not only active tab
 
 ## Messaging cut (task sequence)
 
-Agent-executable tickets (branches/PRs): **[`.scratch/messaging/`](../.scratch/messaging/)** — interfaces first, then parallel slices.
+Agent-executable tickets (api + app): **[`.scratch/messaging/COVERAGE.md`](../.scratch/messaging/COVERAGE.md)** — 29 tickets across Conversations, Attachments, Drafts, Scheduling.
 
-1. Core list/send + window + quotes + threads → issues 03–05  
-2. Typing + presence → 10  
-3. Attachments / images → 06–07 (+ drafts 08)  
-4. Polls → 15  
-5. Schedule (+ recurrence) → 09 then 11  
-6. Recording → attach → 16  
-7. Unread badges + New divider + jump pill + mark-read-on-open → 12  
+| Wave | Tickets | Focus |
+| --- | --- | --- |
+| 0 | 01 | Scaffold (contracts + schema + ports) |
+| 1 | 02–15 | Conversations: messages, quotes, threads, reactions, typing, unread, DM peers |
+| 2 | 16–21 | Attachments: blobstore, refs, upload, composer/timeline UI, files pane |
+| 3 | 22–23 | Drafts api + composer sync |
+| 4 | 24–27 | Scheduling runner, schedule message, UI, recurrence |
+| 5 | 28–29 | Polls, recording → attach |
+
+Each ticket is **api**, **app**, or **full** — see matrix for reviewer-visible UI work.  
 
 ---
 
@@ -324,6 +327,7 @@ Agent-executable tickets (branches/PRs): **[`.scratch/messaging/`](../.scratch/m
 
 | Date | Change |
 | --- | --- |
+| 2026-09-05 | Full api+app task matrix (COVERAGE.md); 29 tickets replace backend-only pack. |
 | 2026-09-04 | Message drafts → MESSAGE-DRAFTS.md (server-authoritative v1). |
 | 2026-09-04 | Point schedule + attachments at SCHEDULING.md / ATTACHMENTS.md. |
 | 2026-09-04 | Grill locks: peers (not leave), blob port S3+R2, unread open/mark-read, quote constants, soft-archive. |

@@ -2,7 +2,7 @@
 
 **Status:** Draft (domain + realtime sketch; not in conversation messaging cut)  
 **Filing:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — Artifact kind `meeting_room`  
-**UI:** TBD `ui-surfaces/meeting-room.md` (catalog: [UI-SURFACES.md](./UI-SURFACES.md))  
+**UI:** [ui-surfaces/meeting-room.md](./ui-surfaces/meeting-room.md) (screen share specified; other in-call chrome TBD)  
 **Sources:** epicstory2 realtime/channel decisions; epicstory PeerJS meetings; Google Meet / Discord / Zoom UX references  
 
 **Related:** [SCHEDULING.md](./SCHEDULING.md) (`meeting_start` / `meeting_reminder` jobs) · [ATTACHMENTS.md](./ATTACHMENTS.md) (recordings)
@@ -113,7 +113,7 @@ Do **not** put persistent cam/mic controls in the app shell sidebar (workflow no
 | **Speaker** | Active speaker (or pinned) large; others filmstrip |
 | **Grid** | Meet-like fill: **2–3 → horizontal columns**; **4+ → balanced grid** maximizing viewport (avoid tiny equal stamps for all counts) |
 | **Pin** | User pins a tile; overrides active-speaker prominence while pinned |
-| **Preference** | Remember last layout per user; factory default: grid when few participants, speaker when crowded or on screenshare (tunable) |
+| **Preference** | Remember last layout per user; factory default: grid when few participants, speaker when crowded or on screenshare (tunable) — [layout side-effects](./ui-surfaces/meeting-room.md#layout-side-effects) |
 
 ---
 
@@ -126,7 +126,7 @@ Do **not** put persistent cam/mic controls in the app shell sidebar (workflow no
 | Start / End meeting | M0/M1 | Hosts; empty auto-end grace |
 | Lobby panel (popover/dialog/sheet) | M0/M1 | Devices + attendees |
 | Join open / knock + Admit | M1 | |
-| LiveKit A/V + screen share | M1 | Self-host |
+| LiveKit A/V + screen share | M1 | Self-host; tile layout + PiP — [meeting-room.md](./ui-surfaces/meeting-room.md#screen-share-m1) |
 | Active speaker | M1 | |
 | Heartbeat / disconnect TTL | M1 | |
 | Layout speaker + Meet grid + pin | M1 | |
@@ -190,7 +190,7 @@ Do **not** put persistent cam/mic controls in the app shell sidebar (workflow no
 | **LeaveMeeting** | left_at; if zero attendees → grace → End |
 | **EndMeeting** | Host; tear down LiveKit |
 | **KickAttendee** | Host |
-| **ToggleAttendeeMedia** | Self (force-mute TBD) |
+| **ToggleAttendeeMedia** | Self (force-mute TBD); includes screen share toggle — [meeting-room.md](./ui-surfaces/meeting-room.md) |
 | **HeartbeatMeeting** | TTL |
 | **AttachRecording** | M3 — [ATTACHMENTS.md](./ATTACHMENTS.md) A4 |
 

@@ -164,7 +164,7 @@ Pure predicates (eligible / gcable) stay separate from I/O — epicstory `attach
 | Inline images | TipTap node refs attachment id; tiles = joins − ids already in doc |
 | Conversation files | List delivered joins (Slack channel files); delete = `releaseAttachment` with confirm |
 | Scheduled list | Hydrate from `load(scheduled)` |
-| Recording | Must **upload + attach** (Meeting and/or Message anchor) — not download-only |
+| Recording | Must **upload + attach** (Meeting and/or Message anchor) — not download-only. **Messaging composer:** Loom-style setup + circular webcam — [SCREEN-RECORDING.md](./SCREEN-RECORDING.md) |
 
 ---
 

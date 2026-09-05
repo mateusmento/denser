@@ -99,7 +99,7 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 | ---------------- | ----- |
 | Status           | Active (shell + UI shipped; messaging phased) |
 | Full domain spec | **[CONVERSATIONS.md](./CONVERSATIONS.md)** — decisions, model, features, commands/queries, constraints, events, quote preview, messaging cut |
-| Agent tickets    | **[`.scratch/messaging/`](../.scratch/messaging/)** — scaffold + parallel PR pack ([map.md](../.scratch/messaging/map.md), [interfaces.md](../.scratch/messaging/interfaces.md)) |
+| Agent tickets    | **[`.scratch/messaging/COVERAGE.md`](../.scratch/messaging/COVERAGE.md)** — full api + app matrix ([map.md](../.scratch/messaging/map.md)) |
 | Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
 | Filing           | [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — `kind = conversation` |
 | v1 scope         | Regular + direct artifacts; messaging with quotes ∥ threads; virtualized cursor windows |

@@ -11,6 +11,8 @@ Canonical product/architecture specs are in `docs/`, not duplicated here.
 | Scheduling | [docs/SCHEDULING.md](../../docs/SCHEDULING.md) |
 | Meetings (out of pack) | [docs/MEETINGS.md](../../docs/MEETINGS.md) |
 
-**Interfaces for parallel agents:** [interfaces.md](./interfaces.md)  
+**Interfaces:** [interfaces.md](./interfaces.md)  
+**Coverage (api + app):** [COVERAGE.md](./COVERAGE.md)  
 **Execution map:** [map.md](./map.md)  
-**Tickets:** [issues/](./issues/)
+**Tickets:** [issues/](./issues/)  
+**PR policy:** [PR-POLICY.md](./PR-POLICY.md)

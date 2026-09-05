@@ -1,8 +1,13 @@
 import { relations } from "drizzle-orm";
 import { account, session, user } from "./auth.js";
 import { artifact } from "./artifact.js";
+import { attachment, messageAttachment } from "./attachment.js";
 import { conversation, conversationMember } from "./conversation.js";
+import { conversationPeer } from "./conversation-peer.js";
 import { document } from "./document.js";
+import { message, readState } from "./message.js";
+import { messageDraft, messageDraftAttachment } from "./message-draft.js";
+import { scheduledJob, scheduledJobAttachment } from "./scheduled-job.js";
 import { space, spaceMembership } from "./space.js";
 import { documentType, workflow, workflowStage } from "./workflow.js";
 
@@ -60,6 +65,7 @@ export const artifactRelations = relations(artifact, ({ one, many }) => ({
     references: [conversation.artifactId],
   }),
   conversationMembers: many(conversationMember),
+  conversationPeers: many(conversationPeer),
 }));
 
 export const conversationRelations = relations(conversation, ({ one }) => ({
@@ -76,6 +82,17 @@ export const conversationMemberRelations = relations(conversationMember, ({ one 
   }),
   user: one(user, {
     fields: [conversationMember.userId],
+    references: [user.id],
+  }),
+}));
+
+export const conversationPeerRelations = relations(conversationPeer, ({ one }) => ({
+  conversation: one(artifact, {
+    fields: [conversationPeer.conversationArtifactId],
+    references: [artifact.id],
+  }),
+  user: one(user, {
+    fields: [conversationPeer.userId],
     references: [user.id],
   }),
 }));
@@ -123,5 +140,97 @@ export const documentTypeRelations = relations(documentType, ({ one }) => ({
   workflow: one(workflow, {
     fields: [documentType.workflowId],
     references: [workflow.id],
+  }),
+}));
+
+export const messageRelations = relations(message, ({ one, many }) => ({
+  conversation: one(artifact, {
+    fields: [message.conversationId],
+    references: [artifact.id],
+  }),
+  author: one(user, {
+    fields: [message.authorId],
+    references: [user.id],
+  }),
+  attachments: many(messageAttachment),
+}));
+
+export const readStateRelations = relations(readState, ({ one }) => ({
+  conversation: one(artifact, {
+    fields: [readState.conversationId],
+    references: [artifact.id],
+  }),
+  user: one(user, {
+    fields: [readState.userId],
+    references: [user.id],
+  }),
+}));
+
+export const attachmentRelations = relations(attachment, ({ one, many }) => ({
+  rootSpace: one(space, {
+    fields: [attachment.rootSpaceId],
+    references: [space.id],
+  }),
+  conversation: one(artifact, {
+    fields: [attachment.conversationId],
+    references: [artifact.id],
+  }),
+  uploadedByUser: one(user, {
+    fields: [attachment.uploadedBy],
+    references: [user.id],
+  }),
+  messageJoins: many(messageAttachment),
+}));
+
+export const messageAttachmentRelations = relations(messageAttachment, ({ one }) => ({
+  message: one(message, {
+    fields: [messageAttachment.messageId],
+    references: [message.id],
+  }),
+  attachment: one(attachment, {
+    fields: [messageAttachment.attachmentId],
+    references: [attachment.id],
+  }),
+}));
+
+export const messageDraftRelations = relations(messageDraft, ({ one, many }) => ({
+  conversation: one(artifact, {
+    fields: [messageDraft.conversationId],
+    references: [artifact.id],
+  }),
+  author: one(user, {
+    fields: [messageDraft.authorId],
+    references: [user.id],
+  }),
+  attachments: many(messageDraftAttachment),
+}));
+
+export const messageDraftAttachmentRelations = relations(messageDraftAttachment, ({ one }) => ({
+  draft: one(messageDraft, {
+    fields: [messageDraftAttachment.draftId],
+    references: [messageDraft.id],
+  }),
+  attachment: one(attachment, {
+    fields: [messageDraftAttachment.attachmentId],
+    references: [attachment.id],
+  }),
+}));
+
+export const scheduledJobRelations = relations(scheduledJob, ({ one, many }) => ({
+  rootSpace: one(space, {
+    fields: [scheduledJob.rootSpaceId],
+    references: [space.id],
+  }),
+  attachments: many(scheduledJobAttachment),
+}));
+
+export const scheduledJobAttachmentRelations = relations(scheduledJobAttachment, ({ one }) => ({
+  job: one(scheduledJob, {
+    fields: [scheduledJobAttachment.jobId],
+    references: [scheduledJob.id],
+  }),
+  attachment: one(attachment, {
+    fields: [scheduledJobAttachment.attachmentId],
+    references: [attachment.id],
   }),
 }));
