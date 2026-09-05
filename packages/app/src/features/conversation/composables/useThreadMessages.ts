@@ -4,9 +4,11 @@ import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
   MESSAGE_UPDATED_EVENT,
+  REACTION_UPDATED_EVENT,
   CONVERSATION_SUBSCRIBE_EVENT,
   CONVERSATION_UNSUBSCRIBE_EVENT,
 } from "@denser/contracts";
+import type { ReactionUpdatedEvent } from "@denser/contracts";
 import type { DenserSocket } from "@denser/api-client";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
@@ -26,6 +28,7 @@ import {
   MESSAGE_PAGE_SIZE,
   type MessagesPageParam,
 } from "../lib/message-cache";
+import { applyReactionUpdated } from "../lib/reaction-cache";
 import type { ListMessagesResponse } from "@denser/contracts";
 import { toConversationMessageView } from "../lib/toConversationMessageView";
 import type { ConversationMessageView, ConversationThreadView } from "../types";
@@ -171,6 +174,18 @@ export function useThreadMessages(
     syncQueryData(applyMessageDeleted(current, event));
   }
 
+  function ingestReaction(event: ReactionUpdatedEvent) {
+    const conversationIdValue = conversation.value;
+    const threadIdValue = thread.value;
+    if (!conversationIdValue || !threadIdValue || event.conversationId !== conversationIdValue) return;
+    const current = readThreadMessagesQuery(queryClient, conversationIdValue, threadIdValue);
+    const next = applyReactionUpdated(current, event);
+    if (!next) return;
+    syncQueryData(next);
+    const message = flattenMessagePages(next).find((row) => row.id === event.messageId);
+    if (message) upsertInCollection(messagesCollection, message);
+  }
+
   let socket: DenserSocket | null = null;
   let cancelled = false;
 
@@ -181,6 +196,7 @@ export function useThreadMessages(
       socket.on(MESSAGE_CREATED_EVENT, ingestMessage);
       socket.on(MESSAGE_UPDATED_EVENT, ingestUpdate);
       socket.on(MESSAGE_DELETED_EVENT, ingestDelete);
+      socket.on(REACTION_UPDATED_EVENT, ingestReaction);
       if (conversation.value) {
         socket.emit(CONVERSATION_SUBSCRIBE_EVENT, { conversationId: conversation.value });
       }
@@ -206,6 +222,7 @@ export function useThreadMessages(
     socket.off(MESSAGE_CREATED_EVENT, ingestMessage);
     socket.off(MESSAGE_UPDATED_EVENT, ingestUpdate);
     socket.off(MESSAGE_DELETED_EVENT, ingestDelete);
+    socket.off(REACTION_UPDATED_EVENT, ingestReaction);
   });
 
   const sendMutation = useMutation({

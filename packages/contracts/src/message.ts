@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AttachmentDto } from "./attachment.js";
 import { ArtifactId, AttachmentId, ClientId, MessageId, UserId } from "./ids.js";
+import { ReactionAggregateDto } from "./reaction.js";
 
 export const MessageIdSchema = MessageId;
 export type { MessageId };
@@ -49,6 +50,7 @@ export const MessageDto = z.object({
   attachments: z.array(AttachmentDto).optional(),
   quoted: QuotedPreviewDto.nullable().optional(),
   wasScheduled: z.boolean().optional(),
+  reactions: z.array(ReactionAggregateDto).optional(),
 });
 export type MessageDto = z.infer<typeof MessageDto>;
 

@@ -7,6 +7,7 @@ import { conversationPeer } from "./conversation-peer.js";
 import { dmSidebarPreference } from "./dm-sidebar-preference.js";
 import { document } from "./document.js";
 import { message, readState } from "./message.js";
+import { messageReaction } from "./message-reaction.js";
 import { messageDraft, messageDraftAttachment } from "./message-draft.js";
 import { scheduledJob, scheduledJobAttachment } from "./scheduled-job.js";
 import { space, spaceMembership } from "./space.js";
@@ -154,6 +155,12 @@ export const messageRelations = relations(message, ({ one, many }) => ({
     references: [user.id],
   }),
   attachments: many(messageAttachment),
+  reactions: many(messageReaction),
+}));
+
+export const messageReactionRelations = relations(messageReaction, ({ one }) => ({
+  message: one(message, { fields: [messageReaction.messageId], references: [message.id] }),
+  user: one(user, { fields: [messageReaction.userId], references: [user.id] }),
 }));
 
 export const readStateRelations = relations(readState, ({ one }) => ({

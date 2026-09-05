@@ -75,7 +75,7 @@ export function toConversationMessageView(
     body: dto.body as JSONContent,
     createdAt: dto.createdAt,
     createdAtLabel: createdAtLabel(dto.createdAt),
-    reactions: [],
+    reactions: (dto.reactions ?? []).map((reaction) => ({ emoji: reaction.emoji, count: reaction.count, mine: reaction.reactedByMe })),
     replyCount: 0,
     quoted: dto.quoted ? toQuotedPreviewView(dto.quoted) : undefined,
     attachments: tileAttachments(dto),

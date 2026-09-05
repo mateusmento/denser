@@ -1,8 +1,9 @@
-import type { ArtifactId, MessageDto } from "@denser/contracts";
+import type { ArtifactId, MessageDto, ReactionUpdatedEvent } from "@denser/contracts";
 import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
   MESSAGE_UPDATED_EVENT,
+  REACTION_UPDATED_EVENT,
 } from "@denser/contracts";
 import type { DenserServer } from "./attach.js";
 import { conversationRoom } from "./rooms.js";
@@ -32,6 +33,11 @@ export function emitConversationEvent(
       server.to(room).emit(MESSAGE_DELETED_EVENT, payload);
       break;
   }
+}
+
+export function emitReactionUpdated(payload: ReactionUpdatedEvent): void {
+  if (!server) return;
+  server.to(conversationRoom(payload.conversationId)).emit(REACTION_UPDATED_EVENT, payload);
 }
 
 export { conversationRoom, userRoom, workspacePresenceRoom } from "./rooms.js";
