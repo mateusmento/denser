@@ -3,9 +3,9 @@
 **Chunk:** 0  
 **Layer:** api  
 **Domain:** all  
-**Status:** ready-for-agent  
+**Status:** resolved  
 **Blocked by:** None  
-**Branch:** `agent/messaging-01-scaffold`  
+**Branch:** `agent/messaging-01-scaffold` (merged to `main` as `11703b7`)  
 **Specs:** [interfaces.md](../interfaces.md) · [COVERAGE.md](../COVERAGE.md) · [CHUNKS.md](../CHUNKS.md)
 
 
@@ -64,4 +64,4 @@ Agent: follow [interfaces.md](../interfaces.md) names exactly. Opencode work may
 
 ## PR
 
-- [ ] `[messaging 01] Messaging scaffold (contracts + schema + ports)` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] Scaffold merged to `main` (`11703b7`) — direct commit per user request (bypassed one-PR policy for 01).

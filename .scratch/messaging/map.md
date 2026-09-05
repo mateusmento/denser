@@ -56,12 +56,12 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 ## Scaffold status (2026-09-05)
 
-Opencode implemented **01** on `agent/messaging-02-scaffold-schema-ports` (uncommitted). **One PR** for combined scaffold recommended. Wave 1 starts after merge.
+**01 merged to `main` (`11703b7`)** — contracts + schema + migration + port stubs committed directly (user-directed, bypassed one-PR policy for 01). Wave 1 api tickets unblocked: **02, 16, 17, 22, 24** run in parallel.
 
 ## Decisions-so-far
 
 - Full-stack coverage via explicit api/app ticket pairs ([COVERAGE.md](./COVERAGE.md)).
-- Scaffold = single PR; wave-1+ = one PR per ticket.
+- Scaffold committed directly to `main` (`11703b7`); wave-1+ = one PR per ticket.
 - Drafts v1 server-authoritative; scheduling typed payloads + `next_run_at`.
 - **Task pack v2** (29 tickets) merged archive 16-ticket pack — see **Updates** section in each issue for renumber map.
 
