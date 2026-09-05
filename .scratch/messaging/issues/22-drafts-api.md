@@ -3,7 +3,7 @@
 **Chunk:** 4  
 **Layer:** api  
 **Domain:** [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-22-drafts-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
