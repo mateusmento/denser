@@ -110,6 +110,15 @@ export function createInMemoryMessageRepository(): {
     return rows.get(id);
   }
 
+  async function findMessagesByIds(ids: readonly MessageId[]): Promise<Map<MessageId, MessageRow>> {
+    const out = new Map<MessageId, MessageRow>();
+    for (const id of ids) {
+      const row = rows.get(id);
+      if (row) out.set(id, row);
+    }
+    return out;
+  }
+
   async function findClientMessage(
     conversationId: ArtifactId,
     clientId: ClientId,
@@ -188,6 +197,7 @@ export function createInMemoryMessageRepository(): {
     listThreadMessages,
     countThreadReplies,
     findMessageById,
+    findMessagesByIds,
     findClientMessage,
     insertMessage,
     loadAttachmentIdsForMessage,

@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { requireArtifactAccess } from "../tenancy/access.js";
 import { findConversationByArtifactId } from "../conversations/repository.js";
 import { emitConversationEvent } from "../../realtime/emit.js";
+import { loadAuthorDisplay } from "./author-display.js";
 import { messageRepository } from "./repository.js";
 import { createMessageService, type MessageServiceDeps } from "./service.js";
 
@@ -167,6 +168,7 @@ const messageDeps: MessageServiceDeps = {
     commitSync,
   },
   emit: (conversationId, event, message) => emitConversationEvent(conversationId, event, message),
+  loadAuthorDisplay,
 };
 
 const defaultMessageService = createMessageService(messageDeps);
