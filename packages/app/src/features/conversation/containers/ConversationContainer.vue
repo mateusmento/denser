@@ -9,6 +9,7 @@ import { apiClient } from "@/lib/api";
 import { buildPersonRoster, personFromUserId } from "@/modules/presence/lib/person-label";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
+import { useMessageComposerScreenRecording } from "../composables/useMessageComposerScreenRecording";
 import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationPresence } from "../composables/useConversationPresence";
 import { useConversationReadState } from "../composables/useConversationReadState";
@@ -20,6 +21,7 @@ import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
+import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
 import type { ComposerActionId, ConversationIntroView, ConversationMessageView, ScheduleCommitPayload } from "../types";
@@ -141,6 +143,23 @@ watch(conversationId, () => {
 const channelAttachments = useComposerAttachments({
   conversationId,
   body: channelDraft,
+});
+
+const {
+  open: screenRecordingOpen,
+  setupView: screenRecordingView,
+  previewCanvas: screenRecordingPreviewCanvas,
+  openDialog: openScreenRecording,
+  onCancel: onScreenRecordingCancel,
+  onStart: onScreenRecordingStart,
+  onStop: onScreenRecordingStop,
+  onMoveCamera: onScreenRecordingMoveCamera,
+  webcamEnabled: screenRecordingWebcamEnabled,
+  micEnabled: screenRecordingMicEnabled,
+  systemAudioEnabled: screenRecordingSystemAudioEnabled,
+} = useMessageComposerScreenRecording({
+  stageFiles: (files) => channelAttachments.stageFiles(files),
+  disabled: () => !conversationId.value,
 });
 
 const threadAttachments = useComposerAttachments({
@@ -385,6 +404,10 @@ async function onThreadRetry() {
 
 function onAction(id: ComposerActionId) {
   if (id === "attach" || id === "image") return;
+  if (id === "record") {
+    openScreenRecording();
+    return;
+  }
   toast(`Coming soon · ${id}`);
 }
 
@@ -492,5 +515,19 @@ async function onThreadJumpToLatest() {
         @dismiss-upload="threadAttachments.dismissFailed"
       />
     </template>
+
+    <ScreenRecordingSetupDialog
+      v-model:open="screenRecordingOpen"
+      :view="screenRecordingView"
+      :preview-canvas="screenRecordingPreviewCanvas"
+      @cancel="onScreenRecordingCancel()"
+      @start="onScreenRecordingStart()"
+      @stop="onScreenRecordingStop()"
+      @move-camera="onScreenRecordingMoveCamera($event)"
+      @update:webcam-enabled="screenRecordingWebcamEnabled = $event"
+      @update:mic-enabled="screenRecordingMicEnabled = $event"
+      @update:system-audio-enabled="screenRecordingSystemAudioEnabled = $event"
+    />
+
   </ConversationSurface>
 </template>

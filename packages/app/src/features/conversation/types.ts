@@ -154,3 +154,19 @@ export type ConversationThreadView = {
   parent: ConversationMessageView;
   messages: readonly ConversationMessageView[];
 };
+
+export type ScreenRecordingPhase = "acquiring" | "setup" | "recording" | "finalizing";
+
+export type ScreenRecordingSetupView = {
+  phase: ScreenRecordingPhase;
+  error?: string;
+  webcamEnabled: boolean;
+  micEnabled: boolean;
+  systemAudioEnabled: boolean;
+  canStart: boolean;
+  elapsedLabel?: string;
+  previewAspectRatio: number;
+  cameraLayout: { x: number; y: number; diameter: number };
+  frameWidth: number;
+  frameHeight: number;
+};
