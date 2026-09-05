@@ -11,7 +11,9 @@ import { defaultChannelComposerView, defaultThreadComposerView } from "../compos
 import { useComposerAttachments } from "../composables/useComposerAttachments";
 import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationPresence } from "../composables/useConversationPresence";
+import { useConversationReadState } from "../composables/useConversationReadState";
 import { useConversationSync } from "../composables/useConversationSync";
+import { useMessageDraftSync } from "../composables/useMessageDraftSync";
 import { useThreadMessages } from "../composables/useThreadMessages";
 import { channelIntro, conversationMentionItems, schedulePresets } from "../fixtures";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
@@ -29,9 +31,6 @@ const conversationTitle = ref("");
 const conversationSync = useConversationSync(conversationId);
 conversationSync.bindComposeTitle(conversationTitle);
 
-const messagesSync = useConversationMessages(conversationId);
-const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
-
 const workspaceMembersQuery = useQuery({
   queryKey: computed(() => ["conversation-roster", conversationId.value] as const),
   enabled: computed(() => conversationId.value != null),
@@ -43,6 +42,35 @@ const workspaceMembersQuery = useQuery({
     return { members: detail.assignableMembers ?? detail.members, rootSpaceId };
   },
 });
+
+const readState = useConversationReadState(conversationId, {
+  rootSpaceId: computed(() => workspaceMembersQuery.data.value?.rootSpaceId ?? null),
+});
+
+const messagesSync = useConversationMessages(conversationId, {
+  openAnchor: computed(() => readState.openAnchor.value),
+});
+const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
+const pendingUnreadScroll = ref<MessageId | null>(null);
+
+watch(
+  () => readState.sessionDividerId.value,
+  (messageId) => {
+    if (messageId) pendingUnreadScroll.value = messageId;
+  },
+);
+
+watch(
+  () => [messagesSync.isLoading.value, pendingUnreadScroll.value] as const,
+  async ([loading, target]) => {
+    if (loading || !target) return;
+    pendingUnreadScroll.value = null;
+    await nextTick();
+    requestAnimationFrame(() => {
+      timelineRef.value?.scrollToMessage(target, { align: "center" });
+    });
+  },
+);
 
 const roster = computed(() =>
   buildPersonRoster(
@@ -79,6 +107,22 @@ const mentionItems = ref<MentionCandidate[]>([]);
 const editingMessageId = ref<MessageId | null>(null);
 const editingInThread = ref(false);
 
+const channelDraftSync = useMessageDraftSync(conversationId, () => null, {
+  enabled: () => editingMessageId.value == null || editingInThread.value,
+});
+const threadDraftSync = useMessageDraftSync(
+  conversationId,
+  () => activeThreadId.value ?? undefined,
+  {
+    enabled: () =>
+      activeThreadId.value != null &&
+      (editingMessageId.value == null || !editingInThread.value),
+  },
+);
+
+channelDraftSync.bindDraft(channelDraft);
+threadDraftSync.bindDraft(threadDraft);
+
 watch(conversationId, () => {
   activeThreadId.value = null;
   threadDraft.value = emptyDoc();
@@ -103,6 +147,7 @@ const channelHeader = computed(() => {
     members: viewers.slice(0, 3),
     presenceLabel: presence.presenceLabel.value,
     extraMemberCount: viewers.length > 3 ? viewers.length - 3 : undefined,
+    unreadCount: readState.unreadCount.value,
   };
 });
 
@@ -166,7 +211,7 @@ async function onChannelSend() {
 
   if (conversationSync.isCompose.value) {
     await conversationSync.sendInitialMessage(channelDraft.value);
-    channelDraft.value = emptyDoc();
+    await channelDraftSync.clearDraft(channelDraft);
     channelAttachments.clearAfterSend();
     return;
   }
@@ -176,7 +221,7 @@ async function onChannelSend() {
     attachmentIds,
     channelAttachments.collectAttachmentDtos(channelDraft.value),
   );
-  channelDraft.value = emptyDoc();
+  await channelDraftSync.clearDraft(channelDraft);
   channelAttachments.clearAfterSend();
 }
 
@@ -195,7 +240,7 @@ async function onThreadSend() {
   }
 
   await threadSync.send(threadDraft.value);
-  threadDraft.value = emptyDoc();
+  await threadDraftSync.clearDraft(threadDraft);
   threadAttachments.clearAfterSend();
 }
 
@@ -209,20 +254,20 @@ function onCancelThreadEdit() {
   clearEdit();
 }
 
-function onSchedule(payload: ScheduleCommitPayload) {
+async function onSchedule(payload: ScheduleCommitPayload) {
   toast(`Message scheduled · ${payload.whenLabel}`);
-  channelDraft.value = emptyDoc();
+  await channelDraftSync.clearDraft(channelDraft);
   channelAttachments.clearAfterSend();
 }
 
-function onThreadSchedule(payload: ScheduleCommitPayload) {
+async function onThreadSchedule(payload: ScheduleCommitPayload) {
   toast(`Reply scheduled · ${payload.whenLabel}`);
-  threadDraft.value = emptyDoc();
+  await threadDraftSync.clearDraft(threadDraft);
   threadAttachments.clearAfterSend();
 }
 
 function onReact(messageId: string, emoji: string) {
-  toast(`${emoji} on ${messageId}`);
+  void messagesSync.toggleReaction(messageId as MessageId, emoji);
 }
 
 function onOpenThread(messageId: string) {
@@ -231,7 +276,6 @@ function onOpenThread(messageId: string) {
 
 function onCloseThread() {
   activeThreadId.value = null;
-  threadDraft.value = emptyDoc();
 }
 
 function onEdit(messageId: string) {
@@ -313,6 +357,7 @@ function onAction(id: ComposerActionId) {
 }
 
 async function onJumpToLatest() {
+  readState.clearDivider();
   await messagesSync.jumpToLatest();
 }
 
@@ -336,6 +381,7 @@ async function onThreadJumpToLatest() {
         :previous-page="messagesSync.previousPage.value"
         :next-page="messagesSync.nextPage.value"
         :show-jump-to-latest="messagesSync.showJumpToLatest.value"
+        :unread-divider-before-message-id="readState.sessionDividerId.value"
         @load-previous="messagesSync.loadPrevious()"
         @jump-to-latest="onJumpToLatest"
         @react="onReact"

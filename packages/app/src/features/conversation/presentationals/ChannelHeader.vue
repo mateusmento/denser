@@ -5,6 +5,7 @@ import {
   AvatarGroup,
   AvatarGroupCount,
   AvatarImage,
+  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,13 @@ const emit = defineEmits<{
         <h1 class="truncate text-base font-semibold">
           {{ channel.title }}
         </h1>
+        <Badge
+          v-if="channel.unreadCount && channel.unreadCount > 0"
+          variant="destructive"
+          class="h-5 min-w-5 shrink-0 px-1.5 tabular-nums"
+        >
+          {{ channel.unreadCount > 99 ? "99+" : channel.unreadCount }}
+        </Badge>
         <span v-if="channel.presenceLabel" class="hidden text-xs text-muted-foreground sm:inline">{{
           channel.presenceLabel
         }}</span>

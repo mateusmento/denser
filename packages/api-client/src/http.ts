@@ -16,6 +16,9 @@ import {
   EditMessageInput,
   GetConversationResponse,
   GetDocumentResponse,
+  GetUnreadSummaryResponse,
+  MarkConversationReadResponse,
+  UnreadConversationSummary,
   ListDirectConversationsResponse,
   ListMessagesQuery,
   ListMessagesResponse,
@@ -37,6 +40,8 @@ import {
   SpaceDetailResponse,
   StartConversationUploadInput,
   StartConversationUploadResponse,
+  ToggleReactionInput,
+  ToggleReactionResponse,
   UpsertMessageDraftInput,
   type ArtifactId,
   type AttachmentId,
@@ -386,6 +391,37 @@ export class ApiClient {
     return ListDirectConversationsResponse.parse(body);
   }
 
+  async getUnreadSummary(rootSpaceId: SpaceId): Promise<GetUnreadSummaryResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/unread-summary`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get unread summary failed", res.status, body);
+    return GetUnreadSummaryResponse.parse(body);
+  }
+
+  async getConversationUnread(
+    conversationId: ArtifactId,
+  ): Promise<{ summary: UnreadConversationSummary }> {
+    const res = await this.request(`/api/conversations/${conversationId}/unread`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("get conversation unread failed", res.status, body);
+    const parsed = body as { summary?: unknown };
+    return { summary: UnreadConversationSummary.parse(parsed.summary) };
+  }
+
+  async markConversationRead(
+    conversationId: ArtifactId,
+    input: { messageId?: MessageId } = {},
+  ): Promise<MarkConversationReadResponse> {
+    const res = await this.request(`/api/conversations/${conversationId}/read`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("mark conversation read failed", res.status, body);
+    return MarkConversationReadResponse.parse(body);
+  }
+
   async createOrOpenDirectConversation(
     input: CreateDirectConversationInput,
   ): Promise<CreateDirectConversationResponse> {
@@ -480,9 +516,10 @@ export class ApiClient {
     );
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("list draft attachments failed", res.status, body);
-    const parsed = body as { attachments?: unknown };
+    const parsed = body as { attachments?: unknown[] };
+    const rows = Array.isArray(parsed.attachments) ? parsed.attachments : [];
     return {
-      attachments: (parsed.attachments ?? []).map((row) => AttachmentDto.parse(row)),
+      attachments: rows.map((row) => AttachmentDto.parse(row)),
     };
   }
 
@@ -497,7 +534,7 @@ export class ApiClient {
       {
         method: "PUT",
         headers: { "Content-Type": "application/octet-stream" },
-        body: data,
+        body: data as BodyInit,
       },
     );
     if (!res.ok) {
@@ -564,6 +601,28 @@ export class ApiClient {
     if (!res.ok) throw new ApiError("upsert message draft failed", res.status, body);
     const parsed = body as { draft: unknown };
     return { draft: MessageDraftDto.parse(parsed.draft), created: res.status === 201 };
+  }
+
+  async deleteMessageDraft(
+    conversationId: ArtifactId,
+    input: { threadId?: MessageId | null; version?: number } = {},
+  ): Promise<void> {
+    const params = new URLSearchParams();
+    if (input.threadId) params.set("threadId", input.threadId);
+    if (input.version !== undefined) params.set("version", String(input.version));
+    const query = params.toString();
+    const res = await this.request(
+      `/api/conversations/${conversationId}/draft${query ? `?${query}` : ""}`,
+      { method: "DELETE" },
+    );
+    const body = await this.parseJson(res);
+    if (res.status === 409) {
+      const conflict = body as { draft?: MessageDraftDto | null };
+      throw new ApiMessageDraftConflictError(conflict);
+    }
+    if (!res.ok) {
+      throw new ApiError("delete message draft failed", res.status, body);
+    }
   }
 
   async postMessage(

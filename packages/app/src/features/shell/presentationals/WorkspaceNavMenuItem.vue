@@ -9,6 +9,7 @@ import {
   ContextMenuTrigger,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuBadge,
   cn,
 } from "@denser/design-system";
 import { CheckIcon, FileTextIcon, MessageCircleIcon, XIcon } from "@lucide/vue";
@@ -60,6 +61,12 @@ watch(
 const displayLabel = computed(() =>
   isArtifact.value ? artifactDisplayTitle(props.link.label) : props.link.label,
 );
+
+const unreadBadgeLabel = computed(() => {
+  const count = props.link.unreadCount ?? 0;
+  if (count <= 0) return null;
+  return count > 99 ? "99+" : String(count);
+});
 
 const displayIcon = computed(() => {
   if (isSpace.value) return resolveSpaceIcon(props.link.icon);
@@ -171,6 +178,9 @@ function cancelRename() {
             <span>{{ displayLabel }}</span>
           </RouterLink>
         </SidebarMenuButton>
+        <SidebarMenuBadge v-if="unreadBadgeLabel">
+          {{ unreadBadgeLabel }}
+        </SidebarMenuBadge>
       </SidebarMenuItem>
     </ContextMenuTrigger>
 

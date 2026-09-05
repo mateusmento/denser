@@ -21,6 +21,7 @@ import ConversationMessage from "./ConversationMessage.vue";
 import ConversationMessageGroup from "./ConversationMessageGroup.vue";
 import ConversationTimelineEdges from "./ConversationTimelineEdges.vue";
 import ConversationTimelineScrollerBridge from "./ConversationTimelineScrollerBridge.vue";
+import ConversationUnreadDivider from "./ConversationUnreadDivider.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +39,7 @@ const props = withDefaults(
     nextPage?: NextPageState;
     /** Force jump-to-latest pill visibility (e.g. around-focus / off live edge). */
     showJumpToLatest?: boolean;
+    unreadDividerBeforeMessageId?: string | null;
   }>(),
   {
     threadActions: true,
@@ -137,6 +139,9 @@ defineExpose({
                 :message-id="message.id"
                 class="px-0"
               >
+                <ConversationUnreadDivider
+                  v-if="unreadDividerBeforeMessageId === message.id"
+                />
                 <ConversationMessage
                   :message="message"
                   :thread-actions="threadActions"
