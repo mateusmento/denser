@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { app } from "./app.js";
 import { attachRealtime } from "./realtime/attach.js";
+import { startSchedulingDispatcher } from "./domains/scheduling/service.js";
 
 config({
   path: resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../.env"),
@@ -22,3 +23,4 @@ const server = serve({ fetch: app.fetch, port }, (info) => {
 });
 
 attachRealtime(server as unknown as import("node:http").Server, appOrigin);
+startSchedulingDispatcher();

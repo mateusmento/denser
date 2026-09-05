@@ -3,7 +3,7 @@
 **Chunk:** 5  
 **Layer:** api  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-24-scheduler-api`  
 **Specs:** [interfaces.md](../interfaces.md) · [CHUNKS.md](../CHUNKS.md)
