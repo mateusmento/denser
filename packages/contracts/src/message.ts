@@ -9,7 +9,7 @@ export type ListMessagesDirection = z.infer<typeof ListMessagesDirection>;
 
 export const ListMessagesQuery = z.object({
   conversationId: ArtifactId,
-  size: z.number().int().positive().optional(),
+  size: z.coerce.number().int().positive().optional(),
   cursor: z.string().optional(),
   direction: ListMessagesDirection.optional(),
   around: MessageId.optional(),
@@ -80,7 +80,7 @@ export type PostMessageResponse = z.infer<typeof PostMessageResponse>;
 export const ListThreadMessagesQuery = z.object({
   conversationId: ArtifactId,
   threadId: MessageId,
-  size: z.number().int().positive().optional(),
+  size: z.coerce.number().int().positive().optional(),
   cursor: z.string().optional(),
   direction: ListMessagesDirection.optional(),
 });
