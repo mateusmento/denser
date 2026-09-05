@@ -5,14 +5,7 @@ import {
   MESSAGE_UPDATED_EVENT,
 } from "@denser/contracts";
 import type { DenserServer } from "./attach.js";
-
-export function conversationRoom(conversationId: ArtifactId): string {
-  return `conversation:${conversationId}`;
-}
-
-export function userRoom(userId: string): string {
-  return `user:${userId}`;
-}
+import { conversationRoom } from "./rooms.js";
 
 let server: DenserServer | null = null;
 
@@ -40,3 +33,5 @@ export function emitConversationEvent(
       break;
   }
 }
+
+export { conversationRoom, userRoom, workspacePresenceRoom } from "./rooms.js";
