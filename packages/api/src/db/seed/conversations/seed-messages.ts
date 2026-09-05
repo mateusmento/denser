@@ -1,4 +1,5 @@
 import { message } from "../../schema/message.js";
+import { messageReaction } from "../../schema/message-reaction.js";
 import type { db } from "../../client.js";
 import type { SeedConversationMessagesModule } from "./types.js";
 
@@ -43,6 +44,23 @@ export async function seedConversationMessages(
             deletedAt,
           },
         });
+
+      if (row.reactions?.length) {
+        for (const reaction of row.reactions) {
+          await database
+            .insert(messageReaction)
+            .values({
+              messageId: row.id,
+              emoji: reaction.emoji,
+              userId: reaction.userId,
+              reactedAt: createdAt,
+            })
+            .onConflictDoUpdate({
+              target: [messageReaction.messageId, messageReaction.emoji, messageReaction.userId],
+              set: { reactedAt: createdAt },
+            });
+        }
+      }
 
       count += 1;
     }

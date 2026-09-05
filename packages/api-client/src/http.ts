@@ -42,8 +42,6 @@ import {
   SpaceDetailResponse,
   StartConversationUploadInput,
   StartConversationUploadResponse,
-  ToggleReactionInput,
-  ToggleReactionResponse,
   UpsertMessageDraftInput,
   type ArtifactId,
   type AttachmentId,

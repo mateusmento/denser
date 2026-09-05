@@ -385,6 +385,7 @@ async function onThreadJumpToLatest() {
         :show-jump-to-latest="messagesSync.showJumpToLatest.value"
         :unread-divider-before-message-id="readState.sessionDividerId.value"
         @load-previous="messagesSync.loadPrevious()"
+        @load-next="messagesSync.loadNext()"
         @jump-to-latest="onJumpToLatest"
         @react="onReact"
         @thread="onOpenThread"

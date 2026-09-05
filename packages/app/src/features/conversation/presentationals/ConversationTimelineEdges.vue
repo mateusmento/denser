@@ -19,6 +19,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   loadPrevious: [];
+  loadNext: [];
   jumpToLatest: [];
 }>();
 
@@ -34,10 +35,23 @@ const scheduleLoadPrevious = useDebounceFn(() => {
   }
 }, 120);
 
+const scheduleLoadNext = useDebounceFn(() => {
+  if (props.nextPage.hasNext && !props.nextPage.loadingNext) {
+    emit("loadNext");
+  }
+}, 120);
+
 watch(
   () => scrollable.value.start,
   (nearTop) => {
     if (nearTop) scheduleLoadPrevious();
+  },
+);
+
+watch(
+  () => scrollable.value.end,
+  (nearBottom) => {
+    if (nearBottom) scheduleLoadNext();
   },
 );
 

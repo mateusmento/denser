@@ -1940,7 +1940,9 @@ console.log(
   `  Nested folders:      Engineering (${SEED_SPACE_ENGINEERING}), Architecture & RFCs (${SEED_SPACE_ARCH_RFCS}), Leadership (${SEED_SPACE_LEADERSHIP})`,
 );
 console.log(`  Channels:            #general, #engineering, #product-design, #random`);
-console.log(`  Channel messages:    ${seededMessageCount} seeded in #engineering`);
+console.log(
+  `  Channel messages:    ${seededMessageCount} seeded (#engineering + #product-design)`,
+);
 console.log(`  Direct messages:     Alice & Carol, Alice & David, Alice & Carol & David`);
 console.log(`  Root artifacts:      Personal notes, Weekly Priorities`);
 process.exit(0);

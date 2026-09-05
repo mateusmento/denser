@@ -15,7 +15,7 @@ import {
   type ReactionUpdatedEvent,
 } from "@denser/contracts";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, onScopeDispose, ref, watch } from "vue";
+import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { apiClient } from "@/lib/api";
 import { useConversationRoom } from "@/lib/realtime/useConversationRoom";
 import { useRealtimeSocket } from "@/lib/realtime/useRealtimeSocket";
@@ -41,13 +41,18 @@ import type { ConversationMessageView } from "../types";
 
 type MessagesQueryData = InfiniteData<ListMessagesResponse, MessagesPageParam>;
 
+function conversationMessagesQueryKey(
+  conversationId: ArtifactId,
+  focus: MessageId | null,
+) {
+  return [...queryKeys.conversationMessages(conversationId), focus ?? "live"] as const;
+}
+
 function readMessagesQuery(
   queryClient: ReturnType<typeof useQueryClient>,
-  conversationId: ArtifactId,
+  key: readonly unknown[],
 ): MessagesQueryData | undefined {
-  return queryClient.getQueryData<MessagesQueryData>(
-    queryKeys.conversationMessages(conversationId),
-  );
+  return queryClient.getQueryData<MessagesQueryData>(key);
 }
 
 function createClientId(): ClientId {
@@ -88,9 +93,14 @@ export function useConversationMessages(
 
   const anchorReady = computed(() => openAnchor.value !== undefined);
   const enabled = computed(() => Boolean(id.value) && anchorReady.value);
+  const messagesQueryKey = computed(() => {
+    const conversation = id.value;
+    if (!conversation) return conversationMessagesQueryKey("" as ArtifactId, null);
+    return conversationMessagesQueryKey(conversation, aroundFocus.value);
+  });
 
   const query = useInfiniteQuery({
-    queryKey: computed(() => queryKeys.conversationMessages(id.value ?? "")),
+    queryKey: messagesQueryKey,
     enabled,
     queryFn: async ({ pageParam }: { pageParam: MessagesPageParam }) => {
       const conversation = id.value;
@@ -148,34 +158,34 @@ export function useConversationMessages(
 
   function syncQueryData(next: ReturnType<typeof applyMessageCreated>) {
     if (!id.value || !next) return;
-    queryClient.setQueryData(queryKeys.conversationMessages(id.value), next);
+    queryClient.setQueryData(messagesQueryKey.value, next);
     upsertMany(messagesCollection, flattenMessagePages(next));
   }
 
   function ingestMessage(event: MessageDto) {
     if (!id.value || event.conversationId !== id.value) return;
     upsertInCollection(messagesCollection, event);
-    const current = readMessagesQuery(queryClient, id.value);
+    const current = readMessagesQuery(queryClient, messagesQueryKey.value);
     syncQueryData(applyMessageCreated(current, event));
   }
 
   function ingestUpdate(event: MessageDto) {
     if (!id.value || event.conversationId !== id.value) return;
     upsertInCollection(messagesCollection, event);
-    const current = readMessagesQuery(queryClient, id.value);
+    const current = readMessagesQuery(queryClient, messagesQueryKey.value);
     syncQueryData(applyMessageUpdated(current, event));
   }
 
   function ingestDelete(event: MessageDto) {
     if (!id.value || event.conversationId !== id.value) return;
     upsertInCollection(messagesCollection, event);
-    const current = readMessagesQuery(queryClient, id.value);
+    const current = readMessagesQuery(queryClient, messagesQueryKey.value);
     syncQueryData(applyMessageDeleted(current, event));
   }
 
   function ingestReaction(event: ReactionUpdatedEvent) {
     if (!id.value || event.conversationId !== id.value) return;
-    const current = readMessagesQuery(queryClient, id.value);
+    const current = readMessagesQuery(queryClient, messagesQueryKey.value);
     const next = applyReactionUpdated(current, event);
     if (!next) return;
     syncQueryData(next);
@@ -224,9 +234,9 @@ export function useConversationMessages(
       const conversation = id.value;
       if (!conversation || !user.value?.id) return;
 
-      const key = queryKeys.conversationMessages(conversation);
+      const key = messagesQueryKey.value;
       await queryClient.cancelQueries({ queryKey: key });
-      const previous = readMessagesQuery(queryClient, conversation);
+      const previous = readMessagesQuery(queryClient, key);
       failedClientId.value = null;
 
       const optimistic: MessageDto = {
@@ -272,9 +282,9 @@ export function useConversationMessages(
       const conversation = id.value;
       if (!conversation || !user.value?.id) return;
 
-      const key = queryKeys.conversationMessages(conversation);
+      const key = messagesQueryKey.value;
       await queryClient.cancelQueries({ queryKey: key });
-      const previous = readMessagesQuery(queryClient, conversation);
+      const previous = readMessagesQuery(queryClient, key);
       const current = dtos.value.find((message) => message.id === input.messageId);
       if (!current) return { previous, key };
 
@@ -308,9 +318,9 @@ export function useConversationMessages(
       const conversation = id.value;
       if (!conversation) return;
 
-      const key = queryKeys.conversationMessages(conversation);
+      const key = messagesQueryKey.value;
       await queryClient.cancelQueries({ queryKey: key });
-      const previous = readMessagesQuery(queryClient, conversation);
+      const previous = readMessagesQuery(queryClient, key);
       const current = dtos.value.find((message) => message.id === messageId);
       if (!current) return { previous, key };
 
@@ -354,25 +364,16 @@ export function useConversationMessages(
   }
 
   async function jumpAround(messageId: MessageId) {
-    const conversation = id.value;
-    if (!conversation) return;
+    if (!id.value) return;
     aroundFocus.value = messageId;
-    const page = await apiClient.listMessages(conversation, {
-      size: MESSAGE_PAGE_SIZE,
-      around: messageId,
-    });
-    upsertMany(messagesCollection, page.messages);
-    queryClient.setQueryData(queryKeys.conversationMessages(conversation), {
-      pages: [page],
-      pageParams: [null],
-    });
+    await nextTick();
+    await query.refetch();
   }
 
   async function jumpToLatest() {
-    const conversation = id.value;
-    if (!conversation) return;
+    if (!id.value) return;
     aroundFocus.value = null;
-    await queryClient.resetQueries({ queryKey: queryKeys.conversationMessages(conversation) });
+    await nextTick();
     await query.refetch();
   }
 
@@ -389,9 +390,9 @@ export function useConversationMessages(
     const conversation = id.value;
     if (!conversation) return;
 
-    const key = queryKeys.conversationMessages(conversation);
+    const key = messagesQueryKey.value;
     await queryClient.cancelQueries({ queryKey: key });
-    const previous = readMessagesQuery(queryClient, conversation);
+    const previous = readMessagesQuery(queryClient, key);
     const current = dtos.value.find((message) => message.id === messageId);
     if (!current) return;
 

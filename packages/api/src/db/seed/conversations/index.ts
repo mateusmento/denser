@@ -1,9 +1,11 @@
 import { engineeringChannelMessages } from "./engineering-channel.js";
+import { productDesignChannelMessages } from "./product-design-channel.js";
 import { seedConversationMessages } from "./seed-messages.js";
 import type { SeedConversationMessagesModule } from "./types.js";
 
 export const conversationMessageSeedModules: readonly SeedConversationMessagesModule[] = [
   engineeringChannelMessages,
+  productDesignChannelMessages,
 ];
 
 export { seedConversationMessages };

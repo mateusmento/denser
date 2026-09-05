@@ -63,6 +63,7 @@ const emit = defineEmits<{
   editDescription: [];
   addPeople: [];
   loadPrevious: [];
+  loadNext: [];
   jumpToLatest: [];
 }>();
 
@@ -169,6 +170,7 @@ defineExpose({
         :next-page="nextPage"
         :show-jump-to-latest="showJumpToLatest"
         @load-previous="emit('loadPrevious')"
+        @load-next="emit('loadNext')"
         @jump-to-latest="emit('jumpToLatest')"
       />
       <ConversationTimelineScrollerBridge ref="scrollerBridge" />
