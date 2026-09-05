@@ -54,10 +54,10 @@ const timelineEdgeResetKey = computed(() => {
   const messages = messagesSync.messages.value;
   return [
     conversationId.value,
-    readState.openAnchor.value,
     messages[0]?.id,
     messages[messages.length - 1]?.id,
     messages.length,
+    messagesSync.atStartOfHistory.value,
   ] as const;
 });
 const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
@@ -161,7 +161,13 @@ const channelHeader = computed(() => {
   };
 });
 
-const showChannelIntro = computed(() => !conversationSync.isDirect.value);
+const showChannelIntro = computed(
+  () =>
+    !conversationSync.isDirect.value &&
+    !messagesSync.isLoading.value &&
+    !messagesSync.isFetching.value &&
+    messagesSync.atStartOfHistory.value,
+);
 
 const channelComposer = computed(() =>
   defaultChannelComposerView({

@@ -1,5 +1,6 @@
 import { useMessageScrollerContextMaybe } from "@denser/design-system";
-import { onBeforeUnmount, ref, watch, type Ref } from "vue";
+import { useEventListener } from "@vueuse/core";
+import { computed, ref, watch, type Ref } from "vue";
 import type { NextPageState, PreviousPageState } from "@/lib/async";
 import {
   distanceFromEnd,
@@ -22,9 +23,10 @@ export function useTimelineEdgeLoads(options: {
   const ctx = useMessageScrollerContextMaybe();
   const startArmed = ref(true);
   const endArmed = ref(true);
+  const scrollTarget = computed(() => ctx?.viewportElement.value ?? null);
 
   function tryEdgeLoads() {
-    const el = ctx?.viewportElement.value;
+    const el = scrollTarget.value;
     if (!el || ctx?.autoscrolling.value) return;
 
     const metrics = {
@@ -58,24 +60,7 @@ export function useTimelineEdgeLoads(options: {
     }
   }
 
-  function onScroll() {
-    tryEdgeLoads();
-  }
-
-  let boundEl: HTMLElement | null = null;
-
-  function bind(el: HTMLElement | null) {
-    if (boundEl === el) return;
-    boundEl?.removeEventListener("scroll", onScroll);
-    boundEl = el;
-    el?.addEventListener("scroll", onScroll, { passive: true });
-  }
-
-  watch(
-    () => ctx?.viewportElement.value ?? null,
-    (el) => bind(el),
-    { immediate: true },
-  );
+  useEventListener(scrollTarget, "scroll", tryEdgeLoads, { passive: true });
 
   if (options.resetKey) {
     watch(options.resetKey, () => {
@@ -83,8 +68,6 @@ export function useTimelineEdgeLoads(options: {
       endArmed.value = true;
     });
   }
-
-  onBeforeUnmount(() => bind(null));
 
   return { tryEdgeLoads, nearPx: NEAR_PX };
 }
