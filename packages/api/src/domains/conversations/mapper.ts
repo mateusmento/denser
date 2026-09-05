@@ -10,5 +10,6 @@ export function toConversationView(
   return {
     ...toArtifactSummary(artifactRow),
     conversationKind: conversationRow.conversationKind,
+    rootSpaceId: conversationRow.rootSpaceId ?? artifactRow.rootSpaceId,
   };
 }

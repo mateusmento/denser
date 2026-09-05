@@ -14,6 +14,7 @@ import {
 import { CheckIcon, FileTextIcon, MessageCircleIcon, XIcon } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
+import PresenceDot from "@/modules/presence/presentationals/PresenceDot.vue";
 import { resolveSpaceIcon } from "@/modules/spaces";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 import type {
@@ -116,7 +117,10 @@ function cancelRename() {
           :class="renameButtonClass"
           data-active="true"
         >
-          <component :is="displayIcon" class="size-4 shrink-0" />
+          <span class="relative shrink-0">
+            <component :is="displayIcon" class="size-4" />
+            <PresenceDot :online="link.peerOnline" class="border-sidebar" />
+          </span>
           <div class="flex min-w-0 flex-1 items-center gap-1">
             <ContentEditable
               v-model="renameDraft"
@@ -160,7 +164,10 @@ function cancelRename() {
           size="sm"
         >
           <RouterLink :to="link.to">
-            <component :is="displayIcon" />
+            <span class="relative shrink-0">
+              <component :is="displayIcon" />
+              <PresenceDot :online="link.peerOnline" class="border-sidebar" />
+            </span>
             <span>{{ displayLabel }}</span>
           </RouterLink>
         </SidebarMenuButton>

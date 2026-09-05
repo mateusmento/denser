@@ -30,8 +30,12 @@ export type SpaceDetailView = SpaceContentView & {
 
 export type SpaceSettingsSection = "general" | "members";
 
+export type SpaceMemberView = SpaceMember & {
+  online?: boolean;
+};
+
 export type SpaceMembersView = {
-  members: readonly SpaceMember[];
+  members: readonly SpaceMemberView[];
   canManage: boolean;
   isNested: boolean;
   visibility: SpaceSummary["visibility"];

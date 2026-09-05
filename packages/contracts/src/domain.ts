@@ -383,6 +383,8 @@ export type ConversationKind = z.infer<typeof ConversationKind>;
 
 export const ConversationView = ArtifactSummary.extend({
   conversationKind: ConversationKind,
+  /** 1:1 direct only — other participant for presence dots and sidebar label. */
+  peerUserId: UserId.nullable().optional(),
 });
 export type ConversationView = z.infer<typeof ConversationView>;
 

@@ -17,16 +17,15 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, type Ref } from "vue";
 import { apiClient } from "@/lib/api";
-import { documentsCollection, upsertInCollection } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
+import {
+  documentQueryKey,
+  fetchDocumentQueryData,
+  type DocumentQueryData,
+} from "../lib/document-query";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { resolveDocumentTypeFromCatalog } from "@/lib/resolve-document-type";
 import { createPropertyOption, findOptionByName } from "../lib/property-options";
-
-type DocumentQueryData = {
-  document: DocumentView;
-  documentType: DocumentTypeView | null;
-};
 
 export type DocumentTypeSchemaOptions = {
   artifactId: ReadonlyRefOrGetter<ArtifactId | undefined>;
@@ -70,22 +69,17 @@ export function useDocumentTypeSchema(options: DocumentTypeSchemaOptions) {
 
     if (!id.value) return null;
 
-    const response = await apiClient.getDocument(id.value);
-    const next: DocumentQueryData = {
-      document: response.document,
-      documentType: response.documentType ?? null,
-    };
-    queryClient.setQueryData(queryKeys.document(id.value), next);
-    upsertInCollection(documentsCollection, response.document);
+    const next = await fetchDocumentQueryData(id.value);
+    queryClient.setQueryData(documentQueryKey(id.value), next);
 
-    if (response.documentType?.id) return response.documentType;
+    if (next.documentType?.id) return next.documentType;
 
     if (spaceId.value) {
       await options.ensureSpaceFresh();
     }
 
     return (
-      resolveDocumentTypeFromCatalog(response.document, catalogTypes.value) ?? null
+      resolveDocumentTypeFromCatalog(next.document, catalogTypes.value) ?? null
     );
   }
 
@@ -107,7 +101,7 @@ export function useDocumentTypeSchema(options: DocumentTypeSchemaOptions) {
     },
     onSuccess: async (updated) => {
       if (updated && id.value) {
-        queryClient.setQueryData<DocumentQueryData>(queryKeys.document(id.value), (old) =>
+        queryClient.setQueryData<DocumentQueryData>(documentQueryKey(id.value), (old) =>
           old ? { ...old, documentType: updated } : old,
         );
       }

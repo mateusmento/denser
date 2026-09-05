@@ -4,6 +4,11 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import {
+  documentQueryKey,
+  fetchDocumentQueryData,
+  readDocumentFromQueryData,
+} from "@/features/document/lib/document-query";
 import { resolveSpaceTabHostId } from "../lib/space-tabs";
 import { useActiveTabHost } from "./useActiveTabHost";
 
@@ -19,12 +24,9 @@ export function useSpaceTabHostId() {
   );
 
   const documentQuery = useQuery({
-    queryKey: computed(() => queryKeys.document(activeDocumentId.value ?? "")),
+    queryKey: computed(() => documentQueryKey(activeDocumentId.value)),
     enabled: computed(() => activeDocumentId.value != null),
-    queryFn: async () => {
-      const { document } = await apiClient.getDocument(activeDocumentId.value!);
-      return document;
-    },
+    queryFn: () => fetchDocumentQueryData(activeDocumentId.value!),
   });
 
   const conversationQuery = useQuery({
@@ -41,8 +43,9 @@ export function useSpaceTabHostId() {
       routeName: route.name,
       routeSpaceId: routeSpaceId.value,
       activeTabHostId: activeTabHostId.value,
-      documentSpaceId: documentQuery.data.value?.spaceId,
+      documentSpaceId: readDocumentFromQueryData(documentQuery.data.value)?.spaceId,
       conversationSpaceId: conversationQuery.data.value?.spaceId,
+      conversationRootSpaceId: conversationQuery.data.value?.rootSpaceId,
       conversationKind: conversationQuery.data.value?.conversationKind,
     });
   });

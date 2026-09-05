@@ -1,5 +1,6 @@
 import type {
   ArtifactId,
+  ConversationView,
   CreateConversationInput,
   CreateDirectConversationInput,
   PatchConversationInput,
@@ -9,13 +10,35 @@ import type {
 import { inArray } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { user } from "../../db/schema/auth.js";
+import type { ArtifactRow } from "../artifacts/repository.js";
 import * as artifactRepository from "../artifacts/repository.js";
 import { findUserByUsername } from "../spaces/membership-repository.js";
 import { resolveTenantRootSpaceId } from "../spaces/service.js";
 import { requireArtifactAccess, requireSpaceAccess, canAccessSpace } from "../tenancy/access.js";
 import { findSpaceById } from "../spaces/repository.js";
 import { toConversationView } from "./mapper.js";
+import type { ConversationRow } from "./repository.js";
 import * as conversationRepository from "./repository.js";
+
+async function enrichDirectConversationView(
+  userId: UserId,
+  artifactRow: ArtifactRow,
+  conversationRow: ConversationRow,
+): Promise<ConversationView> {
+  const base = toConversationView(artifactRow, conversationRow);
+  if (conversationRow.conversationKind !== "direct") {
+    return base;
+  }
+
+  const memberIds = await conversationRepository.listMemberUserIds(artifactRow.id);
+  const otherIds = memberIds.filter((id) => id !== userId);
+  const title = await buildDirectConversationTitle(userId, otherIds);
+  return {
+    ...base,
+    title,
+    peerUserId: otherIds.length === 1 ? otherIds[0]! : null,
+  };
+}
 
 async function buildDirectConversationTitle(
   creatorId: UserId,
@@ -112,7 +135,11 @@ export async function createOrOpenDirectConversation(
   if (existing) {
     return {
       ok: true as const,
-      conversation: toConversationView(existing.artifact, existing.conversation),
+      conversation: await enrichDirectConversationView(
+        userId,
+        existing.artifact,
+        existing.conversation,
+      ),
       created: false as const,
     };
   }
@@ -136,7 +163,7 @@ export async function createOrOpenDirectConversation(
 
   return {
     ok: true as const,
-    conversation: toConversationView(artifactRow, conversationRow),
+    conversation: await enrichDirectConversationView(userId, artifactRow, conversationRow),
     created: true as const,
   };
 }
@@ -148,9 +175,12 @@ export async function listDirectConversations(userId: UserId, rootSpaceId: Space
   }
 
   const rows = await conversationRepository.listDirectConversationsForUser(rootSpaceId, userId);
+  const conversations = await Promise.all(
+    rows.map((row) => enrichDirectConversationView(userId, row.artifact, row.conversation)),
+  );
   return {
     ok: true as const,
-    conversations: rows.map((row) => toConversationView(row.artifact, row.conversation)),
+    conversations,
   };
 }
 
@@ -165,7 +195,10 @@ export async function getConversation(userId: UserId, artifactId: ArtifactId) {
     return { ok: false as const, reason: "not_found" as const };
   }
 
-  return { ok: true as const, conversation: toConversationView(artifactRow, conversationRow) };
+  return {
+    ok: true as const,
+    conversation: await enrichDirectConversationView(userId, artifactRow, conversationRow),
+  };
 }
 
 async function ensureConversationRow(artifactId: ArtifactId) {

@@ -17,7 +17,9 @@ export async function listRootArtifactsByOwner(userId: UserId): Promise<Artifact
   return db
     .select()
     .from(artifact)
-    .where(and(eq(artifact.createdBy, userId), isNull(artifact.spaceId)))
+    .where(
+      and(eq(artifact.createdBy, userId), isNull(artifact.spaceId), ne(artifact.kind, "conversation")),
+    )
     .orderBy(desc(artifact.updatedAt));
 }
 

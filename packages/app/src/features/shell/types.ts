@@ -11,6 +11,9 @@ export type WorkspaceNavLink = {
   label: string;
   icon?: SpaceIcon | null;
   artifactKind?: WorkspaceNavArtifactKind;
+  /** 1:1 DM peer — used for workspace-presence dot (group DMs omit). */
+  peerUserId?: string;
+  peerOnline?: boolean;
   to: {
     name: "home" | "space" | "document" | "conversation";
     params?: { spaceId?: string; documentId?: string; conversationId?: string };
@@ -22,6 +25,8 @@ export type WorkspaceNavSection = {
   label: string;
   items: readonly WorkspaceNavLink[];
   scopeSpaceId?: string | null;
+  /** Shown when items exceed the in-space sidebar limit — opens the space gallery. */
+  seeAllLink?: WorkspaceNavLink;
 };
 
 export type WorkspaceNavHomeButton = {

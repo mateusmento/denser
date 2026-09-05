@@ -13,10 +13,12 @@ import {
   TypingEvent,
   WORKSPACE_PRESENCE_EVENT,
   WORKSPACE_PRESENCE_PULSE_EVENT,
+  WORKSPACE_PRESENCE_SNAPSHOT_EVENT,
   WORKSPACE_PRESENCE_STOP_EVENT,
   WORKSPACE_PRESENCE_SUBSCRIBE_EVENT,
   WORKSPACE_PRESENCE_UNSUBSCRIBE_EVENT,
   WorkspacePresenceEvent,
+  WorkspacePresenceSnapshotEvent,
   WorkspacePresenceRootInput,
 } from "./presence.js";
 import {
@@ -41,6 +43,7 @@ export type ServerToClientEvents = {
   [TYPING_EVENT]: (payload: TypingEvent) => void;
   [CONVERSATION_PRESENCE_EVENT]: (payload: ConversationPresenceEvent) => void;
   [WORKSPACE_PRESENCE_EVENT]: (payload: WorkspacePresenceEvent) => void;
+  [WORKSPACE_PRESENCE_SNAPSHOT_EVENT]: (payload: WorkspacePresenceSnapshotEvent) => void;
 };
 
 export type ClientToServerEvents = {

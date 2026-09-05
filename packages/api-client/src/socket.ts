@@ -17,7 +17,9 @@ import {
   TYPING_EVENT,
   TypingEvent,
   WORKSPACE_PRESENCE_EVENT,
+  WORKSPACE_PRESENCE_SNAPSHOT_EVENT,
   WorkspacePresenceEvent,
+  WorkspacePresenceSnapshotEvent,
 } from "@denser/contracts";
 
 export type DenserSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -72,6 +74,8 @@ const eventParsers = {
     ConversationPresenceEvent.parse(payload),
   [WORKSPACE_PRESENCE_EVENT]: (payload: unknown): WorkspacePresenceEvent =>
     WorkspacePresenceEvent.parse(payload),
+  [WORKSPACE_PRESENCE_SNAPSHOT_EVENT]: (payload: unknown): WorkspacePresenceSnapshotEvent =>
+    WorkspacePresenceSnapshotEvent.parse(payload),
 } satisfies {
   [E in keyof ServerToClientEvents]: (payload: unknown) => ServerEventPayload<E>;
 };

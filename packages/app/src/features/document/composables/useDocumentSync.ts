@@ -1,8 +1,6 @@
 import type {
   ArtifactId,
   ArtifactSummary,
-  DocumentTypeView,
-  DocumentView,
   SpaceId,
   TipTapDoc,
 } from "@denser/contracts";
@@ -31,6 +29,11 @@ import type { DocumentDraftView, DocumentSurfaceView, RelationDocumentsEntry } f
 import { isEmptyDocumentDraft } from "../lib/document-content";
 import { useDocumentTypeSchema } from "./useDocumentTypeSchema";
 import { eq, useLiveQuery } from "@tanstack/vue-db";
+import {
+  documentQueryKey,
+  fetchDocumentQueryData,
+  readDocumentFromQueryData,
+} from "../lib/document-query";
 
 export type DocumentSyncOptions = {
   peekSpaceId?: ReadonlyRefOrGetter<SpaceId | undefined | null>;
@@ -38,11 +41,6 @@ export type DocumentSyncOptions = {
   onPeekCreated?: (id: ArtifactId) => void;
   navigateOnCreate?: boolean;
   onPeekComplete?: () => void;
-};
-
-type DocumentQueryData = {
-  document: DocumentView;
-  documentType: DocumentTypeView | null;
 };
 
 export function useDocumentSync(
@@ -58,16 +56,9 @@ export function useDocumentSync(
   const router = useRouter();
 
   const documentQuery = useQuery({
-    queryKey: computed(() => queryKeys.document(id.value ?? "")),
+    queryKey: computed(() => documentQueryKey(id.value)),
     enabled: computed(() => id.value != null && !isCompose.value),
-    queryFn: async (): Promise<DocumentQueryData> => {
-      const response = await apiClient.getDocument(id.value!);
-      upsertInCollection(documentsCollection, response.document);
-      return {
-        document: response.document,
-        documentType: response.documentType ?? null,
-      };
-    },
+    queryFn: () => fetchDocumentQueryData(id.value!),
   });
 
   const liveDocument = useLiveQuery(
@@ -81,7 +72,8 @@ export function useDocumentSync(
   );
 
   const canonical = computed(
-    () => liveDocument.data.value?.[0] ?? documentQuery.data.value?.document,
+    () =>
+      liveDocument.data.value?.[0] ?? readDocumentFromQueryData(documentQuery.data.value),
   );
 
   const saveError = ref<string | undefined>();
@@ -183,8 +175,8 @@ export function useDocumentSync(
   });
 
   const documentType = computed(() => {
-    const fromQuery = documentQuery.data.value?.documentType;
-    if (fromQuery) return fromQuery;
+    const fromQuery = documentQuery.data.value;
+    if (fromQuery && "documentType" in fromQuery) return fromQuery.documentType;
     return resolveDocumentTypeFromCatalog(
       canonical.value,
       spaceQuery.data.value?.documentTypes ?? [],

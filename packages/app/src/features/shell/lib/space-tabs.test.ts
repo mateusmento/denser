@@ -33,6 +33,19 @@ test("moveStoredTab splices a working tab to the drop index", () => {
   );
 });
 
+test("a direct conversation route uses the workspace root as tab host", () => {
+  const root = "00000000-0000-4000-8000-000000000010" as SpaceId;
+  assert.equal(
+    resolveSpaceTabHostId({
+      routeName: "conversation",
+      activeTabHostId: null,
+      conversationKind: "direct",
+      conversationRootSpaceId: root,
+    }),
+    root,
+  );
+});
+
 test("a space route keeps the persisted workspace tab host", () => {
   assert.equal(
     resolveSpaceTabHostId({

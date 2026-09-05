@@ -10,6 +10,7 @@
 | Commits | On the feature branch only |
 | Push | `git push -u origin HEAD` |
 | PR | `gh pr create` — **do not skip** |
+| Worktree cleanup | `git worktree remove /tmp/opencode/wt/NN --force` (or work in the main clone and skip `/tmp` worktrees) |
 | Merge | **Maintainer only** (or explicit user request) |
 | After merge | Mark issue `resolved`; update [map.md](./map.md) Decisions-so-far |
 
@@ -102,6 +103,7 @@ Port contracts: [interfaces.md](./interfaces.md). Domain docs: `docs/CONVERSATIO
 - Merge their own PR without maintainer approval
 - Combine multiple ticket numbers in one PR (unless user explicitly asks to batch)
 - Leave work only on a local branch with no PR
+- **Leave a feature branch checked out only in `/tmp/opencode/wt/NN`** after the PR is open — remove the worktree so maintainers can `git checkout` the branch in the main repo
 - **Continue in an opencode session past ~70k–80k tokens** when quality drops — [hand off](./map.md#session-handoff-opencode--long-runs) to a fresh session instead
 
 ## Session handoff

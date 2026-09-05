@@ -13,6 +13,7 @@ import {
   TYPING_TTL_MS,
   WORKSPACE_PRESENCE_EVENT,
   WORKSPACE_PRESENCE_PULSE_EVENT,
+  WORKSPACE_PRESENCE_SNAPSHOT_EVENT,
   WORKSPACE_PRESENCE_STOP_EVENT,
   WORKSPACE_PRESENCE_SUBSCRIBE_EVENT,
   WORKSPACE_PRESENCE_UNSUBSCRIBE_EVENT,
@@ -205,6 +206,11 @@ export function registerPresenceHandlers(
 
     await presenceSocket.join(workspacePresenceRoom(rootSpaceId));
     presenceSocket.data.workspacePresenceRootSpaceId = rootSpaceId;
+
+    presenceSocket.emit(WORKSPACE_PRESENCE_SNAPSHOT_EVENT, {
+      rootSpaceId,
+      userIds: workspaceOnline.list(rootSpaceId),
+    });
   });
 
   presenceSocket.on(WORKSPACE_PRESENCE_UNSUBSCRIBE_EVENT, async (body) => {

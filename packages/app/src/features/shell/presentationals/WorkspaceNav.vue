@@ -153,7 +153,21 @@ const emit = defineEmits<{
               @rename-submit="(item, title) => emit('renameSubmit', item, title)"
               @rename-cancel="(item) => emit('renameCancel', item)"
             />
-            <SidebarMenuItem v-if="!view.inSpaceSection.items.length">
+            <SidebarMenuItem v-if="view.inSpaceSection.seeAllLink">
+              <SidebarMenuButton
+                as-child
+                size="sm"
+                :is-active="view.inSpaceSection.seeAllLink.isActive"
+                :tooltip="view.inSpaceSection.seeAllLink.label"
+              >
+                <RouterLink :to="view.inSpaceSection.seeAllLink.to">
+                  <span class="truncate text-muted-foreground">
+                    {{ view.inSpaceSection.seeAllLink.label }}
+                  </span>
+                </RouterLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem v-if="!view.inSpaceSection.items.length && !view.inSpaceSection.seeAllLink">
               <p class="px-2 py-1 text-xs text-muted-foreground">Empty</p>
             </SidebarMenuItem>
           </SidebarMenu>

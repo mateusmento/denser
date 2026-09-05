@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import { readDocumentFromQueryData } from "@/features/document/lib/document-query";
 import { apiClient } from "@/lib/api";
 import { artifactsCollection, spacesCollection } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
@@ -160,9 +161,12 @@ export function useSpaceTabBarSync() {
       if (!host) return;
 
       if (!activeTabHostId.value) {
-        if (route.name === "document" && documentQuery.data.value?.spaceId) {
-          setActiveTabHost(documentQuery.data.value.spaceId);
-        } else if (route.name === "conversation") {
+      if (route.name === "document" && documentQuery.data.value) {
+        const document = readDocumentFromQueryData(documentQuery.data.value);
+        if (document?.spaceId) {
+          setActiveTabHost(document.spaceId);
+        }
+      } else if (route.name === "conversation") {
           const conversation = conversationQuery.data.value;
           if (conversation?.spaceId && conversation.conversationKind === "regular") {
             setActiveTabHost(conversation.spaceId);
@@ -173,11 +177,14 @@ export function useSpaceTabBarSync() {
       const tabHost = hostSpaceId.value;
       if (!tabHost) return;
 
-      if (route.name === "document" && documentQuery.data.value?.spaceId) {
-        spaceTabs.addArtifactTab(tabHost, {
-          id: documentQuery.data.value.id,
-          kind: "document",
-        });
+      if (route.name === "document" && documentQuery.data.value) {
+        const document = readDocumentFromQueryData(documentQuery.data.value);
+        if (document?.spaceId) {
+          spaceTabs.addArtifactTab(tabHost, {
+            id: document.id,
+            kind: "document",
+          });
+        }
       }
 
       const conversation = conversationQuery.data.value;
