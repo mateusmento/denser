@@ -23,6 +23,10 @@ import { space, spaceMembership } from "./schema/space.js";
 import { documentType, workflow, workflowStage } from "./schema/workflow.js";
 import { provisionProjectPlanning } from "../domains/workflows/repository.js";
 import {
+  conversationMessageSeedModules,
+  seedConversationMessages,
+} from "./seed/conversations/index.js";
+import {
   SEED_ARTIFACT_A11Y_STANDARDS,
   SEED_ARTIFACT_ADR_001,
   SEED_ARTIFACT_API_GUIDELINES,
@@ -1916,6 +1920,8 @@ await upsertDocumentArtifact({
   rank: 2000,
 });
 
+const seededMessageCount = await seedConversationMessages(db, conversationMessageSeedModules);
+
 console.log(
   `Seeded rich workspace and features (mode=${mode}, reset=${reset}, password=${password}).`,
 );
@@ -1931,6 +1937,7 @@ console.log(
   `  Nested folders:      Engineering (${SEED_SPACE_ENGINEERING}), Architecture & RFCs (${SEED_SPACE_ARCH_RFCS}), Leadership (${SEED_SPACE_LEADERSHIP})`,
 );
 console.log(`  Channels:            #general, #engineering, #product-design, #random`);
+console.log(`  Channel messages:    ${seededMessageCount} seeded in #engineering`);
 console.log(`  Direct messages:     Alice & Carol, Alice & David, Alice & Carol & David`);
 console.log(`  Root artifacts:      Personal notes, Weekly Priorities`);
 process.exit(0);
