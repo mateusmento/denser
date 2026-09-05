@@ -1,5 +1,4 @@
 import type { ClaimDueJobs } from "@denser/contracts";
+import { claimDueJobs as repositoryClaimDueJobs } from "../domains/scheduling/repository.js";
 
-export const claimDueJobs: ClaimDueJobs = () => {
-  throw new Error("ClaimDueJobs: not implemented (ticket 09)");
-};
+export const claimDueJobs: ClaimDueJobs = repositoryClaimDueJobs;
