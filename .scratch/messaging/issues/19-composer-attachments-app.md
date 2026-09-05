@@ -3,7 +3,7 @@
 **Chunk:** 3c — Compose & upload (**main attachment UI**)  
 **Layer:** app  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [ui-surfaces/conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 18 — Upload API; 03 — Timeline app; 23 — Drafts app (or stub: hydrate without debounce if 23 not merged)  
 **Branch:** `agent/messaging-19-composer-attachments-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)

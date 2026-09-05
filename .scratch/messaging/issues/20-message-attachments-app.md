@@ -3,7 +3,7 @@
 **Chunk:** 3d — In timeline  
 **Layer:** app  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [ui-surfaces/conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** ready-for-agent  
+**Status:** resolved  
 **Blocked by:** 17 — Attachment refs; 03 — Timeline app  
 **Branch:** `agent/messaging-20-message-attachments-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)

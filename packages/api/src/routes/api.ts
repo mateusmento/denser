@@ -5,6 +5,7 @@ import { documentRoutes } from "../domains/documents/routes.js";
 import { draftRoutes } from "../domains/drafts/routes.js";
 import { homeRoutes } from "../domains/home/routes.js";
 import { messageRoutes } from "../domains/messages/routes.js";
+import { readStateRoutes } from "../domains/read-state/routes.js";
 import { spaceRoutes, spaceSprintRoutes } from "../domains/spaces/routes.js";
 import { documentTypeRoutes } from "../domains/workflows/routes.js";
 
@@ -20,5 +21,6 @@ export const apiRoutes = new Hono<{ Variables: Variables }>()
   .route("/", conversationRoutes)
   .route("/", messageRoutes)
   .route("/", draftRoutes)
+  .route("/", readStateRoutes)
   .route("/", attachmentRoutes)
   .route("/", documentTypeRoutes);

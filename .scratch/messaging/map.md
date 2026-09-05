@@ -95,18 +95,42 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 **Merged to `main`:** 03 timeline (#15), 04 quotes (#13), 06 threads (#12), 10 typing/presence (#14), 18 upload (#16). Timeline uses `lib/async` `PreviousPageState`/`NextPageState`; realtime subscribe via `conversation.subscribe` (not duplicate watch events).
 
+## Wave-3 status (2026-09-05)
+
+**Merged to `main`:** 05 quotes-app (#17), 07 threads-app (#18), 09 message-actions-app (#21), 11 typing-presence-app (#20), 19 composer-attachments-app (#19). PR #21 rebased onto post–wave-3 `main` (edit/delete + attachments + threads + presence).
+
+**Seed:** ticket **31** — 44 messages in `#engineering` (jump-to-quote in/out of window).
+
+## Wave-4 plan (conversation polish + drafts)
+
+Parallel API lane (branch from `main`):
+
+| Ticket | Branch | Delivers |
+| --- | --- | --- |
+| **08** reactions | `agent/messaging-08-reactions` | Toggle API + timeline UI |
+| **12** unread-api | `agent/messaging-12-unread-api` | ReadState, mark-read, unread summary |
+| **14** dm-peers-api | `agent/messaging-14-dm-peers-api` | `conversation_peer` expand–contract + hide |
+
+App follow-ups (after API merges):
+
+| Ticket | Blocked by | Delivers |
+| --- | --- | --- |
+| **13** unread-app | 12 | Badges, New divider, open-at-unread |
+| **15** conversation-shell-app | 14 | DM hide in sidebar |
+| **23** drafts-app | 22 (done) | Composer hydrate + debounce + 409 merge |
+
+**Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane.
+
+## Wave-5 plan (scheduling)
+
+| Ticket | Layer | Notes |
+| --- | --- | --- |
+| **25** schedule-message-api | api | Fire → PostMessage; blocked on 24 ✓ |
+| **26** schedule-app | app | SchedulePopover + schedules tab |
+| **27** schedule-recurrence | full | Presets + timezone |
+
 ## Frontier
 
-Wave-3 parallel batch **complete** — all five PRs open for review:
-
-| Ticket | Branch | PR |
-| --- | --- | --- |
-| **05** quotes-app | `agent/messaging-05-quotes-app` | [#17](https://github.com/mateusmento/denser/pull/17) |
-| **07** threads-app | `agent/messaging-07-threads-app` | [#18](https://github.com/mateusmento/denser/pull/18) |
-| **09** message-actions-app | `agent/messaging-09-message-actions-app` | [#21](https://github.com/mateusmento/denser/pull/21) |
-| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | [#20](https://github.com/mateusmento/denser/pull/20) |
-| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | [#19](https://github.com/mateusmento/denser/pull/19) |
-
-**Next api lane (unclaimed):** 08 reactions, 12 unread-api, 14 dm-peers-api, 25 schedule-message-api — rebase worktrees from `144c0a6` → `main` before starting.
+**In progress:** **12** unread-api (read-state domain on `main` worktree).
 
 **Scaling:** ticket **30** before multi-instance deploy for presence (#14).

@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-12-unread-api`  
 **Specs:** [conversation.md](../../../docs/ui-surfaces/conversation.md)
@@ -34,9 +34,9 @@ Persist **last_read** per user×conversation; mark-read on open; unread summary 
 
 ## API (backend)
 
-- [ ] `ReadState` persist per user × conversation
-- [ ] `MarkRead` — advance to latest on open (idempotent)
-- [ ] `GetUnreadSummary` for nav/sidebar badge counts
+- [x] `ReadState` persist per user × conversation
+- [x] `MarkRead` — advance to latest on open (idempotent)
+- [x] `GetUnreadSummary` for nav/sidebar badge counts
 
 ## App (frontend)
 

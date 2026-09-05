@@ -8,4 +8,5 @@ export * from "./message.js";
 export * from "./attachment.js";
 export * from "./upload.js";
 export * from "./message-draft.js";
+export * from "./read-state.js";
 export * from "./scheduling.js";

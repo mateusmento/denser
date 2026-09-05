@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** app  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 03 — Timeline app  
 **Branch:** `agent/messaging-09-message-actions-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -44,4 +44,4 @@ _N/A_
 
 ## PR
 
-- [x] [#21](https://github.com/mateusmento/denser/pull/21) `[messaging 09] Message hover actions UI` — open, awaiting review
+- [x] [#21](https://github.com/mateusmento/denser/pull/21) `[messaging 09] Message hover actions UI` — merged
