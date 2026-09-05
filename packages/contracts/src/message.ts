@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AttachmentDto } from "./attachment.js";
 import { ArtifactId, AttachmentId, ClientId, MessageId, UserId } from "./ids.js";
 
 export const MessageIdSchema = MessageId;
@@ -45,6 +46,7 @@ export const MessageDto = z.object({
   editedAt: z.string().nullable(),
   deletedAt: z.string().nullable(),
   attachmentIds: z.array(AttachmentId),
+  attachments: z.array(AttachmentDto).optional(),
   quoted: QuotedPreviewDto.nullable().optional(),
   wasScheduled: z.boolean().optional(),
 });

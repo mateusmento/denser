@@ -5,6 +5,8 @@ import type {
   ConversationPersonView,
   ConversationQuotedPreviewView,
 } from "../types";
+import { collectImageAttachmentIdsFromDoc } from "./collect-image-attachment-ids";
+import { isMediaMime } from "./is-media-mime";
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -48,6 +50,20 @@ function toQuotedPreviewView(quoted: QuotedPreviewDto): ConversationQuotedPrevie
   };
 }
 
+function tileAttachments(dto: MessageDto): ConversationMessageView["attachments"] {
+  const inlineIds = new Set(collectImageAttachmentIdsFromDoc(dto.body as JSONContent));
+  return (dto.attachments ?? [])
+    .filter((attachment) => !inlineIds.has(attachment.id))
+    .map((attachment) => ({
+      id: attachment.id,
+      name: attachment.originalFilename,
+      mimeType: attachment.mimeType,
+      url: attachment.url,
+      byteSize: attachment.byteSize,
+      kind: isMediaMime(attachment.mimeType) ? ("media" as const) : ("file" as const),
+    }));
+}
+
 export function toConversationMessageView(
   dto: MessageDto,
   currentUser: SessionUser | null,
@@ -62,6 +78,7 @@ export function toConversationMessageView(
     reactions: [],
     replyCount: 0,
     quoted: dto.quoted ? toQuotedPreviewView(dto.quoted) : undefined,
+    attachments: tileAttachments(dto),
     canEdit: isMine && !dto.deletedAt,
     canDelete: isMine && !dto.deletedAt,
   };

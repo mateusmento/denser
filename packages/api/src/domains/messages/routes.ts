@@ -166,6 +166,13 @@ const messageDeps: MessageServiceDeps = {
   access: defaultAccess,
   attachments: {
     commitSync,
+    async loadByIds(ids) {
+      const { loadAttachments } = await import("../attachments/repository.js");
+      const { toAttachmentDtos } = await import("../attachments/mapper.js");
+      const { getPort } = await import("../../ports/container.js");
+      const rows = await loadAttachments(ids);
+      return toAttachmentDtos(rows, (key) => getPort("blobStore").getUrl(key));
+    },
   },
   emit: (conversationId, event, message) => emitConversationEvent(conversationId, event, message),
   loadAuthorDisplay,

@@ -1,5 +1,6 @@
 import type {
   ArtifactId,
+  AttachmentDto,
   AttachmentId,
   ListMessagesQuery,
   ListThreadMessagesQuery,
@@ -68,6 +69,7 @@ export type MessageAttachmentCoordinator = {
     attachmentIds: AttachmentId[];
     actor: { userId: UserId };
   }): Promise<void>;
+  loadByIds(ids: readonly AttachmentId[]): Promise<AttachmentDto[]>;
 };
 
 /** Real-time broadcast of authored messages to the conversation room. */
@@ -177,9 +179,16 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       loadAttachmentIdsForMessages: (ids) => repo.loadAttachmentIdsForMessages(ids),
       loadAuthorDisplay: deps.loadAuthorDisplay,
     });
-    const messages = rows.map((row) =>
-      toMessageDto(row, attachmentMap.get(row.id) ?? [], quotedExtra(row, quotedMap)),
-    );
+    const attachmentDtoMap = await loadAttachmentDtoMap(attachmentMap);
+    const messages = rows.map((row) => {
+      const attachmentIds = attachmentMap.get(row.id) ?? [];
+      return toMessageDto(row, attachmentIds, {
+        attachments: attachmentIds
+          .map((id) => attachmentDtoMap.get(id))
+          .filter((dto): dto is AttachmentDto => dto != null),
+        ...quotedExtra(row, quotedMap),
+      });
+    });
 
     const first = rows[0];
     const last = rows[rows.length - 1];
@@ -295,7 +304,22 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
         loadAuthorDisplay: deps.loadAuthorDisplay,
       }),
     ]);
-    return toMessageDto(row, attachmentIds, quotedExtra(row, quotedMap));
+    const attachmentDtoMap = await loadAttachmentDtoMap(new Map([[row.id, attachmentIds]]));
+    return toMessageDto(row, attachmentIds, {
+      attachments: attachmentIds
+        .map((id) => attachmentDtoMap.get(id))
+        .filter((dto): dto is AttachmentDto => dto != null),
+      ...quotedExtra(row, quotedMap),
+    });
+  }
+
+  async function loadAttachmentDtoMap(
+    attachmentMap: Map<MessageId, AttachmentId[]>,
+  ): Promise<Map<AttachmentId, AttachmentDto>> {
+    const ids = [...new Set([...attachmentMap.values()].flat())];
+    if (ids.length === 0) return new Map();
+    const loaded = await deps.attachments.loadByIds(ids);
+    return new Map(loaded.map((dto) => [dto.id, dto]));
   }
 
   return {
