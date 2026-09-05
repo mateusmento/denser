@@ -7,6 +7,20 @@ export type ConversationPersonView = {
   avatarUrl?: string;
 };
 
+export type ConversationPollOptionView = {
+  id: string;
+  label: string;
+  voteCount: number;
+};
+
+export type ConversationPollView = {
+  id: string;
+  question: string;
+  options: readonly ConversationPollOptionView[];
+  votedOptionId: string | null;
+  totalVotes: number;
+};
+
 export type ConversationReactionView = {
   emoji: string;
   count: number;
@@ -38,6 +52,7 @@ export type ConversationMessageView = {
   createdAt: string;
   createdAtLabel: string;
   reactions: readonly ConversationReactionView[];
+  poll?: ConversationPollView;
   replyCount: number;
   attachments?: readonly ConversationAttachmentView[];
   quoted?: ConversationQuotedPreviewView;

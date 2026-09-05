@@ -10,6 +10,8 @@ import type {
   PostMessageInput,
   QuotedPreviewDto,
   ReactionAggregateDto,
+  CreatePollInput,
+  PollDto,
   SpaceId,
   UserId,
 } from "@denser/contracts";
@@ -86,11 +88,17 @@ export type ReactionCoordinator = {
   loadForMessages(messageIds: readonly MessageId[], viewerId: UserId): Promise<Map<MessageId, ReactionAggregateDto[]>>;
 };
 
+export type PollCoordinator = {
+  createForMessage(messageId: MessageId, input: CreatePollInput, viewerId: UserId): Promise<PollDto>;
+  loadForMessages(messageIds: readonly MessageId[], viewerId: UserId): Promise<Map<MessageId, PollDto>>;
+};
+
 export type MessageServiceDeps = {
   repo: MessageRepository;
   access: MessageAccess;
   attachments: MessageAttachmentCoordinator;
   reactions: ReactionCoordinator;
+  polls: PollCoordinator;
   emit: MessageEmitter;
   loadAuthorDisplay: (userIds: readonly UserId[]) => Promise<Map<UserId, AuthorDisplay>>;
 };
@@ -107,6 +115,7 @@ export type MessageService = {
   postMessage(userId: UserId, input: PostMessageInternalInput): Promise<PostMessageResult>;
   editMessage(userId: UserId, messageId: MessageId, body: unknown): Promise<EditMessageResult>;
   deleteMessage(userId: UserId, messageId: MessageId): Promise<DeleteMessageResult>;
+  getMessage(userId: UserId, messageId: MessageId): Promise<MessageDto | null>;
 };
 
 export function createMessageService(deps: MessageServiceDeps): MessageService {
@@ -189,7 +198,11 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       loadAuthorDisplay: deps.loadAuthorDisplay,
     });
     const attachmentDtoMap = await loadAttachmentDtoMap(attachmentMap);
-    const reactionMap = await deps.reactions.loadForMessages(rows.map((row) => row.id), viewerId);
+    const messageIds = rows.map((row) => row.id);
+    const [reactionMap, pollMap] = await Promise.all([
+      deps.reactions.loadForMessages(messageIds, viewerId),
+      deps.polls.loadForMessages(messageIds, viewerId),
+    ]);
     const messages = rows.map((row) => {
       const attachmentIds = attachmentMap.get(row.id) ?? [];
       return toMessageDto(row, attachmentIds, {
@@ -198,6 +211,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
           .filter((dto): dto is AttachmentDto => dto != null),
         ...quotedExtra(row, quotedMap),
         reactions: reactionMap.get(row.id) ?? [],
+        poll: pollMap.get(row.id),
       });
     });
 
@@ -219,7 +233,8 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
 
     const attachmentIds = input.attachmentIds ?? [];
     const hasBody = input.body !== undefined && !isEmptyBody(input.body);
-    if (!hasBody && attachmentIds.length === 0) {
+    const hasPoll = input.poll !== undefined;
+    if (!hasBody && attachmentIds.length === 0 && !hasPoll) {
       return { ok: false as const, reason: "invalid_message" as const };
     }
 
@@ -228,14 +243,16 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       if (byOccurrence) {
         return {
           ok: true as const,
-          message: await messageDtoFor(byOccurrence, { wasScheduled: input.markAsScheduled === true }),
+          message: await messageDtoFor(byOccurrence, userId, {
+            wasScheduled: input.markAsScheduled === true,
+          }),
         };
       }
     }
 
     const duplicate = await repo.findClientMessage(input.conversationId, input.clientId);
     if (duplicate) {
-      return { ok: true as const, message: await messageDtoFor(duplicate) };
+      return { ok: true as const, message: await messageDtoFor(duplicate, userId) };
     }
 
     const threadId = input.threadId ?? null;
@@ -269,7 +286,13 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       });
     }
 
-    const dto = await messageDtoFor(row, { wasScheduled: input.markAsScheduled === true });
+    if (input.poll) {
+      await deps.polls.createForMessage(row.id, input.poll, userId);
+    }
+
+    const dto = await messageDtoFor(row, userId, {
+      wasScheduled: input.markAsScheduled === true,
+    });
     deps.emit(input.conversationId, "created", dto);
     return { ok: true as const, message: dto };
   }
@@ -294,7 +317,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     if (!updated) {
       return { ok: false as const, reason: "not_found" as const };
     }
-    const dto = await messageDtoFor(updated);
+    const dto = await messageDtoFor(updated, userId);
     deps.emit(updated.conversationId, "updated", dto);
     return { ok: true as const, message: dto };
   }
@@ -315,25 +338,26 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     if (!updated) {
       return { ok: false as const, reason: "not_found" as const };
     }
-
     await deps.attachments.commitRelease({ messageId, actor: { userId } });
 
-    const dto = await messageDtoFor(updated);
+    const dto = await messageDtoFor(updated, userId);
     deps.emit(updated.conversationId, "deleted", dto);
     return { ok: true as const, message: dto };
   }
 
   async function messageDtoFor(
     row: MessageRow,
+    viewerId: UserId,
     extra?: { wasScheduled?: boolean },
   ): Promise<MessageDto> {
-    const [attachmentIds, quotedMap] = await Promise.all([
+    const [attachmentIds, quotedMap, pollMap] = await Promise.all([
       repo.loadAttachmentIdsForMessage(row.id),
       loadQuotedPreviews([row], row.conversationId, {
         findMessagesByIds: (ids) => repo.findMessagesByIds(ids),
         loadAttachmentIdsForMessages: (ids) => repo.loadAttachmentIdsForMessages(ids),
         loadAuthorDisplay: deps.loadAuthorDisplay,
       }),
+      deps.polls.loadForMessages([row.id], viewerId),
     ]);
     const attachmentDtoMap = await loadAttachmentDtoMap(new Map([[row.id, attachmentIds]]));
     return toMessageDto(row, attachmentIds, {
@@ -342,7 +366,16 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
         .map((id) => attachmentDtoMap.get(id))
         .filter((dto): dto is AttachmentDto => dto != null),
       ...quotedExtra(row, quotedMap),
+      poll: pollMap.get(row.id),
     });
+  }
+
+  async function getMessage(userId: UserId, messageId: MessageId): Promise<MessageDto | null> {
+    const row = await repo.findMessageById(messageId);
+    if (!row || row.deletedAt) return null;
+    const ctx = await deps.access(userId, row.conversationId);
+    if (!ctx) return null;
+    return messageDtoFor(row, userId);
   }
 
   async function loadAttachmentDtoMap(
@@ -360,6 +393,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     postMessage,
     editMessage,
     deleteMessage,
+    getMessage,
   };
 }
 

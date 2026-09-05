@@ -1,4 +1,4 @@
-import type { AttachmentDto, AttachmentId, MessageDto, QuotedPreviewDto, ReactionAggregateDto } from "@denser/contracts";
+import type { AttachmentDto, AttachmentId, MessageDto, QuotedPreviewDto, ReactionAggregateDto, PollDto } from "@denser/contracts";
 import type { MessageRow } from "./types.js";
 
 export function toMessageDto(
@@ -9,6 +9,7 @@ export function toMessageDto(
     quoted?: QuotedPreviewDto | null;
     attachments?: AttachmentDto[];
     reactions?: ReactionAggregateDto[];
+    poll?: PollDto;
   },
 ): MessageDto {
   return {
@@ -27,5 +28,6 @@ export function toMessageDto(
     ...(extra?.quoted !== undefined ? { quoted: extra.quoted } : {}),
     ...(extra?.wasScheduled !== undefined ? { wasScheduled: extra.wasScheduled } : {}),
     ...(extra?.reactions !== undefined ? { reactions: extra.reactions } : {}),
+    ...(extra?.poll !== undefined ? { poll: extra.poll } : {}),
   };
 }

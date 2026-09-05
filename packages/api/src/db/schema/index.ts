@@ -12,3 +12,4 @@ export * from "./message-draft.js";
 export * from "./scheduled-job.js";
 export * from "./message-reaction.js";
 export * from "./relations.js";
+export * from "./message-poll.js";

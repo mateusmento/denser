@@ -8,6 +8,7 @@ import { emitConversationEvent } from "../../realtime/emit.js";
 import { loadAuthorDisplay } from "./author-display.js";
 import { messageRepository } from "./repository.js";
 import { reactionService } from "../reactions/routes.js";
+import { pollService } from "../polls/routes.js";
 import { createMessageService, type MessageServiceDeps } from "./service.js";
 
 type Variables = {
@@ -53,7 +54,7 @@ export const messageRoutes = new Hono<{ Variables: Variables }>()
 
       if (!result.ok) {
         if (result.reason === "invalid_message") {
-          return c.json({ error: "Message body or attachment is required" }, 400);
+          return c.json({ error: "Message body, attachment, or poll is required" }, 400);
         }
         if (result.reason === "invalid_thread") {
           return c.json({ error: "Invalid thread" }, 400);
@@ -192,8 +193,13 @@ const messageDeps: MessageServiceDeps = {
   reactions: {
     loadForMessages: (messageIds, viewerId) => reactionService.loadAggregatesForMessages(messageIds, viewerId),
   },
+  polls: {
+    createForMessage: (messageId, input, viewerId) => pollService.createPollForMessage(messageId, input, viewerId),
+    loadForMessages: (messageIds, viewerId) => pollService.loadForMessages(messageIds, viewerId),
+  },
   emit: (conversationId, event, message) => emitConversationEvent(conversationId, event, message),
   loadAuthorDisplay,
 };
 
 export const defaultMessageService = createMessageService(messageDeps);
+export { defaultMessageService as messageService };

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AttachmentDto } from "./attachment.js";
 import { ArtifactId, AttachmentId, ClientId, MessageId, UserId } from "./ids.js";
 import { ReactionAggregateDto } from "./reaction.js";
+import { CreatePollInput, PollDto } from "./poll.js";
 
 export const MessageIdSchema = MessageId;
 export type { MessageId };
@@ -51,6 +52,7 @@ export const MessageDto = z.object({
   quoted: QuotedPreviewDto.nullable().optional(),
   wasScheduled: z.boolean().optional(),
   reactions: z.array(ReactionAggregateDto).optional(),
+  poll: PollDto.optional(),
 });
 export type MessageDto = z.infer<typeof MessageDto>;
 
@@ -61,6 +63,7 @@ export const PostMessageInput = z.object({
   threadId: MessageId.nullable().optional(),
   clientId: ClientId,
   attachmentIds: z.array(AttachmentId).optional(),
+  poll: CreatePollInput.optional(),
 });
 export type PostMessageInput = z.infer<typeof PostMessageInput>;
 

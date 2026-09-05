@@ -76,6 +76,21 @@ export function toConversationMessageView(
     createdAt: dto.createdAt,
     createdAtLabel: createdAtLabel(dto.createdAt),
     reactions: (dto.reactions ?? []).map((reaction) => ({ emoji: reaction.emoji, count: reaction.count, mine: reaction.reactedByMe })),
+    ...(dto.poll
+      ? {
+          poll: {
+            id: dto.poll.id,
+            question: dto.poll.question,
+            votedOptionId: dto.poll.votedOptionId,
+            totalVotes: dto.poll.totalVotes,
+            options: dto.poll.options.map((option) => ({
+              id: option.id,
+              label: option.label,
+              voteCount: option.voteCount,
+            })),
+          },
+        }
+      : {}),
     replyCount: 0,
     quoted: dto.quoted ? toQuotedPreviewView(dto.quoted) : undefined,
     attachments: tileAttachments(dto),
