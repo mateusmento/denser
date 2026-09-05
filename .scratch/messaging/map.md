@@ -119,7 +119,7 @@ App follow-ups (after API merges):
 | **15** conversation-shell-app | 14 (#22) | DM hide in sidebar — **ready after #22 merge** |
 | **23** drafts-app | 22 (done) | Composer hydrate + debounce + 409 merge |
 
-**Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane.
+**Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane, **32** release attachments on message delete.
 
 ## Wave-5 plan (scheduling)
 
@@ -135,6 +135,8 @@ App follow-ups (after API merges):
 
 **In flight:** **08** reactions, **13** unread-app, **23** drafts-app (parallel agents).
 
-**Next after #22 merge:** **15** conversation-shell-app (DM hide UI).
+**Next after wave-4 tail:** **15** conversation-shell-app (DM hide UI), **21** files-pane, **32** delete-message attachment release.
+
+**Wave 5 (scheduling):** **25** schedule-message-api → **26** schedule-app → **27** recurrence — all `ready-for-agent` once you close wave-4 polish.
 
 **Local `main`:** seed (#31) + unread API (#12) committed, not pushed.

@@ -48,6 +48,7 @@ Maps **[CONVERSATIONS.md](../../docs/CONVERSATIONS.md)**, **[MESSAGE-DRAFTS.md](
 | **Later (in pack, lower priority)** |
 | 28 | [polls](./issues/28-polls.md) | 6 | full | conv | Poll create/vote + composer + embed |
 | 29 | [recording-attach](./issues/29-recording-attach.md) | **3f** | full | att | Screen record → upload → attach |
+| 32 | [delete-message-attachment-release](./issues/32-delete-message-attachment-release.md) | **3d** | api | att+conv | `DeleteMessage` releases message attachment anchor for GC |
 
 ## Dependency graph (simplified)
 
