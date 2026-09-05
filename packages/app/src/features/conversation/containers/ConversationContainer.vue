@@ -5,6 +5,7 @@ import { toast } from "@denser/design-system";
 import { computed, nextTick, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
+import { useComposerAttachments } from "../composables/useComposerAttachments";
 import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationSync } from "../composables/useConversationSync";
 import { useThreadMessages } from "../composables/useThreadMessages";
@@ -45,17 +46,31 @@ watch(conversationId, () => {
   threadDraft.value = emptyDoc();
 });
 
+const channelAttachments = useComposerAttachments({
+  conversationId,
+  body: channelDraft,
+});
+
+const threadAttachments = useComposerAttachments({
+  conversationId,
+  threadId: activeThreadId,
+  body: threadDraft,
+});
+
 const channelComposer = computed(() =>
   defaultChannelComposerView({
     schedulePresets,
     sending: messagesSync.isSending.value,
     failed: messagesSync.failed.value,
+    attachments: channelAttachments.view.value,
   }),
 );
+
 const threadComposer = computed(() =>
   defaultThreadComposerView({
     sending: threadSync.isSending.value,
     failed: threadSync.failed.value,
+    attachments: threadAttachments.view.value,
   }),
 );
 
@@ -64,28 +79,42 @@ function onMentionSearch(query: string) {
 }
 
 async function onChannelSend() {
+  if (channelAttachments.hasBlockingUpload.value) return;
+  const attachmentIds = channelAttachments.collectAttachmentIds(channelDraft.value);
+
   if (conversationSync.isCompose.value) {
     await conversationSync.sendInitialMessage(channelDraft.value);
     channelDraft.value = emptyDoc();
+    channelAttachments.clearAfterSend();
     return;
   }
-  await messagesSync.send(channelDraft.value);
+
+  await messagesSync.send(
+    channelDraft.value,
+    attachmentIds,
+    channelAttachments.collectAttachmentDtos(channelDraft.value),
+  );
   channelDraft.value = emptyDoc();
+  channelAttachments.clearAfterSend();
 }
 
 async function onThreadSend() {
+  if (threadAttachments.hasBlockingUpload.value) return;
   await threadSync.send(threadDraft.value);
   threadDraft.value = emptyDoc();
+  threadAttachments.clearAfterSend();
 }
 
 function onSchedule(payload: ScheduleCommitPayload) {
   toast(`Message scheduled · ${payload.whenLabel}`);
   channelDraft.value = emptyDoc();
+  channelAttachments.clearAfterSend();
 }
 
 function onThreadSchedule(payload: ScheduleCommitPayload) {
   toast(`Reply scheduled · ${payload.whenLabel}`);
   threadDraft.value = emptyDoc();
+  threadAttachments.clearAfterSend();
 }
 
 function onReact(messageId: string, emoji: string) {
@@ -150,6 +179,7 @@ async function onThreadRetry() {
 }
 
 function onAction(id: ComposerActionId) {
+  if (id === "attach" || id === "image") return;
   toast(`Coming soon · ${id}`);
 }
 
@@ -197,11 +227,18 @@ async function onThreadJumpToLatest() {
         v-model="channelDraft"
         :view="channelComposer"
         :mention-items="mentionItems"
+        :upload-image="channelAttachments.uploadInlineImage"
+        :on-stage-files="(files) => channelAttachments.stageFiles(files)"
+        :can-send="channelAttachments.hasSendableContent(channelDraft)"
         @mention-search="onMentionSearch"
         @send="onChannelSend"
         @retry="onRetry"
         @schedule="onSchedule"
         @action="onAction"
+        @remove-attachment="channelAttachments.removeTile"
+        @cancel-upload="channelAttachments.cancelUpload"
+        @retry-upload="channelAttachments.retryUpload"
+        @dismiss-upload="channelAttachments.dismissFailed"
       />
     </template>
     <template v-if="activeThreadId && threadSync.thread.value" #thread>
@@ -213,6 +250,9 @@ async function onThreadJumpToLatest() {
         :previous-page="threadSync.previousPage.value"
         :next-page="threadSync.nextPage.value"
         :show-jump-to-latest="threadSync.showJumpToLatest.value"
+        :upload-image="threadAttachments.uploadInlineImage"
+        :on-stage-files="(files) => threadAttachments.stageFiles(files)"
+        :can-send="threadAttachments.hasSendableContent(threadDraft)"
         @mention-search="onMentionSearch"
         @close="onCloseThread"
         @send="onThreadSend"
@@ -229,6 +269,10 @@ async function onThreadJumpToLatest() {
         @delete="onDelete"
         @load-previous="threadSync.loadPrevious()"
         @jump-to-latest="onThreadJumpToLatest"
+        @remove-attachment="threadAttachments.removeTile"
+        @cancel-upload="threadAttachments.cancelUpload"
+        @retry-upload="threadAttachments.retryUpload"
+        @dismiss-upload="threadAttachments.dismissFailed"
       />
     </template>
   </ConversationSurface>

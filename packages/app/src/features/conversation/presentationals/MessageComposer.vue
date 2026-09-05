@@ -26,7 +26,7 @@ import {
   PaperclipIcon,
   SendIcon,
 } from "@lucide/vue";
-import { useElementSize } from "@vueuse/core";
+import { useElementSize, useFileDialog } from "@vueuse/core";
 import { computed, useTemplateRef } from "vue";
 import {
   RichTextComposer,
@@ -34,12 +34,14 @@ import {
   type JSONContent,
   type MentionCandidate,
 } from "@/modules/rich-text";
+import type { RichTextUploadResult } from "@/modules/rich-text/lib/extensions";
 import {
   CHANNEL_COMPOSER_ACTIONS,
   THREAD_COMPOSER_ACTIONS,
   partitionComposerActions,
 } from "../composerActions";
 import type { ComposerActionId, MessageComposerView, ScheduleCommitPayload } from "../types";
+import ComposerAttachmentTiles from "./ComposerAttachmentTiles.vue";
 import SchedulePopover from "./SchedulePopover.vue";
 
 const body = defineModel<JSONContent>({ required: true });
@@ -48,7 +50,9 @@ const props = defineProps<{
   view: MessageComposerView;
   class?: string;
   mentionItems?: readonly MentionCandidate[];
-  uploadImage?: (file: File) => Promise<string>;
+  uploadImage?: (file: File) => Promise<RichTextUploadResult>;
+  onStageFiles?: (files: File[]) => void;
+  canSend?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -57,6 +61,10 @@ const emit = defineEmits<{
   action: [id: ComposerActionId];
   schedule: [payload: ScheduleCommitPayload];
   mentionSearch: [query: string];
+  removeAttachment: [attachmentId: string];
+  cancelUpload: [clientId: string];
+  retryUpload: [clientId: string];
+  dismissUpload: [clientId: string];
 }>();
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -68,14 +76,27 @@ const composer = useTemplateRef<{
 const { width } = useElementSize(root);
 const scheduleOpen = defineModel<boolean>("scheduleOpen", { default: false });
 
+const { open: openAttachDialog, onChange: onAttachFiles } = useFileDialog({ multiple: true });
+
+onAttachFiles((files) => {
+  const list = files ? Array.from(files) : [];
+  if (!list.length) return;
+  props.onStageFiles?.(list);
+});
+
 const catalog = computed(() =>
   props.view.shape === "thread" ? THREAD_COMPOSER_ACTIONS : CHANNEL_COMPOSER_ACTIONS,
 );
 
 const partitioned = computed(() => partitionComposerActions(catalog.value, width.value || 720));
 
+const attachments = computed(() => props.view.attachments);
+
 const canSend = computed(() => {
-  if (props.view.disabled || props.view.sending) return false;
+  if (props.view.disabled || props.view.sending || attachments.value?.hasBlockingUpload) {
+    return false;
+  }
+  if (props.canSend !== undefined) return props.canSend;
   const text = JSON.stringify(body.value);
   return text.length > JSON.stringify(emptyDoc()).length;
 });
@@ -100,6 +121,11 @@ function runAction(id: ComposerActionId) {
     emit("action", id);
     return;
   }
+  if (id === "attach") {
+    openAttachDialog();
+    emit("action", id);
+    return;
+  }
   if (id === "code") {
     composer.value?.toggleCodeBlock();
     return;
@@ -109,6 +135,13 @@ function runAction(id: ComposerActionId) {
     return;
   }
   emit("action", id);
+}
+
+function onDrop(event: DragEvent) {
+  const files = event.dataTransfer?.files;
+  if (!files?.length) return;
+  event.preventDefault();
+  props.onStageFiles?.(Array.from(files));
 }
 </script>
 
@@ -133,7 +166,19 @@ function runAction(id: ComposerActionId) {
     "
     data-slot="message-composer"
     :data-shape="view.shape"
+    @dragover.prevent
+    @drop="onDrop"
   >
+    <ComposerAttachmentTiles
+      v-if="attachments?.tiles.length"
+      :tiles="attachments.tiles"
+      :disabled="attachments.disabled || view.disabled || view.sending"
+      @remove="emit('removeAttachment', $event)"
+      @cancel="emit('cancelUpload', $event)"
+      @retry="emit('retryUpload', $event)"
+      @dismiss="emit('dismissUpload', $event)"
+    />
+
     <CardContent class="min-h-0 flex-1">
       <ScrollArea class="h-full min-h-0">
         <RichTextComposer
@@ -145,6 +190,7 @@ function runAction(id: ComposerActionId) {
           submit-on-enter
           :mention-items="mentionItems"
           :upload-image="uploadImage"
+          :on-stage-files="onStageFiles"
           @submit="canSend && emit('send')"
           @mention-search="emit('mentionSearch', $event)"
         />
@@ -171,7 +217,7 @@ function runAction(id: ComposerActionId) {
                   variant="outline"
                   size="icon"
                   :aria-label="action.label"
-                  :disabled="view.disabled"
+                  :disabled="view.disabled || attachments?.disabled"
                 >
                   <component :is="icons[action.id]" class="size-4" />
                 </Button>
@@ -183,7 +229,7 @@ function runAction(id: ComposerActionId) {
                   variant="outline"
                   size="icon"
                   :aria-label="action.label"
-                  :disabled="view.disabled"
+                  :disabled="view.disabled || attachments?.disabled"
                   @click="runAction(action.id)"
                 >
                   <component :is="icons[action.id]" class="size-4" />
@@ -195,7 +241,12 @@ function runAction(id: ComposerActionId) {
 
           <DropdownMenu v-if="partitioned.overflow.length">
             <DropdownMenuTrigger as-child>
-              <Button variant="ghost" size="icon-sm" aria-label="More" :disabled="view.disabled">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="More"
+                :disabled="view.disabled || attachments?.disabled"
+              >
                 <EllipsisIcon class="size-4" />
               </Button>
             </DropdownMenuTrigger>

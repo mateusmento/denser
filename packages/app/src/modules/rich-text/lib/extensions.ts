@@ -14,11 +14,14 @@ import { filterSlashItems, runSlashCommand, STANDARD_SLASH_ITEMS } from "./slash
 import { createSuggestionRender } from "./suggestionRender";
 import { suggestionFloating } from "./suggestionFloating";
 
+export type RichTextUploadResult = string | { src: string; attachmentId?: string | null };
+
 export type RichTextPorts = {
   placeholder: string;
   mentionItems?: () => readonly MentionCandidate[] | undefined;
   onMentionSearch?: (query: string) => void;
-  uploadImage?: (file: File) => Promise<string>;
+  uploadImage?: (file: File) => Promise<RichTextUploadResult>;
+  onStageFiles?: (files: File[]) => void;
   requestImage?: () => void;
   slashExtras?: readonly SlashCommandItem[];
 };
@@ -74,14 +77,34 @@ async function insertUploadedImage(
   pos?: number,
 ): Promise<void> {
   if (!upload) return;
-  const src = await upload(file);
+  const result = await upload(file);
+  const src = typeof result === "string" ? result : result.src;
   if (!src) return;
-  const image: JSONContent = { type: "image", attrs: { src, alt: file.name } };
+  const attachmentId =
+    typeof result === "object" && result.attachmentId ? result.attachmentId : undefined;
+  const attrs = attachmentId ? { src, alt: file.name, attachmentId } : { src, alt: file.name };
+  const image: JSONContent = { type: "image", attrs };
   if (typeof pos === "number") {
     editor.chain().focus().insertContentAt(pos, image).run();
     return;
   }
-  editor.chain().focus().setImage({ src, alt: file.name }).run();
+  editor.chain().focus().setImage(attrs).run();
+}
+
+function routeDroppedFiles(
+  editor: Editor,
+  files: File[],
+  ports: RichTextPorts,
+  pos?: number,
+) {
+  const images = files.filter((file) => file.type.startsWith("image/"));
+  const others = files.filter((file) => !file.type.startsWith("image/"));
+  if (others.length) {
+    ports.onStageFiles?.(others);
+  }
+  for (const file of images) {
+    insertUploadedImage(editor, file, ports.uploadImage, pos).catch(() => undefined);
+  }
 }
 
 export function createRichTextExtensions(ports: RichTextPorts) {
@@ -139,16 +162,12 @@ export function createRichTextExtensions(ports: RichTextPorts) {
     Placeholder.configure({ placeholder: ports.placeholder }),
     SlashCommands(ports),
     FileHandler.configure({
-      allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      allowedMimeTypes: undefined,
       onPaste: (editor, files) => {
-        for (const file of files) {
-          insertUploadedImage(editor, file, ports.uploadImage).catch(() => undefined);
-        }
+        routeDroppedFiles(editor, [...files], ports);
       },
       onDrop: (editor, files, pos) => {
-        for (const file of files) {
-          insertUploadedImage(editor, file, ports.uploadImage, pos).catch(() => undefined);
-        }
+        routeDroppedFiles(editor, [...files], ports, pos);
       },
     }),
   ];

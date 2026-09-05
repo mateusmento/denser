@@ -5,6 +5,7 @@ import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/ric
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { conversationMentionItems, schedulePresets } from "../fixtures";
 import MessageComposer from "../presentationals/MessageComposer.vue";
+import type { ComposerAttachmentTileView } from "../types";
 
 const { Story } = defineMeta({
   title: "features/conversation/MessageComposer",
@@ -18,6 +19,18 @@ const mentionItems = ref<MentionCandidate[]>([]);
 function onMentionSearch(query: string) {
   mentionItems.value = conversationMentionItems(query);
 }
+
+const attachmentTiles: ComposerAttachmentTileView[] = [
+  {
+    key: "s:1",
+    kind: "uploaded",
+    id: "1",
+    name: "brief.pdf",
+    mimeType: "application/pdf",
+    url: "https://placehold.co/80x80",
+    byteSize: 120_000,
+  },
+];
 </script>
 
 <template>
@@ -46,6 +59,20 @@ function onMentionSearch(query: string) {
       <MessageComposer
         v-model="draft"
         :view="defaultChannelComposerView({ failed: true, schedulePresets })"
+      />
+    </div>
+  </Story>
+  <Story as-child name="With attachments">
+    <div class="h-52 w-[36rem]">
+      <MessageComposer
+        v-model="draft"
+        :view="
+          defaultChannelComposerView({
+            schedulePresets,
+            attachments: { tiles: attachmentTiles, disabled: false, hasBlockingUpload: false },
+          })
+        "
+        :can-send="true"
       />
     </div>
   </Story>
