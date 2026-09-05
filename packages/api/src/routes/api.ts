@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { conversationRoutes } from "../domains/conversations/routes.js";
 import { documentRoutes } from "../domains/documents/routes.js";
+import { draftRoutes } from "../domains/drafts/routes.js";
 import { homeRoutes } from "../domains/home/routes.js";
 import { messageRoutes } from "../domains/messages/routes.js";
 import { spaceRoutes, spaceSprintRoutes } from "../domains/spaces/routes.js";
@@ -17,4 +18,5 @@ export const apiRoutes = new Hono<{ Variables: Variables }>()
   .route("/", documentRoutes)
   .route("/", conversationRoutes)
   .route("/", messageRoutes)
+  .route("/", draftRoutes)
   .route("/", documentTypeRoutes);
