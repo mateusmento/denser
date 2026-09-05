@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import type { ArtifactId, UserId } from "@denser/contracts";
+import { db } from "../../db/client.js";
 import * as readStateRepository from "./repository.js";
 
 const CONVERSATION = "00000000-0000-4000-8000-000000000031" as ArtifactId;
 const ALICE = "00000000-0000-4000-8000-000000000001" as UserId;
 const DAVID = "00000000-0000-4000-8000-000000000004" as UserId;
+
+after(async () => {
+  await (db as unknown as { $client: { end: () => Promise<void> } }).$client.end();
+});
 
 test("countUnreadMessages: excludes own messages and counts others after lastReadAt", async () => {
   const readRow = await readStateRepository.findReadState(CONVERSATION, ALICE);

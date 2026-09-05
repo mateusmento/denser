@@ -1,5 +1,5 @@
 import type { ArtifactId, MessageId, SpaceId, UserId } from "@denser/contracts";
-import { and, asc, count, desc, eq, gt, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, isNull, ne } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { conversation } from "../../db/schema/conversation.js";
@@ -40,7 +40,6 @@ export async function upsertReadState(input: {
       set: {
         lastReadAt: input.lastReadAt,
       },
-      setWhere: sql`${readState.lastReadAt} < ${input.lastReadAt}`,
     })
     .returning();
 
