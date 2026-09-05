@@ -2,6 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import type {
   ClientToServerEvents,
   MessageDto,
+  ReactionUpdatedEvent,
   ReadyEvent,
   ServerEventPayload,
   ServerToClientEvents,
@@ -14,6 +15,8 @@ import {
   MESSAGE_UPDATED_EVENT,
   MessageDto as MessageDtoSchema,
   ReadyEvent as ReadyEventSchema,
+  REACTION_UPDATED_EVENT,
+  ReactionUpdatedEvent as ReactionUpdatedEventSchema,
   TYPING_EVENT,
   TypingEvent,
   WORKSPACE_PRESENCE_EVENT,
@@ -69,6 +72,7 @@ const eventParsers = {
   [MESSAGE_CREATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
   [MESSAGE_UPDATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
   [MESSAGE_DELETED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
+  [REACTION_UPDATED_EVENT]: (payload: unknown): ReactionUpdatedEvent => ReactionUpdatedEventSchema.parse(payload),
   [TYPING_EVENT]: (payload: unknown): TypingEvent => TypingEvent.parse(payload),
   [CONVERSATION_PRESENCE_EVENT]: (payload: unknown): ConversationPresenceEvent =>
     ConversationPresenceEvent.parse(payload),

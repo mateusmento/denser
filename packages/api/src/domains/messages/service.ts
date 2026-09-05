@@ -8,6 +8,7 @@ import type {
   MessageId,
   PostMessageInput,
   QuotedPreviewDto,
+  ReactionAggregateDto,
   SpaceId,
   UserId,
 } from "@denser/contracts";
@@ -79,10 +80,15 @@ export type MessageEmitter = (
   message: MessageDto,
 ) => void;
 
+export type ReactionCoordinator = {
+  loadForMessages(messageIds: readonly MessageId[], viewerId: UserId): Promise<Map<MessageId, ReactionAggregateDto[]>>;
+};
+
 export type MessageServiceDeps = {
   repo: MessageRepository;
   access: MessageAccess;
   attachments: MessageAttachmentCoordinator;
+  reactions: ReactionCoordinator;
   emit: MessageEmitter;
   loadAuthorDisplay: (userIds: readonly UserId[]) => Promise<Map<UserId, AuthorDisplay>>;
 };
@@ -129,7 +135,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       ...(query.around ? { anchorId: query.around } : {}),
     });
 
-    return toListResult(ctx.conversationId, rows);
+    return toListResult(ctx.conversationId, rows, userId);
   }
 
   async function listThreadMessages(
@@ -161,12 +167,13 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       direction: query.direction ?? "next",
     });
 
-    return toListResult(ctx.conversationId, rows);
+    return toListResult(ctx.conversationId, rows, userId);
   }
 
   async function toListResult(
     conversationId: ArtifactId,
     rows: MessageRow[],
+    viewerId: UserId,
   ): Promise<{
     ok: true;
     messages: MessageDto[];
@@ -180,6 +187,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       loadAuthorDisplay: deps.loadAuthorDisplay,
     });
     const attachmentDtoMap = await loadAttachmentDtoMap(attachmentMap);
+    const reactionMap = await deps.reactions.loadForMessages(rows.map((row) => row.id), viewerId);
     const messages = rows.map((row) => {
       const attachmentIds = attachmentMap.get(row.id) ?? [];
       return toMessageDto(row, attachmentIds, {
@@ -187,6 +195,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
           .map((id) => attachmentDtoMap.get(id))
           .filter((dto): dto is AttachmentDto => dto != null),
         ...quotedExtra(row, quotedMap),
+        reactions: reactionMap.get(row.id) ?? [],
       });
     });
 

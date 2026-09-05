@@ -109,3 +109,20 @@ test("toConversationMessageView classifies image attachments as media", () => {
 
   assert.equal(view.attachments?.[0]?.kind, "media");
 });
+
+
+test("toConversationMessageView maps reactions", () => {
+  const view = toConversationMessageView(
+    messageDto({
+      reactions: [
+        { emoji: "👍", count: 2, reactedByMe: true },
+        { emoji: "🎉", count: 1, reactedByMe: false },
+      ],
+    }),
+    null,
+  );
+  assert.deepEqual(view.reactions, [
+    { emoji: "👍", count: 2, mine: true },
+    { emoji: "🎉", count: 1, mine: false },
+  ]);
+});

@@ -34,6 +34,7 @@ import {
   MESSAGE_PAGE_SIZE,
   type MessagesPageParam,
 } from "../lib/message-cache";
+import { applyReactionUpdated, toggleReactionOptimistic } from "../lib/reaction-cache";
 import type { ListMessagesResponse } from "@denser/contracts";
 import { toConversationMessageView } from "../lib/toConversationMessageView";
 import type { ConversationMessageView } from "../types";
@@ -172,6 +173,16 @@ export function useConversationMessages(
     syncQueryData(applyMessageDeleted(current, event));
   }
 
+  function ingestReaction(event: ReactionUpdatedEvent) {
+    if (!id.value || event.conversationId !== id.value) return;
+    const current = readMessagesQuery(queryClient, id.value);
+    const next = applyReactionUpdated(current, event);
+    if (!next) return;
+    syncQueryData(next);
+    const message = flattenMessagePages(next).find((row) => row.id === event.messageId);
+    if (message) upsertInCollection(messagesCollection, message);
+  }
+
   useConversationRoom(id);
   const { ensureSocket } = useRealtimeSocket();
   let cancelled = false;
@@ -181,6 +192,7 @@ export function useConversationMessages(
     socket.on(MESSAGE_CREATED_EVENT, ingestMessage);
     socket.on(MESSAGE_UPDATED_EVENT, ingestUpdate);
     socket.on(MESSAGE_DELETED_EVENT, ingestDelete);
+    socket.on(REACTION_UPDATED_EVENT, ingestReaction);
   });
 
   onScopeDispose(() => {
@@ -190,6 +202,7 @@ export function useConversationMessages(
     socket.off(MESSAGE_CREATED_EVENT, ingestMessage);
     socket.off(MESSAGE_UPDATED_EVENT, ingestUpdate);
     socket.off(MESSAGE_DELETED_EVENT, ingestDelete);
+    socket.off(REACTION_UPDATED_EVENT, ingestReaction);
   });
 
   const sendMutation = useMutation({
@@ -372,6 +385,35 @@ export function useConversationMessages(
     await deleteMutation.mutateAsync(messageId);
   }
 
+  async function toggleReaction(messageId: MessageId, emoji: string) {
+    const conversation = id.value;
+    if (!conversation) return;
+
+    const key = queryKeys.conversationMessages(conversation);
+    await queryClient.cancelQueries({ queryKey: key });
+    const previous = readMessagesQuery(queryClient, conversation);
+    const current = dtos.value.find((message) => message.id === messageId);
+    if (!current) return;
+
+    const optimistic: MessageDto = {
+      ...current,
+      reactions: toggleReactionOptimistic(current.reactions, emoji),
+    };
+    syncQueryData(applyMessageUpdated(previous, optimistic));
+
+    try {
+      const response = await apiClient.toggleReaction(conversation, messageId, { emoji });
+      ingestReaction({
+        conversationId: conversation,
+        messageId,
+        reactions: response.reactions,
+      });
+    } catch (error) {
+      if (previous) queryClient.setQueryData(key, previous);
+      throw error;
+    }
+  }
+
   return {
     messages,
     isLoading,
@@ -390,6 +432,7 @@ export function useConversationMessages(
     send,
     edit,
     remove,
+    toggleReaction,
     retrySend,
     reload: () => query.refetch(),
   };

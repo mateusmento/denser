@@ -27,6 +27,8 @@ import {
   PatchConversationInput,
   PostMessageInput,
   PostMessageResponse,
+  ToggleReactionInput,
+  ToggleReactionResponse,
   PatchConversationResponse,
   EnableSprintsResponse,
   HomeResponse,
@@ -679,6 +681,21 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("delete message failed", res.status, body);
     return PostMessageResponse.parse(body);
+  }
+
+  async toggleReaction(
+    conversationId: ArtifactId,
+    messageId: MessageId,
+    input: ToggleReactionInput,
+  ): Promise<ToggleReactionResponse> {
+    const payload = ToggleReactionInput.parse(input);
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages/${messageId}/reactions`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("toggle reaction failed", res.status, body);
+    return ToggleReactionResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

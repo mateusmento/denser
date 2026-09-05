@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** full  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** claimed  
+**Status:** done  
 **Blocked by:** 02 — Messages API; 03 — Timeline app  
 **Branch:** `agent/messaging-08-reactions`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -38,14 +38,14 @@ Toggle reaction on messages — API + timeline UI in one vertical slice (epicsto
 
 ## API (backend)
 
-- [ ] `ToggleReaction` API + `reaction.updated` socket
-- [ ] Persist aggregates per message + emoji key
+- [x] `ToggleReaction` API + `reaction.updated` socket
+- [x] Persist aggregates per message + emoji key
 
 ## App (frontend)
 
-- [ ] Reaction picker / aggregates on `ConversationMessage`
-- [ ] Realtime update in timeline replica
+- [x] Reaction picker / aggregates on `ConversationMessage`
+- [x] Realtime update in timeline replica
 
 ## PR
 
-- [ ] `[messaging 08] Reactions` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 08] Reactions` — [PR-POLICY.md](../PR-POLICY.md)

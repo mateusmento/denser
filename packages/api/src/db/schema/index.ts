@@ -10,4 +10,5 @@ export * from "./message.js";
 export * from "./attachment.js";
 export * from "./message-draft.js";
 export * from "./scheduled-job.js";
+export * from "./message-reaction.js";
 export * from "./relations.js";

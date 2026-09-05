@@ -267,7 +267,9 @@ async function onThreadSchedule(payload: ScheduleCommitPayload) {
 }
 
 function onReact(messageId: string, emoji: string) {
-  void messagesSync.toggleReaction(messageId as MessageId, emoji);
+  void messagesSync.toggleReaction(messageId as MessageId, emoji).catch(() => {
+    toast("Couldn't update reaction");
+  });
 }
 
 function onOpenThread(messageId: string) {

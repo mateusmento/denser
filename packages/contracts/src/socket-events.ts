@@ -27,6 +27,7 @@ import {
   MESSAGE_UPDATED_EVENT,
   MessageDto,
 } from "./message.js";
+import { REACTION_UPDATED_EVENT, ReactionUpdatedEvent } from "./reaction.js";
 import { z } from "zod";
 
 export const ReadyEvent = z.object({
@@ -40,6 +41,7 @@ export type ServerToClientEvents = {
   [MESSAGE_CREATED_EVENT]: (payload: MessageDto) => void;
   [MESSAGE_UPDATED_EVENT]: (payload: MessageDto) => void;
   [MESSAGE_DELETED_EVENT]: (payload: MessageDto) => void;
+  [REACTION_UPDATED_EVENT]: (payload: ReactionUpdatedEvent) => void;
   [TYPING_EVENT]: (payload: TypingEvent) => void;
   [CONVERSATION_PRESENCE_EVENT]: (payload: ConversationPresenceEvent) => void;
   [WORKSPACE_PRESENCE_EVENT]: (payload: WorkspacePresenceEvent) => void;

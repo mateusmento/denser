@@ -60,6 +60,9 @@ function makeHarness(opts: { forbidBob?: boolean } = {}): Harness {
       commitSync: async () => undefined,
       loadByIds: async () => [],
     },
+    reactions: {
+      loadForMessages: async (messageIds) => new Map(messageIds.map((id) => [id, []])),
+    },
     emit: (_conversationId, event, message) => emitted.push({ event, message }),
     loadAuthorDisplay: async (userIds) => {
       const out = new Map<UserId, { name: string; avatarUrl: string | null }>();
