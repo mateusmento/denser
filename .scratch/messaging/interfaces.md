@@ -78,9 +78,11 @@ type PostMessageInput = {
 type BlobStore = {
   createUpload(input: {
     rootSpaceId: SpaceId
+    uploadedBy: UserId // uploader (authenticated user) — required to seed the `attachments` row
     filename: string
     mimeType: string
     byteSize: number
+    conversationId?: ArtifactId | null // optional listing hint
   }): Promise<{ attachmentId: AttachmentId; upload: { /* multipart or put URL session */ } }>
   /** Progressive upload session supporting abort/cancel */
   uploadPart?(…): Promise<void>
