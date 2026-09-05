@@ -3,7 +3,7 @@
 **Chunk:** 3a — Attachments storage (backend)  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) A1  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-17-attachment-refs-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)
@@ -52,4 +52,4 @@ Pool + joins only — no composer changes. Files pane (21) and upload (18) depen
 
 ## PR
 
-- [ ] `[messaging 17] Attachment references + reclaim` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 17] Attachment references + reclaim` — [PR-POLICY.md](../PR-POLICY.md) → PR #4
