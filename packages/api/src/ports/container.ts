@@ -1,9 +1,11 @@
-import type { AttachmentReferences, BlobStore, ClaimDueJobs } from "@denser/contracts";
+import type { AttachmentReferences, BlobStore, ClaimDueJobs, PresenceStore, TypingStore } from "@denser/contracts";
 
 type PortMap = {
   blobStore: BlobStore;
   attachmentReferences: AttachmentReferences;
   claimDueJobs: ClaimDueJobs;
+  typingStore: TypingStore;
+  presenceStore: PresenceStore;
 };
 
 const ports: Partial<PortMap> = {};

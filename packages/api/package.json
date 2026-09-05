@@ -24,8 +24,10 @@
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.1",
     "postgres": "^3.4.9",
+    "redis": "^5.8.2",
     "socket.io": "^4.8.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@socket.io/redis-adapter": "^8.3.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.5.0",

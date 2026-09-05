@@ -59,7 +59,7 @@ const blobStore: BlobStore = {
 // Register defaults first (they own the `attachmentReferences` seam), then override the
 // BlobStore with an in-memory fake so URL resolution and object deletes are observable.
 before(async () => {
-  registerDefaultPorts();
+  await registerDefaultPorts();
   registerPort("blobStore", blobStore);
   ({ attachmentReferences: references } = await import("./service.js"));
 });

@@ -19,14 +19,9 @@ import {
   WORKSPACE_PRESENCE_UNSUBSCRIBE_EVENT,
   WorkspacePresenceRootInput,
 } from "@denser/contracts";
+import { getPort } from "../ports/container.js";
 import type { DenserServer, DenserSocket } from "./attach.js";
-import {
-  createPresenceRegistry,
-  type ConversationPresenceRegistry,
-  type WorkspacePresenceRegistry,
-} from "./presence-registry.js";
 import { conversationRoom, workspacePresenceRoom } from "./rooms.js";
-import { createTypingState } from "./typing-state.js";
 
 export type ConversationAccess = (
   userId: UserId,
@@ -44,12 +39,6 @@ type PresenceSocketData = DenserSocket["data"] & {
   subscribedConversations?: Set<ArtifactId>;
   viewingConversations?: Set<ArtifactId>;
   workspacePresenceRootSpaceId?: SpaceId;
-};
-
-type PresenceRuntime = {
-  conversationViewers: ConversationPresenceRegistry;
-  workspaceOnline: WorkspacePresenceRegistry;
-  typingState: ReturnType<typeof createTypingState>;
 };
 
 function asPresenceSocket(socket: DenserSocket): DenserSocket & { data: PresenceSocketData } {
@@ -74,50 +63,47 @@ function untrackSet(
   return current.size > 0 ? current : undefined;
 }
 
-export function createPresenceRuntime(): PresenceRuntime {
-  const conversationViewers = createPresenceRegistry<ArtifactId>();
-  const workspaceOnline = createPresenceRegistry<SpaceId>();
-  const typingState = createTypingState({ ttlMs: TYPING_TTL_MS });
-  const pruneTimer = setInterval(() => typingState.prune(), 500);
-  if (typeof pruneTimer === "object" && "unref" in pruneTimer) {
-    pruneTimer.unref();
-  }
-  return { conversationViewers, workspaceOnline, typingState };
-}
-
 export function registerPresenceHandlers(
   io: DenserServer,
   socket: DenserSocket,
   deps: PresenceHandlerDeps,
-  runtime: PresenceRuntime,
 ): void {
-  const { conversationViewers, workspaceOnline, typingState } = runtime;
+  const typingStore = getPort("typingStore");
+  const presenceStore = getPort("presenceStore");
   const presenceSocket = asPresenceSocket(socket);
 
-  function emitConversationPresence(conversationId: ArtifactId): void {
+  function emitConversationPresence(conversationId: ArtifactId, viewers: UserId[]): void {
     io.to(conversationRoom(conversationId)).emit(CONVERSATION_PRESENCE_EVENT, {
       conversationId,
-      viewers: conversationViewers.list(conversationId),
+      viewers,
     });
   }
 
   async function leaveConversationViewing(conversationId: ArtifactId): Promise<void> {
     const userId = presenceSocket.data.userId as UserId;
-    const wasLast = conversationViewers.remove(conversationId, userId);
+    const { viewers, becameAbsent } = await presenceStore.leaveConversation({
+      conversationId,
+      userId,
+      socketId: presenceSocket.id,
+    });
     presenceSocket.data.viewingConversations = untrackSet(
       presenceSocket.data.viewingConversations,
       conversationId,
     );
-    if (wasLast) {
-      emitConversationPresence(conversationId);
+    if (becameAbsent) {
+      emitConversationPresence(conversationId, viewers);
     }
   }
 
   async function leaveWorkspacePresence(rootSpaceId: SpaceId): Promise<void> {
     const userId = presenceSocket.data.userId as UserId;
     presenceSocket.leave(workspacePresenceRoom(rootSpaceId));
-    const wasLast = workspaceOnline.remove(rootSpaceId, userId);
-    if (wasLast) {
+    const { becameOffline } = await presenceStore.leaveWorkspace({
+      rootSpaceId,
+      userId,
+      socketId: presenceSocket.id,
+    });
+    if (becameOffline) {
       io.to(workspacePresenceRoom(rootSpaceId)).emit(WORKSPACE_PRESENCE_EVENT, {
         rootSpaceId,
         userId,
@@ -159,11 +145,15 @@ export function registerPresenceHandlers(
     const { conversationId } = parsed.data;
     if (!(await deps.canAccessConversation(userId, conversationId))) return;
 
-    const untilMs = typingState.record(conversationId, userId);
+    const { until } = await typingStore.pulse({
+      conversationId,
+      userId,
+      ttlMs: TYPING_TTL_MS,
+    });
     presenceSocket.to(conversationRoom(conversationId)).emit(TYPING_EVENT, {
       conversationId,
       userId,
-      until: new Date(untilMs).toISOString(),
+      until,
     });
   });
 
@@ -175,13 +165,17 @@ export function registerPresenceHandlers(
     if (!(await deps.canAccessConversation(userId, conversationId))) return;
 
     await presenceSocket.join(conversationRoom(conversationId));
-    const becameViewer = conversationViewers.add(conversationId, userId);
+    const { becameViewer, viewers } = await presenceStore.joinConversation({
+      conversationId,
+      userId,
+      socketId: presenceSocket.id,
+    });
     presenceSocket.data.viewingConversations = trackSet(
       presenceSocket.data.viewingConversations,
       conversationId,
     );
     if (becameViewer) {
-      emitConversationPresence(conversationId);
+      emitConversationPresence(conversationId, viewers);
     }
   });
 
@@ -209,7 +203,7 @@ export function registerPresenceHandlers(
 
     presenceSocket.emit(WORKSPACE_PRESENCE_SNAPSHOT_EVENT, {
       rootSpaceId,
-      userIds: workspaceOnline.list(rootSpaceId),
+      userIds: await presenceStore.listWorkspaceOnline(rootSpaceId),
     });
   });
 
@@ -232,7 +226,11 @@ export function registerPresenceHandlers(
 
     await presenceSocket.join(workspacePresenceRoom(rootSpaceId));
     presenceSocket.data.workspacePresenceRootSpaceId = rootSpaceId;
-    const becameOnline = workspaceOnline.add(rootSpaceId, userId);
+    const { becameOnline } = await presenceStore.pulseWorkspace({
+      rootSpaceId,
+      userId,
+      socketId: presenceSocket.id,
+    });
     if (becameOnline) {
       presenceSocket.to(workspacePresenceRoom(rootSpaceId)).emit(WORKSPACE_PRESENCE_EVENT, {
         rootSpaceId,
@@ -266,5 +264,3 @@ export function registerPresenceHandlers(
     }
   });
 }
-
-export type { ConversationPresenceRegistry, WorkspacePresenceRegistry };

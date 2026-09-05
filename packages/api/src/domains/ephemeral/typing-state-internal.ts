@@ -6,14 +6,19 @@ export type TypingStateOptions = {
 };
 
 /**
- * In-memory typing registry per conversation. Callers broadcast `typing` with `until`;
- * this module prunes expired rows so server state does not grow without bound.
+ * In-memory typing registry per conversation. Adapters may run periodic prune
+ * so server state does not grow without bound.
  */
 export function createTypingState(options: TypingStateOptions) {
   const byConversation = new Map<string, Map<string, number>>();
 
-  function record(conversationId: ArtifactId, userId: UserId, now = Date.now()): number {
-    const untilMs = now + options.ttlMs;
+  function record(
+    conversationId: ArtifactId,
+    userId: UserId,
+    now = Date.now(),
+    ttlMs = options.ttlMs,
+  ): number {
+    const untilMs = now + ttlMs;
     let users = byConversation.get(conversationId);
     if (!users) {
       users = new Map();
@@ -42,5 +47,17 @@ export function createTypingState(options: TypingStateOptions) {
     return untilMs != null && untilMs > now;
   }
 
-  return { record, prune, isTyping };
+  function listActive(conversationId: ArtifactId, now = Date.now()): Array<{ userId: UserId; until: string }> {
+    const users = byConversation.get(conversationId);
+    if (!users) return [];
+    const rows: Array<{ userId: UserId; until: string }> = [];
+    for (const [userId, untilMs] of users) {
+      if (untilMs > now) {
+        rows.push({ userId: userId as UserId, until: new Date(untilMs).toISOString() });
+      }
+    }
+    return rows;
+  }
+
+  return { record, prune, isTyping, listActive };
 }
