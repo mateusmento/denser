@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ArtifactId } from "@denser/contracts";
+import type { ArtifactId, MessageId } from "@denser/contracts";
 import { emptyDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { useRoute } from "vue-router";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useConversationMessages } from "../composables/useConversationMessages";
@@ -28,6 +28,7 @@ const conversationSync = useConversationSync(conversationId);
 conversationSync.bindComposeTitle(conversationTitle);
 
 const messagesSync = useConversationMessages(conversationId);
+const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const threadDraft = ref<JSONContent>(emptyDoc());
@@ -104,6 +105,14 @@ function onQuote(messageId: string) {
   toast(`Quote · ${messageId}`);
 }
 
+async function onJumpQuote(messageId: string) {
+  await messagesSync.jumpAround(messageId as MessageId);
+  await nextTick();
+  requestAnimationFrame(() => {
+    timelineRef.value?.scrollToMessage(messageId, { align: "center" });
+  });
+}
+
 function onEditDescription() {
   toast("Edit description");
 }
@@ -134,6 +143,7 @@ async function onJumpToLatest() {
     </template>
     <template #messages>
       <ConversationTimeline
+        ref="timelineRef"
         :messages="messagesSync.messages.value"
         :intro="channelIntro"
         :previous-page="messagesSync.previousPage.value"
@@ -147,6 +157,7 @@ async function onJumpToLatest() {
         @bookmark="onBookmark"
         @forward="onForward"
         @quote="onQuote"
+        @jump-quote="onJumpQuote"
         @edit="onEdit"
         @delete="onDelete"
         @edit-description="onEditDescription"
@@ -182,6 +193,7 @@ async function onJumpToLatest() {
         @bookmark="onBookmark"
         @forward="onForward"
         @quote="onQuote"
+        @jump-quote="onJumpQuote"
         @edit="onEdit"
         @delete="onDelete"
       />

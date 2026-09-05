@@ -20,6 +20,7 @@ import ConversationIntro from "./ConversationIntro.vue";
 import ConversationMessage from "./ConversationMessage.vue";
 import ConversationMessageGroup from "./ConversationMessageGroup.vue";
 import ConversationTimelineEdges from "./ConversationTimelineEdges.vue";
+import ConversationTimelineScrollerBridge from "./ConversationTimelineScrollerBridge.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -54,6 +55,7 @@ const emit = defineEmits<{
   bookmark: [messageId: string];
   forward: [messageId: string];
   quote: [messageId: string];
+  jumpQuote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
   editDescription: [];
@@ -74,6 +76,7 @@ const hasContent = computed(
 );
 
 const viewport = useTemplateRef<{ viewportElement?: unknown }>("viewport");
+const scrollerBridge = useTemplateRef("scrollerBridge");
 /** Resolved scroll node for HoverCard collision (tracks MessageScrollerViewport’s exposed ref). */
 const collisionBoundary = shallowRef<HTMLElement | null>(null);
 
@@ -93,6 +96,15 @@ watch(
   },
   { immediate: true, flush: "post" },
 );
+
+defineExpose({
+  scrollToMessage: (
+    messageId: string,
+    options?: Parameters<
+      NonNullable<typeof scrollerBridge.value>["scrollToMessage"]
+    >[1],
+  ) => scrollerBridge.value?.scrollToMessage(messageId, options) ?? false,
+});
 </script>
 
 <template>
@@ -135,6 +147,7 @@ watch(
                   @bookmark="emit('bookmark', message.id)"
                   @forward="emit('forward', message.id)"
                   @quote="emit('quote', message.id)"
+                  @jump-quote="emit('jumpQuote', $event)"
                   @edit="emit('edit', message.id)"
                   @delete="emit('delete', message.id)"
                 />
@@ -153,6 +166,7 @@ watch(
         @load-previous="emit('loadPrevious')"
         @jump-to-latest="emit('jumpToLatest')"
       />
+      <ConversationTimelineScrollerBridge ref="scrollerBridge" />
     </MessageScroller>
   </MessageScrollerProvider>
 </template>

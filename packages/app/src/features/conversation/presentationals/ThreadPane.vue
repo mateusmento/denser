@@ -34,6 +34,7 @@ const emit = defineEmits<{
   bookmark: [messageId: string];
   forward: [messageId: string];
   quote: [messageId: string];
+  jumpQuote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
 }>();
@@ -60,6 +61,7 @@ const emit = defineEmits<{
         @bookmark="emit('bookmark', $event)"
         @forward="emit('forward', $event)"
         @quote="emit('quote', $event)"
+        @jump-quote="emit('jumpQuote', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
       >
@@ -79,6 +81,7 @@ const emit = defineEmits<{
                 @bookmark="emit('bookmark', thread.parent.id)"
                 @forward="emit('forward', thread.parent.id)"
                 @quote="emit('quote', thread.parent.id)"
+                @jump-quote="emit('jumpQuote', $event)"
                 @edit="emit('edit', thread.parent.id)"
                 @delete="emit('delete', thread.parent.id)"
               />

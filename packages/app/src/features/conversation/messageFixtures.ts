@@ -1,4 +1,4 @@
-import { paragraphDoc, type JSONContent } from "@/modules/rich-text";
+import { paragraphDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import type { ConversationMessageView, ConversationPersonView } from "./types";
 
 export const ava: ConversationPersonView = {
@@ -447,6 +447,61 @@ export const channelMessages: ConversationMessageView[] = [
     createdAtLabel: "9:18 AM",
   }),
 ];
+
+const quotedSource = channelMessages[1]!;
+const quotedRichSource = channelMessages[7]!;
+
+/** Reply quoting a short earlier message. */
+export const messageWithShortQuote: ConversationMessageView = message({
+  id: "m-quote-short",
+  author: mia,
+  text: "Totally agree — let's ship it.",
+  createdAt: "2026-08-11T09:35:00.000Z",
+  createdAtLabel: "9:35 AM",
+  quoted: {
+    id: quotedSource.id,
+    author: quotedSource.author,
+    body: quotedSource.body,
+    displayContent: "API auth is in. I'll follow with the session cookie path.",
+    hasAttachment: false,
+    sizeCapped: false,
+  },
+});
+
+/** Reply quoting a long rich-text message (overflow gradient). */
+export const messageWithLongQuote: ConversationMessageView = message({
+  id: "m-quote-long",
+  author: jon,
+  text: "Copy deck looks good from here.",
+  createdAt: "2026-08-11T09:40:00.000Z",
+  createdAtLabel: "9:40 AM",
+  quoted: {
+    id: quotedRichSource.id,
+    author: quotedRichSource.author,
+    body: quotedRichSource.body,
+    displayContent:
+      "Priority for today: ship the composer, then polish empty states. Anything marked nice-to-have waits.",
+    hasAttachment: false,
+    sizeCapped: true,
+  },
+});
+
+/** Reply quoting an attachment-only message. */
+export const messageWithAttachmentQuote: ConversationMessageView = message({
+  id: "m-quote-attachment",
+  author: ava,
+  text: "Can you re-upload the screenshot?",
+  createdAt: "2026-08-11T10:05:00.000Z",
+  createdAtLabel: "10:05 AM",
+  quoted: {
+    id: "m-attachment-src",
+    author: jon,
+    body: emptyDoc(),
+    displayContent: "",
+    hasAttachment: true,
+    sizeCapped: false,
+  },
+});
 
 export const threadReplyMessages: ConversationMessageView[] = [
   // —— Mon Aug 10 ——
