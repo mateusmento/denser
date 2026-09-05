@@ -34,6 +34,7 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 | -------------- | ------------ | --------------------------------------------------------------------------- | ------------------------------------------------ |
 | Document       | Calm         | Read / write primary artifact                                               | [document.md](./ui-surfaces/document.md)         |
 | Conversation   | Calm–medium  | Persistent discussion (artifact tab or DM)                                  | [conversation.md](./ui-surfaces/conversation.md) |
+| Meeting room   | Medium       | Room history + live/scheduled meetings (SFU)                              | TBD (`meeting-room.md`) — domain: [MEETINGS.md](./MEETINGS.md) |
 | This Space     | Calm         | Browse child spaces + regular artifacts                                     | [shell.md](./ui-surfaces/shell.md) (tab content) |
 | Backlog / list | Dense        | Space **view** — this space’s documents; sprint sections if sprinting is on | [backlog.md](./ui-surfaces/backlog.md)           |
 | Board          | Dense        | Space **view** — workflow stages; active sprint only if sprinting is on     | [board.md](./ui-surfaces/board.md)               |
@@ -52,6 +53,7 @@ Feature Specs answer: _What exists, what’s allowed, how does it behave?_
 
 | Date       | Change                                                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------- |
+| 2026-09-04 | Catalog Meeting room surface (TBD file); pointer to Meeting rooms feature spec.                |
 | 2026-08-10 | Scaffold + Message composer draft.                                                             |
 | 2026-08-10 | Conversation surface moved to `ui-surfaces/conversation.md`; this file is the catalog index.   |
 | 2026-08-11 | App shell spec: Theme + Toast ownership (`ui-surfaces/shell.md`).                              |

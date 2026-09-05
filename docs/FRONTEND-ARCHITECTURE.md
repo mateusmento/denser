@@ -82,6 +82,7 @@ Root scripts: `pnpm storybook:design-system`, `pnpm storybook:app`.
 - On connect: join personal `user:{id}` room (expand rooms with product needs)
 - Collaborative entities: whole-entity `version`; PATCH **409** → merge pending → retry
 - Lists: prefer cursor sliding windows + stable sorts when live lists land
+- **Conversation timeline:** virtualized sliding window; bidirectional `next`/`prev` + `around` for quote/deep-link jumps; reconcile optimistic sends with `client_id` — see [CONVERSATIONS.md](./CONVERSATIONS.md) and [ui-surfaces/conversation.md](./ui-surfaces/conversation.md)
 
 ---
 

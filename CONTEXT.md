@@ -69,3 +69,51 @@ _Avoid_: Backlog kind
 **Document type**:
 A space-scoped template of extra fields on a document artifact. Issue, Spec, and Doc are builtins.
 _Avoid_: Issue as an artifact kind
+
+**Conversation**:
+An artifact kind for persistent messaging (`regular` in a space, or `direct` DM). Not a meeting place.
+_Avoid_: Channel as a separate type; embedding live calls inside the conversation artifact
+
+**Meeting room**:
+An artifact kind for a durable place where meetings happen. Filed like other artifacts.
+_Avoid_: Meeting as the artifact; channel-type meeting rooms; embedding live calls in Conversation
+
+**Meeting**:
+One occurrence inside a meeting room — scheduled, live, or ended session log — not the room itself.
+_Avoid_: Calling the room a meeting; treating meetings as messages; always-on sessions with no end
+
+**Meeting attendee**:
+A user's join on a specific Meeting (live-session presence).
+_Avoid_: Equating with workspace presence or conversation viewers
+
+**Attachment**:
+A workspace-pooled blob (file metadata + storage key). Parents reference it; they do not own it exclusively.
+_Avoid_: Message-owned file; exclusive message_id on the blob
+
+**Attachment reference**:
+A join from an Attachment to a parent anchor (draft, scheduled job, message, …).
+_Avoid_: Storing attachment ids only in JSON payload as the source of truth
+
+**Message draft**:
+Server-backed in-progress composer state for one author in one conversation (main or thread), including TipTap body and attachment references before send or schedule.
+_Avoid_: Equating with Message; epicstory-style dual-write as denser v1 SoT; local-only forever when files are staged
+
+**Scheduled job**:
+Durable due work in the workspace scheduler (type + payload + due/recurrence/lock).
+_Avoid_: One queue table per feature; calling the product “ScheduledMessage” a separate entity table
+
+**Scheduled message**:
+A scheduled job of type scheduled_message that will post into a Conversation.
+_Avoid_: Equating with Meeting schedule; stuffing attachment SoT into job JSON
+
+**Conversation peer**:
+A user in the fixed peer set of a direct conversation (identity + access). Not a joinable membership.
+_Avoid_: conversation member; leave DM
+
+**Conversation presence**:
+Who is currently viewing a given conversation.
+_Avoid_: Equating with workspace presence
+
+**Workspace presence**:
+Who is currently online within a private root space (workspace).
+_Avoid_: Equating with conversation presence; treating presence as membership

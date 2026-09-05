@@ -15,13 +15,13 @@ A **thin shell** shared by typed subsystems — the filing and listing noun, **n
 Shell fields (conceptual):
 
 - identity (`id`)
-- kind (`document` | `conversation` | … later kinds)
+- kind (`document` | `conversation` | `meeting_room` | … later kinds)
 - title
 - location: parent Space (`space_id`, nullable for root) + `root_space_id` for tenancy indexing when inside a Space tree
 - `createdBy`
 - timestamps / version as needed
 
-**Not shared across kinds:** content engines. Document, Map, Conversation, etc. are separate feature modules. You do not turn a Document into a Map by toggling capabilities.
+**Not shared across kinds:** content engines. Document, Map, Conversation, Meeting room, etc. are separate feature modules. You do not turn a Document into a Map by toggling capabilities.
 
 ### Space
 
@@ -91,7 +91,7 @@ Create-as-private nested: the creator becomes **owner** (not a copy of the whole
 
 - **Root Artifacts:** owner-only. No member lists on free-floating files. To share, put the Artifact in a Space and invite.
 - **In-Space Artifacts:** access from **Space roles / actions** only. Always persist **`createdBy`**. No separate Artifact-level ACL in v1 (applies to documents and **regular** conversations).
-- **Direct conversations:** access from **`conversation_member`** only — not space gallery listing, not inherited from nested `space_id` context.
+- **Direct conversations:** access from **peer set** ∩ **workspace membership** — not space gallery listing, not inherited from nested `space_id` context. See [CONVERSATIONS.md](./CONVERSATIONS.md).
 - **Space ownership:** multi-owner supported where roles allow; persist **`createdBy`** and ownership/membership separately.
 
 ### Roles
@@ -127,25 +127,42 @@ Permissions are **role-based plus action grants** (granular). Exact action matri
 | Kind            | Listed in This Space? | Access                                                                                               | Notifications                              |
 | --------------- | --------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | **Regular**     | Yes                   | Space ACL (v1). Multiple regular conversations per nested space are allowed (channel-style density). | Channel-style — non-intrusive.             |
-| **Direct (DM)** | **Never**             | Explicit **`conversation_member`** rows only. Supports multi-peer DMs, not only 1:1.                 | DM-style — Slack-like identity and alerts. |
+| **Direct (DM)** | **Never**             | Fixed **peer set** (`conversation_peer`) ∩ workspace membership — not joinable “leave DM” membership. | DM-style — Slack-like identity and alerts. |
 
-**Direct membership applies only to DM conversations**, not to spaces. Space membership remains the boundary for team chat; DM membership is per conversation.
+DMs are identified by peers, not by users joining/leaving the conversation. See [CONVERSATIONS.md](./CONVERSATIONS.md).
 
 ### DMs are global within a root space
 
 A **root space** is a Space with no parent. A **workspace** (tenant / DM boundary, same as `root_space_id` on the tree) is a **private** root space. Within one workspace:
 
-- At most **one** DM conversation per distinct member set, regardless of which nested space the user was in when they opened it.
-- **Dedupe key:** `(root_space_id, sort(member_user_ids))`.
-- **Listing:** flat **Direct messages** nav for the current root space — not nested under folders, not shown in This Space.
-- **Participants** must be members of that **root space** (v1: any member of the workspace; optional later tightening to “people in this nested space”).
+- At most **one** DM conversation per distinct **peer** set, regardless of which nested space the user was in when they opened it.
+- **Dedupe key:** `(root_space_id, sort(peer_user_ids))`.
+- **Listing:** flat **Direct messages** nav for the current root space — not nested under folders, not shown in This Space. Per-user **sidebar hide** does not change peers.
+- **Peers** must be members of that **root space** (v1: any workspace member).
 - **`space_id` on a DM** is optional **context only** (where the DM was started). It does **not** affect dedupe, listing, or access.
+- Leaving the **workspace** loses DM access; users do not “leave” the DM peer set.
 
 Users in multiple **workspaces** (private roots) get **separate DM inboxes** per workspace (same as multiple Slack workspaces). Public Home folders have no DM inbox until promoted to private.
 
 ### Messaging (phased)
 
-v1 ships conversation **shell + UI** (title, route, create/rename/delete). Message persistence, timeline, and notification delivery follow the [Conversation feature spec](./FEATURE-SPECS.md#conversation).
+v1 ships conversation **shell + UI** (title, route, create/rename/delete). Messaging domain: **[CONVERSATIONS.md](./CONVERSATIONS.md)**. UI: [ui-surfaces/conversation.md](./ui-surfaces/conversation.md).
+
+---
+
+## Meeting rooms (artifact kind) and meetings
+
+Unlike Epicstory (live calls glued to a **channel** / “meeting channel” type) and epicstory2’s always-on Meeting channel, denser separates **place** from **occurrence**:
+
+| Noun | What it is |
+| --- | --- |
+| **Meeting room** | **Artifact** (`kind = meeting_room`). Durable place filed in a space (This Space / tabs like other artifacts). |
+| **Meeting** | One **instance** (scheduled / live / ended) in that room — history log, not an artifact. |
+| **Meeting attendee** | Who joined a given Meeting (media flags, times). |
+
+Many meetings accumulate under one room. **Conversation** stays messaging-only — it does not host the SFU room. Media target: **SFU** (not PeerJS mesh). Full domain (decisions, commands/queries, phasing): **[MEETINGS.md](./MEETINGS.md)**.
+
+Phased — **not** part of the conversation messaging cut. Create-menu entry deferred until filing/ACL feels right (same as other later kinds).
 
 ---
 
@@ -155,7 +172,7 @@ v1 ships conversation **shell + UI** (title, route, create/rename/delete). Messa
 
 **Space**, **Document**, and **Conversation** (regular, in the current space). Planning presets (**New project**, **New Scrum project**, **New folder**) are specified in [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md); they still create a Space.
 
-Defer: Event, Map, Whiteboard, Meeting, Workflow as a custom editor, and other **artifact kinds** until filing/ACL feels right. **Sprint** is a child **space**, not a kind. **Direct (DM) conversations** are created from the **Direct messages** affordance, not the generic create menu in space context.
+Defer from create menu until filing/ACL feels right: Event, Map, Whiteboard, **Meeting room**, Workflow as a custom editor, and other **artifact kinds**. **Sprint** is a child **space**, not a kind. **Direct (DM) conversations** are created from the **Direct messages** affordance, not the generic create menu in space context.
 
 ### Document
 
@@ -167,9 +184,10 @@ Defer: custom properties, board/calendar enablement, relationships, comments-as-
 
 - **Personal home** — public roots the user created, private roots they belong to, and root artifacts they own.
 - **Home sidebar section** — shown on Personal home, on **public** root folders (and their content), and on root artifacts. Hidden inside a **private** root workspace tree.
-- **In {space}** — flat sidebar under the active space: child spaces, then artifacts (documents + regular conversations only).
-- **Direct messages** — DM conversations for the **current private root** (workspace) where the user is a member. Not listed for public Home folders.
+- **In {space}** — flat sidebar under the active space: child spaces, then artifacts (documents + regular conversations only; meeting rooms when that kind ships).
+- **Direct messages** — DM conversations for the **current private root** (workspace) where the user is a member. Not listed for public Home folders. **1:1 DM rows** show a **green presence dot** when the other peer has **workspace presence**. **Group DM rows** do not.
 - **Main column** — space **tab bar** + active tab content (This Space, space views, pin, working tab).
+- **Space members** (roster / member UI) — each member shows avatar + name; a **green presence dot** when that user has **workspace presence**.
 
 ### First-run feel
 
@@ -200,7 +218,7 @@ Blank personal home with light base UI and a create affordance — not an opinio
 - Additional Artifact kinds
 - Property-based view enablement on Documents
 - Whether ownership lists on Artifacts appear for UX without affecting ACL
-- **`conversation_member`** schema, DM dedupe enforcement, and DM-only API paths
+- **`conversation_peer`** schema, DM dedupe enforcement, sidebar hide, soft-archive
 - Pin create/remove UI (working tabs are per-user; pins are shared)
 - Private channels (regular conversations with explicit member lists beyond space ACL)
 - Backlog / sprints / board — drafted in [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md) (not v1 shipping)
@@ -211,6 +229,8 @@ Blank personal home with light base UI and a create affordance — not an opinio
 
 | Date       | Change                                                                                                                                                    |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-04 | Meeting rooms: SFU target, lifecycle, lessons vs epicstory/epicstory2.                                                                                    |
+| 2026-09-04 | Meeting room (artifact) vs Meeting (instance); conversation + workspace presence surfaces.                                                                |
 | 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |
 | 2026-08-28 | Tab bar: This Space → shared pins → personal working tabs. `+` opens a child as a working tab, not a pin.                                                 |
 | 2026-08-28 | Backlog & sprints: child spaces + space views; see [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md).                                                    |

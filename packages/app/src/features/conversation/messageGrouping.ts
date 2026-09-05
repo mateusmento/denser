@@ -4,7 +4,9 @@ import type {
   ConversationPersonView,
 } from "./types";
 
-const GROUP_WINDOW_MS = 5 * 60 * 1000;
+/** Same-author contiguous cluster window (Slack-like). Keep in sync with conversation.md. */
+export const MESSAGE_GROUP_WINDOW_MS = 5 * 60 * 1000;
+const GROUP_WINDOW_MS = MESSAGE_GROUP_WINDOW_MS;
 
 export type ConversationDayGroup = {
   id: string;

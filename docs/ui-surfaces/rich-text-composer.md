@@ -193,6 +193,7 @@ Default block is a **paragraph**. Nested lists: Tab / Shift+Tab.
 - **Preview:** **RichTextSubtree** highlights with the same lowlight; show language as a label, not a dropdown.
 - Highlight output is a token tree rendered as spans (`rt-code-block` + token classes). Do **not** `v-html` lowlight/HTML strings ([unsafe-html](../../.cursor/skills/frontend-patterns/rules/unsafe-html.md)).
 - Tab indentation: `enableTabIndentation: true` inside code blocks.
+- **Long blocks (timeline / preview):** peek first N lines + expand; when expanded and taller than the conversation scrollport, show a **floating Collapse** control via **`@floating-ui/dom`**, clipped to the timeline (not the window). Button sticks to the scrollport bottom while the card overflows both edges; sticks to the card bottom as the card’s end enters view; re-floats when scrolling back up. Spec detail: [conversation.md — Code blocks in timeline](./conversation.md#code-blocks-in-timeline). Port pattern from Epicstory `CodeBlockCard` / `useCodeBlockCardModel`.
 
 ### Image
 

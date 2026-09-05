@@ -4,7 +4,9 @@
 
 **Audience:** Product, backend, and frontend when agreeing what a feature _is_ before (or while) building it.
 
-**Related:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) (v1 filing model), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md) (Epicstory → Denser), [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md), [WORKFLOW.md](./WORKFLOW.md), [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ONTHOLOGY.md](./ONTHOLOGY.md) (broader vocabulary — prefer Artifacts & Spaces where they conflict), [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), `@denser/contracts` (wire Zod once implemented).
+**Related:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) (v1 filing model), [CONVERSATIONS.md](./CONVERSATIONS.md), [MEETINGS.md](./MEETINGS.md), [SCHEDULING.md](./SCHEDULING.md), [ATTACHMENTS.md](./ATTACHMENTS.md), [MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md), [PLANNING-DOMAIN.md](./PLANNING-DOMAIN.md), [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md), [WORKFLOW.md](./WORKFLOW.md), [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md), [PRODUCT-MODEL.md](./PRODUCT-MODEL.md) / [ONTHOLOGY.md](./ONTHOLOGY.md), [VISUAL-LANGUAGE.md](./VISUAL-LANGUAGE.md), `@denser/contracts`.
+
+Deep domain specs (decisions, commands/queries, constraints) live in dedicated files — **FEATURE-SPECS** is the **index** for those plus smaller features still drafted inline.
 
 ---
 
@@ -76,142 +78,85 @@ Keep specs **implementation-honest but UI-light**: name API/events when known; d
 
 ## Index
 
-| Feature                                | Status | Objects (summary)                                                            | UI surfaces                                                                |
-| -------------------------------------- | ------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [Conversation](#conversation)          | Active | Conversation artifact, Message, Thread?, Reaction?, conversation_member (DM) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md)               |
-| Document                               | Active | Artifact(document), body, …                                                  | [ui-surfaces/document.md](./ui-surfaces/document.md)                       |
-| Spaces & membership                    | Active | Space, Membership, Invite                                                    | Shell, home, invites, space tabs                                           |
-| [Backlog & sprints](#backlog--sprints) | Draft  | Space views, sprint child spaces                                             | [backlog.md](./ui-surfaces/backlog.md), [board.md](./ui-surfaces/board.md) |
-| [Workflow](#workflow)                  | Draft  | Space-scoped workflow, stages, kinds, transitions                            | [board.md](./ui-surfaces/board.md)                                         |
-| [Document types](#document-types)      | Draft  | Space-scoped templates on document artifacts                                 | [document.md](./ui-surfaces/document.md)                                   |
+| Feature                                | Status | Objects (summary)                                                            | Full spec / UI |
+| -------------------------------------- | ------ | ---------------------------------------------------------------------------- | -------------- |
+| [Conversation](#conversation)          | Active | Conversation, Message, Quote, Thread, …                                      | **[CONVERSATIONS.md](./CONVERSATIONS.md)** · [conversation.md](./ui-surfaces/conversation.md) |
+| [Meeting rooms](#meeting-rooms)        | Draft  | Meeting room, Meeting, Attendee                                              | **[MEETINGS.md](./MEETINGS.md)** · UI TBD |
+| [Scheduling](#scheduling)              | Draft  | ScheduledJob, scheduled message, meeting jobs                              | **[SCHEDULING.md](./SCHEDULING.md)** |
+| [Attachments](#attachments)            | Draft  | Attachment pool, references, draft/schedule/message anchors                 | **[ATTACHMENTS.md](./ATTACHMENTS.md)** |
+| [Message drafts](#message-drafts)      | Draft  | MessageDraft (composer staging)                                            | **[MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md)** |
+| Document                               | Active | Artifact(document), body, …                                                  | [document.md](./ui-surfaces/document.md) |
+| Spaces & membership                    | Active | Space, Membership, Invite                                                    | Shell, home, invites, space tabs |
+| [Backlog & sprints](#backlog--sprints) | Draft  | Space views, sprint child spaces                                             | [BACKLOG-AND-SPRINTS.md](./BACKLOG-AND-SPRINTS.md) · backlog/board surfaces |
+| [Workflow](#workflow)                  | Draft  | Workflow, stages, kinds                                                      | [WORKFLOW.md](./WORKFLOW.md) |
+| [Document types](#document-types)      | Draft  | Document type templates                                                      | [DOCUMENT-TYPES.md](./DOCUMENT-TYPES.md) |
 
 ---
 
 ## Conversation
 
-| Field            | Value                                                                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Status           | Active (shell + UI shipped; messaging phased)                                                                                                        |
-| Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) (MessageComposer); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
-| v1 scope         | Conversation **Artifact** with regular/direct kinds; CRUD shell + routed UI; persistent messages and membership tables phased in                     |
+| Field            | Value |
+| ---------------- | ----- |
+| Status           | Active (shell + UI shipped; messaging phased) |
+| Full domain spec | **[CONVERSATIONS.md](./CONVERSATIONS.md)** — decisions, model, features, commands/queries, constraints, events, quote preview, messaging cut |
+| Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md); engine: [rich-text-composer.md](./ui-surfaces/rich-text-composer.md) |
+| Filing           | [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — `kind = conversation` |
+| v1 scope         | Regular + direct artifacts; messaging with quotes ∥ threads; virtualized cursor windows |
 
-**Product model:** [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — Conversation is an **Artifact kind**.
+This index entry is a pointer. Do not duplicate the Conversations domain here.
 
-### Core objects
+---
 
-| Object                        | Role                                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Conversation (artifact)**   | Thin shell (`kind = conversation`) + typed row: `kind` (`regular` \| `direct`), optional intro, archival flags |
-| **conversation_member** (DM)  | Explicit membership for **direct** conversations only — who can read/post                                      |
-| **Message**                   | One post in a conversation (or thread); rich body                                                              |
-| **Thread** (optional v1)      | Side conversation anchored to a parent message                                                                 |
-| **Reaction** (optional v1)    | Emoji (or short) reaction on a message                                                                         |
-| **Poll** (phased)             | Structured poll embedded or referenced from a message                                                          |
-| **ScheduledMessage** (phased) | Message payload + send-at / recurrence before it becomes a live Message                                        |
+## Meeting rooms
 
-**Regular conversations** inherit **Space ACL** for read/post (v1). **Direct conversations** gate on **`conversation_member`** only and are listed in **Direct messages** nav for the root space, not in This Space.
+| Field            | Value |
+| ---------------- | ----- |
+| Status           | Draft (not in conversation messaging cut) |
+| Full domain spec | **[MEETINGS.md](./MEETINGS.md)** — decisions, model, features, commands/queries, SFU architecture, phasing M0–M3, lessons vs epicstory |
+| Owner surface(s) | TBD `ui-surfaces/meeting-room.md` |
+| Filing           | [ARTIFACTS-AND-SPACES.md](./ARTIFACTS-AND-SPACES.md) — `kind = meeting_room` |
+| v1 scope         | Meeting room artifact + Meeting instances; media via **SFU** |
 
-### Data schema (conceptual)
+This index entry is a pointer. Do not duplicate the Meetings domain here.
 
-**Conversation (artifact extension)**
+---
 
-- `artifact_id` (PK → artifacts, `kind = conversation`)
-- `conversation_kind`: `regular` \| `direct`
-- `intro` / description (nullable)
-- archival flags (TBD)
+## Scheduling
 
-Shell fields on **artifacts**: `title`, `space_id`, `root_space_id`, `created_by`, version/timestamps.
+| Field            | Value |
+| ---------------- | ----- |
+| Status           | Draft |
+| Full domain spec | **[SCHEDULING.md](./SCHEDULING.md)** — ScheduledJob runner, scheduled messages, meeting start/reminder jobs |
+| Owner surface(s) | Conversation composer / schedules UI; Meeting room schedule |
+| v1 scope         | Postgres job claim + once scheduled messages; meeting jobs with Meetings phasing |
 
-- **Regular:** `space_id` required (nested space parent). Listed in This Space when user has space access.
-- **Direct:** `root_space_id` required for dedupe and DM nav. `space_id` optional (creation context only). Dedupe: unique `(root_space_id, sorted member user ids)`.
+This index entry is a pointer. Do not duplicate the Scheduling domain here.
 
-**conversation_member** (direct only)
+---
 
-- `conversation_artifact_id`
-- `user_id`
-- `joined_at` (TBD)
-- unique `(conversation_artifact_id, user_id)`
+## Attachments
 
-**Message**
+| Field            | Value |
+| ---------------- | ----- |
+| Status           | Draft |
+| Full domain spec | **[ATTACHMENTS.md](./ATTACHMENTS.md)** — workspace blob pool, reference graph, draft/schedule/message anchors, A0–A6 cut |
+| Owner surface(s) | Conversation composer, files pane; later documents / meeting recordings |
+| v1 scope         | BlobStore S3+R2; draft + message joins; scheduled joins with Scheduling |
 
-- `id`
-- `conversation_artifact_id`
-- `thread_id` (nullable)
-- `author_id`
-- `body` (TipTap / ProseMirror JSON document — not an HTML string)
-- `created_at` / `edited_at` (nullable)
-- `deleted_at` or soft-delete marker (TBD)
-- attachments / images: list of refs (TBD)
-- optional embeds: poll id, etc. (TBD)
+This index entry is a pointer. Cross-cuts Conversations and Scheduling — implement as its own cut.
 
-**ScheduledMessage** (if phased in)
+---
 
-- payload equivalent to a Message draft
-- `send_at`
-- recurrence rule (nullable)
-- status: `scheduled` \| `cancelled` \| `sent`
+## Message drafts
 
-**Poll** (if phased in)
+| Field            | Value |
+| ---------------- | ----- |
+| Status           | Draft |
+| Full domain spec | **[MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md)** — server-authoritative composer drafts; attachment staging parent |
+| Owner surface(s) | [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) MessageComposer |
+| v1 scope         | Get/Upsert/Delete; hydrate on open; clear on send/schedule; TTL purge; no dual-write / no drawer |
 
-- `id`, options, votes, closes_at (TBD)
-
-**Reaction** (if in v1)
-
-- `message_id`, `user_id`, `emoji` (unique per user/message/emoji)
-
-Wire schemas live in `@denser/contracts`; this section is the product contract.
-
-### Behaviors
-
-| Behavior                         | Trigger                                          | Result                                                                         |
-| -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Create regular conversation      | User with create permission in space             | Artifact + conversation row (`regular`); appears in This Space + can be tabbed |
-| Create / open DM                 | User picks participants in root-space DM flow    | Find or create by `(root_space_id, sorted members)`; add to DM nav only        |
-| Post message                     | Author with post permission submits via composer | Message persisted; appears in stream; realtime fan-out to authorized members   |
-| Schedule message                 | Author confirms schedule options                 | ScheduledMessage stored; live Message created at fire time (or equivalent job) |
-| Edit message                     | Author (or moderator — TBD)                      | Body updated; `edited_at` set; clients refresh                                 |
-| Delete message                   | Author / moderator                               | Soft or hard delete per policy; UI shows tombstone or removal                  |
-| Open thread                      | User acts on parent message                      | Thread created or focused; composer may target thread (thread shape)           |
-| React                            | User toggles reaction                            | Reaction added/removed                                                         |
-| Insert poll / recording / attach | Composer actions                                 | Creates/refs related objects or blobs per constraints                          |
-| Read history                     | User opens conversation                          | Paginated or windowed history (cursor TBD)                                     |
-
-### Constraints
-
-- Users without read access never receive message payloads (HTTP or socket).
-- Users without post access do not get an active composer (see UI surface states).
-- **Direct conversations** never appear in space artifact listings (This Space gallery API/UI must filter `conversation_kind = direct`).
-- **DM participants** must be members of the conversation’s **`root_space_id`**.
-- Message `body` empty and no attachments / allowed embeds → reject send.
-- Ordering: stable sort by `created_at` + `id` (or server sequence) so clients converge.
-- Edits do not change message identity; history/audit TBD.
-- Mentions resolve to existing users/members only (invalid mention handling TBD).
-- Scheduled sends respect conversation permissions at **fire time**, not only at schedule time (policy TBD if membership changed).
-- Screen recording / uploads subject to size, type, and permission limits (TBD).
-- Notification profile follows **conversation kind** (`regular` vs `direct`).
-
-### Events / sync
-
-- Ingest path: prefer same canonical message model for HTTP and Socket.IO (see frontend architecture realtime notes).
-- Suggested events (names TBD): `message.created`, `message.updated`, `message.deleted`, `reaction.updated`, `scheduled_message.upserted` (if phased).
-- Clients apply events into the conversation replica; no second source of truth in the UI.
-
-### Out of scope (v1)
-
-- Cross-conversation search (maybe later)
-- Voice/video calls (screen **recording** insert is separate and may still be phased)
-- Full moderation queue
-- External webhooks
-- **`conversation_kind` / `conversation_member` in API** (schema + rules above are target; current code may be regular-only shell)
-
-### Open questions
-
-- Threads in v1 or defer?
-- ~~Rich body format~~ → TipTap / ProseMirror JSON (locked).
-- Which composer inserts ship in v1 vs later: poll, recording, recurrence?
-- Attachment storage (R2 later vs defer)?
-- DM create: strict nested-space roster vs any root member (recommend loose / Slack-like for v1).
-- Leave root space / leave group DM semantics.
+This index entry is a pointer. Do not duplicate the Message drafts domain here.
 
 ---
 
@@ -375,6 +320,18 @@ Wire schemas live in `@denser/contracts`; this section is the product contract.
 
 | Date       | Change                                                                                                                                |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-04 | Add MESSAGE-DRAFTS.md index (server-authoritative composer drafts). |
+| 2026-09-04 | Add SCHEDULING.md + ATTACHMENTS.md index entries (job runner; workspace attachment pool). |
+| 2026-09-04 | Grill locks written into CONVERSATIONS.md / MEETINGS.md (peers, LiveKit, lobby panel, layouts). |
+| 2026-09-04 | Meeting rooms expanded: SFU, lifecycle, epicstory/epicstory2 comparison, phasing M0–M3. |
+| 2026-09-04 | Conversation + Meeting rooms moved to CONVERSATIONS.md / MEETINGS.md; this file indexes. |
+| 2026-09-04 | Quoted preview: ~1k text chars + byte ceiling; strip images; `displayContent` for Inbox. |
+| 2026-09-04 | Quoted preview: size/footprint cap on wire; UI max-h + gradient (no line budgets). |
+| 2026-09-04 | Quoted preview DTO: smart-truncated TipTap JSON + truncated flag / gradient UI. |
+| 2026-09-04 | Quote join-on-read; Slack-like unread divider; no multi-peer DM presence dots. |
+| 2026-09-04 | Meeting room artifact vs Meeting instance; both presence scopes; message grouping 5 min / day. |
+| 2026-09-04 | Conversation: lock jump pill, thread split/full-replace, typing/presence, attach-only send; poll/recording/schedule as separate messaging-cut tasks. |
+| 2026-09-04 | Conversation messaging: quotes ∥ threads; list `next`/`prev`/`around`; virtualized sliding window; `client_id` optimism. |
 | 2026-08-10 | Scaffold + Conversation draft.                                                                                                        |
 | 2026-08-10 | Align with MessageComposer: rich body, schedule/poll phased objects, schedule permission note.                                        |
 | 2026-08-11 | Lock message `body` as TipTap / ProseMirror JSON.                                                                                     |

@@ -30,9 +30,13 @@ Within a space, the **tab bar** is part of shell chrome (see [ARTIFACTS-AND-SPAC
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Home**            | Shown on Personal home, public root folders, and root artifacts: public roots the user created, private roots they belong to, and root artifacts. Hidden inside a **private** workspace tree.                     |
 | **In {space}**      | When a space is active: nested child spaces, then artifacts (**documents + regular conversations** only).                                                                                                         |
-| **Direct messages** | **Direct** conversation artifacts for the **current private root** (workspace) where the user is a member. Not shown for public Home folders. Flat list — not nested under folders. Not duplicated in In {space}. |
+| **Direct messages** | **Direct** conversation artifacts for the **current private root** (workspace) where the user is a member. Not shown for public Home folders. Flat list — not nested under folders. Not duplicated in In {space}. **1:1 rows:** green **workspace-presence** dot on the other peer when they are online in that workspace. **Multi-peer (group) DM rows:** no presence dot (mirror Slack). |
 
 DMs are **global within the workspace** (one thread per member set per private root). Switching nested spaces does not change the DM list.
+
+**Space members roster** (wherever members are listed in shell or space settings): avatar + name (+ role as applicable) with a green **workspace-presence** dot when that user is online in the workspace.
+
+**Conversation presence** (who is viewing an open conversation) lives on the Conversation header — not the shell; see [conversation.md](./conversation.md#presence).
 
 The home button shows the current **workspace** name (private root) with a back-to-home hint; on Personal home and public folders it stays Home.
 
@@ -64,6 +68,7 @@ Sidebar and tab bar are shell chrome. Capability surfaces (Conversation, Documen
 
 | Date       | Change                                                                               |
 | ---------- | ------------------------------------------------------------------------------------ |
+| 2026-09-04 | Workspace presence dots on 1:1 DM rows and space member lists; point conversation viewers to conversation.md. |
 | 2026-08-11 | Theme + Toast ownership so Conversation prototype is not the product chrome.         |
 | 2026-08-11 | Theme and Toast extracted to their own surface specs; shell keeps mount + nav TBD.   |
 | 2026-08-26 | Sidebar IA (Home / In space / Direct messages); space tab bar; link to domain model. |

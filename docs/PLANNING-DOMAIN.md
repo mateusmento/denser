@@ -15,7 +15,7 @@ Epicstory decisions in `epicstory2/docs/decisions/domain/` are the source of wor
 | Workspace                   | **Workspace** — private root space (`root_space_id`)                                                           |
 | Folder                      | **Public nested space**                                                                                        |
 | Project                     | **Preset / intent** on a space (Backlog and/or Board). Not a type.                                             |
-| Channel                     | **Conversation** artifact (regular). DMs are **direct** conversations on the workspace.                        |
+| Channel                     | **Conversation** artifact (regular). DMs are **direct** conversations — [CONVERSATIONS.md](./CONVERSATIONS.md). Meeting place is **Meeting room**, not a channel type — [MEETINGS.md](./MEETINGS.md). |
 | Sprint (row + document IDs) | **Child space** with role upcoming / active / past. Documents **live in** that space.                          |
 | Document                    | **Artifact** `kind = document` + document body (TipTap). Fields come from a **document type**.                 |
 | Document type (team-scoped) | Document type **space-scoped** (same space as the Board)                                                       |
