@@ -39,6 +39,8 @@ const props = withDefaults(
     nextPage?: NextPageState;
     /** Force jump-to-latest pill visibility (e.g. around-focus / off live edge). */
     showJumpToLatest?: boolean;
+    /** Bust timeline edge arm state when the message window recenters. */
+    edgeResetKey?: unknown;
     unreadDividerBeforeMessageId?: string | null;
   }>(),
   {
@@ -169,6 +171,7 @@ defineExpose({
         :previous-page="previousPage"
         :next-page="nextPage"
         :show-jump-to-latest="showJumpToLatest"
+        :edge-reset-key="edgeResetKey"
         @load-previous="emit('loadPrevious')"
         @load-next="emit('loadNext')"
         @jump-to-latest="emit('jumpToLatest')"

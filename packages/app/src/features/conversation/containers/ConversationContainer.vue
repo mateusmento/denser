@@ -50,6 +50,16 @@ const readState = useConversationReadState(conversationId, {
 const messagesSync = useConversationMessages(conversationId, {
   openAnchor: computed(() => readState.openAnchor.value),
 });
+const timelineEdgeResetKey = computed(() => {
+  const messages = messagesSync.messages.value;
+  return [
+    conversationId.value,
+    readState.openAnchor.value,
+    messages[0]?.id,
+    messages[messages.length - 1]?.id,
+    messages.length,
+  ] as const;
+});
 const timelineRef = ref<InstanceType<typeof ConversationTimeline> | null>(null);
 const pendingUnreadScroll = ref<MessageId | null>(null);
 
@@ -383,6 +393,7 @@ async function onThreadJumpToLatest() {
         :previous-page="messagesSync.previousPage.value"
         :next-page="messagesSync.nextPage.value"
         :show-jump-to-latest="messagesSync.showJumpToLatest.value"
+        :edge-reset-key="timelineEdgeResetKey"
         :unread-divider-before-message-id="readState.sessionDividerId.value"
         @load-previous="messagesSync.loadPrevious()"
         @load-next="messagesSync.loadNext()"

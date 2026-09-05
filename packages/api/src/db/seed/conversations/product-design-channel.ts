@@ -68,14 +68,18 @@ const SNIPPETS = [
   "Read-state divider placement validated in usability test.",
   "Badge count cap at 99+ for sidebar nav items.",
   "Scroll anchoring when prepending older message pages.",
-  "Virtualized list spike — not needed until 10k messages.",
+  "Sliding window eviction after five pages of history.",
   "Design review: reaction toggle optimistic UI.",
   "Spacing grid audit on conversation header.",
   "Tooltip delay unified to 400ms across shell.",
   "Keyboard shortcuts map for message actions menu.",
 ] as const;
 
-const TOTAL = 120;
+const TOTAL = 200;
+
+const RESERVED = new Set([
+  100, 101, 102, 103, 195, 196, TOTAL,
+]);
 
 function authorAt(seq: number): UserId {
   return AUTHORS[(seq - 1) % AUTHORS.length]!;
@@ -94,23 +98,13 @@ function buildTimeline(): SeedConversationMessage[] {
   const rows: SeedConversationMessage[] = [];
 
   for (let seq = 1; seq <= TOTAL; seq += 1) {
-    if (
-      seq === 58 ||
-      seq === 59 ||
-      seq === 60 ||
-      seq === 61 ||
-      seq === 115 ||
-      seq === 116 ||
-      seq === TOTAL
-    ) {
-      continue;
-    }
+    if (RESERVED.has(seq)) continue;
 
     const createdAt = minutesAgo(seq);
     const isDeleted = seq === 40;
-    const isEdited = seq === 80;
+    const isEdited = seq === 130;
     const isQuoteTargetFar = seq === 12;
-    const isQuoteTargetNear = seq === 95;
+    const isQuoteTargetNear = seq === 160;
 
     let text = snippetAt(seq);
     if (isQuoteTargetFar) {
@@ -118,7 +112,7 @@ function buildTimeline(): SeedConversationMessage[] {
         "Pagination anchor — far from the live edge. Quote jumps here should trigger around-fetch from deep history.";
     } else if (isQuoteTargetNear) {
       text =
-        "Near-window quote target — visible when paginating around the middle of #product-design.";
+        "Near-window quote target — mid-timeline anchor for in-window quote previews.";
     } else if (isEdited) {
       text = `${snippetAt(seq)} (edited after critique)`;
     }
@@ -136,18 +130,18 @@ function buildTimeline(): SeedConversationMessage[] {
         : {}),
     };
 
-    if (seq === 55) {
+    if (seq === 85) {
       row.reactions = [
         { emoji: "👍", userId: SEED_USER_ALICE },
         { emoji: "✅", userId: SEED_USER_CAROL },
         { emoji: "🎨", userId: SEED_USER_DAVID },
       ];
-    } else if (seq === 70) {
+    } else if (seq === 120) {
       row.reactions = [
         { emoji: "👀", userId: SEED_USER_EMMA },
         { emoji: "💡", userId: SEED_USER_FRANK },
       ];
-    } else if (seq === 90) {
+    } else if (seq === 155) {
       row.reactions = [
         { emoji: "💯", userId: SEED_USER_ALICE },
         { emoji: "💯", userId: SEED_USER_DAVID },
@@ -164,9 +158,9 @@ function buildTimeline(): SeedConversationMessage[] {
     rootSpaceId: SEED_SPACE_ACME,
     authorId: SEED_USER_CAROL,
     body: seedParagraph(
-      "Should we ship the calmer timeline density as default for all channels?",
+      "Mid-timeline thread — should we ship the calmer timeline density as default for all channels?",
     ),
-    createdAt: minutesAgo(58),
+    createdAt: minutesAgo(100),
     reactions: [{ emoji: "🧵", userId: SEED_USER_ALICE }],
   });
 
@@ -196,7 +190,7 @@ function buildTimeline(): SeedConversationMessage[] {
       authorId: reply.authorId,
       threadId: SEED_PD_MSG_THREAD_PARENT,
       body: seedParagraph(reply.text),
-      createdAt: minutesAgo(59 + index),
+      createdAt: minutesAgo(101 + index),
       ...(index === 0 ? { reactions: [{ emoji: "👍", userId: SEED_USER_CAROL }] } : {}),
     });
   }
@@ -210,7 +204,7 @@ function buildTimeline(): SeedConversationMessage[] {
     body: seedParagraph(
       "↩ In-window quote — click the preview to scroll to the near pagination anchor.",
     ),
-    createdAt: minutesAgo(115),
+    createdAt: minutesAgo(195),
   });
 
   rows.push({
@@ -222,7 +216,7 @@ function buildTimeline(): SeedConversationMessage[] {
     body: seedParagraph(
       "↩ Out-of-window quote — click to jump to the far pagination anchor (around + scroll).",
     ),
-    createdAt: minutesAgo(116),
+    createdAt: minutesAgo(196),
     reactions: [{ emoji: "📌", userId: SEED_USER_ALICE }],
   });
 
@@ -232,7 +226,7 @@ function buildTimeline(): SeedConversationMessage[] {
     rootSpaceId: SEED_SPACE_ACME,
     authorId: SEED_USER_CAROL,
     body: seedParagraph(
-      "#product-design live edge — 120 messages seeded for pagination testing. Scroll up/down or jump quotes from the middle.",
+      "#product-design live edge — 200 messages seeded for sliding-window pagination. Scroll up/down or jump quotes from the middle.",
     ),
     createdAt: minutesAgo(TOTAL),
   });

@@ -1,14 +1,26 @@
 <script setup lang="ts">
-import { MessageScrollerButton, useMessageScrollerScrollable } from "@denser/design-system";
-import { emptyNextPageState, emptyPreviousPageState, type NextPageState, type PreviousPageState } from "@/lib/async";
-import { useDebounceFn } from "@vueuse/core";
-import { computed, watch } from "vue";
+import {
+  MessageScrollerButton,
+  useMessageScrollerContextMaybe,
+  useMessageScrollerScrollable,
+} from "@denser/design-system";
+import {
+  emptyNextPageState,
+  emptyPreviousPageState,
+  type NextPageState,
+  type PreviousPageState,
+} from "@/lib/async";
+import { computed, toRef } from "vue";
+import { useTimelineEdgeLoads } from "../composables/useTimelineEdgeLoads";
+import { distanceFromEnd } from "../lib/scroll-edge-geometry";
 
 const props = withDefaults(
   defineProps<{
     previousPage?: PreviousPageState;
     nextPage?: NextPageState;
     showJumpToLatest?: boolean;
+    /** Bust edge arm state when the message window recenters (conversation / focus). */
+    edgeResetKey?: unknown;
   }>(),
   {
     previousPage: () => emptyPreviousPageState(),
@@ -24,36 +36,22 @@ const emit = defineEmits<{
 }>();
 
 const scrollable = useMessageScrollerScrollable();
+const scroller = useMessageScrollerContextMaybe();
 
-const jumpActive = computed(
-  () => props.showJumpToLatest || props.nextPage.hasNext || scrollable.value.end,
-);
+const { nearPx } = useTimelineEdgeLoads({
+  previousPage: toRef(props, "previousPage"),
+  nextPage: toRef(props, "nextPage"),
+  resetKey: toRef(props, "edgeResetKey"),
+  onLoadPrevious: () => emit("loadPrevious"),
+  onLoadNext: () => emit("loadNext"),
+});
 
-const scheduleLoadPrevious = useDebounceFn(() => {
-  if (props.previousPage.hasPrevious && !props.previousPage.loadingPrevious) {
-    emit("loadPrevious");
-  }
-}, 120);
-
-const scheduleLoadNext = useDebounceFn(() => {
-  if (props.nextPage.hasNext && !props.nextPage.loadingNext) {
-    emit("loadNext");
-  }
-}, 120);
-
-watch(
-  () => scrollable.value.start,
-  (nearTop) => {
-    if (nearTop) scheduleLoadPrevious();
-  },
-);
-
-watch(
-  () => scrollable.value.end,
-  (nearBottom) => {
-    if (nearBottom) scheduleLoadNext();
-  },
-);
+const jumpActive = computed(() => {
+  if (props.showJumpToLatest || props.nextPage.hasNext) return true;
+  const el = scroller?.viewportElement.value;
+  if (el) return distanceFromEnd(el) > nearPx;
+  return scrollable.value.end;
+});
 
 function onJumpToLatest() {
   emit("jumpToLatest");
