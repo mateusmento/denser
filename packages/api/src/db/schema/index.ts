@@ -5,6 +5,7 @@ export * from "./workflow.js";
 export * from "./document.js";
 export * from "./conversation.js";
 export * from "./conversation-peer.js";
+export * from "./dm-sidebar-preference.js";
 export * from "./message.js";
 export * from "./attachment.js";
 export * from "./message-draft.js";

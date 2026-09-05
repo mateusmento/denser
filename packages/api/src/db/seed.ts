@@ -17,7 +17,9 @@ import { eq } from "drizzle-orm";
 import { db } from "./client.js";
 import { account, session, user, verification } from "./schema/auth.js";
 import { artifact } from "./schema/artifact.js";
-import { conversation, conversationMember } from "./schema/conversation.js";
+import { conversation } from "./schema/conversation.js";
+import { conversationPeer } from "./schema/conversation-peer.js";
+import { dmSidebarPreference } from "./schema/dm-sidebar-preference.js";
 import { document } from "./schema/document.js";
 import { space, spaceMembership } from "./schema/space.js";
 import { documentType, workflow, workflowStage } from "./schema/workflow.js";
@@ -86,7 +88,8 @@ const passwordHash = await hashPassword(password);
 
 if (reset) {
   await db.delete(document);
-  await db.delete(conversationMember);
+  await db.delete(dmSidebarPreference);
+  await db.delete(conversationPeer);
   await db.delete(conversation);
   await db.delete(artifact);
   await db.delete(documentType);
@@ -859,7 +862,7 @@ async function upsertDirectConversationArtifact(input: {
 
   for (const userId of input.memberUserIds) {
     await db
-      .insert(conversationMember)
+      .insert(conversationPeer)
       .values({
         conversationArtifactId: input.id,
         userId,

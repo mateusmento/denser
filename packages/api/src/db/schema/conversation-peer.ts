@@ -1,5 +1,5 @@
 import type { ArtifactId, UserId } from "@denser/contracts";
-import { primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
+import { index, primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
 import { artifact } from "./artifact.js";
 import { user } from "./auth.js";
 import { pgTable } from "drizzle-orm/pg-core";
@@ -17,5 +17,8 @@ export const conversationPeer = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.conversationArtifactId, table.userId] })],
+  (table) => [
+    primaryKey({ columns: [table.conversationArtifactId, table.userId] }),
+    index("conversation_peer_user_idx").on(table.userId),
+  ],
 );

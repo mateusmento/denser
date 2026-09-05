@@ -92,7 +92,9 @@ export async function canAccessArtifact(
   if (row.kind === "conversation") {
     const conversationRow = await conversationRepository.findConversationByArtifactId(row.id);
     if (conversationRow?.conversationKind === "direct") {
-      return conversationRepository.isConversationMember(userId, row.id);
+      const rootSpaceId = conversationRow.rootSpaceId;
+      if (!rootSpaceId) return false;
+      return conversationRepository.canAccessDirectConversation(userId, row.id, rootSpaceId);
     }
   }
 

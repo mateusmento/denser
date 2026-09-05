@@ -450,3 +450,11 @@ export const ConversationConflictResponse = z.object({
   conversation: ConversationView,
 });
 export type ConversationConflictResponse = z.infer<typeof ConversationConflictResponse>;
+
+export const DirectConversationSidebarPreferenceResponse = z.object({
+  conversationId: ArtifactId,
+  hidden: z.boolean(),
+});
+export type DirectConversationSidebarPreferenceResponse = z.infer<
+  typeof DirectConversationSidebarPreferenceResponse
+>;

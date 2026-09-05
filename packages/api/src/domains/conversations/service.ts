@@ -30,8 +30,8 @@ async function enrichDirectConversationView(
     return base;
   }
 
-  const memberIds = await conversationRepository.listMemberUserIds(artifactRow.id);
-  const otherIds = memberIds.filter((id) => id !== userId);
+  const peerIds = await conversationRepository.listPeerUserIds(artifactRow.id);
+  const otherIds = peerIds.filter((id) => id !== userId);
   const title = await buildDirectConversationTitle(userId, otherIds);
   return {
     ...base,
@@ -133,6 +133,7 @@ export async function createOrOpenDirectConversation(
     memberSetKey,
   );
   if (existing) {
+    await conversationRepository.setDirectConversationHidden(userId, existing.artifact.id, false);
     return {
       ok: true as const,
       conversation: await enrichDirectConversationView(
@@ -145,12 +146,12 @@ export async function createOrOpenDirectConversation(
   }
 
   const title = input.title ?? (await buildDirectConversationTitle(userId, otherUserIds));
-  let spaceId: SpaceId | null = input.spaceId ?? null;
+  const spaceId: SpaceId | null = input.spaceId ?? null;
 
   const artifactRow = await artifactRepository.insertConversationArtifact({
     title,
     spaceId,
-    rootSpaceId: input.rootSpaceId,
+    rootSpaceId: spaceId != null ? input.rootSpaceId : null,
     createdBy: userId,
   });
 
@@ -158,7 +159,7 @@ export async function createOrOpenDirectConversation(
     artifactId: artifactRow.id,
     rootSpaceId: input.rootSpaceId,
     memberSetKey,
-    memberUserIds: allMemberIds,
+    peerUserIds: allMemberIds,
   });
 
   return {
@@ -302,4 +303,34 @@ async function resolveDirectMemberIds(
   }
 
   return { ok: true, userIds };
+}
+
+export async function hideDirectConversation(userId: UserId, artifactId: ArtifactId) {
+  const artifactRow = await requireArtifactAccess(userId, artifactId);
+  if (!artifactRow || artifactRow.kind !== "conversation") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const conversationRow = await conversationRepository.findConversationByArtifactId(artifactId);
+  if (!conversationRow || conversationRow.conversationKind !== "direct") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  await conversationRepository.setDirectConversationHidden(userId, artifactId, true);
+  return { ok: true as const, hidden: true as const };
+}
+
+export async function unhideDirectConversation(userId: UserId, artifactId: ArtifactId) {
+  const artifactRow = await requireArtifactAccess(userId, artifactId);
+  if (!artifactRow || artifactRow.kind !== "conversation") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const conversationRow = await conversationRepository.findConversationByArtifactId(artifactId);
+  if (!conversationRow || conversationRow.conversationKind !== "direct") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  await conversationRepository.setDirectConversationHidden(userId, artifactId, false);
+  return { ok: true as const, hidden: false as const };
 }
