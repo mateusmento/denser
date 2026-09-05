@@ -7,11 +7,17 @@ import type {
   ServerToClientEvents,
 } from "@denser/contracts";
 import {
+  CONVERSATION_PRESENCE_EVENT,
+  ConversationPresenceEvent,
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
   MESSAGE_UPDATED_EVENT,
   MessageDto as MessageDtoSchema,
   ReadyEvent as ReadyEventSchema,
+  TYPING_EVENT,
+  TypingEvent,
+  WORKSPACE_PRESENCE_EVENT,
+  WorkspacePresenceEvent,
 } from "@denser/contracts";
 
 export type DenserSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -61,6 +67,11 @@ const eventParsers = {
   [MESSAGE_CREATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
   [MESSAGE_UPDATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
   [MESSAGE_DELETED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
+  [TYPING_EVENT]: (payload: unknown): TypingEvent => TypingEvent.parse(payload),
+  [CONVERSATION_PRESENCE_EVENT]: (payload: unknown): ConversationPresenceEvent =>
+    ConversationPresenceEvent.parse(payload),
+  [WORKSPACE_PRESENCE_EVENT]: (payload: unknown): WorkspacePresenceEvent =>
+    WorkspacePresenceEvent.parse(payload),
 } satisfies {
   [E in keyof ServerToClientEvents]: (payload: unknown) => ServerEventPayload<E>;
 };

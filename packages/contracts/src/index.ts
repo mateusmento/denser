@@ -3,6 +3,7 @@ export * from "./auth.js";
 export * from "./property-definition.js";
 export * from "./domain.js";
 export * from "./socket-events.js";
+export * from "./presence.js";
 export * from "./message.js";
 export * from "./attachment.js";
 export * from "./message-draft.js";
