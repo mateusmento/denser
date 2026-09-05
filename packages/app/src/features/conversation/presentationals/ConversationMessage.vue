@@ -2,6 +2,7 @@
 import { RichTextPreview } from "@/modules/rich-text";
 import { Bubble, BubbleContent, Button, MessageFooter } from "@denser/design-system";
 import type { ConversationMessageView } from "../types";
+import ConversationQuotePreview from "./ConversationQuotePreview.vue";
 import MessageContextMenu from "./MessageContextMenu.vue";
 import MessageHoverMenu from "./MessageHoverMenu.vue";
 
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   bookmark: [];
   forward: [];
   quote: [];
+  jumpQuote: [quotedMessageId: string];
   edit: [];
   delete: [];
 }>();
@@ -30,6 +32,11 @@ const emit = defineEmits<{
 
 <template>
   <div data-slot="conversation-message" class="flex min-w-0 flex-col gap-1.5">
+    <ConversationQuotePreview
+      v-if="message.quoted"
+      :quoted="message.quoted"
+      @activate="emit('jumpQuote', message.quoted.id)"
+    />
     <MessageContextMenu
       :message="message"
       :thread-actions="threadActions"

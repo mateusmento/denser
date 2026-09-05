@@ -18,6 +18,15 @@ export type ConversationAttachmentView = {
   name: string;
 };
 
+export type ConversationQuotedPreviewView = {
+  id: string;
+  author: ConversationPersonView;
+  body: JSONContent;
+  displayContent: string;
+  hasAttachment: boolean;
+  sizeCapped: boolean;
+};
+
 export type ConversationMessageView = {
   id: string;
   author: ConversationPersonView;
@@ -27,6 +36,7 @@ export type ConversationMessageView = {
   reactions: readonly ConversationReactionView[];
   replyCount: number;
   attachments?: readonly ConversationAttachmentView[];
+  quoted?: ConversationQuotedPreviewView;
   canEdit?: boolean;
   canDelete?: boolean;
 };

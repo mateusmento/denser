@@ -1,6 +1,10 @@
-import type { MessageDto, SessionUser } from "@denser/contracts";
+import type { MessageDto, QuotedPreviewDto, SessionUser } from "@denser/contracts";
 import type { JSONContent } from "@/modules/rich-text";
-import type { ConversationMessageView, ConversationPersonView } from "../types";
+import type {
+  ConversationMessageView,
+  ConversationPersonView,
+  ConversationQuotedPreviewView,
+} from "../types";
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -28,6 +32,22 @@ function createdAtLabel(iso: string): string {
   }).format(new Date(iso));
 }
 
+function toQuotedPreviewView(quoted: QuotedPreviewDto): ConversationQuotedPreviewView {
+  return {
+    id: quoted.id,
+    author: {
+      id: quoted.author.id,
+      name: quoted.author.name,
+      initials: initialsFromName(quoted.author.name),
+      avatarUrl: quoted.author.avatarUrl ?? undefined,
+    },
+    body: quoted.body as JSONContent,
+    displayContent: quoted.displayContent,
+    hasAttachment: quoted.hasAttachment ?? false,
+    sizeCapped: quoted.sizeCapped ?? false,
+  };
+}
+
 export function toConversationMessageView(
   dto: MessageDto,
   currentUser: SessionUser | null,
@@ -41,6 +61,7 @@ export function toConversationMessageView(
     createdAtLabel: createdAtLabel(dto.createdAt),
     reactions: [],
     replyCount: 0,
+    quoted: dto.quoted ? toQuotedPreviewView(dto.quoted) : undefined,
     canEdit: isMine && !dto.deletedAt,
     canDelete: isMine && !dto.deletedAt,
   };
