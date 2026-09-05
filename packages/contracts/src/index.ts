@@ -5,5 +5,6 @@ export * from "./domain.js";
 export * from "./socket-events.js";
 export * from "./message.js";
 export * from "./attachment.js";
+export * from "./upload.js";
 export * from "./message-draft.js";
 export * from "./scheduling.js";

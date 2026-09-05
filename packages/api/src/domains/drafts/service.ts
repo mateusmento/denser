@@ -77,6 +77,58 @@ export type GetMessageDraftResult =
   | { ok: true; draft: MessageDraftDto | null }
   | { ok: false; reason: "not_found" };
 
+export type EnsureMessageDraftResult =
+  | { ok: true; draft: MessageDraftRow }
+  | { ok: false; reason: "not_found" };
+
+/**
+ * Ensures a draft row exists for (conversation, author, thread) without changing
+ * body or version. Used by upload staging (ticket 18) before syncing attachment joins.
+ */
+export async function ensureMessageDraft(
+  userId: UserId,
+  conversationId: ArtifactId,
+  threadId: MessageId | null,
+): Promise<EnsureMessageDraftResult> {
+  const conversation = await requireConversation(userId, conversationId);
+  if (!conversation || !conversation.rootSpaceId) {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  const existing = await draftRepository.findDraftByKey({
+    conversationId,
+    authorId: userId,
+    threadId,
+  });
+  if (existing) {
+    return { ok: true as const, draft: existing };
+  }
+
+  try {
+    const created = await draftRepository.insertDraft({
+      rootSpaceId: conversation.rootSpaceId,
+      conversationId,
+      authorId: userId,
+      threadId,
+      body: null,
+      quotesId: null,
+      version: 1,
+      expiresAt: nextDraftExpiry(),
+    });
+    return { ok: true as const, draft: created };
+  } catch {
+    const winner = await draftRepository.findDraftByKey({
+      conversationId,
+      authorId: userId,
+      threadId,
+    });
+    if (!winner) {
+      return { ok: false as const, reason: "not_found" as const };
+    }
+    return { ok: true as const, draft: winner };
+  }
+}
+
 export async function getMessageDraft(
   userId: UserId,
   conversationId: ArtifactId,

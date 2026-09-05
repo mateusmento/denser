@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { app } from "./app.js";
+import { registerDefaultPorts } from "./ports/index.js";
 import { attachRealtime } from "./realtime/attach.js";
 import { startSchedulingDispatcher } from "./domains/scheduling/service.js";
 
@@ -17,6 +18,8 @@ const authSecret = process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET;
 if (!authSecret) {
   throw new Error("BETTER_AUTH_SECRET (or AUTH_SECRET) is required");
 }
+
+registerDefaultPorts();
 
 const server = serve({ fetch: app.fetch, port }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);
