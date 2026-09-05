@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server as SocketServer, type Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@denser/contracts";
 import { app } from "../app.js";
+import { bindRealtimeServer } from "./emit.js";
 
 export type DenserServer = SocketServer<ClientToServerEvents, ServerToClientEvents>;
 export type DenserSocket = Socket<ClientToServerEvents, ServerToClientEvents> & {
@@ -21,6 +22,7 @@ export function attachRealtime(httpServer: HttpServer, appOrigin: string): Dense
       credentials: true,
     },
   });
+  bindRealtimeServer(io);
 
   io.use(async (socket, next) => {
     try {

@@ -1,11 +1,18 @@
 import { io, type Socket } from "socket.io-client";
 import type {
   ClientToServerEvents,
+  MessageDto,
   ReadyEvent,
   ServerEventPayload,
   ServerToClientEvents,
 } from "@denser/contracts";
-import { ReadyEvent as ReadyEventSchema } from "@denser/contracts";
+import {
+  MESSAGE_CREATED_EVENT,
+  MESSAGE_DELETED_EVENT,
+  MESSAGE_UPDATED_EVENT,
+  MessageDto as MessageDtoSchema,
+  ReadyEvent as ReadyEventSchema,
+} from "@denser/contracts";
 
 export type DenserSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -51,6 +58,9 @@ export async function connectSocket(options: SocketClientOptions): Promise<Dense
 
 const eventParsers = {
   ready: (payload: unknown): ReadyEvent => ReadyEventSchema.parse(payload),
+  [MESSAGE_CREATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
+  [MESSAGE_UPDATED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
+  [MESSAGE_DELETED_EVENT]: (payload: unknown): MessageDto => MessageDtoSchema.parse(payload),
 } satisfies {
   [E in keyof ServerToClientEvents]: (payload: unknown) => ServerEventPayload<E>;
 };

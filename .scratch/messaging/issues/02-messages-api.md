@@ -3,7 +3,7 @@
 **Chunk:** 1  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-02-messages-api`  
 **Specs:** [interfaces.md](../interfaces.md) · [FRONTEND-ARCHITECTURE.md](../../../docs/FRONTEND-ARCHITECTURE.md)
