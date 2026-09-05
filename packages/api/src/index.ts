@@ -5,6 +5,7 @@ import { serve } from "@hono/node-server";
 import { app } from "./app.js";
 import { registerDefaultPorts } from "./ports/index.js";
 import { attachRealtime } from "./realtime/attach.js";
+import { bootstrapScheduledMessages } from "./domains/scheduled-messages/bootstrap.js";
 import { startSchedulingDispatcher } from "./domains/scheduling/service.js";
 
 config({
@@ -20,6 +21,7 @@ if (!authSecret) {
 }
 
 registerDefaultPorts();
+bootstrapScheduledMessages();
 
 const server = serve({ fetch: app.fetch, port }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);

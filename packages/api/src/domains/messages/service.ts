@@ -6,6 +6,7 @@ import type {
   ListThreadMessagesQuery,
   MessageDto,
   MessageId,
+  PostMessageInternalInput,
   PostMessageInput,
   QuotedPreviewDto,
   ReactionAggregateDto,
@@ -68,7 +69,7 @@ export type MessageAttachmentCoordinator = {
     conversationId: ArtifactId;
     messageId: MessageId;
     attachmentIds: AttachmentId[];
-    actor: { userId: UserId };
+    actor: { userId: UserId; trustedDelivery?: boolean };
   }): Promise<void>;
   loadByIds(ids: readonly AttachmentId[]): Promise<AttachmentDto[]>;
 };
@@ -102,7 +103,7 @@ export type MessageService = {
     userId: UserId,
     query: ListThreadMessagesQuery,
   ): Promise<ListThreadMessagesResult>;
-  postMessage(userId: UserId, input: PostMessageInput): Promise<PostMessageResult>;
+  postMessage(userId: UserId, input: PostMessageInternalInput): Promise<PostMessageResult>;
   editMessage(userId: UserId, messageId: MessageId, body: unknown): Promise<EditMessageResult>;
   deleteMessage(userId: UserId, messageId: MessageId): Promise<DeleteMessageResult>;
 };
@@ -208,7 +209,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
 
   async function postMessage(
     userId: UserId,
-    input: PostMessageInput,
+    input: PostMessageInternalInput,
   ): Promise<PostMessageResult> {
     const ctx = await deps.access(userId, input.conversationId);
     if (!ctx) {
@@ -219,6 +220,16 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     const hasBody = input.body !== undefined && !isEmptyBody(input.body);
     if (!hasBody && attachmentIds.length === 0) {
       return { ok: false as const, reason: "invalid_message" as const };
+    }
+
+    if (input.occurrenceKey) {
+      const byOccurrence = await repo.findMessageByOccurrenceKey(input.occurrenceKey);
+      if (byOccurrence) {
+        return {
+          ok: true as const,
+          message: await messageDtoFor(byOccurrence, { wasScheduled: input.markAsScheduled === true }),
+        };
+      }
     }
 
     const duplicate = await repo.findClientMessage(input.conversationId, input.clientId);
@@ -242,6 +253,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       authorId: userId,
       body: input.body ?? null,
       clientId: input.clientId,
+      occurrenceKey: input.occurrenceKey ?? null,
     });
 
     if (attachmentIds.length > 0) {
@@ -249,11 +261,14 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
         conversationId: input.conversationId,
         messageId: row.id,
         attachmentIds,
-        actor: { userId },
+        actor: {
+          userId,
+          ...(input.trustedDelivery ? { trustedDelivery: true } : {}),
+        },
       });
     }
 
-    const dto = await messageDtoFor(row);
+    const dto = await messageDtoFor(row, { wasScheduled: input.markAsScheduled === true });
     deps.emit(input.conversationId, "created", dto);
     return { ok: true as const, message: dto };
   }
@@ -304,7 +319,10 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     return { ok: true as const, message: dto };
   }
 
-  async function messageDtoFor(row: MessageRow): Promise<MessageDto> {
+  async function messageDtoFor(
+    row: MessageRow,
+    extra?: { wasScheduled?: boolean },
+  ): Promise<MessageDto> {
     const [attachmentIds, quotedMap] = await Promise.all([
       repo.loadAttachmentIdsForMessage(row.id),
       loadQuotedPreviews([row], row.conversationId, {
@@ -315,6 +333,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     ]);
     const attachmentDtoMap = await loadAttachmentDtoMap(new Map([[row.id, attachmentIds]]));
     return toMessageDto(row, attachmentIds, {
+      ...(extra?.wasScheduled !== undefined ? { wasScheduled: extra.wasScheduled } : {}),
       attachments: attachmentIds
         .map((id) => attachmentDtoMap.get(id))
         .filter((dto): dto is AttachmentDto => dto != null),

@@ -28,6 +28,14 @@ import {
   MessageDto,
 } from "./message.js";
 import { REACTION_UPDATED_EVENT, ReactionUpdatedEvent } from "./reaction.js";
+import {
+  SCHEDULED_MESSAGE_CANCELLED_EVENT,
+  SCHEDULED_MESSAGE_UPSERTED_EVENT,
+} from "./scheduled-message.js";
+import type {
+  ScheduledMessageCancelledEvent,
+  ScheduledMessageUpsertedEvent,
+} from "./scheduled-message.js";
 import { z } from "zod";
 
 export const ReadyEvent = z.object({
@@ -46,6 +54,8 @@ export type ServerToClientEvents = {
   [CONVERSATION_PRESENCE_EVENT]: (payload: ConversationPresenceEvent) => void;
   [WORKSPACE_PRESENCE_EVENT]: (payload: WorkspacePresenceEvent) => void;
   [WORKSPACE_PRESENCE_SNAPSHOT_EVENT]: (payload: WorkspacePresenceSnapshotEvent) => void;
+  [SCHEDULED_MESSAGE_UPSERTED_EVENT]: (payload: ScheduledMessageUpsertedEvent) => void;
+  [SCHEDULED_MESSAGE_CANCELLED_EVENT]: (payload: ScheduledMessageCancelledEvent) => void;
 };
 
 export type ClientToServerEvents = {

@@ -4,6 +4,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from "@denser/contrac
 import { app } from "../app.js";
 import { isMemberOfSpace, requireArtifactAccess } from "../domains/tenancy/access.js";
 import { bindRealtimeServer } from "./emit.js";
+import { bindScheduledMessageRealtime } from "./scheduled-message-events.js";
 import { createPresenceRuntime, registerPresenceHandlers } from "./handlers.js";
 import { userRoom } from "./rooms.js";
 
@@ -29,6 +30,7 @@ export function attachRealtime(httpServer: HttpServer, appOrigin: string): Dense
     },
   });
   bindRealtimeServer(io);
+  bindScheduledMessageRealtime(io);
 
   const presenceRuntime = createPresenceRuntime();
 

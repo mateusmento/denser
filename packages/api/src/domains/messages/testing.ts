@@ -119,6 +119,10 @@ export function createInMemoryMessageRepository(): {
     return out;
   }
 
+  async function findMessageByOccurrenceKey(occurrenceKey: string): Promise<MessageRow | undefined> {
+    return [...rows.values()].find((row) => row.occurrenceKey === occurrenceKey);
+  }
+
   async function findClientMessage(
     conversationId: ArtifactId,
     clientId: ClientId,
@@ -136,6 +140,7 @@ export function createInMemoryMessageRepository(): {
     authorId: UserId;
     body: unknown;
     clientId: ClientId | null;
+    occurrenceKey?: string | null;
   }): Promise<MessageRow> {
     seq += 1;
     const now = new Date(1_000_000 * seq);
@@ -148,7 +153,7 @@ export function createInMemoryMessageRepository(): {
       authorId: input.authorId,
       body: input.body,
       clientId: input.clientId,
-      occurrenceKey: null,
+      occurrenceKey: input.occurrenceKey ?? null,
       createdAt: now,
       editedAt: null,
       deletedAt: null,
@@ -199,6 +204,7 @@ export function createInMemoryMessageRepository(): {
     findMessageById,
     findMessagesByIds,
     findClientMessage,
+    findMessageByOccurrenceKey,
     insertMessage,
     loadAttachmentIdsForMessage,
     loadAttachmentIdsForMessages,
