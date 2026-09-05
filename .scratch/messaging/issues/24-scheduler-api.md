@@ -3,7 +3,7 @@
 **Chunk:** 5  
 **Layer:** api  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-24-scheduler-api`  
 **Specs:** [interfaces.md](../interfaces.md) · [CHUNKS.md](../CHUNKS.md)
@@ -53,4 +53,4 @@ Read epicstory `scheduled-job.repository.ts` for lock/retry ideas; denser SQL st
 
 ## PR
 
-- [ ] `[messaging 24] Scheduling runner API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 24] Scheduling runner API` — [PR-POLICY.md](../PR-POLICY.md) → PR #10

@@ -3,7 +3,7 @@
 **Chunk:** 4  
 **Layer:** api  
 **Domain:** [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-22-drafts-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -47,4 +47,4 @@ _N/A_
 
 ## PR
 
-- [ ] `[messaging 22] Message drafts API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 22] Message drafts API` — [PR-POLICY.md](../PR-POLICY.md) → PR #8

@@ -54,9 +54,9 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 **Signals to hand off early:** repeating mistakes, forgetting ticket scope, fighting merge/typecheck loops, or re-litigating decisions already in domain docs.
 
-## Scaffold status (2026-09-05)
+## Wave-1 status (2026-09-05)
 
-**01 merged to `main` (`11703b7`)** — contracts + schema + migration + port stubs committed directly (user-directed, bypassed one-PR policy for 01). Wave 1 api tickets unblocked: **02, 16, 17, 22, 24** run in parallel.
+**01–05 api tickets merged to `main` (`371f412`):** 02 messages (#7), 22 drafts (#8), 17 attachments (#9), 24 scheduler (#10), 16 blobstore (#11). Independent api tickets done. Next: wire-dependent app/api tickets in isolated worktrees.
 
 ## Decisions-so-far
 
@@ -64,6 +64,8 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 - Scaffold committed directly to `main` (`11703b7`); wave-1+ = one PR per ticket.
 - Drafts v1 server-authoritative; scheduling typed payloads + `next_run_at`.
 - **Task pack v2** (29 tickets) merged archive 16-ticket pack — see **Updates** section in each issue for renumber map.
+- Parallel agents run in **isolated git worktrees** (`/tmp/opencode/wt/NN`), one per ticket/branch — never share a working tree (tangled-commit incident on first parallel run).
+- Tickets 16 + 17 both own `domains/attachments/`; reconciled by merging disjoint function sets into shared `repository.ts` / `orphan-sweep.ts`.
 
 ### Archive → v2 renumber map
 

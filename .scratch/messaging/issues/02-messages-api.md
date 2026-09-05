@@ -3,7 +3,7 @@
 **Chunk:** 1  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-02-messages-api`  
 **Specs:** [interfaces.md](../interfaces.md) · [FRONTEND-ARCHITECTURE.md](../../../docs/FRONTEND-ARCHITECTURE.md)
@@ -52,4 +52,4 @@ Quotes/threads columns may exist from scaffold — accept `quotesId`/`threadId` 
 
 ## PR
 
-- [ ] `[messaging 02] Messages API + realtime` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 02] Messages API + realtime` — [PR-POLICY.md](../PR-POLICY.md) → PR #7
