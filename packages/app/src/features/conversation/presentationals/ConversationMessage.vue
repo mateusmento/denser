@@ -3,6 +3,7 @@ import { RichTextPreview } from "@/modules/rich-text";
 import { Bubble, BubbleContent, Button, MessageFooter } from "@denser/design-system";
 import type { ConversationMessageView } from "../types";
 import ConversationQuotePreview from "./ConversationQuotePreview.vue";
+import MessageAttachmentList from "./MessageAttachmentList.vue";
 import MessageContextMenu from "./MessageContextMenu.vue";
 import MessageHoverMenu from "./MessageHoverMenu.vue";
 
@@ -49,34 +50,30 @@ const emit = defineEmits<{
       @edit="emit('edit')"
       @delete="emit('delete')"
     >
-      <Bubble variant="ghost">
-        <MessageHoverMenu
-          :message="message"
-          :thread-actions="threadActions"
-          :collision-boundary="collisionBoundary"
-          @react="emit('react', $event)"
-          @thread="emit('thread')"
-          @edit="emit('edit')"
-          @delete="emit('delete')"
-        >
-          <template #default="{ highlighted }">
-            <BubbleContent :data-highlighted="highlighted ? '' : undefined">
-              <RichTextPreview :doc="message.body" class="w-fit" />
-            </BubbleContent>
-          </template>
-        </MessageHoverMenu>
-      </Bubble>
-    </MessageContextMenu>
-
-    <ul v-if="message.attachments?.length" class="flex flex-wrap gap-1">
-      <li
-        v-for="attachment in message.attachments"
-        :key="attachment.id"
-        class="rounded-md bg-muted px-2 py-1 text-xs"
+      <MessageHoverMenu
+        :message="message"
+        :thread-actions="threadActions"
+        :collision-boundary="collisionBoundary"
+        @react="emit('react', $event)"
+        @thread="emit('thread')"
+        @edit="emit('edit')"
+        @delete="emit('delete')"
       >
-        {{ attachment.name }}
-      </li>
-    </ul>
+        <template #default="{ highlighted }">
+          <div class="flex w-fit max-w-full min-w-0 flex-col gap-1.5">
+            <Bubble variant="ghost">
+              <BubbleContent :data-highlighted="highlighted ? '' : undefined">
+                <RichTextPreview :doc="message.body" class="w-fit" />
+              </BubbleContent>
+            </Bubble>
+            <MessageAttachmentList
+              v-if="message.attachments?.length"
+              :attachments="message.attachments"
+            />
+          </div>
+        </template>
+      </MessageHoverMenu>
+    </MessageContextMenu>
 
     <MessageFooter
       v-if="message.reactions.length || (threadActions && message.replyCount)"

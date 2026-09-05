@@ -1,5 +1,12 @@
 import type { InfiniteData } from "@tanstack/vue-query";
-import type { ArtifactId, ClientId, AttachmentId, MessageDto, MessageId } from "@denser/contracts";
+import type {
+  ArtifactId,
+  AttachmentDto,
+  ClientId,
+  AttachmentId,
+  MessageDto,
+  MessageId,
+} from "@denser/contracts";
 import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
@@ -192,6 +199,7 @@ export function useConversationMessages(
       body: JSONContent;
       clientId: ClientId;
       attachmentIds: AttachmentId[];
+      attachments: AttachmentDto[];
     }) => {
       const conversation = id.value;
       if (!conversation) throw new Error("no conversation");
@@ -222,6 +230,7 @@ export function useConversationMessages(
         editedAt: null,
         deletedAt: null,
         attachmentIds: input.attachmentIds,
+        attachments: input.attachments,
       };
 
       syncQueryData(applyMessageCreated(previous, optimistic));
@@ -239,9 +248,13 @@ export function useConversationMessages(
     },
   });
 
-  async function send(body: JSONContent, attachmentIds: AttachmentId[] = []) {
+  async function send(
+    body: JSONContent,
+    attachmentIds: AttachmentId[] = [],
+    attachments: AttachmentDto[] = [],
+  ) {
     if (isEmptyBody(body) && attachmentIds.length === 0) return;
-    await sendMutation.mutateAsync({ body, attachmentIds, clientId: createClientId() });
+    await sendMutation.mutateAsync({ body, attachmentIds, attachments, clientId: createClientId() });
   }
 
   async function retrySend() {
@@ -251,6 +264,7 @@ export function useConversationMessages(
     await sendMutation.mutateAsync({
       body: current.body as JSONContent,
       attachmentIds: (current.attachmentIds ?? []) as AttachmentId[],
+      attachments: current.attachments ?? [],
       clientId: failedClientId.value,
     });
   }

@@ -16,6 +16,10 @@ export type ConversationReactionView = {
 export type ConversationAttachmentView = {
   id: string;
   name: string;
+  mimeType: string;
+  url: string;
+  byteSize: number;
+  kind: "media" | "file";
 };
 
 export type ConversationQuotedPreviewView = {

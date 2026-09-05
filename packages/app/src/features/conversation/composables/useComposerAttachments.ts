@@ -309,6 +309,11 @@ export function useComposerAttachments(options: {
     return [...new Set([...tileIds, ...inlineIds])];
   }
 
+  function collectAttachmentDtos(doc: JSONContent): AttachmentDto[] {
+    const ids = new Set(collectAttachmentIds(doc));
+    return staged.value.filter((attachment) => ids.has(attachment.id));
+  }
+
   function clearAfterSend() {
     revokePreviewUrls(pending.value);
     pending.value = [];
@@ -331,6 +336,7 @@ export function useComposerAttachments(options: {
     dismissFailed,
     cancelUpload,
     collectAttachmentIds,
+    collectAttachmentDtos,
     clearAfterSend,
     hasSendableContent,
     hasBlockingUpload,

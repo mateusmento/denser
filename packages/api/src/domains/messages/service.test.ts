@@ -58,6 +58,7 @@ function makeHarness(opts: { forbidBob?: boolean } = {}): Harness {
     access,
     attachments: {
       commitSync: async () => undefined,
+      loadByIds: async () => [],
     },
     emit: (_conversationId, event, message) => emitted.push({ event, message }),
     loadAuthorDisplay: async (userIds) => {

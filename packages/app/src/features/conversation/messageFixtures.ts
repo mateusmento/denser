@@ -280,6 +280,31 @@ export const channelMessages: ConversationMessageView[] = [
     },
   }),
   message({
+    id: "m-attachments",
+    author: ava,
+    text: "Specs and a screenshot from staging.",
+    createdAt: "2026-08-11T10:00:00.000Z",
+    createdAtLabel: "10:00 AM",
+    attachments: [
+      {
+        id: "att-image",
+        name: "admin-dashboard.png",
+        mimeType: "image/png",
+        url: "https://picsum.photos/seed/denser-dashboard/480/360",
+        byteSize: 248_320,
+        kind: "media",
+      },
+      {
+        id: "att-file",
+        name: "launch-checklist.pdf",
+        mimeType: "application/pdf",
+        url: "https://example.com/launch-checklist.pdf",
+        byteSize: 94_208,
+        kind: "file",
+      },
+    ],
+  }),
+  message({
     id: "m12",
     author: ava,
     text: "Looks good — merge when green.",

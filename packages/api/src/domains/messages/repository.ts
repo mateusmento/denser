@@ -6,12 +6,30 @@ import type {
   SpaceId,
   UserId,
 } from "@denser/contracts";
-import { and, asc, count, desc, eq, inArray, max, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, lt, max, or, type SQL } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { messageAttachment } from "../../db/schema/attachment.js";
 import { message } from "../../db/schema/message.js";
 import type { MessageCursor } from "./cursor.js";
 import type { MessageRepository, MessageRow, ThreadListOptions, ThreadSummaryRow } from "./types.js";
+
+type TupleCursor = Pick<MessageRow, "createdAt" | "id">;
+
+/** `(created_at, id)` lexicographic comparison — older than cursor. */
+function tupleBefore(cursor: TupleCursor): SQL {
+  return or(
+    lt(message.createdAt, cursor.createdAt),
+    and(eq(message.createdAt, cursor.createdAt), lt(message.id, cursor.id)),
+  )!;
+}
+
+/** `(created_at, id)` lexicographic comparison — newer than cursor. */
+function tupleAfter(cursor: TupleCursor): SQL {
+  return or(
+    gt(message.createdAt, cursor.createdAt),
+    and(eq(message.createdAt, cursor.createdAt), gt(message.id, cursor.id)),
+  )!;
+}
 
 async function loadAttachmentIds(
   messageIds: readonly MessageId[],
@@ -37,8 +55,8 @@ async function loadAttachmentIds(
 async function fetchWindow(input: {
   conversationId: ArtifactId;
   size: number;
-  where: ReturnType<typeof sql> | undefined;
-  orderBy: ReturnType<typeof sql>[];
+  where: SQL | undefined;
+  orderBy: SQL[];
 }): Promise<MessageRow[]> {
   return db
     .select()
@@ -51,8 +69,8 @@ async function fetchWindow(input: {
 async function fetchThreadWindow(input: {
   threadId: MessageId;
   size: number;
-  where: ReturnType<typeof sql> | undefined;
-  orderBy: ReturnType<typeof sql>[];
+  where: SQL | undefined;
+  orderBy: SQL[];
 }): Promise<MessageRow[]> {
   return db
     .select()
@@ -90,7 +108,7 @@ async function listLinear(
     return fetchWindow({
       conversationId,
       size: opts.size,
-      where: sql`(${message.createdAt}, ${message.id}) > (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      where: tupleAfter(opts.cursor),
       orderBy: [asc(message.createdAt), asc(message.id)],
     });
   }
@@ -99,7 +117,7 @@ async function listLinear(
     const rows = await fetchWindow({
       conversationId,
       size: opts.size,
-      where: sql`(${message.createdAt}, ${message.id}) < (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      where: tupleBefore(opts.cursor),
       orderBy: [desc(message.createdAt), desc(message.id)],
     });
     return rows.reverse();
@@ -130,7 +148,7 @@ async function listAround(
   const older = await fetchWindow({
     conversationId,
     size: olderCount,
-    where: sql`(${message.createdAt}, ${message.id}) < (${anchor.createdAt}, ${anchor.id})`,
+    where: tupleBefore(anchor),
     orderBy: [desc(message.createdAt), desc(message.id)],
   });
 
@@ -139,7 +157,7 @@ async function listAround(
       ? await fetchWindow({
           conversationId,
           size: newerCount,
-          where: sql`(${message.createdAt}, ${message.id}) > (${anchor.createdAt}, ${anchor.id})`,
+          where: tupleAfter(anchor),
           orderBy: [asc(message.createdAt), asc(message.id)],
         })
       : [];
@@ -160,7 +178,7 @@ async function listThreadMessages(
     return fetchThreadWindow({
       threadId,
       size: opts.size,
-      where: sql`(${message.createdAt}, ${message.id}) > (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      where: tupleAfter(opts.cursor),
       orderBy: [asc(message.createdAt), asc(message.id)],
     });
   }
@@ -169,7 +187,7 @@ async function listThreadMessages(
     const rows = await fetchThreadWindow({
       threadId,
       size: opts.size,
-      where: sql`(${message.createdAt}, ${message.id}) < (${opts.cursor.createdAt}, ${opts.cursor.id})`,
+      where: tupleBefore(opts.cursor),
       orderBy: [desc(message.createdAt), desc(message.id)],
     });
     return rows.reverse();
