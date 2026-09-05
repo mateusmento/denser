@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** app  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 06 — Threads API; 03 — Timeline app  
 **Branch:** `agent/messaging-07-threads-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
