@@ -1,18 +1,10 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import type { BlobStore } from "@denser/contracts";
+import type { R2BlobStoreConfig } from "./blob-store-env.js";
 import { S3BlobStore, type S3BlobStoreOptions } from "./s3-blob-store.js";
 import type { AttachRowStore } from "./types.js";
 
-export type R2BlobStoreOptions = {
-  accountId: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucket: string;
-  folder?: string;
-  expiresIn?: number;
-  /** R2 public bucket URL (e.g. https://pub-xxxx.r2.dev) for un-signed URLs. */
-  publicBaseUrl?: string;
-};
+export type R2BlobStoreOptions = R2BlobStoreConfig;
 
 /**
  * Cloudflare R2 `BlobStore` adapter. R2 exposes an S3-compatible API, so this
@@ -21,11 +13,11 @@ export type R2BlobStoreOptions = {
  */
 export function createR2BlobStore(
   rowStore: AttachRowStore,
-  options: R2BlobStoreOptions,
+  options: R2BlobStoreConfig,
 ): BlobStore {
   const client = new S3Client({
     region: "auto",
-    endpoint: `https://${options.accountId}.r2.cloudflarestorage.com`,
+    endpoint: options.endpoint,
     credentials: {
       accessKeyId: options.accessKeyId,
       secretAccessKey: options.secretAccessKey,
@@ -34,8 +26,7 @@ export function createR2BlobStore(
 
   const s3Options: S3BlobStoreOptions = {
     bucket: options.bucket,
-    ...(options.folder ? { folder: options.folder } : {}),
-    ...(options.expiresIn ? { expiresIn: options.expiresIn } : {}),
+    folder: options.folder,
     ...(options.publicBaseUrl ? { publicBaseUrl: options.publicBaseUrl } : {}),
   };
 
