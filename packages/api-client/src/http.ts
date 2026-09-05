@@ -14,7 +14,11 @@ import {
   GetConversationResponse,
   GetDocumentResponse,
   ListDirectConversationsResponse,
+  ListMessagesQuery,
+  ListMessagesResponse,
   PatchConversationInput,
+  PostMessageInput,
+  PostMessageResponse,
   PatchConversationResponse,
   EnableSprintsResponse,
   HomeResponse,
@@ -27,7 +31,9 @@ import {
   SEED_ARTIFACT_ONBOARDING_NOTES,
   SpaceDetailResponse,
   type ArtifactId,
+  type ClientId,
   type DocumentTypeId,
+  type MessageId,
   type SpaceId,
   type UserId,
 } from "@denser/contracts";
@@ -372,6 +378,57 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("create direct conversation failed", res.status, body);
     return CreateDirectConversationResponse.parse(body);
+  }
+
+  async listMessages(
+    conversationId: ArtifactId,
+    input: {
+      cursor?: string;
+      size?: number;
+      direction?: "next" | "prev";
+      around?: MessageId;
+    } = {},
+  ): Promise<ListMessagesResponse> {
+    const query = ListMessagesQuery.parse({
+      conversationId,
+      ...input,
+    });
+    const params = new URLSearchParams();
+    if (query.cursor) params.set("cursor", query.cursor);
+    if (query.around) params.set("around", query.around);
+    if (query.size !== undefined) params.set("size", String(query.size));
+    if (query.direction) params.set("direction", query.direction);
+
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages?${params.toString()}`,
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list messages failed", res.status, body);
+    return ListMessagesResponse.parse(body);
+  }
+
+  async postMessage(
+    conversationId: ArtifactId,
+    input: {
+      body?: unknown;
+      clientId: ClientId;
+      quotesId?: MessageId | null;
+      threadId?: MessageId | null;
+      attachmentIds?: string[];
+    },
+  ): Promise<PostMessageResponse> {
+    const payload = PostMessageInput.parse({
+      conversationId,
+      ...input,
+    });
+    const res = await this.request(`/api/conversations/${conversationId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("post message failed", res.status, body);
+    return PostMessageResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

@@ -55,4 +55,19 @@ function onDelete(messageId: string) {
       />
     </div>
   </Story>
+  <Story as-child name="Jump to latest">
+    <div class="h-[28rem] w-[36rem]">
+      <ConversationTimeline
+        :messages="channelMessages"
+        :intro="channelIntro"
+        show-jump-to-latest
+        has-more-newer
+        @react="onReact"
+        @thread="onThread"
+        @edit="onEdit"
+        @delete="onDelete"
+        @jump-to-latest="toast('Jump to latest')"
+      />
+    </div>
+  </Story>
 </template>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   MessageScroller,
-  MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
@@ -14,6 +13,7 @@ import type { ConversationIntroView, ConversationMessageView } from "../types";
 import ConversationIntro from "./ConversationIntro.vue";
 import ConversationMessage from "./ConversationMessage.vue";
 import ConversationMessageGroup from "./ConversationMessageGroup.vue";
+import ConversationTimelineEdges from "./ConversationTimelineEdges.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -25,10 +25,21 @@ const props = withDefaults(
     threadActions?: boolean;
     /** Sticky day chip fill — match the surrounding surface (channel vs card). */
     dayClass?: string;
+    /** Whether older pages exist beyond the loaded window. */
+    hasMoreOlder?: boolean;
+    /** Whether newer pages exist (off live edge). */
+    hasMoreNewer?: boolean;
+    /** Force jump-to-latest pill visibility (e.g. around-focus / hasMoreNewer). */
+    showJumpToLatest?: boolean;
+    loadingOlder?: boolean;
   }>(),
   {
     threadActions: true,
     dayClass: "bg-background",
+    hasMoreOlder: false,
+    hasMoreNewer: false,
+    showJumpToLatest: false,
+    loadingOlder: false,
   },
 );
 
@@ -43,6 +54,8 @@ const emit = defineEmits<{
   delete: [messageId: string];
   editDescription: [];
   addPeople: [];
+  loadOlder: [];
+  jumpToLatest: [];
 }>();
 
 defineSlots<{
@@ -129,7 +142,14 @@ watch(
           {{ emptyLabel ?? "No messages yet. Say hello." }}
         </p>
       </MessageScrollerViewport>
-      <MessageScrollerButton />
+      <ConversationTimelineEdges
+        :has-more-older="hasMoreOlder"
+        :has-more-newer="hasMoreNewer"
+        :show-jump-to-latest="showJumpToLatest"
+        :loading-older="loadingOlder"
+        @load-older="emit('loadOlder')"
+        @jump-to-latest="emit('jumpToLatest')"
+      />
     </MessageScroller>
   </MessageScrollerProvider>
 </template>
