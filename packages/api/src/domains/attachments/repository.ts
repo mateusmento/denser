@@ -5,6 +5,8 @@ import type {
   MessageDraftId,
   MessageId,
   ScheduledJobId,
+  SpaceId,
+  UserId,
 } from "@denser/contracts";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db/client.js";
@@ -15,6 +17,63 @@ import { message } from "../../db/schema/message.js";
 import type { AnchorScope } from "./rules.js";
 
 export type AttachmentRow = typeof attachment.$inferSelect;
+
+// --- Ticket 16: attachment metadata row CRUD (BlobStore adapters) ---
+
+export type CreateAttachmentRowInput = {
+  rootSpaceId: SpaceId;
+  conversationId?: ArtifactId | null;
+  uploadedBy: UserId;
+  storageKey: string;
+  mimeType: string;
+  originalFilename: string;
+  byteSize: number;
+};
+
+export async function insertAttachmentRow(input: CreateAttachmentRowInput): Promise<AttachmentRow> {
+  const [created] = await db
+    .insert(attachment)
+    .values({
+      rootSpaceId: input.rootSpaceId,
+      conversationId: input.conversationId ?? null,
+      uploadedBy: input.uploadedBy,
+      storageKey: input.storageKey,
+      mimeType: input.mimeType,
+      originalFilename: input.originalFilename,
+      byteSize: input.byteSize,
+    })
+    .returning();
+
+  if (!created) {
+    throw new Error("Failed to create attachment row");
+  }
+
+  return created;
+}
+
+export async function findAttachmentByStorageKey(
+  storageKey: string,
+): Promise<AttachmentRow | undefined> {
+  return db.query.attachment.findFirst({
+    where: eq(attachment.storageKey, storageKey),
+  });
+}
+
+export async function deleteAttachmentRow(id: AttachmentId): Promise<void> {
+  await db.delete(attachment).where(eq(attachment.id, id));
+}
+
+export async function deleteAttachmentRowByStorageKey(storageKey: string): Promise<void> {
+  await db.delete(attachment).where(eq(attachment.storageKey, storageKey));
+}
+
+/** `hasRow` probe backed by the attachments table (orphan sweep). */
+export async function attachmentHasRow(storageKey: string): Promise<boolean> {
+  const row = await findAttachmentByStorageKey(storageKey);
+  return row != null;
+}
+
+// --- Ticket 17: reference-graph queries (AttachmentReferences) ---
 
 export async function resolveAnchorScope(anchor: AttachmentAnchor): Promise<AnchorScope | null> {
   switch (anchor.type) {

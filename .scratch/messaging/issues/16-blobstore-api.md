@@ -3,7 +3,7 @@
 **Chunk:** 3a — Attachments storage (backend)  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) A0  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 01 — Scaffold  
 **Branch:** `agent/messaging-16-blobstore-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [interfaces.md](../interfaces.md)
@@ -54,4 +54,4 @@ After merge you can verify with API/integration tests only. **You will not see u
 
 ## PR
 
-- [ ] `[messaging 16] BlobStore adapters (S3 + R2)` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 16] BlobStore adapters (S3 + R2)` — [PR-POLICY.md](../PR-POLICY.md)

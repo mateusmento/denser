@@ -1,3 +1,4 @@
+import { createBlobStoreFromEnv } from "../domains/attachments/blob-store.js";
 import { registerPort } from "./container.js";
 import { blobStore } from "./blob-store.js";
 import { attachmentReferences } from "../domains/attachments/service.js";
@@ -14,7 +15,9 @@ let registered = false;
 export function registerDefaultPorts(): void {
   if (registered) return;
   registered = true;
-  registerPort("blobStore", blobStore);
+  // Ticket 16: register the real BlobStore adapter when blob env is configured,
+  // otherwise keep the NotImplemented stub so the app boots without S3/R2.
+  registerPort("blobStore", process.env.BLOB_STORE_BUCKET ? createBlobStoreFromEnv() : blobStore);
   registerPort("attachmentReferences", attachmentReferences);
   registerPort("claimDueJobs", claimDueJobs);
 }

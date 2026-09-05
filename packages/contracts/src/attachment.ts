@@ -41,9 +41,11 @@ export type AttachmentAnchor = z.infer<typeof AttachmentAnchor>;
 export type BlobStore = {
   createUpload(input: {
     rootSpaceId: SpaceId;
+    uploadedBy: UserId;
     filename: string;
     mimeType: string;
     byteSize: number;
+    conversationId?: ArtifactId | null;
   }): Promise<{ attachmentId: AttachmentId; upload: { uploadId: string } }>;
   uploadPart?(input: { uploadId: string; part?: number; data: Uint8Array }): Promise<void>;
   abortUpload(uploadId: string): Promise<void>;
