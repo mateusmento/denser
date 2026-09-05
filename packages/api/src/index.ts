@@ -20,12 +20,12 @@ if (!authSecret) {
   throw new Error("BETTER_AUTH_SECRET (or AUTH_SECRET) is required");
 }
 
-registerDefaultPorts();
+await registerDefaultPorts();
 bootstrapScheduledMessages();
 
 const server = serve({ fetch: app.fetch, port }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);
 });
 
-attachRealtime(server as unknown as import("node:http").Server, appOrigin);
+await attachRealtime(server as unknown as import("node:http").Server, appOrigin);
 startSchedulingDispatcher();

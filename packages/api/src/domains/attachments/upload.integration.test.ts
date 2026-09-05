@@ -89,7 +89,7 @@ const blobStore: BlobStore = {
 };
 
 before(async () => {
-  registerDefaultPorts();
+  await registerDefaultPorts();
   registerPort("blobStore", blobStore);
 });
 

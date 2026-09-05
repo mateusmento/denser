@@ -1,11 +1,13 @@
 import type { Server as HttpServer } from "node:http";
 import { Server as SocketServer } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
 import type { ClientToServerEvents, ServerToClientEvents } from "@denser/contracts";
 import { app } from "../app.js";
 import { isMemberOfSpace, requireArtifactAccess } from "../domains/tenancy/access.js";
+import { getSharedRedisClient, resolveRealtimeAdapter } from "../domains/ephemeral/ephemeral-store-env.js";
 import { bindRealtimeServer } from "./emit.js";
 import { bindScheduledMessageRealtime } from "./scheduled-message-events.js";
-import { createPresenceRuntime, registerPresenceHandlers } from "./handlers.js";
+import { registerPresenceHandlers } from "./handlers.js";
 import { userRoom } from "./rooms.js";
 
 export type DenserServer = SocketServer<ClientToServerEvents, ServerToClientEvents>;
@@ -22,17 +24,24 @@ type SessionPayload = {
   } | null;
 } | null;
 
-export function attachRealtime(httpServer: HttpServer, appOrigin: string): DenserServer {
+export async function attachRealtime(httpServer: HttpServer, appOrigin: string): Promise<DenserServer> {
   const io = new SocketServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: {
       origin: appOrigin,
       credentials: true,
     },
+    transports: ["websocket"],
   });
+
+  if (resolveRealtimeAdapter() === "redis") {
+    const pub = await getSharedRedisClient();
+    const sub = pub.duplicate();
+    await sub.connect();
+    io.adapter(createAdapter(pub, sub));
+  }
+
   bindRealtimeServer(io);
   bindScheduledMessageRealtime(io);
-
-  const presenceRuntime = createPresenceRuntime();
 
   io.use(async (socket, next) => {
     try {
@@ -52,7 +61,7 @@ export function attachRealtime(httpServer: HttpServer, appOrigin: string): Dense
         return artifact !== null && artifact.kind === "conversation";
       },
       canAccessWorkspace: async (userId, rootSpaceId) => isMemberOfSpace(userId, rootSpaceId),
-    }, presenceRuntime);
+    });
 
     void (async () => {
       const userId = denserSocket.data.userId;

@@ -7,8 +7,8 @@ import {
   SEED_USER_BOB,
   TYPING_TTL_MS,
 } from "@denser/contracts";
-import { createPresenceRegistry } from "./presence-registry.js";
-import { createTypingState } from "./typing-state.js";
+import { createInMemoryPresenceStore } from "../domains/ephemeral/in-memory-presence-store.js";
+import { createTypingState } from "../domains/ephemeral/typing-state-internal.js";
 
 test("typing state records until and prunes expired users", () => {
   const expired: UserId[] = [];
@@ -27,20 +27,52 @@ test("typing state records until and prunes expired users", () => {
   assert.equal(typing.isTyping(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE, start + TYPING_TTL_MS), false);
 });
 
-test("presence registry ref-counts users across sockets", () => {
-  const viewers = createPresenceRegistry<ArtifactId>();
+test("presence store ref-counts users across sockets", async () => {
+  const presence = createInMemoryPresenceStore();
+  const conversationId = SEED_ARTIFACT_CHAN_GENERAL as ArtifactId;
 
-  assert.equal(viewers.add(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE), true);
-  assert.equal(viewers.add(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE), false);
-  assert.deepEqual(viewers.list(SEED_ARTIFACT_CHAN_GENERAL), [SEED_USER_ALICE]);
+  const first = await presence.joinConversation({
+    conversationId,
+    userId: SEED_USER_ALICE,
+    socketId: "socket-a",
+  });
+  assert.equal(first.becameViewer, true);
+  assert.deepEqual(first.viewers, [SEED_USER_ALICE]);
 
-  assert.equal(viewers.remove(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE), false);
-  assert.equal(viewers.has(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE), true);
+  const secondTab = await presence.joinConversation({
+    conversationId,
+    userId: SEED_USER_ALICE,
+    socketId: "socket-b",
+  });
+  assert.equal(secondTab.becameViewer, false);
+  assert.deepEqual(secondTab.viewers, [SEED_USER_ALICE]);
 
-  assert.equal(viewers.remove(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE), true);
-  assert.deepEqual(viewers.list(SEED_ARTIFACT_CHAN_GENERAL), []);
+  const partialLeave = await presence.leaveConversation({
+    conversationId,
+    userId: SEED_USER_ALICE,
+    socketId: "socket-a",
+  });
+  assert.equal(partialLeave.becameAbsent, false);
+  assert.deepEqual(partialLeave.viewers, [SEED_USER_ALICE]);
 
-  viewers.add(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_ALICE);
-  viewers.add(SEED_ARTIFACT_CHAN_GENERAL, SEED_USER_BOB);
-  assert.deepEqual(viewers.list(SEED_ARTIFACT_CHAN_GENERAL).sort(), [SEED_USER_ALICE, SEED_USER_BOB].sort());
+  const lastLeave = await presence.leaveConversation({
+    conversationId,
+    userId: SEED_USER_ALICE,
+    socketId: "socket-b",
+  });
+  assert.equal(lastLeave.becameAbsent, true);
+  assert.deepEqual(lastLeave.viewers, []);
+
+  await presence.joinConversation({
+    conversationId,
+    userId: SEED_USER_ALICE,
+    socketId: "socket-c",
+  });
+  await presence.joinConversation({
+    conversationId,
+    userId: SEED_USER_BOB,
+    socketId: "socket-d",
+  });
+  const viewers = await presence.listConversationViewers(conversationId);
+  assert.deepEqual(viewers.sort(), [SEED_USER_ALICE, SEED_USER_BOB].sort());
 });

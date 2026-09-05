@@ -40,7 +40,7 @@ export function createSocketClient(options: SocketClientOptions): DenserSocket {
   const opts: Parameters<typeof io>[1] = {
     withCredentials: true,
     autoConnect: false,
-    transports: ["polling", "websocket"],
+    transports: ["websocket"],
   };
   if (options.cookieHeader) {
     opts.extraHeaders = { Cookie: options.cookieHeader };
