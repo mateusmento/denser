@@ -1,9 +1,19 @@
+export type { BlobStoreAdapterName } from "./blob-store-env.js";
+export {
+  inferR2Endpoint,
+  inferS3PublicBaseUrl,
+  parseR2BlobStoreEnv,
+  parseS3BlobStoreEnv,
+  resolveBlobStoreAdapter,
+} from "./blob-store-env.js";
 export {
   createBlobStore,
   createBlobStoreFromEnv,
+  createS3BlobStore,
   defaultRowStore,
-  type BlobStoreAdapterName,
-  type BlobStoreEnv,
+  isBlobStoreConfigured,
+  type R2BlobStoreConfig,
+  type S3BlobStoreConfig,
 } from "./blob-store.js";
 export { S3BlobStore, type S3BlobStoreOptions } from "./s3-blob-store.js";
 export { createR2BlobStore, type R2BlobStoreOptions } from "./r2-blob-store.js";

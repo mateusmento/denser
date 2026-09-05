@@ -167,25 +167,23 @@ test("deleteObject issues DeleteObjectCommand", async () => {
 
 test("createBlobStore selects the s3 adapter by default and from env", () => {
   const row = makeRowStore();
-  const s3Store = createBlobStore(row.store, {
-    adapter: "s3",
-    bucket: "bkt",
-    folder: "uploads",
+  const s3Store = createBlobStore(row.store, "s3", {
+    AWS_BUCKET: "bkt",
+    S3_FOLDER: "uploads",
   });
   assert.ok(s3Store instanceof S3BlobStore);
 
-  const fromEnv = createBlobStore(row.store, {
-    adapter: "s3",
-    bucket: "bkt",
+  const fromEnv = createBlobStore(row.store, "s3", {
+    AWS_BUCKET: "bkt",
   });
   assert.ok(fromEnv instanceof S3BlobStore);
 });
 
-test("createBlobStore throws when bucket is missing", () => {
+test("createBlobStore throws when S3 env is missing", () => {
   const row = makeRowStore();
   assert.throws(
-    () => createBlobStore(row.store, { adapter: "s3", bucket: "" }),
-    /BLOB_STORE_BUCKET is required/,
+    () => createBlobStore(row.store, "s3", {}),
+    /S3 blob store is not configured/,
   );
 });
 
