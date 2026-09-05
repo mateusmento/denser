@@ -40,14 +40,14 @@ _N/A — consumes 18._
 
 ## App (frontend)
 
-- [ ] **Insert attachment** action row + drop/paste files → calls upload API
-- [ ] **Tile strip** under/beside composer: filename, thumb for images, **progress %**, **Cancel** while uploading
-- [ ] **Remove tile** before send → sync draft anchor (not `releaseAttachment` unless intentional destroy)
-- [ ] **Inline images** in TipTap: `attachmentId` on image node; tiles exclude ids already in doc (`joins − doc`)
-- [ ] **Send** passes union(tile ids ∪ inline image ids) to PostMessage
-- [ ] **Attach-only send**: Send enabled when tiles exist but body empty
-- [ ] Failed upload: inline error on tile + retry; cancel leaves no orphan UI state
-- [ ] Storybook or manual test notes in PR body
+- [x] **Insert attachment** action row + drop/paste files → calls upload API
+- [x] **Tile strip** under/beside composer: filename, thumb for images, **progress %**, **Cancel** while uploading
+- [x] **Remove tile** before send → sync draft anchor (not `releaseAttachment` unless intentional destroy)
+- [x] **Inline images** in TipTap: `attachmentId` on image node; tiles exclude ids already in doc (`joins − doc`)
+- [x] **Send** passes union(tile ids ∪ inline image ids) to PostMessage
+- [x] **Attach-only send**: Send enabled when tiles exist but body empty
+- [x] Failed upload: inline error on tile + retry; cancel leaves no orphan UI state
+- [x] Storybook or manual test notes in PR body
 
 ## Reviewer notes
 
@@ -55,4 +55,4 @@ _N/A — consumes 18._
 
 ## PR
 
-- [ ] `[messaging 19] Composer upload UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] [#19](https://github.com/mateusmento/denser/pull/19) `[messaging 19] Composer upload UI` — open, awaiting review

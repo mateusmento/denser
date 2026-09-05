@@ -102,8 +102,8 @@ Wave-3 parallel batch **claimed** — worktrees at `/tmp/opencode/wt/{05,07,09,1
 | **05** quotes-app | `agent/messaging-05-quotes-app` | [#17](https://github.com/mateusmento/denser/pull/17) |
 | **07** threads-app | `agent/messaging-07-threads-app` | [#18](https://github.com/mateusmento/denser/pull/18) |
 | **09** message-actions-app | `agent/messaging-09-message-actions-app` | — |
-| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | — |
-| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | — |
+| **11** typing-presence-app | `agent/messaging-11-typing-presence-app` | [#20](https://github.com/mateusmento/denser/pull/20) |
+| **19** composer-attachments-app | `agent/messaging-19-composer-attachments-app` | [#19](https://github.com/mateusmento/denser/pull/19) |
 
 **Next api lane (unclaimed):** 08 reactions, 12 unread-api, 14 dm-peers-api, 25 schedule-message-api — rebase worktrees from `144c0a6` → `main` before starting.
 

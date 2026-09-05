@@ -38,10 +38,10 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Typing banner near composer (pulse + TTL)
-- [ ] Conversation viewer avatars in `ChannelHeader`
-- [ ] Green dots: 1:1 DM rows + space member lists only (no group DM row dots)
+- [x] Typing banner near composer (pulse + TTL)
+- [x] Conversation viewer avatars in `ChannelHeader`
+- [x] Green dots: 1:1 DM rows + space member lists only (no group DM row dots)
 
 ## PR
 
-- [ ] `[messaging 11] Typing + presence UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] [#20](https://github.com/mateusmento/denser/pull/20) `[messaging 11] Typing + presence UI` — open, awaiting review
