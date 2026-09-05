@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [ARTIFACTS-AND-SPACES.md](../../../docs/ARTIFACTS-AND-SPACES.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-14-dm-peers-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)

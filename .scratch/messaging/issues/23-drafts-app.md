@@ -3,7 +3,7 @@
 **Chunk:** 4  
 **Layer:** app  
 **Domain:** [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 22 — Drafts API; 03 — Timeline app  
 **Branch:** `agent/messaging-23-drafts-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)

@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** app  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 12 — Unread API; 03 — Timeline app  
 **Branch:** `agent/messaging-13-unread-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)

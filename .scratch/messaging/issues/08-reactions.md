@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** full  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API; 03 — Timeline app  
 **Branch:** `agent/messaging-08-reactions`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
