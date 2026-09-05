@@ -34,7 +34,6 @@ import { useUnreadSummarySync } from "@/features/conversation/composables/useUnr
 function spaceLink(
   space: Pick<SpaceSummary, "id" | "title" | "icon">,
   isActive: boolean,
-  unreadCount?: number,
 ): WorkspaceNavLink {
   return {
     id: space.id,
@@ -48,28 +47,30 @@ function spaceLink(
 function artifactLink(
   artifact: Pick<ArtifactSummary, "id" | "title" | "kind">,
   isActive: boolean,
+  unreadCount?: number,
 ): WorkspaceNavLink {
-  if (artifact.kind === "conversation") {
-    return {
-      id: artifact.id,
-      label: artifactDisplayTitle(artifact.title),
-      artifactKind: "conversation",
-      to: { name: "conversation", params: { conversationId: artifact.id } },
-      isActive,
-    };
-    if (unreadCount != null && unreadCount > 0) {
-      return { ...link, unreadCount };
-    }
-    return link;
+  const link: WorkspaceNavLink =
+    artifact.kind === "conversation"
+      ? {
+          id: artifact.id,
+          label: artifactDisplayTitle(artifact.title),
+          artifactKind: "conversation",
+          to: { name: "conversation", params: { conversationId: artifact.id } },
+          isActive,
+        }
+      : {
+          id: artifact.id,
+          label: artifactDisplayTitle(artifact.title),
+          artifactKind: "document",
+          to: { name: "document", params: { documentId: artifact.id } },
+          isActive,
+        };
+
+  if (artifact.kind === "conversation" && unreadCount != null && unreadCount > 0) {
+    link.unreadCount = unreadCount;
   }
 
-  return {
-    id: artifact.id,
-    label: artifactDisplayTitle(artifact.title),
-    artifactKind: "document",
-    to: { name: "document", params: { documentId: artifact.id } },
-    isActive,
-  };
+  return link;
 }
 
 function sectionItems(

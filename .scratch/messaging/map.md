@@ -108,15 +108,15 @@ Parallel API lane (branch from `main`):
 | Ticket | Branch | Delivers |
 | --- | --- | --- |
 | **08** reactions | `agent/messaging-08-reactions` | Toggle API + timeline UI |
-| **12** unread-api | `agent/messaging-12-unread-api` | ReadState, mark-read, unread summary |
-| **14** dm-peers-api | `agent/messaging-14-dm-peers-api` | `conversation_peer` expand–contract + hide |
+| **14** dm-peers-api | `agent/messaging-14-dm-peers-api` | [#22](https://github.com/mateusmento/denser/pull/22) — review |
+| **12** unread-api | on `main` (local) | merged locally — push pending |
 
 App follow-ups (after API merges):
 
 | Ticket | Blocked by | Delivers |
 | --- | --- | --- |
 | **13** unread-app | 12 | Badges, New divider, open-at-unread |
-| **15** conversation-shell-app | 14 | DM hide in sidebar |
+| **15** conversation-shell-app | 14 (#22) | DM hide in sidebar — **ready after #22 merge** |
 | **23** drafts-app | 22 (done) | Composer hydrate + debounce + 409 merge |
 
 **Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane.
@@ -131,6 +131,10 @@ App follow-ups (after API merges):
 
 ## Frontier
 
-**In progress:** **12** unread-api (read-state domain on `main` worktree).
+**Wave-4 PRs:** [#22](https://github.com/mateusmento/denser/pull/22) (**14** dm-peers-api) — run `0012_dm_peers_contract` migration before deploy; drops `conversation_member`.
 
-**Scaling:** ticket **30** before multi-instance deploy for presence (#14).
+**In flight:** **08** reactions, **13** unread-app, **23** drafts-app (parallel agents).
+
+**Next after #22 merge:** **15** conversation-shell-app (DM hide UI).
+
+**Local `main`:** seed (#31) + unread API (#12) committed, not pushed.

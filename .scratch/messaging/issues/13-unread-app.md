@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** app  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 12 — Unread API; 03 — Timeline app  
 **Branch:** `agent/messaging-13-unread-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -38,12 +38,12 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Sidebar/header badge counts from unread summary
-- [ ] **New** divider between last-read and first unread in timeline
-- [ ] Open with unread → `around` first unread; caught up → pin latest
-- [ ] Mark-read-to-latest on open (debounced OK)
-- [ ] Jump-to-latest pill when scrolled away from live edge
+- [x] Sidebar/header badge counts from unread summary
+- [x] **New** divider between last-read and first unread in timeline
+- [x] Open with unread → `around` first unread; caught up → pin latest
+- [x] Mark-read-to-latest on open (debounced OK)
+- [x] Jump-to-latest pill when scrolled away from live edge
 
 ## PR
 
-- [ ] `[messaging 13] Unread UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 13] Unread UI` — https://github.com/mateusmento/denser/pull/23
