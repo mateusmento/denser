@@ -3,7 +3,7 @@
 **Chunk:** 1  
 **Layer:** app  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-03-timeline-app`  
 **Specs:** [FRONTEND-ARCHITECTURE.md](../../../docs/FRONTEND-ARCHITECTURE.md)
@@ -39,13 +39,13 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] `useConversationMessages` binds ListMessages + socket replica
-- [ ] Virtualized sliding window (`next`/`prev`/`around`); bounded pages — not unbounded DOM
-- [ ] Optimistic send reconciles by `clientId`
-- [ ] Day sticky + same-author / 5 min groups (`messageGrouping.ts`)
-- [ ] Jump-to-latest floating pill (Floating UI); visibility tied to live-edge / `hasMoreNewer`
-- [ ] Wire `ConversationTimeline` + `MessageComposer` send (text only OK for this PR)
+- [x] `useConversationMessages` binds ListMessages + socket replica
+- [x] Virtualized sliding window (`next`/`prev`/`around`); bounded pages — not unbounded DOM
+- [x] Optimistic send reconciles by `clientId`
+- [x] Day sticky + same-author / 5 min groups (`messageGrouping.ts`)
+- [x] Jump-to-latest floating pill (Floating UI); visibility tied to live-edge / `hasMoreNewer`
+- [x] Wire `ConversationTimeline` + `MessageComposer` send (text only OK for this PR)
 
 ## PR
 
-- [ ] `[messaging 03] Timeline app (virtualized window + send)` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 03] Timeline app (virtualized window + send)` — https://github.com/mateusmento/denser/pull/15 (open, awaiting maintainer review)

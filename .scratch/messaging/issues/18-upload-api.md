@@ -3,7 +3,7 @@
 **Chunk:** 3b — Upload API (backend)  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 16 — BlobStore; 17 — Attachment refs; 22 — Drafts API  
 **Branch:** `agent/messaging-18-upload-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -32,12 +32,12 @@ HTTP API for **uploading files into a conversation**: start progressive upload, 
 
 ## API (backend)
 
-- [ ] Upload: create blob via BlobStore → ensure MessageDraft (22) → sync draft joins
-- [ ] Return `attachmentId` + upload session handles for client progress
-- [ ] Abort/cancel: abort multipart + best-effort cleanup
-- [ ] Permission: same as can post on conversation
-- [ ] List attachment metadata for a draft anchor (optional helper for 19 hydrate)
-- [ ] Integration test: upload → load(draft) returns attachment
+- [x] Upload: create blob via BlobStore → ensure MessageDraft (22) → sync draft joins
+- [x] Return `attachmentId` + upload session handles for client progress
+- [x] Abort/cancel: abort multipart + best-effort cleanup
+- [x] Permission: same as can post on conversation
+- [x] List attachment metadata for a draft anchor (optional helper for 19 hydrate)
+- [x] Integration test: upload → load(draft) returns attachment
 
 ## App (frontend)
 
@@ -49,4 +49,4 @@ _N/A — ticket 19 wires the client._
 
 ## PR
 
-- [ ] `[messaging 18] Conversation upload API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 18] Conversation upload API` — https://github.com/mateusmento/denser/pull/16 (open, awaiting maintainer review)

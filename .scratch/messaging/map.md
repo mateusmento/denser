@@ -3,6 +3,7 @@
 **Coverage matrix:** [COVERAGE.md](./COVERAGE.md) — full api + app task list for Conversations, Drafts, Attachments, Scheduling  
 **Delivery chunks:** [CHUNKS.md](./CHUNKS.md) — product-sized groupings, upload UI callouts, parallel lanes  
 **Interfaces:** [interfaces.md](./interfaces.md)  
+**Realtime scaling:** [REALTIME-SCALING.md](./REALTIME-SCALING.md) — ephemeral state audit; ticket **30**  
 **PR policy:** [PR-POLICY.md](./PR-POLICY.md) — **every ticket → one PR for maintainer review**
 
 ## Goal
@@ -90,4 +91,4 @@ Opencode (and similar long agent sessions) tend to **degrade around 70,000–80,
 
 ## Frontier
 
-After **01** merges: **02, 16, 17, 22, 24** (api, parallel) → then dependent app tickets.
+Wave-2 parallel batch complete — all five PRs open for review: **03** [#15](https://github.com/mateusmento/denser/pull/15); **04** [#13](https://github.com/mateusmento/denser/pull/13) → **05**; **06** [#12](https://github.com/mateusmento/denser/pull/12) → **07**; **10** [#14](https://github.com/mateusmento/denser/pull/14) → **11** (**requires [30](./issues/30-realtime-scaling-ports.md) before multi-instance**); **18** [#16](https://github.com/mateusmento/denser/pull/16) → **19**.

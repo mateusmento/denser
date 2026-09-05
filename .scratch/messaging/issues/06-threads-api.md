@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-06-threads-api`  
 **Specs:** [conversation.md](../../../docs/ui-surfaces/conversation.md)
@@ -34,8 +34,8 @@ Thread message listing and validated `threadId` on post. Main stream still shows
 
 ## API (backend)
 
-- [ ] `ListThreadMessages` by parent / `thread_id`
-- [ ] `PostMessage` with `threadId` validated (parent exists, same conversation)
+- [x] `ListThreadMessages` by parent / `thread_id`
+- [x] `PostMessage` with `threadId` validated (parent exists, same conversation)
 
 ## App (frontend)
 
@@ -43,4 +43,4 @@ _N/A_
 
 ## PR
 
-- [ ] `[messaging 06] Threads API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 06] Threads API` — https://github.com/mateusmento/denser/pull/12 (open, awaiting maintainer review)

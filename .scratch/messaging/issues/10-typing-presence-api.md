@@ -3,10 +3,12 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-10-typing-presence-api`  
-**Specs:** [conversation.md](../../../docs/ui-surfaces/conversation.md)
+**Specs:** [REALTIME-SCALING.md](../REALTIME-SCALING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)
+
+> **Scale note:** PR uses in-memory `Map`s — OK for single-node dev. Before multi-instance deploy, land ticket **30** ([REALTIME-SCALING.md](../REALTIME-SCALING.md)).
 
 
 ## Agent skills
@@ -34,9 +36,9 @@ Socket handlers for **typing** (TTL) and **presence** (conversation viewers + wo
 
 ## API (backend)
 
-- [ ] `EmitTyping` + `typing` socket events with TTL prune
-- [ ] `conversation.presence` — users viewing this conversation
-- [ ] `workspace.presence` — online in root space
+- [x] `EmitTyping` + `typing` socket events with TTL prune
+- [x] `conversation.presence` — users viewing this conversation
+- [x] `workspace.presence` — online in root space
 
 ## App (frontend)
 
@@ -48,4 +50,4 @@ Can start once **02** exposes conversation socket room membership.
 
 ## PR
 
-- [ ] `[messaging 10] Typing + presence API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 10] Typing + presence API` — https://github.com/mateusmento/denser/pull/14 (open, awaiting maintainer review)

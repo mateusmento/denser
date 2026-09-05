@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-04-quotes-api`  
 **Specs:** [conversation.md](../../../docs/ui-surfaces/conversation.md)
@@ -34,9 +34,9 @@
 
 ## API (backend)
 
-- [ ] `QuotedPreview` builder: strip images; ≤1000 text chars + 8 KiB JSON; `displayContent` ≤160
-- [ ] List/get includes `quoted` when `quotes_id` set; missing target → omit chrome
-- [ ] Tests for cap / strip images
+- [x] `QuotedPreview` builder: strip images; ≤1000 text chars + 8 KiB JSON; `displayContent` ≤160
+- [x] List/get includes `quoted` when `quotes_id` set; missing target → omit chrome
+- [x] Tests for cap / strip images
 
 ## App (frontend)
 
@@ -48,4 +48,4 @@ If **02** not merged, land preview builder + unit tests first; UI can wait for *
 
 ## PR
 
-- [ ] `[messaging 04] Quote preview API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 04] Quote preview API` — https://github.com/mateusmento/denser/pull/13 (open, awaiting maintainer review)
