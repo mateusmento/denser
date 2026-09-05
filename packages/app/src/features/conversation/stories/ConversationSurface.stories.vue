@@ -164,6 +164,58 @@ function onAction(id: ComposerActionId) {
       </ConversationSurface>
     </div>
   </Story>
+  <Story
+    as-child
+    name="MobileThreadOpen"
+    :parameters="{ viewport: { defaultViewport: 'mobile1' } }"
+  >
+    <div class="flex h-[40rem]">
+      <ConversationSurface>
+        <template #header>
+          <ChannelHeader :channel="channelHeader" />
+        </template>
+        <template #messages>
+          <ConversationTimeline
+            :messages="channelMessages"
+            :intro="channelIntro"
+            @react="onReact"
+            @thread="onOpenThread"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
+        </template>
+        <template #composer>
+          <MessageComposer
+            v-model="channelDraft"
+            :view="channelComposer"
+            :mention-items="mentionItems"
+            @mention-search="onMentionSearch"
+            @send="onChannelSend"
+            @retry="onRetry"
+            @schedule="onSchedule"
+            @action="onAction"
+          />
+        </template>
+        <template v-if="threadOpen" #thread>
+          <ThreadPane
+            v-model="threadDraft"
+            :thread="threadView"
+            :composer="threadComposer"
+            :mention-items="mentionItems"
+            @mention-search="onMentionSearch"
+            @close="threadOpen = false"
+            @send="onThreadSend"
+            @retry="onRetry"
+            @schedule="onThreadSchedule"
+            @action="onAction"
+            @react="onReact"
+            @edit="onEdit"
+            @delete="onDelete"
+          />
+        </template>
+      </ConversationSurface>
+    </div>
+  </Story>
   <Story as-child name="EmptyChannel">
     <div class="flex h-[40rem]">
       <ConversationSurface>

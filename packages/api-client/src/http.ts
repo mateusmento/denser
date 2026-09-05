@@ -16,6 +16,7 @@ import {
   ListDirectConversationsResponse,
   ListMessagesQuery,
   ListMessagesResponse,
+  ListThreadMessagesQuery,
   PatchConversationInput,
   PostMessageInput,
   PostMessageResponse,
@@ -404,6 +405,33 @@ export class ApiClient {
     );
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("list messages failed", res.status, body);
+    return ListMessagesResponse.parse(body);
+  }
+
+  async listThreadMessages(
+    conversationId: ArtifactId,
+    threadId: MessageId,
+    input: {
+      cursor?: string;
+      size?: number;
+      direction?: "next" | "prev";
+    } = {},
+  ): Promise<ListMessagesResponse> {
+    const query = ListThreadMessagesQuery.parse({
+      conversationId,
+      threadId,
+      ...input,
+    });
+    const params = new URLSearchParams();
+    if (query.cursor) params.set("cursor", query.cursor);
+    if (query.size !== undefined) params.set("size", String(query.size));
+    if (query.direction) params.set("direction", query.direction);
+
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages/${threadId}/thread?${params.toString()}`,
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list thread messages failed", res.status, body);
     return ListMessagesResponse.parse(body);
   }
 

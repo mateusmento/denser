@@ -2,25 +2,42 @@
 import { Button, MessageScrollerItem } from "@denser/design-system";
 import { XIcon } from "@lucide/vue";
 import type { JSONContent, MentionCandidate } from "@/modules/rich-text";
+import {
+  emptyNextPageState,
+  emptyPreviousPageState,
+  type NextPageState,
+  type PreviousPageState,
+} from "@/lib/async";
+import ConversationMessage from "./ConversationMessage.vue";
+import ConversationMessageGroup from "./ConversationMessageGroup.vue";
+import ConversationTimeline from "./ConversationTimeline.vue";
+import MessageComposer from "./MessageComposer.vue";
+
 import type {
   ComposerActionId,
   ConversationThreadView,
   MessageComposerView,
   ScheduleCommitPayload,
 } from "../types";
-import ConversationMessage from "./ConversationMessage.vue";
-import ConversationMessageGroup from "./ConversationMessageGroup.vue";
-import ConversationTimeline from "./ConversationTimeline.vue";
-import MessageComposer from "./MessageComposer.vue";
 
 const draft = defineModel<JSONContent>({ required: true });
 
-defineProps<{
-  thread: ConversationThreadView;
-  composer: MessageComposerView;
-  mentionItems?: readonly MentionCandidate[];
-  uploadImage?: (file: File) => Promise<string>;
-}>();
+const props = withDefaults(
+  defineProps<{
+    thread: ConversationThreadView;
+    composer: MessageComposerView;
+    mentionItems?: readonly MentionCandidate[];
+    uploadImage?: (file: File) => Promise<string>;
+    previousPage?: PreviousPageState;
+    nextPage?: NextPageState;
+    showJumpToLatest?: boolean;
+  }>(),
+  {
+    previousPage: () => emptyPreviousPageState(),
+    nextPage: () => emptyNextPageState(),
+    showJumpToLatest: false,
+  },
+);
 
 const emit = defineEmits<{
   close: [];
@@ -37,6 +54,8 @@ const emit = defineEmits<{
   jumpQuote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
+  loadPrevious: [];
+  jumpToLatest: [];
 }>();
 </script>
 
@@ -53,8 +72,11 @@ const emit = defineEmits<{
 
     <div class="min-h-0 flex-1">
       <ConversationTimeline
-        :messages="thread.messages"
+        :messages="props.thread.messages"
         :thread-actions="false"
+        :previous-page="props.previousPage"
+        :next-page="props.nextPage"
+        :show-jump-to-latest="props.showJumpToLatest"
         day-class="bg-muted/90 light:bg-mist-50/90"
         @react="(messageId, emoji) => emit('react', messageId, emoji)"
         @copy-link="emit('copyLink', $event)"
@@ -64,6 +86,8 @@ const emit = defineEmits<{
         @jump-quote="emit('jumpQuote', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @load-previous="emit('loadPrevious')"
+        @jump-to-latest="emit('jumpToLatest')"
       >
         <template #intro="introSlot">
           <MessageScrollerItem :message-id="thread.parent.id" class="px-0">
