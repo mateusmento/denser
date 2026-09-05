@@ -26,6 +26,11 @@ const BOB = "00000000-0000-4000-8000-00000000000b" as UserId;
 const CLIENT = "00000000-0000-4000-8000-0000000000c1" as ClientId;
 const MISSING = "deadbeef-0000-4000-8000-000000000000" as MessageId;
 
+const AUTHORS = new Map<UserId, { name: string; avatarUrl: string | null }>([
+  [ALICE, { name: "Alice", avatarUrl: null }],
+  [BOB, { name: "Bob", avatarUrl: null }],
+]);
+
 function body(text: string): unknown {
   return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] };
 }
@@ -55,6 +60,14 @@ function makeHarness(opts: { forbidBob?: boolean } = {}): Harness {
       commitSync: async () => undefined,
     },
     emit: (_conversationId, event, message) => emitted.push({ event, message }),
+    loadAuthorDisplay: async (userIds) => {
+      const out = new Map<UserId, { name: string; avatarUrl: string | null }>();
+      for (const id of userIds) {
+        const author = AUTHORS.get(id);
+        if (author) out.set(id, author);
+      }
+      return out;
+    },
   };
 
   return { service: createMessageService(deps), state, emitted };
@@ -373,4 +386,76 @@ test("post: threadId requires parent in same conversation", async () => {
     }),
   );
   assert.deepEqual(missing, { ok: false, reason: "invalid_thread" });
+});
+
+test("list: enriches quoted preview when quotes_id targets an existing message", async () => {
+  const h = makeHarness();
+  const quoted = await h.service.postMessage(ALICE, postInput({ clientId: "q-src" as ClientId, body: body("original") }));
+  if (!quoted.ok) return;
+
+  await h.service.postMessage(ALICE, {
+    ...postInput({ clientId: "q-reply" as ClientId, body: body("replying") }),
+    quotesId: quoted.message.id,
+  });
+
+  const listed = await h.service.listMessagesForConversation(ALICE, {
+    conversationId: CONVERSATION,
+  });
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+
+  const reply = listed.messages.find((m) => m.quotesId === quoted.message.id);
+  assert.ok(reply);
+  assert.equal(reply!.quoted?.id, quoted.message.id);
+  assert.equal(reply!.quoted?.author.name, "Alice");
+  assert.equal(reply!.quoted?.displayContent, "original");
+});
+
+test("list: omits quoted when quotes_id target is missing", async () => {
+  const h = makeHarness();
+  await h.service.postMessage(ALICE, {
+    ...postInput({ clientId: "orphan" as ClientId }),
+    quotesId: MISSING,
+  });
+
+  const listed = await h.service.listMessagesForConversation(ALICE, {
+    conversationId: CONVERSATION,
+  });
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+
+  const msg = listed.messages[0]!;
+  assert.equal(msg.quotesId, MISSING);
+  assert.equal(msg.quoted, null);
+});
+
+test("list: quoted preview strips images from joined body", async () => {
+  const h = makeHarness();
+  const quoted = await h.service.postMessage(ALICE, {
+    ...postInput({ clientId: "img-src" as ClientId }),
+    body: {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "see" }] },
+        { type: "image", attrs: { src: "https://example.com/pic.png" } },
+      ],
+    },
+  });
+  if (!quoted.ok) return;
+
+  await h.service.postMessage(ALICE, {
+    ...postInput({ clientId: "img-reply" as ClientId, body: body("ok") }),
+    quotesId: quoted.message.id,
+  });
+
+  const listed = await h.service.listMessagesForConversation(ALICE, {
+    conversationId: CONVERSATION,
+  });
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+
+  const reply = listed.messages.find((m) => m.quotesId === quoted.message.id);
+  const quotedBody = reply!.quoted!.body as { content: { type?: string }[] };
+  assert.ok(quotedBody.content.every((node) => node.type !== "image"));
+  assert.equal(reply!.quoted!.displayContent, "see");
 });

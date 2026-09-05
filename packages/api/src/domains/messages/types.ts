@@ -35,6 +35,7 @@ export type MessageRepository = {
   listThreadMessages(threadId: MessageId, opts: ThreadListOptions): Promise<MessageRow[]>;
   countThreadReplies(threadId: MessageId): Promise<ThreadSummaryRow>;
   findMessageById(id: MessageId): Promise<MessageRow | undefined>;
+  findMessagesByIds(ids: readonly MessageId[]): Promise<Map<MessageId, MessageRow>>;
   findClientMessage(
     conversationId: ArtifactId,
     clientId: ClientId,

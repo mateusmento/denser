@@ -6,12 +6,15 @@ import type {
   MessageDto,
   MessageId,
   PostMessageInput,
+  QuotedPreviewDto,
   SpaceId,
   UserId,
 } from "@denser/contracts";
 import type { MessageCursor } from "./cursor.js";
 import { decodeCursor, encodeCursor } from "./cursor.js";
 import { toMessageDto } from "./mapper.js";
+import type { AuthorDisplay } from "./quoted-enrichment.js";
+import { loadQuotedPreviews } from "./quoted-enrichment.js";
 import type { MessageRepository, MessageRow } from "./types.js";
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -79,6 +82,7 @@ export type MessageServiceDeps = {
   access: MessageAccess;
   attachments: MessageAttachmentCoordinator;
   emit: MessageEmitter;
+  loadAuthorDisplay: (userIds: readonly UserId[]) => Promise<Map<UserId, AuthorDisplay>>;
 };
 
 export type MessageService = {
@@ -123,7 +127,7 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       ...(query.around ? { anchorId: query.around } : {}),
     });
 
-    return toListResult(rows);
+    return toListResult(ctx.conversationId, rows);
   }
 
   async function listThreadMessages(
@@ -155,17 +159,27 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       direction: query.direction ?? "next",
     });
 
-    return toListResult(rows);
+    return toListResult(ctx.conversationId, rows);
   }
 
-  async function toListResult(rows: MessageRow[]): Promise<{
+  async function toListResult(
+    conversationId: ArtifactId,
+    rows: MessageRow[],
+  ): Promise<{
     ok: true;
     messages: MessageDto[];
     nextCursor: string | null;
     prevCursor: string | null;
   }> {
     const attachmentMap = await repo.loadAttachmentIdsForMessages(rows.map((r) => r.id));
-    const messages = rows.map((row) => toMessageDto(row, attachmentMap.get(row.id) ?? []));
+    const quotedMap = await loadQuotedPreviews(rows, conversationId, {
+      findMessagesByIds: (ids) => repo.findMessagesByIds(ids),
+      loadAttachmentIdsForMessages: (ids) => repo.loadAttachmentIdsForMessages(ids),
+      loadAuthorDisplay: deps.loadAuthorDisplay,
+    });
+    const messages = rows.map((row) =>
+      toMessageDto(row, attachmentMap.get(row.id) ?? [], quotedExtra(row, quotedMap)),
+    );
 
     const first = rows[0];
     const last = rows[rows.length - 1];
@@ -273,8 +287,15 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
   }
 
   async function messageDtoFor(row: MessageRow): Promise<MessageDto> {
-    const attachmentIds = await repo.loadAttachmentIdsForMessage(row.id);
-    return toMessageDto(row, attachmentIds);
+    const [attachmentIds, quotedMap] = await Promise.all([
+      repo.loadAttachmentIdsForMessage(row.id),
+      loadQuotedPreviews([row], row.conversationId, {
+        findMessagesByIds: (ids) => repo.findMessagesByIds(ids),
+        loadAttachmentIdsForMessages: (ids) => repo.loadAttachmentIdsForMessages(ids),
+        loadAuthorDisplay: deps.loadAuthorDisplay,
+      }),
+    ]);
+    return toMessageDto(row, attachmentIds, quotedExtra(row, quotedMap));
   }
 
   return {
@@ -291,6 +312,14 @@ function clampSize(requested: number | undefined): number {
   if (requested < 1) return 1;
   if (requested > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
   return Math.floor(requested);
+}
+
+function quotedExtra(
+  row: MessageRow,
+  quotedMap: Map<MessageId, QuotedPreviewDto>,
+): { quoted: QuotedPreviewDto | null } | undefined {
+  if (!row.quotesId) return undefined;
+  return { quoted: quotedMap.get(row.quotesId) ?? null };
 }
 
 /**

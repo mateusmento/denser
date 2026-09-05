@@ -203,6 +203,12 @@ async function findMessageById(id: MessageId): Promise<MessageRow | undefined> {
   return db.query.message.findFirst({ where: eq(message.id, id) });
 }
 
+async function findMessagesByIds(ids: readonly MessageId[]): Promise<Map<MessageId, MessageRow>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db.select().from(message).where(inArray(message.id, [...ids]));
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
 async function findClientMessage(
   conversationId: ArtifactId,
   clientId: ClientId,
@@ -278,6 +284,7 @@ export const messageRepository: MessageRepository = {
   listThreadMessages,
   countThreadReplies,
   findMessageById,
+  findMessagesByIds,
   findClientMessage,
   insertMessage,
   loadAttachmentIdsForMessage,
