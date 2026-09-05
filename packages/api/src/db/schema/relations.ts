@@ -2,8 +2,9 @@ import { relations } from "drizzle-orm";
 import { account, session, user } from "./auth.js";
 import { artifact } from "./artifact.js";
 import { attachment, messageAttachment } from "./attachment.js";
-import { conversation, conversationMember } from "./conversation.js";
+import { conversation } from "./conversation.js";
 import { conversationPeer } from "./conversation-peer.js";
+import { dmSidebarPreference } from "./dm-sidebar-preference.js";
 import { document } from "./document.js";
 import { message, readState } from "./message.js";
 import { messageDraft, messageDraftAttachment } from "./message-draft.js";
@@ -64,25 +65,14 @@ export const artifactRelations = relations(artifact, ({ one, many }) => ({
     fields: [artifact.id],
     references: [conversation.artifactId],
   }),
-  conversationMembers: many(conversationMember),
   conversationPeers: many(conversationPeer),
+  dmSidebarPreferences: many(dmSidebarPreference),
 }));
 
 export const conversationRelations = relations(conversation, ({ one }) => ({
   artifact: one(artifact, {
     fields: [conversation.artifactId],
     references: [artifact.id],
-  }),
-}));
-
-export const conversationMemberRelations = relations(conversationMember, ({ one }) => ({
-  conversation: one(artifact, {
-    fields: [conversationMember.conversationArtifactId],
-    references: [artifact.id],
-  }),
-  user: one(user, {
-    fields: [conversationMember.userId],
-    references: [user.id],
   }),
 }));
 
@@ -93,6 +83,17 @@ export const conversationPeerRelations = relations(conversationPeer, ({ one }) =
   }),
   user: one(user, {
     fields: [conversationPeer.userId],
+    references: [user.id],
+  }),
+}));
+
+export const dmSidebarPreferenceRelations = relations(dmSidebarPreference, ({ one }) => ({
+  conversation: one(artifact, {
+    fields: [dmSidebarPreference.conversationArtifactId],
+    references: [artifact.id],
+  }),
+  user: one(user, {
+    fields: [dmSidebarPreference.userId],
     references: [user.id],
   }),
 }));

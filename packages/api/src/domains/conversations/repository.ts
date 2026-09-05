@@ -1,8 +1,10 @@
 import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
-import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
-import { conversation, conversationMember } from "../../db/schema/conversation.js";
+import { conversation } from "../../db/schema/conversation.js";
+import { conversationPeer } from "../../db/schema/conversation-peer.js";
+import { dmSidebarPreference } from "../../db/schema/dm-sidebar-preference.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
 
 type ArtifactRow = typeof artifact.$inferSelect;
@@ -66,7 +68,7 @@ export async function insertDirectConversationRows(input: {
   artifactId: ArtifactId;
   rootSpaceId: SpaceId;
   memberSetKey: string;
-  memberUserIds: readonly UserId[];
+  peerUserIds: readonly UserId[];
 }): Promise<ConversationRow> {
   return db.transaction(async (tx) => {
     const [createdConversation] = await tx
@@ -83,9 +85,9 @@ export async function insertDirectConversationRows(input: {
       throw new Error("Failed to create direct conversation row");
     }
 
-    if (input.memberUserIds.length > 0) {
-      await tx.insert(conversationMember).values(
-        input.memberUserIds.map((userId) => ({
+    if (input.peerUserIds.length > 0) {
+      await tx.insert(conversationPeer).values(
+        input.peerUserIds.map((userId) => ({
           conversationArtifactId: input.artifactId,
           userId,
         })),
@@ -96,18 +98,29 @@ export async function insertDirectConversationRows(input: {
   });
 }
 
-export async function isConversationMember(
+export async function isConversationPeer(
   userId: UserId,
   conversationArtifactId: ArtifactId,
 ): Promise<boolean> {
-  const row = await db.query.conversationMember.findFirst({
+  const row = await db.query.conversationPeer.findFirst({
     where: and(
-      eq(conversationMember.conversationArtifactId, conversationArtifactId),
-      eq(conversationMember.userId, userId),
+      eq(conversationPeer.conversationArtifactId, conversationArtifactId),
+      eq(conversationPeer.userId, userId),
     ),
     columns: { userId: true },
   });
   return row != null;
+}
+
+export async function canAccessDirectConversation(
+  userId: UserId,
+  conversationArtifactId: ArtifactId,
+  rootSpaceId: SpaceId,
+): Promise<boolean> {
+  if (!(await isConversationPeer(userId, conversationArtifactId))) {
+    return false;
+  }
+  return assertUsersInRootSpaceTree(rootSpaceId, [userId]);
 }
 
 export async function listDirectConversationsForUser(
@@ -119,26 +132,55 @@ export async function listDirectConversationsForUser(
       artifact,
       conversation,
     })
-    .from(conversationMember)
-    .innerJoin(conversation, eq(conversation.artifactId, conversationMember.conversationArtifactId))
+    .from(conversationPeer)
+    .innerJoin(conversation, eq(conversation.artifactId, conversationPeer.conversationArtifactId))
     .innerJoin(artifact, eq(artifact.id, conversation.artifactId))
+    .leftJoin(
+      dmSidebarPreference,
+      and(
+        eq(dmSidebarPreference.conversationArtifactId, conversation.artifactId),
+        eq(dmSidebarPreference.userId, userId),
+      ),
+    )
     .where(
       and(
-        eq(conversationMember.userId, userId),
+        eq(conversationPeer.userId, userId),
         eq(conversation.conversationKind, "direct"),
         eq(conversation.rootSpaceId, rootSpaceId),
+        or(isNull(dmSidebarPreference.hidden), eq(dmSidebarPreference.hidden, false)),
       ),
     )
     .orderBy(desc(artifact.updatedAt));
 }
 
-export async function listMemberUserIds(conversationArtifactId: ArtifactId): Promise<UserId[]> {
+export async function listPeerUserIds(conversationArtifactId: ArtifactId): Promise<UserId[]> {
   const rows = await db
-    .select({ userId: conversationMember.userId })
-    .from(conversationMember)
-    .where(eq(conversationMember.conversationArtifactId, conversationArtifactId));
+    .select({ userId: conversationPeer.userId })
+    .from(conversationPeer)
+    .where(eq(conversationPeer.conversationArtifactId, conversationArtifactId));
 
   return rows.map((row) => row.userId);
+}
+
+export async function setDirectConversationHidden(
+  userId: UserId,
+  conversationArtifactId: ArtifactId,
+  hidden: boolean,
+): Promise<void> {
+  await db
+    .insert(dmSidebarPreference)
+    .values({
+      userId,
+      conversationArtifactId,
+      hidden,
+    })
+    .onConflictDoUpdate({
+      target: [dmSidebarPreference.userId, dmSidebarPreference.conversationArtifactId],
+      set: {
+        hidden,
+        updatedAt: new Date(),
+      },
+    });
 }
 
 export async function assertUsersInRootSpaceTree(

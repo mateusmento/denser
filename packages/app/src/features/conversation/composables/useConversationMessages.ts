@@ -11,6 +11,8 @@ import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
   MESSAGE_UPDATED_EVENT,
+  REACTION_UPDATED_EVENT,
+  type ReactionUpdatedEvent,
 } from "@denser/contracts";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, onScopeDispose, ref, watch } from "vue";
@@ -58,8 +60,12 @@ function isEmptyBody(body: JSONContent): boolean {
 
 export function useConversationMessages(
   conversationId: ReadonlyRefOrGetter<ArtifactId | undefined>,
+  options?: {
+    openAnchor?: ReadonlyRefOrGetter<MessageId | null | undefined>;
+  },
 ) {
   const id = toReadonlyRef(conversationId);
+  const openAnchor = toReadonlyRef(options?.openAnchor ?? (() => null));
   const queryClient = useQueryClient();
   const { user } = useAuthSession();
   const aroundFocus = ref<MessageId | null>(null);
@@ -70,7 +76,17 @@ export function useConversationMessages(
     failedClientId.value = null;
   });
 
-  const enabled = computed(() => Boolean(id.value));
+  watch(
+    openAnchor,
+    (anchor) => {
+      if (anchor === undefined) return;
+      aroundFocus.value = anchor;
+    },
+    { immediate: true },
+  );
+
+  const anchorReady = computed(() => openAnchor.value !== undefined);
+  const enabled = computed(() => Boolean(id.value) && anchorReady.value);
 
   const query = useInfiniteQuery({
     queryKey: computed(() => queryKeys.conversationMessages(id.value ?? "")),

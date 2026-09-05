@@ -11,8 +11,10 @@ import {
   createOrOpenDirectConversation,
   deleteConversation,
   getConversation,
+  hideDirectConversation,
   listDirectConversations,
   patchConversation,
+  unhideDirectConversation,
 } from "./service.js";
 
 type Variables = {
@@ -106,4 +108,26 @@ export const conversationRoutes = new Hono<{ Variables: Variables }>()
     }
 
     return c.body(null, 204);
+  })
+  .post("/conversations/:conversationId/hide", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const conversationId = c.req.param("conversationId") as ArtifactId;
+    const result = await hideDirectConversation(userId, conversationId);
+
+    if (!result.ok) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    return c.json({ conversationId, hidden: result.hidden });
+  })
+  .post("/conversations/:conversationId/unhide", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const conversationId = c.req.param("conversationId") as ArtifactId;
+    const result = await unhideDirectConversation(userId, conversationId);
+
+    if (!result.ok) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    return c.json({ conversationId, hidden: result.hidden });
   });

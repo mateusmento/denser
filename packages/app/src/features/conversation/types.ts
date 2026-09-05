@@ -59,6 +59,7 @@ export type ConversationChannelHeaderView = {
   presenceLabel?: string;
   members: readonly ConversationPersonView[];
   extraMemberCount?: number;
+  unreadCount?: number;
 };
 
 /** Start-of-history block (Slack “channel beginning”) — not the sticky ChannelHeader chrome. */

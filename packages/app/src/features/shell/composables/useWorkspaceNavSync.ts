@@ -29,10 +29,12 @@ import {
   readDocumentFromQueryData,
 } from "@/features/document/lib/document-query";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import { useUnreadSummarySync } from "@/features/conversation/composables/useUnreadSummarySync";
 
 function spaceLink(
   space: Pick<SpaceSummary, "id" | "title" | "icon">,
   isActive: boolean,
+  unreadCount?: number,
 ): WorkspaceNavLink {
   return {
     id: space.id,
@@ -55,6 +57,10 @@ function artifactLink(
       to: { name: "conversation", params: { conversationId: artifact.id } },
       isActive,
     };
+    if (unreadCount != null && unreadCount > 0) {
+      return { ...link, unreadCount };
+    }
+    return link;
   }
 
   return {
@@ -71,10 +77,11 @@ function sectionItems(
   artifacts: readonly Pick<ArtifactSummary, "id" | "title" | "kind">[],
   activeSpaceId: SpaceId | undefined,
   activeArtifactId: ArtifactId | undefined,
+  unreadCountFor?: (conversationId: string) => number,
 ): WorkspaceNavLink[] {
   return [
     ...spaces.map((space) => spaceLink(space, activeSpaceId === space.id)),
-    ...artifacts.map((artifact) => artifactLink(artifact, activeArtifactId === artifact.id)),
+    ...artifacts.map((artifact) => artifactLink(artifact, activeArtifactId === artifact.id, artifact.kind === "conversation" ? unreadCountFor?.(artifact.id) : undefined)),
   ];
 }
 
@@ -82,11 +89,13 @@ function directMessageLinks(
   conversations: readonly ConversationView[],
   activeArtifactId: ArtifactId | undefined,
   isUserOnline: (userId: string) => boolean,
+  unreadCountFor?: (conversationId: string) => number,
 ): WorkspaceNavLink[] {
   return conversations.map((conversation) => {
     const link = artifactLink(
       { ...conversation, title: conversation.title },
       activeArtifactId === conversation.id,
+      unreadCountFor?.(conversation.id),
     );
     const peerUserId = conversation.peerUserId ?? undefined;
     return {
@@ -257,6 +266,7 @@ export function useWorkspaceNavSync() {
   });
 
   const { isUserOnline } = useWorkspacePresence(workspaceRootId);
+  const unreadSummary = useUnreadSummarySync(workspaceRootId);
 
   const view = computed((): WorkspaceNavView => {
     const emptyHomeSection = {
@@ -282,11 +292,12 @@ export function useWorkspaceNavSync() {
     const activeArtifact = activeArtifactId.value;
 
     const homeArtifacts = home.artifacts.filter((artifact) => artifact.kind !== "conversation");
+    const unreadCountFor = unreadSummary.unreadCountFor;
     const homeSection = inPrivateWorkspace.value
       ? undefined
       : {
           label: "Home",
-          items: sectionItems(liveRootSpaces.value, homeArtifacts, activeSpace, activeArtifact),
+          items: sectionItems(liveRootSpaces.value, homeArtifacts, activeSpace, activeArtifact, unreadCountFor),
           scopeSpaceId: null,
         };
 
@@ -299,6 +310,7 @@ export function useWorkspaceNavSync() {
             detail.artifacts,
             activeSpace,
             activeArtifact,
+            unreadCountFor,
           );
           const { items, seeAllLink } = truncateInSpaceNavItems(allItems, {
             scopeSpaceId: detail.space.id,
@@ -324,6 +336,7 @@ export function useWorkspaceNavSync() {
               directMessagesQuery.data.value,
               activeArtifact,
               isUserOnline,
+              unreadCountFor,
             ),
             scopeSpaceId: rootSpaceId,
           }
@@ -357,6 +370,9 @@ export function useWorkspaceNavSync() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.space(workspaceRootId.value) });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.directMessages(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.unreadSummary(workspaceRootId.value),
       });
     }
   };

@@ -3,7 +3,7 @@
 **Chunk:** 2  
 **Layer:** api  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [ARTIFACTS-AND-SPACES.md](../../../docs/ARTIFACTS-AND-SPACES.md)  
-**Status:** claimed  
+**Status:** resolved  
 **Blocked by:** 02 — Messages API  
 **Branch:** `agent/messaging-14-dm-peers-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -34,13 +34,13 @@ Migrate DM identity from `conversation_member` to **`conversation_peer`**: expan
 
 ## API (backend)
 
-- [ ] Expand: `conversation_peer` (+ optional `dm_sidebar_preference`) beside `conversation_member`
-- [ ] Backfill peers from members for directs
-- [ ] Access checks use peer ∩ workspace
-- [ ] Dedupe key `(root_space_id, sort(peer ids))` unchanged in spirit
-- [ ] Contract: remove `conversation_member` for directs (or whole table if unused)
-- [ ] `HideDirectConversation` / `UnhideDirectConversation`
-- [ ] Wide refactor — expand/migrate/contract may span commits; note in PR body
+- [x] Expand: `conversation_peer` (+ optional `dm_sidebar_preference`) beside `conversation_member`
+- [x] Backfill peers from members for directs
+- [x] Access checks use peer ∩ workspace
+- [x] Dedupe key `(root_space_id, sort(peer ids))` unchanged in spirit
+- [x] Contract: remove `conversation_member` for directs (or whole table if unused)
+- [x] `HideDirectConversation` / `UnhideDirectConversation`
+- [x] Wide refactor — expand/migrate/contract may span commits; note in PR body
 
 ## App (frontend)
 
@@ -52,4 +52,4 @@ Keep CI green via expand–contract; integration branch OK if needed.
 
 ## PR
 
-- [ ] `[messaging 14] DM peers + hide preference API` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 14] DM peers + hide preference API` — [PR-POLICY.md](../PR-POLICY.md)

@@ -14,6 +14,7 @@ export type WorkspaceNavLink = {
   /** 1:1 DM peer — used for workspace-presence dot (group DMs omit). */
   peerUserId?: string;
   peerOnline?: boolean;
+  unreadCount?: number;
   to: {
     name: "home" | "space" | "document" | "conversation";
     params?: { spaceId?: string; documentId?: string; conversationId?: string };
