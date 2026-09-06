@@ -1,29 +1,29 @@
+import { apiClient } from "@/lib/api";
+import { applyArtifactPatch, artifactPatchConflictVersion } from "@/lib/artifact-patch-conflict";
+import { artifactsCollection, spacesCollection, upsertInCollection, upsertMany } from "@/lib/db";
+import { patchWithVersionRetry } from "@/lib/patch-with-version-retry";
+import { queryKeys } from "@/lib/query-keys";
+import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
+import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
+import type { SpaceGeneralView } from "@/modules/spaces";
+import { applySpacePatch, invalidateSpaceProjections, useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
+import { ApiError } from "@denser/api-client";
 import type {
   ArtifactId,
   ArtifactSummary,
   PatchSpaceInput,
-  SpaceIcon,
   SpaceId,
   SpacePreset,
   SpaceSummary,
   SpaceVisibility,
   UserId,
-  WorkflowStageId,
+  WorkflowStageId
 } from "@denser/contracts";
-import { ApiError } from "@denser/api-client";
 import { toast } from "@denser/design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { apiClient } from "@/lib/api";
-import { artifactsCollection, spacesCollection, upsertInCollection, upsertMany } from "@/lib/db";
-import { queryKeys } from "@/lib/query-keys";
-import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
-import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
-import { applySpacePatch, invalidateSpaceProjections } from "@/modules/spaces";
-import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
-import type { SpaceGeneralView } from "@/modules/spaces";
-import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
+import { messageFromApiBody } from "../lib/api-error-message";
 import {
   neighborsOf,
   samePlace,
@@ -31,7 +31,7 @@ import {
   thisSpaceChildSpaces,
   type PlaceNeighbors,
 } from "../lib/planning";
-import { messageFromApiBody } from "../lib/api-error-message";
+import type { SpaceBackLink, SpaceContentView, SpaceMembersView } from "../types";
 
 export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) {
   const id = toReadonlyRef(spaceId);
@@ -258,20 +258,25 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     ) {
       return true;
     }
-    try {
-      await apiClient.patchDocument(payload.artifactId, {
-        spaceId: payload.toSpaceId,
-        afterId: payload.afterId as ArtifactId | null,
-        beforeId: payload.beforeId as ArtifactId | null,
-        version: artifact.version,
-      });
-      await invalidateSpace();
-      return true;
-    } catch {
-      toast("Couldn’t move document");
-      await invalidateSpace();
-      return false;
-    }
+
+    const updated = await patchWithVersionRetry({
+      version: artifact.version,
+      patch: async (version) => {
+        const { document } = await apiClient.patchDocument(payload.artifactId, {
+          spaceId: payload.toSpaceId,
+          afterId: payload.afterId as ArtifactId | null,
+          beforeId: payload.beforeId as ArtifactId | null,
+          version,
+        });
+        applyArtifactPatch(document);
+        return document;
+      },
+      onConflict: artifactPatchConflictVersion,
+      onFailure: () => toast("Couldn’t move document"),
+    });
+
+    await invalidateSpace();
+    return updated != null;
   }
 
   async function transitionDocument(
@@ -289,22 +294,29 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     ) {
       return true;
     }
-    try {
-      await apiClient.patchDocument(payload.artifactId, {
-        stageId: payload.stageId,
-        afterId: payload.afterId as ArtifactId | null,
-        beforeId: payload.beforeId as ArtifactId | null,
-        version: artifact.version,
-      });
-      await invalidateSpace();
-      return true;
-    } catch (error) {
-      toast.error(
-        error instanceof ApiError ? messageFromApiBody(error.body) : "Couldn’t update stage",
-      );
-      await invalidateSpace();
-      return false;
-    }
+
+    const updated = await patchWithVersionRetry({
+      version: artifact.version,
+      patch: async (version) => {
+        const { document } = await apiClient.patchDocument(payload.artifactId, {
+          stageId: payload.stageId,
+          afterId: payload.afterId as ArtifactId | null,
+          beforeId: payload.beforeId as ArtifactId | null,
+          version,
+        });
+        applyArtifactPatch(document);
+        return document;
+      },
+      onConflict: artifactPatchConflictVersion,
+      onFailure: (error) => {
+        toast.error(
+          error instanceof ApiError ? messageFromApiBody(error.body) : "Couldn’t update stage",
+        );
+      },
+    });
+
+    await invalidateSpace();
+    return updated != null;
   }
 
   return {

@@ -1,12 +1,13 @@
 import { apiClient } from "@/lib/api";
+import { applyArtifactPatch, artifactPatchConflictVersion } from "@/lib/artifact-patch-conflict";
 import {
   artifactsCollection,
   documentsCollection,
   removeFromCollection,
   upsertInCollection,
 } from "@/lib/db";
+import { patchWithVersionRetry } from "@/lib/patch-with-version-retry";
 import { queryKeys } from "@/lib/query-keys";
-import { ApiConflictError, ApiConversationConflictError } from "@denser/api-client";
 import type { ArtifactId, ArtifactKind, ArtifactSummary, SpaceId } from "@denser/contracts";
 import { toast } from "@denser/design-system";
 import { useActiveTabHost } from "@/features/shell/composables/useActiveTabHost";
@@ -67,16 +68,6 @@ export async function invalidateArtifactProjections(
   }
 }
 
-function applyArtifactPatch(artifact: ArtifactSummary) {
-  upsertInCollection(artifactsCollection, artifact);
-  if (artifact.kind === "document") {
-    const fullDocument = documentsCollection.get(artifact.id);
-    if (fullDocument) {
-      upsertInCollection(documentsCollection, { ...fullDocument, ...artifact });
-    }
-  }
-}
-
 export function useArtifactCommands() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -93,39 +84,34 @@ export function useArtifactCommands() {
     const trimmed = title.trim();
     if (!trimmed || trimmed === target.title) return;
 
-    let version =
+    const version =
       target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
-    let attempt = 0;
 
-    while (attempt < 3) {
-      attempt += 1;
-      try {
+    const updated = await patchWithVersionRetry({
+      version,
+      patch: async (nextVersion) => {
         if (target.kind === "conversation") {
           const { conversation } = await apiClient.patchConversation(target.id, {
             title: trimmed,
-            version,
+            version: nextVersion,
           });
           applyArtifactPatch(conversation);
-          await invalidateArtifactProjections(queryClient, conversation);
-          return;
+          return conversation;
         }
 
-        const { document } = await apiClient.patchDocument(target.id, { title: trimmed, version });
+        const { document } = await apiClient.patchDocument(target.id, {
+          title: trimmed,
+          version: nextVersion,
+        });
         applyArtifactPatch(document);
-        await invalidateArtifactProjections(queryClient, document);
-        return;
-      } catch (error) {
-        if (error instanceof ApiConversationConflictError) {
-          upsertInCollection(artifactsCollection, error.conflict.conversation);
-          version = error.conflict.conversation.version;
-          if (attempt >= 2) throw error;
-          continue;
-        }
-        if (!(error instanceof ApiConflictError)) throw error;
-        applyArtifactPatch(error.conflict.document);
-        version = error.conflict.document.version;
-        if (attempt >= 2) throw error;
-      }
+        return document;
+      },
+      onConflict: artifactPatchConflictVersion,
+      onFailure: () => toast("Couldn’t rename"),
+    });
+
+    if (updated) {
+      await invalidateArtifactProjections(queryClient, updated);
     }
   }
 
@@ -173,66 +159,39 @@ export function useArtifactCommands() {
   ) {
     const target = resolveArtifactRef(artifact);
     if (target.spaceId === toSpaceId) return;
+    if (target.kind !== "document" && target.kind !== "conversation") return;
 
-    if (target.kind === "conversation") {
-      let version =
-        target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
-      let attempt = 0;
+    const version =
+      target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
+    const failureMessage =
+      target.kind === "conversation" ? "Couldn’t move conversation" : "Couldn’t move document";
 
-      while (attempt < 3) {
-        attempt += 1;
-        try {
+    const updated = await patchWithVersionRetry({
+      version,
+      patch: async (nextVersion) => {
+        if (target.kind === "conversation") {
           const { conversation } = await apiClient.patchConversation(target.id, {
             spaceId: toSpaceId,
-            version,
+            version: nextVersion,
           });
           applyArtifactPatch(conversation);
-          await invalidateArtifactProjections(queryClient, target);
-          await invalidateArtifactProjections(queryClient, conversation);
-          return;
-        } catch (error) {
-          if (error instanceof ApiConversationConflictError) {
-            upsertInCollection(artifactsCollection, error.conflict.conversation);
-            version = error.conflict.conversation.version;
-            if (attempt >= 2) throw error;
-            continue;
-          }
-          toast("Couldn’t move conversation");
-          return;
+          return conversation;
         }
-      }
-      return;
-    }
 
-    if (target.kind !== "document") return;
-
-    let version =
-      target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
-    let attempt = 0;
-
-    while (attempt < 3) {
-      attempt += 1;
-      try {
         const { document } = await apiClient.patchDocument(target.id, {
           spaceId: toSpaceId,
-          version,
+          version: nextVersion,
         });
         applyArtifactPatch(document);
-        await invalidateArtifactProjections(queryClient, target);
-        await invalidateArtifactProjections(queryClient, document);
-        return;
-      } catch (error) {
-        if (!(error instanceof ApiConflictError)) {
-          toast("Couldn’t move document");
-          return;
-        }
-        applyArtifactPatch(error.conflict.document);
-        version = error.conflict.document.version;
-        if (attempt >= 2) {
-          toast("Couldn’t move document");
-          return;
-        }
-      }
+        return document;
+      },
+      onConflict: artifactPatchConflictVersion,
+      onFailure: () => toast(failureMessage),
+    });
+
+    if (updated) {
+      await invalidateArtifactProjections(queryClient, target);
+      await invalidateArtifactProjections(queryClient, updated);
     }
   }
 

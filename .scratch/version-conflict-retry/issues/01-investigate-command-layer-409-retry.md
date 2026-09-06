@@ -1,7 +1,7 @@
 # 01 — Investigate command-layer 409 retry policy
 
 **Type:** research  
-**Status:** resolved (preliminary — desk review 2026-09-06; re-validate with grep before implementing)  
+**Status:** resolved — implemented 2026-09-06  
 **Effort map:** [map.md](../map.md)  
 **Blocked by:** None — can start immediately
 
@@ -26,10 +26,10 @@ Documented policy ([`conflict-version.md`](../../../.cursor/skills/frontend-patt
 | --- | --- | --- | --- | --- |
 | `useDocumentSync.patchMutation` | Document autosave | Yes | Yes (3) | Field-aware `mergeDocumentConflict` |
 | `useConversationSync.patchMutation` | Conversation title | Yes | Yes (3) | Bumps version from conflict body |
-| `useArtifactCommands.renameArtifact` | Gallery rename | Yes | Yes (3) | Unified loop for doc + conversation |
-| `useArtifactCommands.moveArtifact` | Gallery move | Yes | Yes (3) | **Duplicated** loops; doc branch toasts on exhaustion, conversation branch throws |
-| `useSpaceSync.moveDocument` | Backlog space change + order | Yes | **No** | Toast + invalidate on any error |
-| `useSpaceSync.transitionDocument` | Board stage change + order | Yes | **No** | Toast + invalidate |
+| `useArtifactCommands.renameArtifact` | Gallery rename | Yes | Yes (2) | `patchWithVersionRetry` |
+| `useArtifactCommands.moveArtifact` | Gallery move | Yes | Yes (2) | `patchWithVersionRetry` |
+| `useSpaceSync.moveDocument` | Backlog space change + order | Yes | Yes (2) | `patchWithVersionRetry` |
+| `useSpaceSync.transitionDocument` | Board stage change + order | Yes | Yes (2) | `patchWithVersionRetry` |
 | `useSpaceCommands.renameSpace` / `moveSpace` | Space tree | No | N/A | No entity version on `PatchSpaceInput` |
 
 **Not in table (confirmed no version/retry path):** `patchDocumentType` in `useDocumentTypeSchema` — different entity, no artifact `version` gate.
@@ -55,7 +55,7 @@ Planning DnD already uses optimistic UI; a single retry would reduce silent fail
 - [x] Prototype helper shape — see Answer §5
 - [x] Decide: align `useSpaceSync` with gallery commands — see Answer §1 (yes, align)
 - [x] Record decision on [map.md](../map.md) under **Decisions so far**
-- [ ] Spawn implementation ticket when ready to execute (see Answer §6)
+- [x] Spawn implementation ticket when ready to execute (see Answer §6) — implemented in same effort; no separate ticket
 
 ## Non-goals
 
@@ -96,10 +96,10 @@ The retry loop in `moveArtifact` is not arbitrary; it mirrors `renameArtifact` a
 | --- | --- | --- |
 | `useDocumentSync.patchMutation` | Sync stream | Rich merge + retry (3) |
 | `useConversationSync.patchMutation` | Sync stream | Version bump + retry (3) |
-| `useArtifactCommands.renameArtifact` | One-shot command | Dumb merge + retry (2) — **already retries, should use shared helper** |
-| `useArtifactCommands.moveArtifact` | One-shot command | Dumb merge + retry (2) — **should dedupe into same helper as rename** |
-| `useSpaceSync.moveDocument` | Optimistic DnD command | Dumb merge + retry (2) — **gap today** |
-| `useSpaceSync.transitionDocument` | Optimistic DnD command | Dumb merge + retry (2) — **gap today** |
+| `useArtifactCommands.renameArtifact` | One-shot command | Dumb merge + retry (2) — `patchWithVersionRetry` |
+| `useArtifactCommands.moveArtifact` | One-shot command | Dumb merge + retry (2) — `patchWithVersionRetry` |
+| `useSpaceSync.moveDocument` | Optimistic DnD command | Dumb merge + retry (2) — `patchWithVersionRetry` |
+| `useSpaceSync.transitionDocument` | Optimistic DnD command | Dumb merge + retry (2) — `patchWithVersionRetry` |
 | `useSpaceCommands.*` | Unversioned command | No retry |
 
 ### §3 — Conflict scenarios (one-shot commands)
@@ -134,46 +134,45 @@ Today `useArtifactCommands` is inconsistent even with itself:
 3. **Do not throw** to callers for gallery commands (`void moveArtifact(...)`). Planning DnD can keep `return false` after toast + invalidate.
 4. On 409: always **upsert conflict snapshot** into `artifactsCollection` / `documentsCollection` before retry (same as sync).
 
-### §5 — Helper shape (recommended, not implemented)
+### §5 — Helper shape (implemented)
 
-**Location:** `packages/app/src/lib/patch-with-version-retry.ts` (or `modules/spaces/lib/`) — **app layer**, not `api-client`. Conflict policy belongs in sync/command layer per `conflict-version.md` smells table.
+**Location:** `packages/app/src/lib/patch-with-version-retry.ts` + `packages/app/src/lib/artifact-patch-conflict.ts`
 
 **Keep sync composables separate** — `useDocumentSync` needs `mergeDocumentConflict`; sharing would over-couple.
 
-**Proposed surface:**
+**Surface:**
 
 ```ts
-type PatchArtifactWithVersionRetryInput<T> = {
-  maxAttempts?: number; // default 2 for commands
+// patch-with-version-retry.ts
+export async function patchWithVersionRetry<T>(input: {
+  maxAttempts?: number; // default 2
   version: number;
   patch: (version: number) => Promise<T>;
-  onConflict: (conflict: unknown) => number; // upsert snapshot, return new version
+  onConflict: (error: unknown) => number | null;
   onFailure?: (error: unknown) => void;
-};
+}): Promise<T | null>;
 
-async function patchWithVersionRetry<T>(input: PatchArtifactWithVersionRetryInput<T>): Promise<T>;
+// artifact-patch-conflict.ts
+export function applyArtifactPatch(artifact: ArtifactSummary): void;
+export function artifactPatchConflictVersion(error: unknown): number | null;
 ```
 
-Callers pass kind-specific `patch` lambdas (`apiClient.patchDocument` / `patchConversation`) and `onConflict` that upserts the 409 body and returns the new version.
+**Wired through:**
 
-**Refactor targets (one implementation ticket):**
+1. `useArtifactCommands.renameArtifact` + `moveArtifact`
+2. `useSpaceSync.moveDocument` + `transitionDocument`
 
-1. Extract helper.
-2. `renameArtifact` + `moveArtifact` → single loop via helper (fixes duplication).
-3. `useSpaceSync.moveDocument` + `transitionDocument` → use helper inside existing try/catch; keep `return true/false` API.
+### §6 — Implementation (done 2026-09-06)
 
-### §6 — Follow-up implementation ticket (not written yet)
+- [x] Shared `patchWithVersionRetry` helper with default `maxAttempts: 2` for commands
+- [x] `renameArtifact` and `moveArtifact` deduplicated; consistent toast-on-failure
+- [x] `useSpaceSync.moveDocument` and `transitionDocument` retry on 409
+- [x] No change to `useDocumentSync` / `useConversationSync` merge behavior (still `while (attempt < 3)` with field merge)
+- [x] `pnpm typecheck` green
+- [x] Unit tests: `packages/app/src/lib/patch-with-version-retry.test.ts`
 
-When executing, acceptance criteria should include:
+### §7 — Open questions (closed for v1)
 
-- [ ] Shared `patchWithVersionRetry` helper with default `maxAttempts: 2` for commands
-- [ ] `renameArtifact` and `moveArtifact` deduplicated; consistent toast-on-failure
-- [ ] `useSpaceSync.moveDocument` and `transitionDocument` retry on 409
-- [ ] No change to `useDocumentSync` / `useConversationSync` merge behavior
-- [ ] `pnpm typecheck` green
-
-### §7 — Open questions (still fog on map)
-
-- **2 vs 3 attempts for commands** — prefer 2; sync keeps 3. Decide at implementation time unless telemetry says otherwise.
-- **Same-field move UX** — toast-only is fine for v1; explicit picker only if users hit it in practice.
-- **Whether sync composables ever share a thin "version bump only" branch** — probably not worth it; conversation sync loop is already small.
+- **2 vs 3 attempts for commands** — **2** for command layer; sync keeps 3.
+- **Same-field move UX** — toast-only for v1; explicit picker deferred.
+- **Sync composable sharing** — not pursued; conversation/document sync loops stay as-is.
