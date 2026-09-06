@@ -406,6 +406,18 @@ export function resolveTenantRootSpaceId(row: SpaceRow): SpaceId {
   return row.rootSpaceId ?? row.id;
 }
 
+export async function resolveArtifactSpaceMove(
+  userId: UserId,
+  nextSpaceId: SpaceId | null,
+): Promise<{ ok: true; spaceId: SpaceId | null; rootSpaceId: SpaceId | null } | { ok: false }> {
+  if (nextSpaceId === null) {
+    return { ok: true, spaceId: null, rootSpaceId: null };
+  }
+  const target = await requireSpaceAccess(userId, nextSpaceId);
+  if (!target) return { ok: false };
+  return { ok: true, spaceId: target.id, rootSpaceId: resolveTenantRootSpaceId(target) };
+}
+
 export async function enableSprints(userId: UserId, spaceId: SpaceId) {
   const spaceRow = await requireSpaceManagement(userId, spaceId);
   if (!spaceRow) {

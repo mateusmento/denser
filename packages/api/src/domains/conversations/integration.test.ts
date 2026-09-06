@@ -9,7 +9,7 @@ import { conversation } from "../../db/schema/conversation.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
 import { canAccessArtifact } from "../tenancy/access.js";
 import * as conversationRepository from "./repository.js";
-import { createOrOpenDirectConversation, hideDirectConversation, listDirectConversations, unhideDirectConversation } from "./service.js";
+import { createOrOpenDirectConversation, createConversation, hideDirectConversation, listDirectConversations, patchConversation, unhideDirectConversation } from "./service.js";
 import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
 
 async function makeFixture() {
@@ -70,4 +70,34 @@ test("access requires workspace membership", async () => {
     const row = await conversationRepository.findConversationByArtifactId(conversationId);
     assert.equal(await conversationRepository.canAccessDirectConversation(f.bobId, conversationId, row!.rootSpaceId!), false);
   } finally { await f.cleanup(); }
+});
+
+test("regular conversation can move between spaces", async () => {
+  const f = await makeFixture();
+  const childSpaceId = randomUUID() as SpaceId;
+  const targetSpaceId = randomUUID() as SpaceId;
+  try {
+    await db.insert(space).values([
+      { id: childSpaceId, title: "Channel folder", visibility: "private", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
+      { id: targetSpaceId, title: "Other folder", visibility: "private", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
+    ]);
+
+    const created = await createConversation(f.aliceId, {
+      title: "Standup",
+      spaceId: childSpaceId,
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+
+    const moved = await patchConversation(f.aliceId, created.conversation.id, {
+      spaceId: targetSpaceId,
+      version: created.conversation.version,
+    });
+    assert.equal(moved.ok, true);
+    if (!moved.ok) return;
+    assert.equal(moved.conversation.spaceId, targetSpaceId);
+  } finally {
+    await db.delete(space).where(inArray(space.id, [childSpaceId, targetSpaceId])).catch(() => {});
+    await f.cleanup();
+  }
 });

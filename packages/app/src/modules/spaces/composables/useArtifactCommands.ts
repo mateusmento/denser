@@ -172,7 +172,39 @@ export function useArtifactCommands() {
     toSpaceId: SpaceId | null,
   ) {
     const target = resolveArtifactRef(artifact);
-    if (target.kind !== "document" || target.spaceId === toSpaceId) return;
+    if (target.spaceId === toSpaceId) return;
+
+    if (target.kind === "conversation") {
+      let version =
+        target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);
+      let attempt = 0;
+
+      while (attempt < 3) {
+        attempt += 1;
+        try {
+          const { conversation } = await apiClient.patchConversation(target.id, {
+            spaceId: toSpaceId,
+            version,
+          });
+          applyArtifactPatch(conversation);
+          await invalidateArtifactProjections(queryClient, target);
+          await invalidateArtifactProjections(queryClient, conversation);
+          return;
+        } catch (error) {
+          if (error instanceof ApiConversationConflictError) {
+            upsertInCollection(artifactsCollection, error.conflict.conversation);
+            version = error.conflict.conversation.version;
+            if (attempt >= 2) throw error;
+            continue;
+          }
+          toast("Couldn’t move conversation");
+          return;
+        }
+      }
+      return;
+    }
+
+    if (target.kind !== "document") return;
 
     let version =
       target.version > 0 ? target.version : await resolveArtifactVersion(target.id, target.kind);

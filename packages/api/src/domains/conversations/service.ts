@@ -13,7 +13,7 @@ import { user } from "../../db/schema/auth.js";
 import type { ArtifactRow } from "../artifacts/repository.js";
 import * as artifactRepository from "../artifacts/repository.js";
 import { findUserByUsername } from "../spaces/membership-repository.js";
-import { resolveTenantRootSpaceId } from "../spaces/service.js";
+import { resolveArtifactSpaceMove, resolveTenantRootSpaceId } from "../spaces/service.js";
 import { requireArtifactAccess, requireSpaceAccess, canAccessSpace } from "../tenancy/access.js";
 import { findSpaceById } from "../spaces/repository.js";
 import { toConversationView } from "./mapper.js";
@@ -235,11 +235,36 @@ export async function patchConversation(
     };
   }
 
+  if (input.spaceId !== undefined && conversationRow.conversationKind !== "regular") {
+    return { ok: false as const, reason: "not_found" as const };
+  }
+
+  let nextSpaceId = artifactRow.spaceId;
+  let nextRootSpaceId = artifactRow.rootSpaceId;
+  if (input.spaceId !== undefined) {
+    const move = await resolveArtifactSpaceMove(userId, input.spaceId);
+    if (!move.ok) {
+      return { ok: false as const, reason: "not_found" as const };
+    }
+    nextSpaceId = move.spaceId;
+    nextRootSpaceId = move.rootSpaceId;
+  }
+
   const nextTitle = input.title !== undefined ? input.title : artifactRow.title;
+  const spaceChanged = input.spaceId !== undefined && nextSpaceId !== artifactRow.spaceId;
+  const titleChanged = input.title !== undefined && nextTitle !== artifactRow.title;
+  if (!spaceChanged && !titleChanged) {
+    return {
+      ok: true as const,
+      conversation: toConversationView(artifactRow, conversationRow),
+    };
+  }
+
   const updatedArtifact = await artifactRepository.updateArtifactWithVersion({
     artifactId: artifactRow.id,
     expectedVersion: artifactRow.version,
     title: nextTitle,
+    ...(input.spaceId !== undefined ? { spaceId: nextSpaceId, rootSpaceId: nextRootSpaceId } : {}),
   });
 
   if (!updatedArtifact) {

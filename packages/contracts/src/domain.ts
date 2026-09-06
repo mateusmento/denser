@@ -431,6 +431,7 @@ export type CreateConversationResponse = z.infer<typeof CreateConversationRespon
 
 export const PatchConversationInput = z.object({
   title: z.string().trim().max(200).optional(),
+  spaceId: SpaceId.nullable().optional(),
   version: z.number().int().positive(),
 });
 export type PatchConversationInput = z.infer<typeof PatchConversationInput>;

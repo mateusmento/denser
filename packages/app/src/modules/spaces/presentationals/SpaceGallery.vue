@@ -21,6 +21,11 @@ import type {
   SpaceGallerySpace,
   SpaceGallerySpaceAction,
 } from "@/modules/spaces/types";
+import type { ArtifactKind } from "@denser/contracts";
+
+function isGalleryMovableArtifact(kind: ArtifactKind): boolean {
+  return kind === "document" || kind === "conversation";
+}
 
 const props = defineProps<{
   childSpaces: readonly SpaceGallerySpace[];
@@ -210,7 +215,7 @@ function blockedMoveIds(itemId: string): readonly string[] {
             :key="artifact.id"
             :item-id="artifact.id"
             :index="index"
-            :disabled="artifact.kind !== 'document'"
+            :disabled="!isGalleryMovableArtifact(artifact.kind)"
             @click="onArtifactClick(artifact.id, $event)"
           >
             <SpaceArtifactTile
@@ -219,7 +224,7 @@ function blockedMoveIds(itemId: string): readonly string[] {
               :selected="selection.isSelected(artifact.id)"
               @action="(action) => emit('artifactAction', action, artifact)"
             >
-              <template v-if="artifact.kind === 'document'" #move-to>
+              <template v-if="isGalleryMovableArtifact(artifact.kind)" #move-to>
                 <SpaceMoveMenu
                   :spaces="moveSpaces ?? []"
                   :current-destination="artifact.spaceId"

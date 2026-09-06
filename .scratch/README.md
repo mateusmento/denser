@@ -5,6 +5,7 @@ Local effort trackers for agent-parallel work (see denser `issue-tracker-local` 
 | Effort | Path |
 | --- | --- |
 | Messaging | [messaging/](./messaging/) — [COVERAGE.md](./messaging/COVERAGE.md) (api+app matrix), [map.md](./messaging/map.md), [PR-POLICY.md](./messaging/PR-POLICY.md), [issues/](./messaging/issues/) |
+| Version-conflict retry | [version-conflict-retry/](./version-conflict-retry/) — [map.md](./version-conflict-retry/map.md), [issues/](./version-conflict-retry/issues/) (command-layer 409 policy — investigation) |
 
 Not a substitute for `docs/` domain specs — tickets point at docs and freeze seams in `interfaces.md`.
 
