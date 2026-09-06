@@ -3,7 +3,7 @@
 **Chunk:** 5  
 **Layer:** app  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#31](https://github.com/mateusmento/denser/pull/31) (open — mergeable; E2E needs **#25** API)  
 **Blocked by:** 25 — Schedule message API; 03 — Timeline app; 19 — Composer attachments  
 **Branch:** `agent/messaging-26-schedule-app`  
@@ -39,12 +39,16 @@ _N/A_
 
 ## App (frontend)
 
-- [ ] Wire `SchedulePopover` (presets + custom time — once-only OK until **27**)
-- [ ] Composer schedule action + scheduling state
-- [ ] Conversation schedules list/tab (list/edit/cancel)
-- [ ] Optional muted “scheduled” caption on timeline
-- [ ] Scheduled row shows attachment tiles from API
+- [x] Wire `SchedulePopover` (presets + custom time — once-only OK until **27**)
+- [x] Composer schedule action + scheduling state
+- [x] Conversation schedules list/tab (list/edit/cancel)
+- [x] Optional muted “scheduled” caption on timeline
+- [x] Scheduled row shows attachment tiles from API
 
 ## PR
 
 - [x] `[messaging 26] Schedule message UI` — [#31](https://github.com/mateusmento/denser/pull/31)
+
+## Comments
+
+**Audit 2026-09-06:** Merged on `main` (`SchedulePopover`, `ConversationSchedulesList`, wired in `ConversationContainer`). Recurrence values not sent to API yet — that's **27**.

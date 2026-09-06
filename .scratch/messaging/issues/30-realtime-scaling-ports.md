@@ -3,7 +3,7 @@
 **Chunk:** infra (cross-cutting)  
 **Layer:** api  
 **Domain:** [REALTIME-SCALING.md](../REALTIME-SCALING.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#26](https://github.com/mateusmento/denser/pull/26) (open — mergeable)  
 **Blocked by:** **10** merged (or rebase onto #14 branch before merge)  
 **Branch:** `agent/messaging-30-realtime-scaling-ports`  
@@ -31,23 +31,23 @@ Replace process-local typing/presence `Map`s (PR **#14**) with **ports + adapter
 
 ### Phase A — ports + in-memory
 
-- [ ] Add `TypingStore` + `PresenceStore` to `@denser/contracts` and [interfaces.md](../interfaces.md)
-- [ ] Register in `PortMap`; `InMemory*` adapters (extract current `typing-state` / `presence-registry` logic)
-- [ ] Refactor `realtime/handlers.ts` to use `getPort("typingStore")` / `getPort("presenceStore")` with `socketId` ref-counting
-- [ ] Remove `createPresenceRuntime()` singleton from `attach.ts`
-- [ ] Existing `presence.test.ts` passes against in-memory adapters
+- [x] Add `TypingStore` + `PresenceStore` to `@denser/contracts` and [interfaces.md](../interfaces.md)
+- [x] Register in `PortMap`; `InMemory*` adapters (extract current `typing-state` / `presence-registry` logic)
+- [x] Refactor `realtime/handlers.ts` to use `getPort("typingStore")` / `getPort("presenceStore")` with `socketId` ref-counting
+- [x] Remove `createPresenceRuntime()` singleton from `attach.ts`
+- [x] Existing `presence.test.ts` passes against in-memory adapters
 
 ### Phase B — Redis + Socket.IO
 
-- [ ] `RedisTypingStore` / `RedisPresenceStore` (or unified `RedisEphemeralStore`) behind `EPHEMERAL_STORE_ADAPTER=redis`
-- [ ] `@socket.io/redis-adapter` when `REALTIME_ADAPTER=redis` (`REDIS_URL`)
-- [ ] Server `transports: ["websocket"]` only
-- [ ] Document env vars in `.env.example`
+- [x] `RedisTypingStore` / `RedisPresenceStore` (or unified `RedisEphemeralStore`) behind `EPHEMERAL_STORE_ADAPTER=redis`
+- [x] `@socket.io/redis-adapter` when `REALTIME_ADAPTER=redis` (`REDIS_URL`)
+- [x] Server `transports: ["websocket"]` only
+- [x] Document env vars in `.env.example`
 - [ ] Optional: docker-compose Redis integration smoke test (two processes)
 
 ## App (frontend)
 
-- [ ] `packages/api-client/src/socket.ts` — `transports: ["websocket"]` only
+- [x] `packages/api-client/src/socket.ts` — `transports: ["websocket"]` only
 
 ## Out of scope (ticket 31)
 
@@ -57,3 +57,7 @@ Replace process-local typing/presence `Map`s (PR **#14**) with **ports + adapter
 ## PR
 
 - [x] `[messaging 30] Realtime ephemeral ports + Redis scale` — [#26](https://github.com/mateusmento/denser/pull/26)
+
+## Comments
+
+**Audit 2026-09-06:** Merged on `main`. Optional Redis multi-process smoke test still open.

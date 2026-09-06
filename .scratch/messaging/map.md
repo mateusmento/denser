@@ -123,18 +123,18 @@ App follow-ups (after API merges):
 
 ## Wave-5 plan (scheduling)
 
-| Ticket | Layer | Notes |
+| Ticket | Layer | Status on `main` |
 | --- | --- | --- |
-| **25** schedule-message-api | api | Fire → PostMessage; blocked on 24 ✓ |
-| **26** schedule-app | app | SchedulePopover + schedules tab |
-| **27** schedule-recurrence | full | Presets + timezone |
+| **25** schedule-message-api | api | **resolved** |
+| **26** schedule-app | app | **resolved** |
+| **27** schedule-recurrence | full | **partial** — engine + picker UI; wire create/update + list wall time |
 
 ## Frontier
 
-**Wave-4 PRs:** [#22](https://github.com/mateusmento/denser/pull/22) (**14** dm-peers-api) — run `0012_dm_peers_contract` migration before deploy; drops `conversation_member`.
+**Ready to grab:** **15** conversation-shell-app (DM hide UI), **21** files-pane.
 
-**Parallel wave 5+ (all PRs open):** **25** → [#30](https://github.com/mateusmento/denser/pull/30), **26** → [#31](https://github.com/mateusmento/denser/pull/31), **27** → [#29](https://github.com/mateusmento/denser/pull/29), **28** → [#32](https://github.com/mateusmento/denser/pull/32), **29** → [#27](https://github.com/mateusmento/denser/pull/27), **30** → [#26](https://github.com/mateusmento/denser/pull/26), **32** → [#28](https://github.com/mateusmento/denser/pull/28). **Schedule stack:** **#30** → **#31** → **#29**.
+**Open (not started):** **33** drafts/scheduled outbox, **34** screen-recording dialog workflow, **35** audio composer, **36** pin spaces sidebar.
 
-**Next after wave-4 tail:** **15** conversation-shell-app (DM hide UI), **21** files-pane.
+**In progress:** **27** schedule recurrence — pass recurrence/timezone from app → API.
 
-**Local `main`:** seed (#31) + unread API (#12) committed, not pushed.
+**Resolved on `main` (audit 2026-09-06):** **25**, **26**, **28** polls, **29** recording attach, **30** realtime ports, **32** message-delete attachment release.

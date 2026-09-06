@@ -3,7 +3,7 @@
 **Chunk:** 5  
 **Layer:** api  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#30](https://github.com/mateusmento/denser/pull/30) (open — mergeable; merge before **#31** / **#29**)  
 **Blocked by:** 24 — Scheduler; 17 — Attachment refs; 22 — Drafts; 02 — Messages  
 **Branch:** `agent/messaging-25-schedule-message-api`  
@@ -35,16 +35,16 @@ Schedule a message (once first): create job, **sync attachment joins** on schedu
 
 ## API (backend)
 
-- [ ] Schedule create uses `createScheduledMessageJob` — not hand-built `{ type, payload }`
-- [ ] List/get return `ScheduledJobDto<'scheduled_message'>` (parsed payloads)
-- [ ] `scheduled_message` handler receives narrowed job type from registry
-- [ ] Schedule create/update stores content in payload **without** attachment id SoT; joins hold files
-- [ ] Fire loads joins → PostMessage with `occurrence_key` idempotency
-- [ ] Once: release scheduled anchor after success; recurring keeps joins (**27**)
-- [ ] Cancel releases joins + disables job
-- [ ] Clear draft on schedule
-- [ ] Access lost at fire → fail job + visible error (per SCHEDULING.md)
-- [ ] `scheduled_message.upserted` events
+- [x] Schedule create uses `createScheduledMessageJob` — not hand-built `{ type, payload }`
+- [x] List/get return `ScheduledJobDto<'scheduled_message'>` (parsed payloads)
+- [x] `scheduled_message` handler receives narrowed job type from registry
+- [x] Schedule create/update stores content in payload **without** attachment id SoT; joins hold files
+- [x] Fire loads joins → PostMessage with `occurrence_key` idempotency
+- [x] Once: release scheduled anchor after success; recurring keeps joins (**27**)
+- [x] Cancel releases joins + disables job
+- [x] Clear draft on schedule
+- [x] Access lost at fire → fail job + visible error (per SCHEDULING.md)
+- [x] `scheduled_message.upserted` events
 
 ## App (frontend)
 
@@ -53,6 +53,8 @@ _N/A_
 ## Comments
 
 Recurrence + timezone follow in **27** — once-only acceptance OK for first merge of this ticket.
+
+**Audit 2026-09-06:** Merged on `main` (`packages/api/src/domains/scheduled-messages/`). Marked resolved.
 
 ## PR
 

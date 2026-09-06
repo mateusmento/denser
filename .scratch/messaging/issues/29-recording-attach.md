@@ -3,7 +3,7 @@
 **Chunk:** 3f — Recording  
 **Layer:** full (app-heavy; reuses upload API)  
 **Domain:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#27](https://github.com/mateusmento/denser/pull/27) (open — mergeable)  
 **Blocked by:** 19 — Composer upload UI  
 **Branch:** `agent/messaging-29-recording-attach`  
@@ -42,24 +42,24 @@
 
 ## API (backend)
 
-- [ ] Reuse upload API (18) — `video/webm` as normal attachment; no new routes
+- [x] Reuse upload API (18) — `video/webm` as normal attachment; no new routes
 
 ## App (frontend)
 
 ### Setup (before record)
 
-- [ ] Composer **Record screen** → modal/overlay (not instant record)
-- [ ] `getDisplayMedia` screen preview full-bleed
-- [ ] Webcam as **draggable circle** on preview; clamp inside frame
-- [ ] Shared `compositeFrame()` for preview rAF **and** export canvas (WYSIWYG)
-- [ ] Toggles: webcam, mic, system audio (degrade gracefully)
-- [ ] Cancel releases all tracks
+- [x] Composer **Record screen** → modal/overlay (not instant record)
+- [x] `getDisplayMedia` screen preview full-bleed
+- [x] Webcam as **draggable circle** on preview; clamp inside frame
+- [x] Shared `compositeFrame()` for preview rAF **and** export canvas (WYSIWYG)
+- [x] Toggles: webcam, mic, system audio (degrade gracefully)
+- [x] Cancel releases all tracks
 
 ### Record
 
-- [ ] Start → `MediaRecorder` on `canvas.captureStream(30)` + mixed audio (VP9 → VP8 fallback)
-- [ ] Recording UI: timer, Stop
-- [ ] Stop → finalize blob → pass to upload client from 19 (tile, progress, cancel)
+- [x] Start → `MediaRecorder` on `canvas.captureStream(30)` + mixed audio (VP9 → VP8 fallback)
+- [x] Recording UI: timer, Stop
+- [x] Stop → finalize blob → pass to upload client from 19 (tile, progress, cancel)
 
 ### Out of scope (do not build)
 
@@ -74,3 +74,7 @@
 ## PR
 
 - [x] `[messaging 29] Screen recording (Loom-style attach)` — [#27](https://github.com/mateusmento/denser/pull/27)
+
+## Comments
+
+**Audit 2026-09-06:** Merged on `main`. Dialog-before-record UX rework is **34** (open), not this ticket.

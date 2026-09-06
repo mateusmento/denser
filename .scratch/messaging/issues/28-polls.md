@@ -3,7 +3,7 @@
 **Chunk:** 6  
 **Layer:** full  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#32](https://github.com/mateusmento/denser/pull/32) (rebased onto `main` — run `pnpm db:migrate` for `0014_message_poll.sql`)  
 **Blocked by:** 02 — Messages API; 03 — Timeline app  
 **Branch:** `agent/messaging-28-polls`  
@@ -41,14 +41,18 @@ Poll embed **create/vote** as a separate messaging-cut slice: composer insert + 
 
 ## API (backend)
 
-- [ ] CreatePoll / VotePoll API + embed on message
-- [ ] Vote updates; realtime optional (`message.updated` or poll-specific event)
+- [x] CreatePoll / VotePoll API + embed on message
+- [x] Vote updates; realtime optional (`message.updated` or poll-specific event)
 
 ## App (frontend)
 
-- [ ] Composer poll insert (action row)
-- [ ] Poll embed render + vote in timeline
+- [x] Composer poll insert (action row)
+- [x] Poll embed render + vote in timeline
 
 ## PR
 
 - [x] `[messaging 28] Polls` — [#32](https://github.com/mateusmento/denser/pull/32)
+
+## Comments
+
+**Audit 2026-09-06:** Merged on `main` (`domains/polls/`, `PollInsertDialog`, `MessagePollEmbed`).

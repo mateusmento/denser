@@ -189,6 +189,21 @@ Defer: custom properties, board/calendar enablement, relationships, comments-as-
 - **Main column** — space **tab bar** + active tab content (This Space, space views, pin, working tab).
 - **Space members** (roster / member UI) — each member shows avatar + name; a **green presence dot** when that user has **workspace presence**.
 
+### This Space gallery — move & rename
+
+In **This Space** (gallery), users can **rename**, **duplicate** (documents only), **delete**, and **move** artifacts and child spaces:
+
+| Item | Move between spaces? | Notes |
+| --- | --- | --- |
+| **Document** | Yes | Drag-and-drop or **Move to** context menu; also movable on backlog/board (planning views). |
+| **Regular conversation** | Yes | Same gallery chrome as documents — drag or **Move to**; `patchConversation` updates `spaceId` / `rootSpaceId`. |
+| **Direct (DM) conversation** | **No** | Never listed in This Space; only in **Direct messages**. |
+| **Child space** | Yes | Reparent via gallery drag or **Move to** (`patchSpace.parentSpaceId`). |
+
+Moves require **write access** to source and destination spaces. Version conflicts on PATCH are retried automatically (bounded) in the command layer.
+
+**Deferred (not blocking v1):** multi-hop move edge cases across private boundaries (sealed nested rooms, workspace promotion) — see [Open for later](#open-for-later-not-blocking-v1).
+
 ### First-run feel
 
 Blank personal home with light base UI and a create affordance — not an opinionated “what this app is” dashboard.
@@ -214,7 +229,7 @@ Blank personal home with light base UI and a create affordance — not an opinio
 ## Open for later (not blocking v1)
 
 - Full action-permission matrices per role
-- Move rules edge cases (multi-step across private boundaries)
+- Move rules **edge cases** (multi-step across private boundaries) — basic gallery move for documents and regular conversations is shipped
 - Additional Artifact kinds
 - Property-based view enablement on Documents
 - Whether ownership lists on Artifacts appear for UX without affecting ACL
@@ -229,6 +244,7 @@ Blank personal home with light base UI and a create affordance — not an opinio
 
 | Date       | Change                                                                                                                                                    |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-06 | Gallery move: regular conversations movable between spaces (same as documents); DMs excluded. Command-layer PATCH 409 retry helper.                      |
 | 2026-09-04 | Meeting rooms: SFU target, lifecycle, lessons vs epicstory/epicstory2.                                                                                    |
 | 2026-09-04 | Meeting room (artifact) vs Meeting (instance); conversation + workspace presence surfaces.                                                                |
 | 2026-08-28 | Visibility is the membership gate: public roots are personal Home folders (`createdBy`); private roots are workspaces. Private → public is not a feature. |

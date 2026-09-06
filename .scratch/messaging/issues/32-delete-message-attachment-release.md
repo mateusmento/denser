@@ -3,7 +3,7 @@
 **Chunk:** 3d — Attachments lifecycle  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** claimed  
+**Status:** resolved  
 **PR:** [#28](https://github.com/mateusmento/denser/pull/28) (open — mergeable)  
 **Blocked by:** 02 — Messages API; 17 — Attachment refs  
 **Branch:** `agent/messaging-32-delete-message-attachment-release`  
@@ -40,9 +40,9 @@ In `deleteMessage` (after successful soft delete):
 
 ## API (backend)
 
-- [ ] `deleteMessage` releases message attachment anchor
-- [ ] Integration test: message + attachment → delete → zero `message_attachment` rows for that message
-- [ ] Shared attachment on two messages: delete one message drops only that message's join (not `releaseAttachment` on the blob)
+- [x] `deleteMessage` releases message attachment anchor
+- [x] Integration test: message + attachment → delete → zero `message_attachment` rows for that message
+- [x] Shared attachment on two messages: delete one message drops only that message's join (not `releaseAttachment` on the blob)
 - [ ] Reclaim path can delete blob after grace when refcount hits 0 (extend 17 integration test or add focused case)
 
 ## App (frontend)
@@ -56,3 +56,7 @@ Distinct from **21** files-pane **intentional delete** (`releaseAttachment` — 
 ## PR
 
 - [x] `[messaging 32] Release attachments on message delete` — [#28](https://github.com/mateusmento/denser/pull/28)
+
+## Comments
+
+**Audit 2026-09-06:** Merged on `main` (`messages/service.ts` → `commitRelease` on delete; integration tests in `messages/integration.test.ts`).
