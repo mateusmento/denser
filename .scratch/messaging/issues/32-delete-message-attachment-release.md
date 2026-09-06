@@ -3,7 +3,8 @@
 **Chunk:** 3d — Attachments lifecycle  
 **Layer:** api  
 **Domain:** [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#28](https://github.com/mateusmento/denser/pull/28) (open — mergeable)  
 **Blocked by:** 02 — Messages API; 17 — Attachment refs  
 **Branch:** `agent/messaging-32-delete-message-attachment-release`  
 **Specs:** [interfaces.md](../interfaces.md) · [CHUNKS.md](../CHUNKS.md)
@@ -54,4 +55,4 @@ Distinct from **21** files-pane **intentional delete** (`releaseAttachment` — 
 
 ## PR
 
-- [ ] `[messaging 32] Release attachments on message delete` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 32] Release attachments on message delete` — [#28](https://github.com/mateusmento/denser/pull/28)

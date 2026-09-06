@@ -3,7 +3,8 @@
 **Chunk:** 5  
 **Layer:** app  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#31](https://github.com/mateusmento/denser/pull/31) (open — mergeable; E2E needs **#25** API)  
 **Blocked by:** 25 — Schedule message API; 03 — Timeline app; 19 — Composer attachments  
 **Branch:** `agent/messaging-26-schedule-app`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -46,4 +47,4 @@ _N/A_
 
 ## PR
 
-- [ ] `[messaging 26] Schedule message UI` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 26] Schedule message UI` — [#31](https://github.com/mateusmento/denser/pull/31)

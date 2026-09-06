@@ -3,7 +3,8 @@
 **Chunk:** 3f — Recording  
 **Layer:** full (app-heavy; reuses upload API)  
 **Domain:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#27](https://github.com/mateusmento/denser/pull/27) (open — mergeable)  
 **Blocked by:** 19 — Composer upload UI  
 **Branch:** `agent/messaging-29-recording-attach`  
 **Specs:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [CHUNKS.md](../CHUNKS.md)
@@ -72,4 +73,4 @@
 
 ## PR
 
-- [ ] `[messaging 29] Screen recording (Loom-style attach)` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 29] Screen recording (Loom-style attach)` — [#27](https://github.com/mateusmento/denser/pull/27)

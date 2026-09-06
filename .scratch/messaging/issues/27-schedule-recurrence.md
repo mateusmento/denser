@@ -3,7 +3,8 @@
 **Chunk:** 5  
 **Layer:** full  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#29](https://github.com/mateusmento/denser/pull/29) (open — mergeable; stack after **#25** / **#26**)  
 **Blocked by:** 25 — Schedule message API; 26 — Schedule app  
 **Branch:** `agent/messaging-27-schedule-recurrence`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -51,4 +52,4 @@ Recurrence presets (once/daily/weekly) + timezone on job; recompute `next_run_at
 
 ## PR
 
-- [ ] `[messaging 27] Schedule recurrence + timezone` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 27] Schedule recurrence + timezone` — [#29](https://github.com/mateusmento/denser/pull/29)

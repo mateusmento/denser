@@ -3,7 +3,8 @@
 **Chunk:** 5  
 **Layer:** api  
 **Domain:** [SCHEDULING.md](../../../docs/SCHEDULING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#30](https://github.com/mateusmento/denser/pull/30) (open — mergeable; merge before **#31** / **#29**)  
 **Blocked by:** 24 — Scheduler; 17 — Attachment refs; 22 — Drafts; 02 — Messages  
 **Branch:** `agent/messaging-25-schedule-message-api`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -55,4 +56,4 @@ Recurrence + timezone follow in **27** — once-only acceptance OK for first mer
 
 ## PR
 
-- [ ] `[messaging 25] Schedule message API + fire handler` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 25] Schedule message API + fire handler` — [#30](https://github.com/mateusmento/denser/pull/30)

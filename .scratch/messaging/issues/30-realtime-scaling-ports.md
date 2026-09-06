@@ -3,7 +3,8 @@
 **Chunk:** infra (cross-cutting)  
 **Layer:** api  
 **Domain:** [REALTIME-SCALING.md](../REALTIME-SCALING.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#26](https://github.com/mateusmento/denser/pull/26) (open — mergeable)  
 **Blocked by:** **10** merged (or rebase onto #14 branch before merge)  
 **Branch:** `agent/messaging-30-realtime-scaling-ports`  
 **Specs:** [REALTIME-SCALING.md](../REALTIME-SCALING.md) · [interfaces.md](../interfaces.md)
@@ -55,4 +56,4 @@ Replace process-local typing/presence `Map`s (PR **#14**) with **ports + adapter
 
 ## PR
 
-- [ ] `[messaging 30] Realtime ephemeral ports + Redis scale` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 30] Realtime ephemeral ports + Redis scale` — [#26](https://github.com/mateusmento/denser/pull/26)

@@ -347,3 +347,26 @@ Access: peer ∩ workspace member for directs; space ACL for regular.
 2. Stub implementations (`NotImplemented` / in-memory) are OK behind a port until the owner ticket lands — prefer DI so **03** can post without real S3.
 3. TipTap body remains `unknown` at the contract boundary until a shared schema module exists; validate in API.
 4. **ScheduledJob `payload` is always parsed/created via `@denser/contracts` factories and Zod schemas** — no `Record<string, unknown>` at handler or HTTP boundaries.
+
+---
+
+## Ephemeral stores (typing / presence)
+
+```ts
+type TypingStore = {
+  pulse(input: { conversationId: ArtifactId; userId: UserId; ttlMs: number }): Promise<{ until: string }>
+  listActive(conversationId: ArtifactId): Promise<Array<{ userId: UserId; until: string }>>
+}
+
+type PresenceStore = {
+  joinConversation(input: { conversationId: ArtifactId; userId: UserId; socketId: string }): Promise<{ viewers: UserId[]; becameViewer: boolean }>
+  leaveConversation(input: { conversationId: ArtifactId; userId: UserId; socketId: string }): Promise<{ viewers: UserId[]; becameAbsent: boolean }>
+  listConversationViewers(conversationId: ArtifactId): Promise<UserId[]>
+
+  pulseWorkspace(input: { rootSpaceId: SpaceId; userId: UserId; socketId: string }): Promise<{ becameOnline: boolean }>
+  leaveWorkspace(input: { rootSpaceId: SpaceId; userId: UserId; socketId: string }): Promise<{ becameOffline: boolean }>
+  listWorkspaceOnline(rootSpaceId: SpaceId): Promise<UserId[]>
+}
+```
+
+Adapters: **in-memory** (dev/test), **Redis** (multi-instance Node). Env: `EPHEMERAL_STORE_ADAPTER`, `REALTIME_ADAPTER`, `REDIS_URL`. Socket.IO clients use **websocket-only** transport.

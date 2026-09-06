@@ -3,7 +3,8 @@
 **Chunk:** 6  
 **Layer:** full  
 **Domain:** [CONVERSATIONS.md](../../../docs/CONVERSATIONS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
-**Status:** ready-for-agent  
+**Status:** claimed  
+**PR:** [#32](https://github.com/mateusmento/denser/pull/32) (rebased onto `main` — run `pnpm db:migrate` for `0014_message_poll.sql`)  
 **Blocked by:** 02 — Messages API; 03 — Timeline app  
 **Branch:** `agent/messaging-28-polls`  
 **Specs:** [CHUNKS.md](../CHUNKS.md)
@@ -50,4 +51,4 @@ Poll embed **create/vote** as a separate messaging-cut slice: composer insert + 
 
 ## PR
 
-- [ ] `[messaging 28] Polls` — [PR-POLICY.md](../PR-POLICY.md)
+- [x] `[messaging 28] Polls` — [#32](https://github.com/mateusmento/denser/pull/32)

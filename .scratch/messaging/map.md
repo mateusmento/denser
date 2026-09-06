@@ -119,7 +119,7 @@ App follow-ups (after API merges):
 | **15** conversation-shell-app | 14 (#22) | DM hide in sidebar — **ready after #22 merge** |
 | **23** drafts-app | 22 (done) | Composer hydrate + debounce + 409 merge |
 
-**Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane, **32** release attachments on message delete.
+**Attachment tail:** **20** (timeline render — largely done in #19), **21** files-pane; **32** → [#28](https://github.com/mateusmento/denser/pull/28) (review).
 
 ## Wave-5 plan (scheduling)
 
@@ -133,10 +133,8 @@ App follow-ups (after API merges):
 
 **Wave-4 PRs:** [#22](https://github.com/mateusmento/denser/pull/22) (**14** dm-peers-api) — run `0012_dm_peers_contract` migration before deploy; drops `conversation_member`.
 
-**In flight:** **08** reactions, **13** unread-app, **23** drafts-app (parallel agents).
+**Parallel wave 5+ (all PRs open):** **25** → [#30](https://github.com/mateusmento/denser/pull/30), **26** → [#31](https://github.com/mateusmento/denser/pull/31), **27** → [#29](https://github.com/mateusmento/denser/pull/29), **28** → [#32](https://github.com/mateusmento/denser/pull/32), **29** → [#27](https://github.com/mateusmento/denser/pull/27), **30** → [#26](https://github.com/mateusmento/denser/pull/26), **32** → [#28](https://github.com/mateusmento/denser/pull/28). **Schedule stack:** **#30** → **#31** → **#29**.
 
-**Next after wave-4 tail:** **15** conversation-shell-app (DM hide UI), **21** files-pane, **32** delete-message attachment release.
-
-**Wave 5 (scheduling):** **25** schedule-message-api → **26** schedule-app → **27** recurrence — all `ready-for-agent` once you close wave-4 polish.
+**Next after wave-4 tail:** **15** conversation-shell-app (DM hide UI), **21** files-pane.
 
 **Local `main`:** seed (#31) + unread API (#12) committed, not pushed.
