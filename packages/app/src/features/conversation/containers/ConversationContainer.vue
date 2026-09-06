@@ -655,6 +655,8 @@ async function onThreadJumpToLatest() {
     @update:webcam-enabled="screenRecording.setWebcamEnabled($event)"
     @update:mic-enabled="screenRecording.setMicEnabled($event)"
     @update:system-audio-enabled="screenRecording.setSystemAudioEnabled($event)"
+    @update:webcam-device-id="screenRecording.setWebcamDeviceId($event)"
+    @update:mic-device-id="screenRecording.setMicDeviceId($event)"
   />
 
   <ScreenRecordingControlsPopover

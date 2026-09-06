@@ -49,4 +49,19 @@ test.describe("ScreenRecordingSetupDialog", () => {
     );
     runtime.assertClean();
   });
+
+  test("lists connected cameras and microphones in the device dropdowns", async ({ page }) => {
+    const runtime = await gotoStory(page, STORIES.dialogWebcamOn, SELECTORS.setupDialog);
+    await waitForLayout(page);
+
+    await page.locator(SELECTORS.cameraSelect).click();
+    await expect(page.getByRole("option", { name: "FaceTime HD Camera" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "USB Webcam" })).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await page.locator(SELECTORS.micSelect).click();
+    await expect(page.getByRole("option", { name: "MacBook Pro Microphone" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "USB Microphone" })).toBeVisible();
+    runtime.assertClean();
+  });
 });

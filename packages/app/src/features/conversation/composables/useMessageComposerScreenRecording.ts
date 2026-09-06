@@ -119,6 +119,8 @@ export function useMessageComposerScreenRecording(options: {
     setWebcamEnabled: setup.setWebcamEnabled,
     setMicEnabled: setup.setMicEnabled,
     setSystemAudioEnabled: setup.setSystemAudioEnabled,
+    setWebcamDeviceId: setup.setWebcamDeviceId,
+    setMicDeviceId: setup.setMicDeviceId,
     get setupView() {
       return setup.view.value;
     },

@@ -5,6 +5,10 @@ import {
   readVideoIntrinsicSize,
 } from "./screen-recording-composite";
 import {
+  microphoneAudioConstraints,
+  webcamVideoConstraints,
+} from "./screen-recording-devices";
+import {
   createRecordingChunkSink,
 } from "./screen-recording-persistence";
 
@@ -12,6 +16,8 @@ export type ScreenRecordingToggles = {
   webcamEnabled: boolean;
   micEnabled: boolean;
   systemAudioEnabled: boolean;
+  webcamDeviceId?: string | null;
+  micDeviceId?: string | null;
 };
 
 export type AcquiredStreams = {
@@ -23,6 +29,8 @@ export type AcquiredStreams = {
   screenVideo: HTMLVideoElement;
   webcamVideo: HTMLVideoElement | null;
   audioContext: AudioContext;
+  audioDestination: MediaStreamAudioDestinationNode;
+  micAudioSources: MediaStreamAudioSourceNode[];
   mixedAudioStream: MediaStream;
 };
 
@@ -123,14 +131,46 @@ function connectAudioTracks(
   audioContext: AudioContext,
   destination: MediaStreamAudioDestinationNode,
   stream: MediaStream,
-) {
-  for (const track of stream.getAudioTracks()) {
+): MediaStreamAudioSourceNode[] {
+  return stream.getAudioTracks().map((track) => {
     const source = audioContext.createMediaStreamSource(new MediaStream([track]));
     source.connect(destination);
+    return source;
+  });
+}
+
+function stopStream(stream: MediaStream | null) {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
+async function acquireWebcamMedia(deviceId?: string | null): Promise<MediaStream | null> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: webcamVideoConstraints(deviceId),
+    });
+  } catch {
+    return null;
   }
 }
 
-const SQUARE_WEBCAM_IDEAL_PX = 720;
+async function acquireMicMedia(deviceId?: string | null): Promise<MediaStream | null> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: microphoneAudioConstraints(deviceId),
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function attachWebcamStream(acquired: AcquiredStreams, stream: MediaStream) {
+  if (!acquired.webcamVideo) {
+    acquired.webcamVideo = document.createElement("video");
+    mountMediaVideo(acquired.webcamVideo);
+  }
+  await playVideoElement(acquired.webcamVideo, stream);
+  await waitForVideoReady(acquired.webcamVideo);
+}
 
 export async function acquireScreenRecordingStreams(
   toggles: ScreenRecordingToggles,
@@ -143,49 +183,24 @@ export async function acquireScreenRecordingStreams(
   const videoTrack = screenStream.getVideoTracks()[0];
   if (!videoTrack) throw new Error("Screen capture has no video track");
 
-  let webcamStream: MediaStream | null = null;
-  if (toggles.webcamEnabled) {
-    try {
-      webcamStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: SQUARE_WEBCAM_IDEAL_PX },
-          height: { ideal: SQUARE_WEBCAM_IDEAL_PX },
-          aspectRatio: { ideal: 1 },
-        },
-      });
-    } catch {
-      webcamStream = null;
-    }
-  }
-
-  let micStream: MediaStream | null = null;
-  if (toggles.micEnabled) {
-    try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      micStream = null;
-    }
-  }
+  const webcamStream = toggles.webcamEnabled
+    ? await acquireWebcamMedia(toggles.webcamDeviceId)
+    : null;
+  const micStream = toggles.micEnabled ? await acquireMicMedia(toggles.micDeviceId) : null;
 
   const audioContext = new AudioContext();
   await audioContext.resume().catch(() => undefined);
   const audioDestination = audioContext.createMediaStreamDestination();
   connectAudioTracks(audioContext, audioDestination, screenStream);
-  if (micStream) connectAudioTracks(audioContext, audioDestination, micStream);
+  const micAudioSources = micStream
+    ? connectAudioTracks(audioContext, audioDestination, micStream)
+    : [];
 
   const screenVideo = document.createElement("video");
   mountMediaVideo(screenVideo);
   await playVideoElement(screenVideo, screenStream);
   await waitForVideoReady(screenVideo);
   const { width: frameWidth, height: frameHeight } = await waitForVideoDimensions(screenVideo);
-
-  let webcamVideo: HTMLVideoElement | null = null;
-  if (webcamStream) {
-    webcamVideo = document.createElement("video");
-    mountMediaVideo(webcamVideo);
-    await playVideoElement(webcamVideo, webcamStream);
-    await waitForVideoReady(webcamVideo);
-  }
 
   const acquired: AcquiredStreams = {
     screenStream,
@@ -194,15 +209,55 @@ export async function acquireScreenRecordingStreams(
     frameWidth,
     frameHeight,
     screenVideo,
-    webcamVideo,
+    webcamVideo: null,
     audioContext,
+    audioDestination,
+    micAudioSources,
     mixedAudioStream: audioDestination.stream,
   };
+
+  if (webcamStream) {
+    await attachWebcamStream(acquired, webcamStream);
+  }
+
   applyStreamToggles(acquired, toggles);
   return acquired;
 }
 
-/** Mute/unmute tracks that were already acquired. Cannot add new sources after pick. */
+export async function replaceWebcamStream(
+  acquired: AcquiredStreams,
+  deviceId?: string | null,
+): Promise<boolean> {
+  const next = await acquireWebcamMedia(deviceId);
+  if (!next) return false;
+  const previous = acquired.webcamStream;
+  acquired.webcamStream = next;
+  await attachWebcamStream(acquired, next);
+  stopStream(previous);
+  return true;
+}
+
+export async function replaceMicStream(
+  acquired: AcquiredStreams,
+  deviceId?: string | null,
+): Promise<boolean> {
+  const next = await acquireMicMedia(deviceId);
+  if (!next) return false;
+
+  for (const source of acquired.micAudioSources) {
+    source.disconnect();
+  }
+  stopStream(acquired.micStream);
+  acquired.micStream = next;
+  acquired.micAudioSources = connectAudioTracks(
+    acquired.audioContext,
+    acquired.audioDestination,
+    next,
+  );
+  return true;
+}
+
+/** Mute/unmute tracks that were already acquired. */
 export function applyStreamToggles(acquired: AcquiredStreams, toggles: ScreenRecordingToggles) {
   for (const track of acquired.screenStream.getAudioTracks()) {
     track.enabled = toggles.systemAudioEnabled;

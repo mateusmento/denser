@@ -1,3 +1,4 @@
+import { useDevicesList } from "@vueuse/core";
 import { computed, onScopeDispose, ref, shallowRef, watch } from "vue";
 import {
   clampCameraLayout,
@@ -15,11 +16,18 @@ import {
   applyStreamToggles,
   createPreviewCompositor,
   releaseAcquiredStreams,
+  replaceMicStream,
+  replaceWebcamStream,
   startCanvasRecording,
   type AcquiredStreams,
   type ActiveRecording,
   type ScreenRecordingToggles,
 } from "../lib/screen-recording-capture";
+import {
+  streamNeedsDeviceSwitch,
+  toRecordingDeviceOptions,
+  trackDeviceId,
+} from "../lib/screen-recording-devices";
 import {
   clearCompositorCanvasMount,
   mountCompositorCanvas,
@@ -39,10 +47,15 @@ export function useScreenRecordingSetup() {
   const webcamEnabled = ref(true);
   const micEnabled = ref(true);
   const systemAudioEnabled = ref(true);
+  const webcamDeviceId = ref<string | null>(null);
+  const micDeviceId = ref<string | null>(null);
   const cameraLayout = ref<CameraCircleLayout>({ x: 24, y: 24, diameter: 160 });
   const previewCanvas = shallowRef<HTMLCanvasElement | null>(null);
   const elapsedSeconds = ref(0);
   const acquired = shallowRef<AcquiredStreams | null>(null);
+  const { videoInputs, audioInputs, ensurePermissions } = useDevicesList();
+  const cameras = computed(() => toRecordingDeviceOptions(videoInputs.value, "Camera"));
+  const microphones = computed(() => toRecordingDeviceOptions(audioInputs.value, "Microphone"));
 
   let previewCompositor: ReturnType<typeof createPreviewCompositor> | null = null;
   let activeRecording: ActiveRecording | null = null;
@@ -75,8 +88,12 @@ export function useScreenRecordingSetup() {
       error: error.value,
       webcamEnabled: webcamEnabled.value,
       webcamAvailable: streams?.webcamVideo != null,
+      webcamDeviceId: webcamDeviceId.value,
       micEnabled: micEnabled.value,
+      micDeviceId: micDeviceId.value,
       systemAudioEnabled: systemAudioEnabled.value,
+      cameras: cameras.value,
+      microphones: microphones.value,
       canStart: phase.value === "setup" && streams != null,
       elapsedLabel: phase.value === "recording" ? formatElapsed(elapsedSeconds.value) : undefined,
       previewAspectRatio: previewAspectRatio.value,
@@ -91,10 +108,87 @@ export function useScreenRecordingSetup() {
       webcamEnabled: webcamEnabled.value,
       micEnabled: micEnabled.value,
       systemAudioEnabled: systemAudioEnabled.value,
+      webcamDeviceId: webcamDeviceId.value,
+      micDeviceId: micDeviceId.value,
     };
   }
 
-  watch([webcamEnabled, micEnabled, systemAudioEnabled], () => {
+  function syncSelectedDeviceIds(streams: AcquiredStreams) {
+    webcamDeviceId.value = trackDeviceId(streams.webcamStream, "video") ?? webcamDeviceId.value;
+    micDeviceId.value = trackDeviceId(streams.micStream, "audio") ?? micDeviceId.value;
+  }
+
+  async function syncWebcamStream() {
+    const streams = acquired.value;
+    if (!streams || phase.value !== "setup") {
+      if (streams) applyStreamToggles(streams, toggles());
+      return;
+    }
+    if (!webcamEnabled.value) {
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    if (
+      !streamNeedsDeviceSwitch(
+        streams.webcamStream != null,
+        trackDeviceId(streams.webcamStream, "video"),
+        webcamDeviceId.value,
+      )
+    ) {
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    const switched = await replaceWebcamStream(streams, webcamDeviceId.value);
+    if (!switched) {
+      error.value = "Could not switch camera";
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    error.value = undefined;
+    syncSelectedDeviceIds(streams);
+    applyStreamToggles(streams, toggles());
+  }
+
+  async function syncMicStream() {
+    const streams = acquired.value;
+    if (!streams || phase.value !== "setup") {
+      if (streams) applyStreamToggles(streams, toggles());
+      return;
+    }
+    if (!micEnabled.value) {
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    if (
+      !streamNeedsDeviceSwitch(
+        streams.micStream != null,
+        trackDeviceId(streams.micStream, "audio"),
+        micDeviceId.value,
+      )
+    ) {
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    const switched = await replaceMicStream(streams, micDeviceId.value);
+    if (!switched) {
+      error.value = "Could not switch microphone";
+      applyStreamToggles(streams, toggles());
+      return;
+    }
+    error.value = undefined;
+    syncSelectedDeviceIds(streams);
+    applyStreamToggles(streams, toggles());
+  }
+
+  watch(webcamEnabled, () => {
+    void syncWebcamStream();
+  });
+
+  watch(micEnabled, () => {
+    void syncMicStream();
+  });
+
+  watch(systemAudioEnabled, () => {
     if (!acquired.value) return;
     applyStreamToggles(acquired.value, toggles());
   });
@@ -144,6 +238,8 @@ export function useScreenRecordingSetup() {
     try {
       const streams = await acquireScreenRecordingStreams(toggles());
       acquired.value = streams;
+      await ensurePermissions();
+      syncSelectedDeviceIds(streams);
       cameraLayout.value = defaultCameraLayout(streams.frameWidth, streams.frameHeight);
 
       const track = streams.screenStream.getVideoTracks()[0];
@@ -291,6 +387,14 @@ export function useScreenRecordingSetup() {
     },
     setSystemAudioEnabled: (value: boolean) => {
       systemAudioEnabled.value = value;
+    },
+    setWebcamDeviceId: (value: string) => {
+      webcamDeviceId.value = value;
+      void syncWebcamStream();
+    },
+    setMicDeviceId: (value: string) => {
+      micDeviceId.value = value;
+      void syncMicStream();
     },
     webcamEnabled,
     micEnabled,

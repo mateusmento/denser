@@ -206,13 +206,22 @@ export type ConversationThreadView = {
 
 export type ScreenRecordingPhase = "acquiring" | "setup" | "recording" | "finalizing";
 
+export type ScreenRecordingDeviceOption = {
+  deviceId: string;
+  label: string;
+};
+
 export type ScreenRecordingSetupView = {
   phase: ScreenRecordingPhase;
   error?: string;
   webcamEnabled: boolean;
   webcamAvailable: boolean;
+  webcamDeviceId: string | null;
   micEnabled: boolean;
+  micDeviceId: string | null;
   systemAudioEnabled: boolean;
+  cameras: readonly ScreenRecordingDeviceOption[];
+  microphones: readonly ScreenRecordingDeviceOption[];
   canStart: boolean;
   elapsedLabel?: string;
   previewAspectRatio: number;

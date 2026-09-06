@@ -14,12 +14,16 @@ const open = ref(true);
 const webcamEnabled = ref(true);
 const micEnabled = ref(true);
 const systemAudioEnabled = ref(false);
+const webcamDeviceId = ref("cam-front");
+const micDeviceId = ref("mic-built-in");
 
 const setupView = computed(() =>
   screenRecordingSetupView({
     webcamEnabled: webcamEnabled.value,
     webcamAvailable: true,
+    webcamDeviceId: webcamDeviceId.value,
     micEnabled: micEnabled.value,
+    micDeviceId: micDeviceId.value,
     systemAudioEnabled: systemAudioEnabled.value,
   }),
 );
@@ -29,7 +33,9 @@ const recordingView = computed(() =>
     phase: "recording",
     webcamEnabled: webcamEnabled.value,
     webcamAvailable: true,
+    webcamDeviceId: webcamDeviceId.value,
     micEnabled: micEnabled.value,
+    micDeviceId: micDeviceId.value,
     systemAudioEnabled: systemAudioEnabled.value,
     elapsedLabel: "0:42",
   }),
@@ -46,6 +52,8 @@ const recordingView = computed(() =>
       @update:webcam-enabled="webcamEnabled = $event"
       @update:mic-enabled="micEnabled = $event"
       @update:system-audio-enabled="systemAudioEnabled = $event"
+      @update:webcam-device-id="webcamDeviceId = $event"
+      @update:mic-device-id="micDeviceId = $event"
     />
   </Story>
 
@@ -58,6 +66,8 @@ const recordingView = computed(() =>
       @update:webcam-enabled="webcamEnabled = $event"
       @update:mic-enabled="micEnabled = $event"
       @update:system-audio-enabled="systemAudioEnabled = $event"
+      @update:webcam-device-id="webcamDeviceId = $event"
+      @update:mic-device-id="micDeviceId = $event"
     />
   </Story>
 
@@ -70,6 +80,8 @@ const recordingView = computed(() =>
       @update:webcam-enabled="webcamEnabled = $event"
       @update:mic-enabled="micEnabled = $event"
       @update:system-audio-enabled="systemAudioEnabled = $event"
+      @update:webcam-device-id="webcamDeviceId = $event"
+      @update:mic-device-id="micDeviceId = $event"
     />
   </Story>
 
@@ -83,6 +95,8 @@ const recordingView = computed(() =>
       @update:webcam-enabled="webcamEnabled = $event"
       @update:mic-enabled="micEnabled = $event"
       @update:system-audio-enabled="systemAudioEnabled = $event"
+      @update:webcam-device-id="webcamDeviceId = $event"
+      @update:mic-device-id="micDeviceId = $event"
     />
   </Story>
 </template>

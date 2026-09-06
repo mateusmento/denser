@@ -8,6 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Spinner,
   Switch,
 } from "@denser/design-system";
@@ -36,6 +41,8 @@ const emit = defineEmits<{
   "update:webcamEnabled": [value: boolean];
   "update:micEnabled": [value: boolean];
   "update:systemAudioEnabled": [value: boolean];
+  "update:webcamDeviceId": [value: string];
+  "update:micDeviceId": [value: string];
   "move-camera": [payload: { displayX: number; displayY: number; displayWidth: number; displayHeight: number }];
   "resize-camera": [
     payload: {
@@ -85,9 +92,22 @@ onUnmounted(() => {
 });
 
 function onInteractOutside(event: Event) {
+  const target = event.target;
+  if (target instanceof Element && target.closest("[data-slot='select-content']")) {
+    event.preventDefault();
+    return;
+  }
   if (props.view.phase === "recording" || props.view.phase === "finalizing") {
     event.preventDefault();
   }
+}
+
+function onWebcamDeviceSelected(value: unknown) {
+  if (typeof value === "string" && value !== "") emit("update:webcamDeviceId", value);
+}
+
+function onMicDeviceSelected(value: unknown) {
+  if (typeof value === "string" && value !== "") emit("update:micDeviceId", value);
 }
 
 function onEscapeKeydown(event: KeyboardEvent) {
@@ -100,7 +120,7 @@ function onEscapeKeydown(event: KeyboardEvent) {
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="flex max-h-[min(40rem,calc(100vh-2rem))] max-w-3xl flex-col gap-4 sm:max-w-3xl"
+      class="flex max-h-[min(40rem,calc(100vh-2rem))] max-w-3xl flex-col gap-4 overflow-y-auto sm:max-w-3xl"
       data-slot="screen-recording-setup-dialog"
       :show-close-button="view.phase !== 'recording' && view.phase !== 'finalizing'"
       @pointer-down-outside="onInteractOutside"
@@ -150,33 +170,79 @@ function onEscapeKeydown(event: KeyboardEvent) {
         </div>
       </div>
 
-      <div
-        v-if="view.phase === 'setup'"
-        class="grid gap-3 sm:grid-cols-3"
-      >
-        <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-          <Label for="sr-webcam">Webcam</Label>
-          <Switch
-            id="sr-webcam"
-            :model-value="view.webcamEnabled"
-            @update:model-value="emit('update:webcamEnabled', $event)"
-          />
+      <div v-if="view.phase === 'setup'" class="flex flex-col gap-3">
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+            <Label for="sr-webcam">Webcam</Label>
+            <Switch
+              id="sr-webcam"
+              :model-value="view.webcamEnabled"
+              @update:model-value="emit('update:webcamEnabled', $event)"
+            />
+          </div>
+          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+            <Label for="sr-mic">Microphone</Label>
+            <Switch
+              id="sr-mic"
+              :model-value="view.micEnabled"
+              @update:model-value="emit('update:micEnabled', $event)"
+            />
+          </div>
+          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+            <Label for="sr-system">System audio</Label>
+            <Switch
+              id="sr-system"
+              :model-value="view.systemAudioEnabled"
+              @update:model-value="emit('update:systemAudioEnabled', $event)"
+            />
+          </div>
         </div>
-        <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-          <Label for="sr-mic">Microphone</Label>
-          <Switch
-            id="sr-mic"
-            :model-value="view.micEnabled"
-            @update:model-value="emit('update:micEnabled', $event)"
-          />
-        </div>
-        <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-          <Label for="sr-system">System audio</Label>
-          <Switch
-            id="sr-system"
-            :model-value="view.systemAudioEnabled"
-            @update:model-value="emit('update:systemAudioEnabled', $event)"
-          />
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <Select
+            :model-value="view.webcamDeviceId ?? undefined"
+            :disabled="view.cameras.length === 0"
+            @update:model-value="onWebcamDeviceSelected($event)"
+          >
+            <SelectTrigger
+              id="sr-webcam-device"
+              class="h-8 w-full min-w-0"
+              aria-label="Camera"
+            >
+              <SelectValue :placeholder="view.cameras.length === 0 ? 'No camera found' : 'Select camera'" />
+            </SelectTrigger>
+            <SelectContent position="popper" class="z-60">
+              <SelectItem
+                v-for="camera in view.cameras"
+                :key="camera.deviceId"
+                :value="camera.deviceId"
+              >
+                {{ camera.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            :model-value="view.micDeviceId ?? undefined"
+            :disabled="view.microphones.length === 0"
+            @update:model-value="onMicDeviceSelected($event)"
+          >
+            <SelectTrigger
+              id="sr-mic-device"
+              class="h-8 w-full min-w-0"
+              aria-label="Microphone"
+            >
+              <SelectValue :placeholder="view.microphones.length === 0 ? 'No microphone found' : 'Select microphone'" />
+            </SelectTrigger>
+            <SelectContent position="popper" class="z-60">
+              <SelectItem
+                v-for="microphone in view.microphones"
+                :key="microphone.deviceId"
+                :value="microphone.deviceId"
+              >
+                {{ microphone.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

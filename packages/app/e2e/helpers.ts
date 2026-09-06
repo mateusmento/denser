@@ -14,6 +14,8 @@ export const SELECTORS = {
   cameraEditorBbox: "[data-slot='screen-recording-camera-editor-bbox']",
   setupDialog: "[data-slot='screen-recording-setup-dialog']",
   webcamSwitch: "#sr-webcam",
+  cameraSelect: "#sr-webcam-device",
+  micSelect: "#sr-mic-device",
 } as const;
 
 export async function gotoStory(page: Page, id: string, waitSelector: string) {

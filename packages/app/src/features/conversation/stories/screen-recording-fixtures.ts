@@ -7,8 +7,18 @@ export function screenRecordingSetupView(
     phase: "setup",
     webcamEnabled: true,
     webcamAvailable: true,
+    webcamDeviceId: "cam-front",
     micEnabled: true,
+    micDeviceId: "mic-built-in",
     systemAudioEnabled: false,
+    cameras: [
+      { deviceId: "cam-front", label: "FaceTime HD Camera" },
+      { deviceId: "cam-usb", label: "USB Webcam" },
+    ],
+    microphones: [
+      { deviceId: "mic-built-in", label: "MacBook Pro Microphone" },
+      { deviceId: "mic-usb", label: "USB Microphone" },
+    ],
     canStart: true,
     previewAspectRatio: 16 / 9,
     cameraLayout: { x: 24, y: 640, diameter: 180 },
