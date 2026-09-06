@@ -2,7 +2,7 @@
 import { defineMeta } from "sb-addon-vue-csf";
 import { computed, ref } from "vue";
 import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
-import type { ScreenRecordingSetupView } from "../types";
+import { screenRecordingSetupView } from "./screen-recording-fixtures";
 
 const { Story } = defineMeta({
   title: "features/conversation/ScreenRecordingSetupDialog",
@@ -15,28 +15,29 @@ const webcamEnabled = ref(true);
 const micEnabled = ref(true);
 const systemAudioEnabled = ref(false);
 
-const setupView = computed((): ScreenRecordingSetupView => ({
-  phase: "setup",
-  webcamEnabled: webcamEnabled.value,
-  webcamAvailable: true,
-  micEnabled: micEnabled.value,
-  systemAudioEnabled: systemAudioEnabled.value,
-  canStart: true,
-  previewAspectRatio: 16 / 9,
-  cameraLayout: { x: 24, y: 640, diameter: 180 },
-  frameWidth: 1920,
-  frameHeight: 1080,
-}));
+const setupView = computed(() =>
+  screenRecordingSetupView({
+    webcamEnabled: webcamEnabled.value,
+    webcamAvailable: true,
+    micEnabled: micEnabled.value,
+    systemAudioEnabled: systemAudioEnabled.value,
+  }),
+);
 
-const recordingView = computed((): ScreenRecordingSetupView => ({
-  ...setupView.value,
-  phase: "recording",
-  elapsedLabel: "0:42",
-}));
+const recordingView = computed(() =>
+  screenRecordingSetupView({
+    phase: "recording",
+    webcamEnabled: webcamEnabled.value,
+    webcamAvailable: true,
+    micEnabled: micEnabled.value,
+    systemAudioEnabled: systemAudioEnabled.value,
+    elapsedLabel: "0:42",
+  }),
+);
 </script>
 
 <template>
-  <Story as-child name="Setup">
+  <Story as-child name="Setup webcam on">
     <ScreenRecordingSetupDialog
       v-model:open="open"
       :view="setupView"
@@ -47,6 +48,31 @@ const recordingView = computed((): ScreenRecordingSetupView => ({
       @update:system-audio-enabled="systemAudioEnabled = $event"
     />
   </Story>
+
+  <Story as-child name="Setup webcam off">
+    <ScreenRecordingSetupDialog
+      v-model:open="open"
+      :view="screenRecordingSetupView({ webcamEnabled: false })"
+      :preview-canvas="null"
+      @cancel="open = false"
+      @update:webcam-enabled="webcamEnabled = $event"
+      @update:mic-enabled="micEnabled = $event"
+      @update:system-audio-enabled="systemAudioEnabled = $event"
+    />
+  </Story>
+
+  <Story as-child name="Toggle webcam overlay">
+    <ScreenRecordingSetupDialog
+      v-model:open="open"
+      :view="setupView"
+      :preview-canvas="null"
+      @cancel="open = false"
+      @update:webcam-enabled="webcamEnabled = $event"
+      @update:mic-enabled="micEnabled = $event"
+      @update:system-audio-enabled="systemAudioEnabled = $event"
+    />
+  </Story>
+
   <Story as-child name="Recording">
     <ScreenRecordingSetupDialog
       v-model:open="open"

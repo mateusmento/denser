@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { cn } from "@denser/design-system";
+import { useElementSize } from "@vueuse/core";
 import { computed, onUnmounted, ref, useTemplateRef } from "vue";
 import {
   cameraLayoutToDisplayRect,
   previewContentMetrics,
 } from "../lib/screen-recording-display-metrics";
+import { shouldShowWebcamEditor } from "../lib/screen-recording-overlay-visibility";
 import type { CameraResizeHandle } from "../lib/screen-recording-resize";
 import type { ScreenRecordingSetupView } from "../types";
 
@@ -25,6 +27,21 @@ const emit = defineEmits<{
 }>();
 
 const host = useTemplateRef<HTMLDivElement>("host");
+const { width: hostWidth, height: hostHeight } = useElementSize(host);
+
+const metrics = computed(() => {
+  if (!hostWidth.value || !hostHeight.value) return null;
+  return previewContentMetrics(
+    hostWidth.value,
+    hostHeight.value,
+    props.view.frameWidth,
+    props.view.frameHeight,
+  );
+});
+
+const showWebcamEditor = computed(() =>
+  shouldShowWebcamEditor(props.view, metrics.value != null),
+);
 
 const HANDLES: readonly { id: CameraResizeHandle; class: string }[] = [
   { id: "nw", class: "-start-1 -top-1 cursor-nwse-resize" },
@@ -37,29 +54,10 @@ const HANDLES: readonly { id: CameraResizeHandle; class: string }[] = [
   { id: "w", class: "start-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize" },
 ];
 
-const metrics = computed(() => {
-  const el = host.value;
-  if (!el) return null;
-  return previewContentMetrics(
-    el.clientWidth,
-    el.clientHeight,
-    props.view.frameWidth,
-    props.view.frameHeight,
-  );
-});
-
-const showWebcamEditor = computed(
-  () =>
-    props.view.webcamEnabled &&
-    props.view.webcamAvailable &&
-    props.view.phase === "setup" &&
-    metrics.value != null,
-);
-
 const bboxStyle = computed(() => {
   const m = metrics.value;
-  if (!showWebcamEditor.value || !m) {
-    return { display: "none" };
+  if (!m) {
+    return undefined;
   }
   const rect = cameraLayoutToDisplayRect(m, props.view.cameraLayout);
   return {
@@ -159,6 +157,7 @@ defineExpose({ host });
   >
     <div
       v-if="showWebcamEditor"
+      data-slot="screen-recording-camera-editor-bbox"
       class="pointer-events-auto absolute touch-none border-2 border-dashed border-white/90"
       :style="bboxStyle"
       @pointerdown="onMovePointerDown"

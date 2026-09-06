@@ -405,6 +405,9 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(@vue/compiler-sfc@3.5.41)(esbuild@0.28.1)(rolldown@1.2.3)(rollup@4.62.4)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(stylus@0.57.0(supports-color@10.2.2))(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@5.9.3))
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.55.1
+        version: 1.62.1
       '@storybook/addon-docs':
         specifier: ^10.5.7
         version: 10.5.7(@types/react@19.2.18)(esbuild@0.28.1)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.18)(prettier@3.9.6)(react@19.2.8))(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(stylus@0.57.0(supports-color@10.2.2))(tsx@4.23.12)(yaml@2.9.0))

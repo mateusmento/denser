@@ -109,9 +109,6 @@ export function useMessageComposerScreenRecording(options: {
   return reactive({
     open,
     openDialog,
-    controlsPopoverVisible,
-    setupView: setup.view,
-    previewCanvas: setup.previewCanvas,
     onCancel,
     onStart,
     onStop,
@@ -122,5 +119,14 @@ export function useMessageComposerScreenRecording(options: {
     setWebcamEnabled: setup.setWebcamEnabled,
     setMicEnabled: setup.setMicEnabled,
     setSystemAudioEnabled: setup.setSystemAudioEnabled,
+    get setupView() {
+      return setup.view.value;
+    },
+    get previewCanvas() {
+      return setup.previewCanvas.value;
+    },
+    get controlsPopoverVisible() {
+      return controlsPopoverVisible.value;
+    },
   });
 }

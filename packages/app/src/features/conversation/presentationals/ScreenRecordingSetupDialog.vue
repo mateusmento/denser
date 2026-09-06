@@ -158,24 +158,24 @@ function onEscapeKeydown(event: KeyboardEvent) {
           <Label for="sr-webcam">Webcam</Label>
           <Switch
             id="sr-webcam"
-            :checked="view.webcamEnabled"
-            @update:checked="emit('update:webcamEnabled', $event)"
+            :model-value="view.webcamEnabled"
+            @update:model-value="emit('update:webcamEnabled', $event)"
           />
         </div>
         <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
           <Label for="sr-mic">Microphone</Label>
           <Switch
             id="sr-mic"
-            :checked="view.micEnabled"
-            @update:checked="emit('update:micEnabled', $event)"
+            :model-value="view.micEnabled"
+            @update:model-value="emit('update:micEnabled', $event)"
           />
         </div>
         <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
           <Label for="sr-system">System audio</Label>
           <Switch
             id="sr-system"
-            :checked="view.systemAudioEnabled"
-            @update:checked="emit('update:systemAudioEnabled', $event)"
+            :model-value="view.systemAudioEnabled"
+            @update:model-value="emit('update:systemAudioEnabled', $event)"
           />
         </div>
       </div>

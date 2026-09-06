@@ -24,6 +24,7 @@ import {
   clearCompositorCanvasMount,
   mountCompositorCanvas,
 } from "../lib/screen-recording-preview-mount";
+import { shouldDrawWebcamOnCanvas } from "../lib/screen-recording-overlay-visibility";
 import type { ScreenRecordingPhase, ScreenRecordingSetupView } from "../types";
 
 function formatElapsed(seconds: number): string {
@@ -49,7 +50,7 @@ export function useScreenRecordingSetup() {
   let screenTrackEndedHandler: (() => void) | null = null;
 
   function isWebcamOverlayVisible(): boolean {
-    return webcamEnabled.value && acquired.value?.webcamVideo != null;
+    return shouldDrawWebcamOnCanvas(webcamEnabled.value, acquired.value?.webcamVideo != null);
   }
 
   const previewAspectRatio = computed(() => {
