@@ -5,15 +5,26 @@ export type CameraCircleLayout = {
   diameter: number;
 };
 
-const MIN_DIAMETER = 120;
-const MAX_DIAMETER = 220;
+const MIN_DIAMETER_FRACTION = 0.06;
+const MAX_DIAMETER_FRACTION = 0.35;
+const DEFAULT_DIAMETER_FRACTION = 0.18;
 const INSET_PX = 24;
+const ABSOLUTE_MIN_DIAMETER = 80;
+
+export function cameraDiameterBounds(frameWidth: number, frameHeight: number) {
+  const base = Math.min(frameWidth, frameHeight);
+  return {
+    min: Math.max(ABSOLUTE_MIN_DIAMETER, Math.round(base * MIN_DIAMETER_FRACTION)),
+    max: Math.round(base * MAX_DIAMETER_FRACTION),
+  };
+}
 
 export function defaultCameraLayout(frameWidth: number, frameHeight: number): CameraCircleLayout {
+  const { min, max } = cameraDiameterBounds(frameWidth, frameHeight);
   const diameter = clamp(
-    Math.round(Math.min(frameWidth, frameHeight) * 0.18),
-    MIN_DIAMETER,
-    MAX_DIAMETER,
+    Math.round(Math.min(frameWidth, frameHeight) * DEFAULT_DIAMETER_FRACTION),
+    min,
+    max,
   );
   return {
     x: INSET_PX,
@@ -27,7 +38,8 @@ export function clampCameraLayout(
   frameWidth: number,
   frameHeight: number,
 ): CameraCircleLayout {
-  const diameter = clamp(layout.diameter, MIN_DIAMETER, Math.min(MAX_DIAMETER, frameWidth, frameHeight));
+  const { min, max } = cameraDiameterBounds(frameWidth, frameHeight);
+  const diameter = clamp(layout.diameter, min, Math.min(max, frameWidth, frameHeight));
   const maxX = Math.max(0, frameWidth - diameter);
   const maxY = Math.max(0, frameHeight - diameter);
   return {
@@ -35,6 +47,46 @@ export function clampCameraLayout(
     x: clamp(layout.x, 0, maxX),
     y: clamp(layout.y, 0, maxY),
   };
+}
+
+export function readVideoIntrinsicSize(
+  video: CanvasImageSource,
+  fallbackWidth: number,
+  fallbackHeight: number,
+): { width: number; height: number } {
+  const element = video as HTMLVideoElement;
+  const width = element.videoWidth || fallbackWidth;
+  const height = element.videoHeight || fallbackHeight;
+  return { width, height };
+}
+
+export function canDrawVideoFrame(video: CanvasImageSource): boolean {
+  const element = video as HTMLVideoElement;
+  return (
+    element.videoWidth > 0 &&
+    element.videoHeight > 0 &&
+    element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+  );
+}
+
+function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  image: CanvasImageSource,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const { width: sourceWidth, height: sourceHeight } = readVideoIntrinsicSize(image, width, height);
+  if (!sourceWidth || !sourceHeight) return;
+
+  const scale = Math.max(width / sourceWidth, height / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  const drawX = x + (width - drawWidth) / 2;
+  const drawY = y + (height - drawHeight) / 2;
+
+  ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, drawX, drawY, drawWidth, drawHeight);
 }
 
 export function displayPointToCapture(
@@ -59,10 +111,16 @@ export function drawCompositeFrame(
   frameHeight: number,
   webcamVisible: boolean,
 ) {
-  ctx.clearRect(0, 0, frameWidth, frameHeight);
-  ctx.drawImage(screenVideo, 0, 0, frameWidth, frameHeight);
+  if (!canDrawVideoFrame(screenVideo)) return;
 
-  if (!webcamVisible || !webcamVideo) return;
+  const canvasWidth = ctx.canvas.width;
+  const canvasHeight = ctx.canvas.height;
+  if (!canvasWidth || !canvasHeight) return;
+
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  ctx.drawImage(screenVideo, 0, 0, canvasWidth, canvasHeight);
+
+  if (!webcamVisible || !webcamVideo || !canDrawVideoFrame(webcamVideo)) return;
 
   const { x, y, diameter } = layout;
   const radius = diameter / 2;
@@ -73,15 +131,7 @@ export function drawCompositeFrame(
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.clip();
-  ctx.drawImage(webcamVideo, x, y, diameter, diameter);
-  ctx.restore();
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,255,255,0.55)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  drawImageCover(ctx, webcamVideo, x, y, diameter, diameter);
   ctx.restore();
 }
 

@@ -1,6 +1,7 @@
 import { toast } from "@denser/design-system";
-import { ref, watch } from "vue";
-import { recordingFilename } from "../lib/screen-recording-capture";
+import { computed, reactive, ref, watch } from "vue";
+import type { CameraCircleLayout } from "../lib/screen-recording-composite";
+import type { CameraResizeHandle } from "../lib/screen-recording-resize";
 import { useScreenRecordingSetup } from "./useScreenRecordingSetup";
 
 export function useMessageComposerScreenRecording(options: {
@@ -11,16 +12,36 @@ export function useMessageComposerScreenRecording(options: {
   const setup = useScreenRecordingSetup();
 
   watch(open, (isOpen, wasOpen) => {
-    if (isOpen && !wasOpen) {
-      void setup.begin();
-    }
-    if (!isOpen && wasOpen && setup.phase.value !== "idle") {
+    if (!isOpen && wasOpen) {
+      if (setup.phase.value === "recording" || setup.phase.value === "finalizing") return;
       setup.cancel();
     }
   });
 
-  function openDialog() {
+  watch(
+    () => setup.phase.value,
+    (phase, previous) => {
+      if (phase === "idle" && previous != null && previous !== "idle" && open.value) {
+        open.value = false;
+      }
+    },
+  );
+
+  const controlsPopoverVisible = computed(
+    () =>
+      (setup.phase.value === "recording" || setup.phase.value === "finalizing") &&
+      !open.value,
+  );
+
+  async function openDialog() {
     if (options.disabled?.()) return;
+    if (setup.phase.value === "idle") {
+      const started = await setup.begin();
+      if (!started) {
+        if (setup.view.value.error) toast(setup.view.value.error);
+        return;
+      }
+    }
     open.value = true;
   }
 
@@ -31,17 +52,16 @@ export function useMessageComposerScreenRecording(options: {
 
   async function onStart() {
     await setup.startRecording();
+    open.value = false;
   }
 
   async function onStop() {
-    const blob = await setup.stopRecording();
+    const file = await setup.stopRecording();
     open.value = false;
-    if (!blob || blob.size === 0) {
+    if (!file || file.size === 0) {
       toast("Recording failed");
       return;
     }
-    const mimeType = blob.type || "video/webm";
-    const file = new File([blob], recordingFilename(mimeType), { type: mimeType });
     options.stageFiles([file]);
   }
 
@@ -64,17 +84,43 @@ export function useMessageComposerScreenRecording(options: {
     });
   }
 
-  return {
+  function onResizeCamera(payload: {
+    handle: CameraResizeHandle;
+    deltaCaptureX: number;
+    deltaCaptureY: number;
+    baseLayout?: CameraCircleLayout;
+  }) {
+    setup.resizeCamera(
+      payload.handle,
+      payload.deltaCaptureX,
+      payload.deltaCaptureY,
+      payload.baseLayout,
+    );
+  }
+
+  function onMinimize() {
+    open.value = false;
+  }
+
+  function onOpenDialogDuringRecording() {
+    if (setup.phase.value === "recording") open.value = true;
+  }
+
+  return reactive({
     open,
     openDialog,
+    controlsPopoverVisible,
     setupView: setup.view,
     previewCanvas: setup.previewCanvas,
     onCancel,
     onStart,
     onStop,
     onMoveCamera,
-    webcamEnabled: setup.webcamEnabled,
-    micEnabled: setup.micEnabled,
-    systemAudioEnabled: setup.systemAudioEnabled,
-  };
+    onResizeCamera,
+    onMinimize,
+    onOpenDialogDuringRecording,
+    setWebcamEnabled: setup.setWebcamEnabled,
+    setMicEnabled: setup.setMicEnabled,
+    setSystemAudioEnabled: setup.setSystemAudioEnabled,
+  });
 }

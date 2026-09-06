@@ -161,6 +161,7 @@ export type ScreenRecordingSetupView = {
   phase: ScreenRecordingPhase;
   error?: string;
   webcamEnabled: boolean;
+  webcamAvailable: boolean;
   micEnabled: boolean;
   systemAudioEnabled: boolean;
   canStart: boolean;

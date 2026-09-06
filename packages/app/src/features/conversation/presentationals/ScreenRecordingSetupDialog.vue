@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   Button,
-  cn,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -12,7 +11,14 @@ import {
   Spinner,
   Switch,
 } from "@denser/design-system";
-import { computed, onUnmounted, ref, useTemplateRef, watch } from "vue";
+import { nextTick, onUnmounted, useTemplateRef, watch } from "vue";
+import type { CameraResizeHandle } from "../lib/screen-recording-resize";
+import {
+  createDisplayCanvas,
+  mountPreviewCanvas,
+  startPreviewMirror,
+} from "../lib/screen-recording-preview-mount";
+import ScreenRecordingCameraEditor from "./ScreenRecordingCameraEditor.vue";
 import type { ScreenRecordingSetupView } from "../types";
 
 const open = defineModel<boolean>("open", { required: true });
@@ -26,108 +32,69 @@ const emit = defineEmits<{
   cancel: [];
   start: [];
   stop: [];
+  minimize: [];
   "update:webcamEnabled": [value: boolean];
   "update:micEnabled": [value: boolean];
   "update:systemAudioEnabled": [value: boolean];
   "move-camera": [payload: { displayX: number; displayY: number; displayWidth: number; displayHeight: number }];
+  "resize-camera": [
+    payload: {
+      handle: CameraResizeHandle;
+      deltaCaptureX: number;
+      deltaCaptureY: number;
+      baseLayout: ScreenRecordingSetupView["cameraLayout"];
+    },
+  ];
 }>();
 
 const previewHost = useTemplateRef<HTMLDivElement>("previewHost");
-const dragging = ref(false);
-const dragOffset = ref({ x: 0, y: 0 });
+let stopMirror: (() => void) | null = null;
+
+function teardownMirror() {
+  stopMirror?.();
+  stopMirror = null;
+}
 
 watch(
-  () => props.previewCanvas,
-  (canvas) => {
-    const host = previewHost.value;
-    if (!host) return;
-    host.replaceChildren();
-    if (canvas) {
-      canvas.className = "size-full object-contain";
-      canvas.setAttribute("data-screen-recording-preview", "");
-      host.appendChild(canvas);
-    }
+  () => [open.value, props.previewCanvas, props.view.phase] as const,
+  ([isOpen, canvas, phase]) => {
+    teardownMirror();
+    if (!isOpen || !canvas) return;
+
+    nextTick(() => {
+      const host = previewHost.value;
+      if (!host || !canvas) return;
+
+      if (phase === "setup") {
+        mountPreviewCanvas(host, canvas, "size-full object-contain");
+        return;
+      }
+
+      if (phase === "recording" || phase === "finalizing") {
+        const displayCanvas = createDisplayCanvas("size-full object-contain");
+        mountPreviewCanvas(host, displayCanvas, "size-full object-contain");
+        stopMirror = startPreviewMirror(() => props.previewCanvas, displayCanvas);
+      }
+    });
   },
-  { flush: "post" },
+  { flush: "post", immediate: true },
 );
-
-const overlayStyle = computed(() => {
-  const host = previewHost.value;
-  const { cameraLayout, frameWidth, frameHeight } = props.view;
-  if (!host || !frameWidth || !frameHeight) return { display: "none" };
-  const rect = host.getBoundingClientRect();
-  const displayWidth = host.clientWidth;
-  const displayHeight = host.clientHeight;
-  if (!displayWidth || !displayHeight) return { display: "none" };
-
-  const scale = Math.min(displayWidth / frameWidth, displayHeight / frameHeight);
-  const contentWidth = frameWidth * scale;
-  const contentHeight = frameHeight * scale;
-  const offsetX = (displayWidth - contentWidth) / 2;
-  const offsetY = (displayHeight - contentHeight) / 2;
-
-  const left = offsetX + cameraLayout.x * scale;
-  const top = offsetY + cameraLayout.y * scale;
-  const size = cameraLayout.diameter * scale;
-
-  return {
-    left: `${left}px`,
-    top: `${top}px`,
-    width: `${size}px`,
-    height: `${size}px`,
-  };
-});
-
-const showCameraHandle = computed(
-  () =>
-    props.view.webcamEnabled &&
-    (props.view.phase === "setup" || props.view.phase === "recording"),
-);
-
-function onPointerDown(event: PointerEvent) {
-  if (!showCameraHandle.value || props.view.phase === "recording") return;
-  const target = event.currentTarget as HTMLElement;
-  target.setPointerCapture(event.pointerId);
-  dragging.value = true;
-  const host = previewHost.value;
-  if (!host) return;
-  const rect = host.getBoundingClientRect();
-  const layout = props.view.cameraLayout;
-  const scale = Math.min(host.clientWidth / props.view.frameWidth, host.clientHeight / props.view.frameHeight);
-  const offsetX = (host.clientWidth - props.view.frameWidth * scale) / 2;
-  const offsetY = (host.clientHeight - props.view.frameHeight * scale) / 2;
-  const circleLeft = offsetX + layout.x * scale;
-  const circleTop = offsetY + layout.y * scale;
-  dragOffset.value = {
-    x: event.clientX - rect.left - circleLeft,
-    y: event.clientY - rect.top - circleTop,
-  };
-}
-
-function onPointerMove(event: PointerEvent) {
-  if (!dragging.value) return;
-  const host = previewHost.value;
-  if (!host) return;
-  const displayX = event.clientX - host.getBoundingClientRect().left - dragOffset.value.x;
-  const displayY = event.clientY - host.getBoundingClientRect().top - dragOffset.value.y;
-  emit("move-camera", {
-    displayX,
-    displayY,
-    displayWidth: host.clientWidth,
-    displayHeight: host.clientHeight,
-  });
-}
-
-function onPointerUp(event: PointerEvent) {
-  if (!dragging.value) return;
-  dragging.value = false;
-  const target = event.currentTarget as HTMLElement;
-  target.releasePointerCapture(event.pointerId);
-}
 
 onUnmounted(() => {
-  dragging.value = false;
+  teardownMirror();
 });
+
+function onInteractOutside(event: Event) {
+  if (props.view.phase === "recording" || props.view.phase === "finalizing") {
+    event.preventDefault();
+  }
+}
+
+function onEscapeKeydown(event: KeyboardEvent) {
+  if (props.view.phase === "recording" || props.view.phase === "finalizing") {
+    event.preventDefault();
+  }
+}
 </script>
 
 <template>
@@ -135,14 +102,20 @@ onUnmounted(() => {
     <DialogContent
       class="flex max-h-[min(40rem,calc(100vh-2rem))] max-w-3xl flex-col gap-4 sm:max-w-3xl"
       data-slot="screen-recording-setup-dialog"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointercancel="onPointerUp"
+      :show-close-button="view.phase !== 'recording' && view.phase !== 'finalizing'"
+      @pointer-down-outside="onInteractOutside"
+      @interact-outside="onInteractOutside"
+      @escape-key-down="onEscapeKeydown"
     >
       <DialogHeader>
         <DialogTitle>Record screen</DialogTitle>
         <DialogDescription>
-          Position your camera, then record. The preview matches the exported video.
+          <template v-if="view.phase === 'recording'">
+            Recording in progress. Minimize to use the floating controls while you present.
+          </template>
+          <template v-else>
+            Position and resize your camera, then record. The preview matches the exported video.
+          </template>
         </DialogDescription>
       </DialogHeader>
 
@@ -154,20 +127,18 @@ onUnmounted(() => {
       >
         <div ref="previewHost" class="relative flex size-full items-center justify-center bg-black/80" />
 
-        <div
-          v-if="showCameraHandle"
-          class="absolute touch-none rounded-full border-2 border-white/70 shadow-lg"
-          :class="cn(view.phase === 'setup' && 'cursor-grab active:cursor-grabbing')"
-          :style="overlayStyle"
-          @pointerdown="onPointerDown"
+        <ScreenRecordingCameraEditor
+          :view="view"
+          @move-camera="emit('move-camera', $event)"
+          @resize-camera="emit('resize-camera', $event)"
         />
 
         <div
-          v-if="view.phase === 'acquiring' || view.phase === 'finalizing'"
+          v-if="view.phase === 'finalizing'"
           class="absolute inset-0 flex items-center justify-center bg-background/60"
         >
           <Spinner class="size-8" />
-          <span class="sr-only">{{ view.phase === "finalizing" ? "Processing" : "Starting" }}</span>
+          <span class="sr-only">Processing</span>
         </div>
 
         <div
@@ -210,7 +181,15 @@ onUnmounted(() => {
       </div>
 
       <DialogFooter class="gap-2 sm:justify-between">
-        <Button variant="ghost" @click="emit('cancel')">Cancel</Button>
+        <Button
+          v-if="view.phase !== 'recording'"
+          variant="ghost"
+          @click="emit('cancel')"
+        >
+          Cancel
+        </Button>
+        <div v-else />
+
         <div class="flex gap-2">
           <Button
             v-if="view.phase === 'setup'"
@@ -219,13 +198,10 @@ onUnmounted(() => {
           >
             Start recording
           </Button>
-          <Button
-            v-else-if="view.phase === 'recording'"
-            variant="destructive"
-            @click="emit('stop')"
-          >
-            Stop
-          </Button>
+          <template v-else-if="view.phase === 'recording'">
+            <Button variant="outline" @click="emit('minimize')">Minimize</Button>
+            <Button variant="destructive" @click="emit('stop')">Stop</Button>
+          </template>
         </div>
       </DialogFooter>
     </DialogContent>

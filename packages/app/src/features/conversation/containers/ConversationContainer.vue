@@ -22,6 +22,7 @@ import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
 import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
+import ScreenRecordingControlsPopover from "../presentationals/ScreenRecordingControlsPopover.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
 import type { ComposerActionId, ConversationIntroView, ConversationMessageView, ScheduleCommitPayload } from "../types";
@@ -145,19 +146,7 @@ const channelAttachments = useComposerAttachments({
   body: channelDraft,
 });
 
-const {
-  open: screenRecordingOpen,
-  setupView: screenRecordingView,
-  previewCanvas: screenRecordingPreviewCanvas,
-  openDialog: openScreenRecording,
-  onCancel: onScreenRecordingCancel,
-  onStart: onScreenRecordingStart,
-  onStop: onScreenRecordingStop,
-  onMoveCamera: onScreenRecordingMoveCamera,
-  webcamEnabled: screenRecordingWebcamEnabled,
-  micEnabled: screenRecordingMicEnabled,
-  systemAudioEnabled: screenRecordingSystemAudioEnabled,
-} = useMessageComposerScreenRecording({
+const screenRecording = useMessageComposerScreenRecording({
   stageFiles: (files) => channelAttachments.stageFiles(files),
   disabled: () => !conversationId.value,
 });
@@ -405,7 +394,7 @@ async function onThreadRetry() {
 function onAction(id: ComposerActionId) {
   if (id === "attach" || id === "image") return;
   if (id === "record") {
-    openScreenRecording();
+    screenRecording.openDialog();
     return;
   }
   toast(`Coming soon · ${id}`);
@@ -515,19 +504,28 @@ async function onThreadJumpToLatest() {
         @dismiss-upload="threadAttachments.dismissFailed"
       />
     </template>
-
-    <ScreenRecordingSetupDialog
-      v-model:open="screenRecordingOpen"
-      :view="screenRecordingView"
-      :preview-canvas="screenRecordingPreviewCanvas"
-      @cancel="onScreenRecordingCancel()"
-      @start="onScreenRecordingStart()"
-      @stop="onScreenRecordingStop()"
-      @move-camera="onScreenRecordingMoveCamera($event)"
-      @update:webcam-enabled="screenRecordingWebcamEnabled = $event"
-      @update:mic-enabled="screenRecordingMicEnabled = $event"
-      @update:system-audio-enabled="screenRecordingSystemAudioEnabled = $event"
-    />
-
   </ConversationSurface>
+
+  <ScreenRecordingSetupDialog
+    v-model:open="screenRecording.open"
+    :view="screenRecording.setupView"
+    :preview-canvas="screenRecording.previewCanvas"
+    @cancel="screenRecording.onCancel()"
+    @start="screenRecording.onStart()"
+    @stop="screenRecording.onStop()"
+    @minimize="screenRecording.onMinimize()"
+    @move-camera="screenRecording.onMoveCamera($event)"
+    @resize-camera="screenRecording.onResizeCamera($event)"
+    @update:webcam-enabled="screenRecording.setWebcamEnabled($event)"
+    @update:mic-enabled="screenRecording.setMicEnabled($event)"
+    @update:system-audio-enabled="screenRecording.setSystemAudioEnabled($event)"
+  />
+
+  <ScreenRecordingControlsPopover
+    :visible="screenRecording.controlsPopoverVisible"
+    :view="screenRecording.setupView"
+    :preview-canvas="screenRecording.previewCanvas"
+    @stop="screenRecording.onStop()"
+    @open-dialog="screenRecording.onOpenDialogDuringRecording()"
+  />
 </template>

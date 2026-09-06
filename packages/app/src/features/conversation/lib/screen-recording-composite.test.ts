@@ -5,6 +5,15 @@ import {
   defaultCameraLayout,
   displayPointToCapture,
 } from "./screen-recording-composite.js";
+import { resizeCameraLayout } from "./screen-recording-resize.js";
+
+test("resizeCameraLayout grows from south-east handle", () => {
+  const start = { x: 24, y: 24, diameter: 160 };
+  const next = resizeCameraLayout("se", start, 40, 40, 1920, 1080);
+  assert.equal(next.x, 24);
+  assert.equal(next.y, 24);
+  assert.equal(next.diameter, 200);
+});
 
 test("defaultCameraLayout places circle bottom-left at 1080p", () => {
   const layout = defaultCameraLayout(1920, 1080);
@@ -15,8 +24,8 @@ test("defaultCameraLayout places circle bottom-left at 1080p", () => {
 
 test("clampCameraLayout keeps circle inside frame", () => {
   const clamped = clampCameraLayout({ x: 9000, y: -50, diameter: 400 }, 800, 600);
-  assert.equal(clamped.diameter, 220);
-  assert.equal(clamped.x, 580);
+  assert.equal(clamped.diameter, 210);
+  assert.equal(clamped.x, 590);
   assert.equal(clamped.y, 0);
 });
 
