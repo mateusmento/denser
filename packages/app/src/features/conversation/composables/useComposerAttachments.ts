@@ -1,4 +1,4 @@
-import type { ArtifactId, AttachmentDto, AttachmentId, MessageId } from "@denser/contracts";
+import type { ArtifactId, AttachmentDto, AttachmentId, MessageDraftDto, MessageId } from "@denser/contracts";
 import { ApiMessageDraftConflictError } from "@denser/api-client";
 import { computed, shallowRef, watch } from "vue";
 import { apiClient } from "@/lib/api";
@@ -43,6 +43,7 @@ export function useComposerAttachments(options: {
   threadId?: ReadonlyRefOrGetter<MessageId | null | undefined>;
   body: ReadonlyRefOrGetter<JSONContent>;
   disabled?: ReadonlyRefOrGetter<boolean>;
+  syncDraftMetadata?: (draft: MessageDraftDto | null) => void;
 }) {
   const conversationId = toReadonlyRef(options.conversationId);
   const threadId = toReadonlyRef(options.threadId ?? (() => null));
@@ -132,9 +133,28 @@ export function useComposerAttachments(options: {
       const inline = collectImageAttachmentIdsFromDoc(body.value);
       staged.value = attachments.filter((attachment) => !inline.includes(attachment.id));
       draftVersion.value = draftResult.draft?.version ?? 0;
+      options.syncDraftMetadata?.(draftResult.draft);
     } catch {
       staged.value = [];
       draftVersion.value = 0;
+    }
+  }
+
+  async function refreshDraftFromServer() {
+    const id = conversationId.value;
+    if (!id) return;
+
+    try {
+      const [{ attachments }, draftResult] = await Promise.all([
+        apiClient.listDraftAttachments(id, { threadId: threadId.value ?? null }),
+        apiClient.getMessageDraft(id, { threadId: threadId.value ?? null }),
+      ]);
+      draftVersion.value = draftResult.draft?.version ?? 0;
+      options.syncDraftMetadata?.(draftResult.draft);
+      const inline = collectImageAttachmentIdsFromDoc(body.value);
+      staged.value = attachments.filter((attachment) => !inline.includes(attachment.id));
+    } catch {
+      // Keep local staged tiles when refresh fails.
     }
   }
 
@@ -170,12 +190,14 @@ export function useComposerAttachments(options: {
         version: draftVersion.value,
       });
       draftVersion.value = result.draft.version;
+      options.syncDraftMetadata?.(result.draft);
       staged.value = result.draft.attachments.filter(
         (attachment) => !inlineAttachmentIds.value.includes(attachment.id),
       );
     } catch (error) {
       if (error instanceof ApiMessageDraftConflictError) {
         draftVersion.value = error.draft?.version ?? draftVersion.value;
+        options.syncDraftMetadata?.(error.draft ?? null);
         if (error.draft) {
           staged.value = error.draft.attachments.filter(
             (attachment) => !inlineAttachmentIds.value.includes(attachment.id),
@@ -202,6 +224,7 @@ export function useComposerAttachments(options: {
   async function uploadInlineImage(file: File): Promise<{ src: string; attachmentId: AttachmentId }> {
     const attachment = await uploadOne(file);
     staged.value = [...staged.value, attachment];
+    await refreshDraftFromServer();
     return { src: attachment.url, attachmentId: attachment.id };
   }
 
@@ -247,6 +270,7 @@ export function useComposerAttachments(options: {
 
           staged.value = [...staged.value, attachment];
           removePending(entry.clientId);
+          await refreshDraftFromServer();
         } catch (error) {
           if (error instanceof ConversationUploadAbortError) {
             removePending(entry.clientId);

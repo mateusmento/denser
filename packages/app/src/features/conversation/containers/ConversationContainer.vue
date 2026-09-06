@@ -144,6 +144,7 @@ watch(conversationId, () => {
 const channelAttachments = useComposerAttachments({
   conversationId,
   body: channelDraft,
+  syncDraftMetadata: (draft) => channelDraftSync.syncServerDraftMetadata(draft),
 });
 
 const screenRecording = useMessageComposerScreenRecording({
@@ -155,6 +156,7 @@ const threadAttachments = useComposerAttachments({
   conversationId,
   threadId: activeThreadId,
   body: threadDraft,
+  syncDraftMetadata: (draft) => threadDraftSync.syncServerDraftMetadata(draft),
 });
 
 const channelHeader = computed(() => {
@@ -245,22 +247,25 @@ async function onChannelSend() {
     return;
   }
 
-  const attachmentIds = channelAttachments.collectAttachmentIds(channelDraft.value);
+  channelDraftSync.cancelPendingDraftPersist();
+  const body = cloneDoc(channelDraft.value);
+  const attachmentIds = channelAttachments.collectAttachmentIds(body);
+  const attachmentDtos = channelAttachments.collectAttachmentDtos(body);
 
-  if (conversationSync.isCompose.value) {
-    await conversationSync.sendInitialMessage(channelDraft.value);
-    await channelDraftSync.clearDraft(channelDraft);
-    channelAttachments.clearAfterSend();
+  try {
+    if (conversationSync.isCompose.value) {
+      await conversationSync.sendInitialMessage(body);
+    } else {
+      await messagesSync.send(body, attachmentIds, attachmentDtos);
+    }
+  } catch {
+    toast("Couldn't send message");
     return;
+  } finally {
+    channelAttachments.clearAfterSend();
   }
 
-  await messagesSync.send(
-    channelDraft.value,
-    attachmentIds,
-    channelAttachments.collectAttachmentDtos(channelDraft.value),
-  );
   await channelDraftSync.clearDraft(channelDraft);
-  channelAttachments.clearAfterSend();
 }
 
 async function onThreadSend() {
@@ -277,9 +282,19 @@ async function onThreadSend() {
     return;
   }
 
-  await threadSync.send(threadDraft.value);
+  threadDraftSync.cancelPendingDraftPersist();
+  const body = cloneDoc(threadDraft.value);
+
+  try {
+    await threadSync.send(body);
+  } catch {
+    toast("Couldn't send reply");
+    return;
+  } finally {
+    threadAttachments.clearAfterSend();
+  }
+
   await threadDraftSync.clearDraft(threadDraft);
-  threadAttachments.clearAfterSend();
 }
 
 function onCancelChannelEdit() {

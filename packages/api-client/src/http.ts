@@ -620,6 +620,9 @@ export class ApiClient {
       const conflict = body as { draft?: MessageDraftDto | null };
       throw new ApiMessageDraftConflictError(conflict);
     }
+    if (res.status === 404) {
+      return;
+    }
     if (!res.ok) {
       throw new ApiError("delete message draft failed", res.status, body);
     }

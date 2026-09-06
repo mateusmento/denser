@@ -29,9 +29,12 @@ import {
   applyMessageCreated,
   applyMessageDeleted,
   applyMessageUpdated,
+  canLoadNewerMessages,
   flattenMessagePages,
   MESSAGE_MAX_PAGES,
   MESSAGE_PAGE_SIZE,
+  messageIdentityKeys,
+  messagesAreAlreadyKnown,
   type MessagesPageParam,
 } from "../lib/message-cache";
 import { applyReactionUpdated, toggleReactionOptimistic } from "../lib/reaction-cache";
@@ -72,11 +75,13 @@ export function useConversationMessages(
   const aroundFocus = ref<MessageId | null>(null);
   const failedClientId = ref<ClientId | null>(null);
   const hasAppliedOpenAnchor = ref(false);
+  const reachedLiveEdge = ref(false);
 
   watch(id, () => {
     aroundFocus.value = null;
     failedClientId.value = null;
     hasAppliedOpenAnchor.value = false;
+    reachedLiveEdge.value = false;
   });
 
   watch(
@@ -85,6 +90,7 @@ export function useConversationMessages(
       if (anchor === undefined || hasAppliedOpenAnchor.value) return;
       aroundFocus.value = anchor;
       hasAppliedOpenAnchor.value = true;
+      reachedLiveEdge.value = false;
     },
     { immediate: true },
   );
@@ -100,6 +106,10 @@ export function useConversationMessages(
       const conversation = id.value;
       if (!conversation) throw new Error("no conversation");
 
+      if (pageParam?.direction === "prev" && reachedLiveEdge.value) {
+        return { messages: [], nextCursor: null, prevCursor: null };
+      }
+
       const response =
         pageParam === null
           ? aroundFocus.value
@@ -114,16 +124,32 @@ export function useConversationMessages(
               direction: pageParam.direction,
             });
 
+      if (pageParam === null && !aroundFocus.value) {
+        reachedLiveEdge.value = true;
+      }
+
       upsertMany(messagesCollection, response.messages);
       return response;
     },
     initialPageParam: null as MessagesPageParam,
     getNextPageParam: (last): MessagesPageParam | undefined =>
       last.nextCursor ? { cursor: last.nextCursor, direction: "next" } : undefined,
-    getPreviousPageParam: (first): MessagesPageParam | undefined =>
-      first.prevCursor ? { cursor: first.prevCursor, direction: "prev" } : undefined,
+    getPreviousPageParam: (first): MessagesPageParam | undefined => {
+      if (reachedLiveEdge.value) return undefined;
+      return first.prevCursor ? { cursor: first.prevCursor, direction: "prev" } : undefined;
+    },
     maxPages: MESSAGE_MAX_PAGES,
   });
+
+  watch(
+    () => [query.isSuccess.value, aroundFocus.value, query.data.value?.pages.length] as const,
+    ([success, focus, pageCount]) => {
+      if (success && !focus && pageCount === 1) {
+        reachedLiveEdge.value = true;
+      }
+    },
+    { immediate: true },
+  );
 
   const dtos = computed(() => flattenMessagePages(query.data.value));
 
@@ -141,7 +167,10 @@ export function useConversationMessages(
   );
   const nextPage = computed(() =>
     toNextPageState({
-      hasNext: Boolean(query.hasPreviousPage.value),
+      hasNext: canLoadNewerMessages({
+        reachedLiveEdge: reachedLiveEdge.value,
+        firstPagePrevCursor: query.data.value?.pages[0]?.prevCursor,
+      }),
       loadingNext: query.isFetchingPreviousPage.value,
     }),
   );
@@ -163,6 +192,7 @@ export function useConversationMessages(
     if (!id.value || !next) return;
     queryClient.setQueryData(messagesQueryKey.value, next);
     upsertMany(messagesCollection, flattenMessagePages(next));
+    if (!aroundFocus.value) reachedLiveEdge.value = true;
   }
 
   function ingestMessage(event: MessageDto) {
@@ -370,6 +400,7 @@ export function useConversationMessages(
     if (!id.value) return;
     hasAppliedOpenAnchor.value = true;
     aroundFocus.value = messageId;
+    reachedLiveEdge.value = false;
     await nextTick();
     await recenterWindow();
   }
@@ -378,6 +409,7 @@ export function useConversationMessages(
     if (!id.value) return;
     hasAppliedOpenAnchor.value = true;
     aroundFocus.value = null;
+    reachedLiveEdge.value = true;
     await nextTick();
     await recenterWindow();
   }
@@ -434,7 +466,19 @@ export function useConversationMessages(
     showJumpToLatest,
     failed: computed(() => failedClientId.value != null),
     loadPrevious: () => query.fetchNextPage(),
-    loadNext: () => query.fetchPreviousPage(),
+    loadNext: async () => {
+      if (reachedLiveEdge.value) return;
+      const knownKeys = new Set(dtos.value.flatMap((message) => messageIdentityKeys(message)));
+      const result = await query.fetchPreviousPage();
+      const prepended = result.data?.pages[0]?.messages ?? [];
+      if (
+        prepended.length === 0 ||
+        prepended.length < MESSAGE_PAGE_SIZE ||
+        messagesAreAlreadyKnown(prepended, knownKeys)
+      ) {
+        reachedLiveEdge.value = true;
+      }
+    },
     jumpAround,
     jumpToLatest,
     send,

@@ -272,7 +272,7 @@ export async function deleteMessageDraft(
     threadId,
   });
   if (!row) {
-    return { ok: false as const, reason: "not_found" as const };
+    return { ok: true as const };
   }
 
   if (version !== undefined && version !== row.version) {

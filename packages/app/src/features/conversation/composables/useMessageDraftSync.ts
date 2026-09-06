@@ -1,21 +1,15 @@
 import type { ArtifactId, MessageDraftDto, MessageId } from "@denser/contracts";
-import { ApiMessageDraftConflictError } from "@denser/api-client";
+import { ApiError, ApiMessageDraftConflictError } from "@denser/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDebounceFn } from "@vueuse/core";
 import { computed, ref, watch, type Ref } from "vue";
 import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
-import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
+import { emptyDoc, type JSONContent } from "@/modules/rich-text/types";
 import { isEmptyComposerBody } from "../lib/composer-content";
 
-function isComposerDoc(body: unknown): body is JSONContent {
-  return typeof body === "object" && body !== null && (body as JSONContent).type === "doc";
-}
-
-function adoptDraftBody(body: unknown): JSONContent {
-  return isComposerDoc(body) ? cloneDoc(body) : emptyDoc();
-}
+import { adoptDraftBody, reconcileDraftConflict } from "../lib/draft-conflict";
 
 /** Draft key thread segment: `null` = main composer; else thread root message id (ticket 07). */
 export function messageDraftThreadKey(threadId: MessageId | null | undefined): string | null {
@@ -83,6 +77,18 @@ export function useMessageDraftSync(
     },
   });
 
+  function syncServerDraftMetadata(draft: MessageDraftDto | null) {
+    if (draft) {
+      version.value = draft.version;
+      draftId.value = draft.id;
+      queryClient.setQueryData(draftQueryKey.value, draft);
+      return;
+    }
+    version.value = 0;
+    draftId.value = null;
+    queryClient.setQueryData(draftQueryKey.value, null);
+  }
+
   function applyServerDraft(draft: MessageDraftDto | null, body: Ref<JSONContent>) {
     if (draft) {
       version.value = draft.version;
@@ -95,19 +101,31 @@ export function useMessageDraftSync(
     body.value = emptyDoc();
   }
 
+  let cancelPendingPersist: (() => void) | undefined;
+  let draftPersistSuspended = false;
+
+  function isDraftDeleteNotFound(error: unknown): boolean {
+    return error instanceof ApiError && error.status === 404;
+  }
+
   function bindDraft(body: Ref<JSONContent>) {
     let syncing = false;
     const dirty = ref(false);
 
     function adoptConflictDraft(error: ApiMessageDraftConflictError, editor: Ref<JSONContent>) {
       syncing = true;
-      applyServerDraft(error.draft, editor);
-      dirty.value = false;
+      const next = reconcileDraftConflict(error.draft, { dirty: dirty.value });
+      version.value = next.version;
+      draftId.value = next.draftId;
+      if (next.replaceBody) {
+        editor.value = next.replaceBody;
+        dirty.value = false;
+      }
       syncing = false;
     }
 
     const schedulePersist = useDebounceFn(async (editor: Ref<JSONContent>) => {
-      if (!enabled.value || !conversation.value) return;
+      if (!enabled.value || !conversation.value || draftPersistSuspended) return;
 
       if (isEmptyComposerBody(editor.value)) {
         if (draftId.value) {
@@ -116,6 +134,8 @@ export function useMessageDraftSync(
           } catch (error) {
             if (error instanceof ApiMessageDraftConflictError) {
               adoptConflictDraft(error, editor);
+            } else if (!isDraftDeleteNotFound(error)) {
+              throw error;
             }
           }
         }
@@ -136,6 +156,8 @@ export function useMessageDraftSync(
         }
       }
     }, 400);
+
+    cancelPendingPersist = () => schedulePersist.cancel();
 
     watch(
       draftQueryKey,
@@ -174,30 +196,48 @@ export function useMessageDraftSync(
     );
   }
 
+  function cancelPendingDraftPersist() {
+    cancelPendingPersist?.();
+  }
+
   async function clearDraft(body?: Ref<JSONContent>) {
+    cancelPendingDraftPersist();
+    draftPersistSuspended = true;
     if (!enabled.value || !conversation.value) {
       if (body) {
         body.value = emptyDoc();
       }
+      draftPersistSuspended = false;
       return;
     }
 
     try {
-      await deleteMutation.mutateAsync();
-    } catch (error) {
-      if (!(error instanceof ApiMessageDraftConflictError)) throw error;
-    }
+      try {
+        await deleteMutation.mutateAsync();
+      } catch (error) {
+        if (error instanceof ApiMessageDraftConflictError) {
+          // Already cleared elsewhere; keep local state reset below.
+        } else if (!isDraftDeleteNotFound(error)) {
+          throw error;
+        }
+      }
 
-    version.value = 0;
-    draftId.value = null;
-    if (body) {
-      body.value = emptyDoc();
+      version.value = 0;
+      draftId.value = null;
+      queryClient.setQueryData(draftQueryKey.value, null);
+      if (body) {
+        body.value = emptyDoc();
+      }
+    } finally {
+      draftPersistSuspended = false;
     }
   }
 
   return {
     bindDraft,
     clearDraft,
+    cancelPendingDraftPersist,
+    syncServerDraftMetadata,
     isHydrating: computed(() => draftQuery.isPending.value),
   };
 }
