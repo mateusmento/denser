@@ -10,7 +10,9 @@ import {
   Label,
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
   Spinner,
@@ -212,13 +214,16 @@ function onEscapeKeydown(event: KeyboardEvent) {
               <SelectValue :placeholder="view.cameras.length === 0 ? 'No camera found' : 'Select camera'" />
             </SelectTrigger>
             <SelectContent position="popper" class="z-60">
-              <SelectItem
+              <SelectLabel>Camera Devices</SelectLabel>
+              <SelectGroup>
+                <SelectItem
                 v-for="camera in view.cameras"
                 :key="camera.deviceId"
                 :value="camera.deviceId"
-              >
-                {{ camera.label }}
-              </SelectItem>
+                >
+                  {{ camera.label }}
+                </SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
           <Select
@@ -234,13 +239,16 @@ function onEscapeKeydown(event: KeyboardEvent) {
               <SelectValue :placeholder="view.microphones.length === 0 ? 'No microphone found' : 'Select microphone'" />
             </SelectTrigger>
             <SelectContent position="popper" class="z-60">
-              <SelectItem
+              <SelectLabel>Microphone Devices</SelectLabel>
+              <SelectGroup>
+                <SelectItem
                 v-for="microphone in view.microphones"
                 :key="microphone.deviceId"
-                :value="microphone.deviceId"
-              >
-                {{ microphone.label }}
-              </SelectItem>
+                  :value="microphone.deviceId"
+                >
+                  {{ microphone.label }}
+                </SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>

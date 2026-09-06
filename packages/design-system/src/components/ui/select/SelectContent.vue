@@ -44,6 +44,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
         :data-position="position"
         :class="
           cn(
+            'py-1',
             'data-[position=popper]:h-(--reka-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--reka-select-trigger-width)',
           )
         "
