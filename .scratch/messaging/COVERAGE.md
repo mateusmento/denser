@@ -53,6 +53,8 @@ Maps **[CONVERSATIONS.md](../../docs/CONVERSATIONS.md)**, **[MESSAGE-DRAFTS.md](
 | 32 | [delete-message-attachment-release](./issues/32-delete-message-attachment-release.md) | **3d** | api | att+conv | `DeleteMessage` releases message attachment anchor for GC |
 | **Outbox UX** |
 | 33 | [drafts-scheduled-outbox](./issues/33-drafts-scheduled-outbox.md) | 7 | api+app | draft+sched | Workspace Drafts/Scheduled pages, per-channel side panel, badges; remove header tabs |
+| **Shell / navigation** |
+| 36 | [pin-spaces-sidebar](./issues/36-pin-spaces-sidebar.md) | 8 | api+app | shell | Pin spaces as persistent sidebar sections; shared In {space} component; See all dropdown; ScrollArea |
 
 ## Dependency graph (simplified)
 

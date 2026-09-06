@@ -154,6 +154,14 @@ Does not include cross-workspace search or notification-style inbox.
 
 ---
 
+## Chunk 8 — Pin spaces in sidebar
+
+| Tickets | Layer | Reviewer sees |
+| --- | --- | --- |
+| **36** | api + app | Pin spaces → persistent **In {title}** sections; See all overflow dropdown; per-section Show limit; sidebar ScrollArea |
+
+---
+
 ## Suggested review batches (fewer PRs to click)
 
 If you prefer **fewer, larger reviews** over max parallel:
