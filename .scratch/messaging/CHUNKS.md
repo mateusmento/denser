@@ -142,6 +142,16 @@ Scheduled messages **with attachments** need **25 + 19** (upload) + **26** (sche
 
 ---
 
+## Chunk 7 — Drafts & scheduled outbox
+
+| Tickets | Layer | Reviewer sees |
+| --- | --- | --- |
+| **33** | api + app | Workspace **Drafts** + **Scheduled** sidebar pages with badges; per-channel **Drafts & scheduled** side panel; header tabs removed |
+
+Does not include cross-workspace search or notification-style inbox.
+
+---
+
 ## Suggested review batches (fewer PRs to click)
 
 If you prefer **fewer, larger reviews** over max parallel:

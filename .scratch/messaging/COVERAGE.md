@@ -49,6 +49,8 @@ Maps **[CONVERSATIONS.md](../../docs/CONVERSATIONS.md)**, **[MESSAGE-DRAFTS.md](
 | 28 | [polls](./issues/28-polls.md) | 6 | full | conv | Poll create/vote + composer + embed |
 | 29 | [recording-attach](./issues/29-recording-attach.md) | **3f** | full | att | Screen record → upload → attach |
 | 32 | [delete-message-attachment-release](./issues/32-delete-message-attachment-release.md) | **3d** | api | att+conv | `DeleteMessage` releases message attachment anchor for GC |
+| **Outbox UX** |
+| 33 | [drafts-scheduled-outbox](./issues/33-drafts-scheduled-outbox.md) | 7 | api+app | draft+sched | Workspace Drafts/Scheduled pages, per-channel side panel, badges; remove header tabs |
 
 ## Dependency graph (simplified)
 
@@ -75,7 +77,6 @@ Maps **[CONVERSATIONS.md](../../docs/CONVERSATIONS.md)**, **[MESSAGE-DRAFTS.md](
 ## Out of scope (separate packs)
 
 - Meetings `meeting_start` / `meeting_reminder` handlers → [MEETINGS.md](../../docs/MEETINGS.md)
-- Drafts drawer / workspace list (MESSAGE-DRAFTS D5)
 - Media library (ATTACHMENTS A5)
 - Cross-conversation search
 
