@@ -21,24 +21,28 @@ test("createPollForMessage stores options in order", async () => {
   const poll = await h.service.createPollForMessage(MESSAGE, { question: "Lunch?", options: ["Pizza", "Salad"] }, ALICE);
   assert.equal(poll.question, "Lunch?");
   assert.equal(poll.options.length, 2);
-  assert.equal(poll.options[0].label, "Pizza");
+  const pizza = poll.options[0];
+  assert.ok(pizza);
+  assert.equal(pizza.label, "Pizza");
   assert.equal(poll.totalVotes, 0);
 });
 
 test("votePoll records vote and allows changing vote", async () => {
   const h = makeHarness();
   const poll = await h.service.createPollForMessage(MESSAGE, { question: "Go?", options: ["Yes", "No"] }, ALICE);
-  const yes = poll.options[0].id;
-  const no = poll.options[1].id;
-  const first = await h.service.votePoll(ALICE, MESSAGE, yes);
+  const yes = poll.options[0];
+  const no = poll.options[1];
+  assert.ok(yes);
+  assert.ok(no);
+  const first = await h.service.votePoll(ALICE, MESSAGE, yes.id);
   assert.equal(first.ok, true);
   if (!first.ok) return;
-  assert.equal(first.poll.votedOptionId, yes);
+  assert.equal(first.poll.votedOptionId, yes.id);
   assert.equal(first.poll.totalVotes, 1);
-  const changed = await h.service.votePoll(ALICE, MESSAGE, no);
+  const changed = await h.service.votePoll(ALICE, MESSAGE, no.id);
   assert.equal(changed.ok, true);
   if (!changed.ok) return;
-  assert.equal(changed.poll.votedOptionId, no);
+  assert.equal(changed.poll.votedOptionId, no.id);
   assert.equal(changed.poll.totalVotes, 1);
 });
 

@@ -16,6 +16,7 @@ import { findConversationByArtifactId } from "../conversations/repository.js";
 import { loadAuthorDisplay } from "./author-display.js";
 import { messageRepository } from "./repository.js";
 import { reactionService } from "../reactions/routes.js";
+import { pollService } from "../polls/routes.js";
 import { createMessageService } from "./service.js";
 
 const blobStore: BlobStore = {
@@ -98,6 +99,11 @@ function createTestMessageService() {
     reactions: {
       loadForMessages: (messageIds, viewerId) =>
         reactionService.loadAggregatesForMessages(messageIds, viewerId),
+    },
+    polls: {
+      createForMessage: (messageId, input, userId) =>
+        pollService.createPollForMessage(messageId, input, userId),
+      loadForMessages: (messageIds, viewerId) => pollService.loadForMessages(messageIds, viewerId),
     },
     emit: () => undefined,
     loadAuthorDisplay,

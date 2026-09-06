@@ -7,7 +7,7 @@ import { isOnceJob } from "./recurrence.js";
 test("isOnceJob treats null recurrence as once", () => {
   assert.equal(isOnceJob({ recurrence: null }), true);
   assert.equal(isOnceJob({ recurrence: { frequency: "once" } }), true);
-  assert.equal(isOnceJob({ recurrence: { frequency: "daily" } }), false);
+  assert.equal(isOnceJob({ recurrence: { frequency: "daily", timeOfDay: "09:00" } }), false);
 });
 
 test("createScheduledMessageJob factory matches row type", () => {

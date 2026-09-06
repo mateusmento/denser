@@ -2,18 +2,17 @@ import type {
   ArtifactId,
   AttachmentDto,
   AttachmentId,
+  CreatePollInput,
   ListMessagesQuery,
   ListThreadMessagesQuery,
   MessageDto,
   MessageId,
+  PollDto,
   PostMessageInternalInput,
-  PostMessageInput,
   QuotedPreviewDto,
   ReactionAggregateDto,
-  CreatePollInput,
-  PollDto,
   SpaceId,
-  UserId,
+  UserId
 } from "@denser/contracts";
 import type { MessageCursor } from "./cursor.js";
 import { decodeCursor, encodeCursor } from "./cursor.js";
@@ -205,13 +204,14 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
     ]);
     const messages = rows.map((row) => {
       const attachmentIds = attachmentMap.get(row.id) ?? [];
+      const poll = pollMap.get(row.id);
       return toMessageDto(row, attachmentIds, {
         attachments: attachmentIds
           .map((id) => attachmentDtoMap.get(id))
           .filter((dto): dto is AttachmentDto => dto != null),
         ...quotedExtra(row, quotedMap),
         reactions: reactionMap.get(row.id) ?? [],
-        poll: pollMap.get(row.id),
+        ...(poll !== undefined ? { poll } : {}),
       });
     });
 
@@ -360,13 +360,14 @@ export function createMessageService(deps: MessageServiceDeps): MessageService {
       deps.polls.loadForMessages([row.id], viewerId),
     ]);
     const attachmentDtoMap = await loadAttachmentDtoMap(new Map([[row.id, attachmentIds]]));
+    const poll = pollMap.get(row.id);
     return toMessageDto(row, attachmentIds, {
       ...(extra?.wasScheduled !== undefined ? { wasScheduled: extra.wasScheduled } : {}),
       attachments: attachmentIds
         .map((id) => attachmentDtoMap.get(id))
         .filter((dto): dto is AttachmentDto => dto != null),
       ...quotedExtra(row, quotedMap),
-      poll: pollMap.get(row.id),
+      ...(poll !== undefined ? { poll } : {}),
     });
   }
 

@@ -6,6 +6,7 @@ import type {
   MessageDto,
   AttachmentId,
   MessageId,
+  PollId,
   PostMessageInput,
   SpaceId,
   UserId,
@@ -67,7 +68,7 @@ function makeHarness(opts: { forbidBob?: boolean } = {}): Harness {
     },
     polls: {
       createForMessage: async () => ({
-        id: "00000000-0000-4000-8000-000000000020",
+        id: "00000000-0000-4000-8000-000000000020" as PollId,
         question: "Q",
         options: [],
         votedOptionId: null,
@@ -288,6 +289,16 @@ test("delete: releases message attachment anchor after soft delete", async () =>
     },
     reactions: {
       loadForMessages: async (messageIds) => new Map(messageIds.map((id) => [id, []])),
+    },
+    polls: {
+      createForMessage: async () => ({
+        id: "00000000-0000-4000-8000-000000000020" as PollId,
+        question: "Q",
+        options: [],
+        votedOptionId: null,
+        totalVotes: 0,
+      }),
+      loadForMessages: async () => new Map(),
     },
     emit: (_conversationId, event, message) => emitted.push({ event, message }),
     loadAuthorDisplay: async (userIds) => {

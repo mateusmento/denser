@@ -5,7 +5,7 @@ import type {
   SpaceId,
   UserId,
 } from "@denser/contracts";
-import { parseScheduledJobRow } from "@denser/contracts";
+import { parseScheduledJobRow, parseScheduledJobRecurrence } from "@denser/contracts";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { scheduledJob } from "../../db/schema/scheduled-job.js";
@@ -23,7 +23,7 @@ function toScheduledMessageRow(row: typeof scheduledJob.$inferSelect): Scheduled
     dueAt: row.dueAt.toISOString(),
     nextRunAt: row.nextRunAt.toISOString(),
     timezone: row.timezone,
-    recurrence: row.recurrence ?? null,
+    recurrence: parseScheduledJobRecurrence(row.recurrence),
     processed: row.processed,
     lastOccurrenceAt: row.lastOccurrenceAt ? row.lastOccurrenceAt.toISOString() : null,
   });
