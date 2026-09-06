@@ -9,6 +9,14 @@ import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { cloneDoc, emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { isEmptyComposerBody } from "../lib/composer-content";
 
+function isComposerDoc(body: unknown): body is JSONContent {
+  return typeof body === "object" && body !== null && (body as JSONContent).type === "doc";
+}
+
+function adoptDraftBody(body: unknown): JSONContent {
+  return isComposerDoc(body) ? cloneDoc(body) : emptyDoc();
+}
+
 /** Draft key thread segment: `null` = main composer; else thread root message id (ticket 07). */
 export function messageDraftThreadKey(threadId: MessageId | null | undefined): string | null {
   return threadId ?? null;
@@ -79,7 +87,7 @@ export function useMessageDraftSync(
     if (draft) {
       version.value = draft.version;
       draftId.value = draft.id;
-      body.value = cloneDoc(draft.body as JSONContent);
+      body.value = adoptDraftBody(draft.body);
       return;
     }
     version.value = 0;
@@ -133,6 +141,12 @@ export function useMessageDraftSync(
       draftQueryKey,
       () => {
         dirty.value = false;
+        if (!enabled.value) return;
+        syncing = true;
+        version.value = 0;
+        draftId.value = null;
+        body.value = emptyDoc();
+        syncing = false;
       },
       { flush: "sync" },
     );
@@ -140,9 +154,9 @@ export function useMessageDraftSync(
     watch(
       () => draftQuery.data.value,
       (draft) => {
-        if (!enabled.value || dirty.value) return;
+        if (!enabled.value || dirty.value || draft === undefined) return;
         syncing = true;
-        applyServerDraft(draft ?? null, body);
+        applyServerDraft(draft, body);
         dirty.value = false;
         syncing = false;
       },
