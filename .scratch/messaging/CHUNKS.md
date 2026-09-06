@@ -139,6 +139,8 @@ Scheduled messages **with attachments** need **25 + 19** (upload) + **26** (sche
 | --- | --- |
 | **28** polls | Full-stack |
 | **29** recording | Reuses Chunk 3 upload pipeline |
+| **34** screen dialog workflow | Refactor setup UX (after 29) |
+| **35** audio composer | Voice note attach (after 19) |
 
 ---
 
