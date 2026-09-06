@@ -17,8 +17,9 @@ export function buildPersonRoster(
     roster.set(member.userId, member.name);
   }
   for (const message of messages) {
-    if (!roster.has(message.author.id)) {
-      roster.set(message.author.id, message.author.name);
+    const authorId = message.author.id as UserId;
+    if (!roster.has(authorId)) {
+      roster.set(authorId, message.author.name);
     }
   }
   return roster;

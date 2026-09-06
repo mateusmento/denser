@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button, MessageScrollerItem } from "@denser/design-system";
+import type { AttachmentId } from "@denser/contracts";
 import { XIcon } from "@lucide/vue";
 import type { JSONContent, MentionCandidate } from "@/modules/rich-text";
 import type { RichTextUploadResult } from "@/modules/rich-text/lib/extensions";
@@ -60,7 +61,7 @@ const emit = defineEmits<{
   vote: [messageId: string, optionId: string];
   loadPrevious: [];
   jumpToLatest: [];
-  removeAttachment: [attachmentId: string];
+  removeAttachment: [attachmentId: AttachmentId];
   cancelUpload: [clientId: string];
   retryUpload: [clientId: string];
   dismissUpload: [clientId: string];

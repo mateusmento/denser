@@ -10,9 +10,13 @@ export function isOpfsRecordingSupported(): boolean {
   return typeof navigator.storage?.getDirectory === "function";
 }
 
-async function getRecordingsDirectory(): Promise<FileSystemDirectoryHandle> {
+type OpfsDirectoryHandle = FileSystemDirectoryHandle & {
+  keys(): AsyncIterableIterator<string>;
+};
+
+async function getRecordingsDirectory(): Promise<OpfsDirectoryHandle> {
   const root = await navigator.storage.getDirectory();
-  return root.getDirectoryHandle(RECORDINGS_DIR, { create: true });
+  return root.getDirectoryHandle(RECORDINGS_DIR, { create: true }) as Promise<OpfsDirectoryHandle>;
 }
 
 export async function clearStaleOpfsRecordings(): Promise<void> {

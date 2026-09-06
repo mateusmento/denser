@@ -1,6 +1,6 @@
 import type { MessageDto, PollDto } from "@denser/contracts";
 import type { ListMessagesResponse } from "@denser/contracts";
-import type { InfiniteData } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/vue-query";
 import type { MessagesPageParam } from "./message-cache";
 
 type MessagesQueryData = InfiniteData<ListMessagesResponse, MessagesPageParam>;

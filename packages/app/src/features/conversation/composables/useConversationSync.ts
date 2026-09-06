@@ -240,7 +240,15 @@ export function useConversationSync(
   return {
     headerView,
     conversation: canonical,
-    isDirect: computed(() => canonical.value?.conversationKind === "direct"),
+    isDirect: computed(() => {
+      const conversation = canonical.value;
+      return (
+        conversation != null &&
+        conversation.kind === "conversation" &&
+        "conversationKind" in conversation &&
+        conversation.conversationKind === "direct"
+      );
+    }),
     isCompose,
     saveError,
     isCreating,

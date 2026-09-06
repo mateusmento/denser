@@ -17,8 +17,8 @@ export function isSameMessageIdentity(left: MessageDto, right: MessageDto): bool
   const leftClientId = left.clientId ?? null;
   const rightClientId = right.clientId ?? null;
   if (leftClientId && rightClientId && leftClientId === rightClientId) return true;
-  if (rightClientId && left.id === rightClientId) return true;
-  if (leftClientId && right.id === leftClientId) return true;
+  if (rightClientId && String(left.id) === String(rightClientId)) return true;
+  if (leftClientId && String(right.id) === String(leftClientId)) return true;
 
   return false;
 }
@@ -38,7 +38,7 @@ export function canLoadNewerMessages(input: {
 }
 
 export function messageIdentityKeys(message: MessageDto): string[] {
-  const keys = [message.id];
+  const keys: string[] = [message.id];
   if (message.clientId) keys.push(message.clientId);
   return keys;
 }

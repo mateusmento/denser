@@ -89,7 +89,7 @@ function sectionItems(
 function directMessageLinks(
   conversations: readonly ConversationView[],
   activeArtifactId: ArtifactId | undefined,
-  isUserOnline: (userId: string) => boolean,
+  isUserOnline: (userId: UserId) => boolean,
   unreadCountFor?: (conversationId: string) => number,
 ): WorkspaceNavLink[] {
   return conversations.map((conversation) => {
@@ -190,8 +190,8 @@ export function useWorkspaceNavSync() {
     if (conversationQuery.data.value?.rootSpaceId) {
       return conversationQuery.data.value.rootSpaceId;
     }
-    if (documentQuery.data.value?.rootSpaceId) {
-      return documentQuery.data.value.rootSpaceId;
+    if (documentQuery.data.value?.document.rootSpaceId) {
+      return documentQuery.data.value.document.rootSpaceId;
     }
     return null;
   });

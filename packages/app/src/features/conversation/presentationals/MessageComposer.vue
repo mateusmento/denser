@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@denser/design-system";
+import type { AttachmentId } from "@denser/contracts";
 import {
   AtSignIcon,
   ChartPieIcon,
@@ -64,7 +65,7 @@ const emit = defineEmits<{
   mentionSearch: [query: string];
   typing: [];
   "typing-stop": [];
-  removeAttachment: [attachmentId: string];
+  removeAttachment: [attachmentId: AttachmentId];
   cancelUpload: [clientId: string];
   retryUpload: [clientId: string];
   dismissUpload: [clientId: string];
@@ -202,7 +203,7 @@ function onDrop(event: DragEvent) {
       v-if="attachments?.tiles.length"
       :tiles="attachments.tiles"
       :disabled="attachments.disabled || view.disabled || view.sending"
-      @remove="emit('removeAttachment', $event)"
+      @remove="emit('removeAttachment', $event as AttachmentId)"
       @cancel="emit('cancelUpload', $event)"
       @retry="emit('retryUpload', $event)"
       @dismiss="emit('dismissUpload', $event)"
