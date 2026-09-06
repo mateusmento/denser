@@ -64,6 +64,15 @@ export const PostMessageInput = z.object({
 });
 export type PostMessageInput = z.infer<typeof PostMessageInput>;
 
+/** Server-only delivery path (schedule fire). Not accepted on public HTTP. */
+export const PostMessageInternalInput = PostMessageInput.extend({
+  occurrenceKey: z.string().min(1).optional(),
+  markAsScheduled: z.boolean().optional(),
+  trustedDelivery: z.boolean().optional(),
+});
+export type PostMessageInternalInput = z.infer<typeof PostMessageInternalInput>;
+
+
 export const EditMessageInput = z.object({
   body: z.unknown(),
 });

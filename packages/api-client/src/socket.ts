@@ -23,6 +23,10 @@ import {
   WORKSPACE_PRESENCE_SNAPSHOT_EVENT,
   WorkspacePresenceEvent,
   WorkspacePresenceSnapshotEvent,
+  SCHEDULED_MESSAGE_CANCELLED_EVENT,
+  SCHEDULED_MESSAGE_UPSERTED_EVENT,
+  ScheduledMessageCancelledEventSchema,
+  ScheduledMessageUpsertedEventSchema,
 } from "@denser/contracts";
 
 export type DenserSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -80,6 +84,10 @@ const eventParsers = {
     WorkspacePresenceEvent.parse(payload),
   [WORKSPACE_PRESENCE_SNAPSHOT_EVENT]: (payload: unknown): WorkspacePresenceSnapshotEvent =>
     WorkspacePresenceSnapshotEvent.parse(payload),
+  [SCHEDULED_MESSAGE_UPSERTED_EVENT]: (payload: unknown) =>
+    ScheduledMessageUpsertedEventSchema.parse(payload),
+  [SCHEDULED_MESSAGE_CANCELLED_EVENT]: (payload: unknown) =>
+    ScheduledMessageCancelledEventSchema.parse(payload),
 } satisfies {
   [E in keyof ServerToClientEvents]: (payload: unknown) => ServerEventPayload<E>;
 };

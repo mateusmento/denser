@@ -40,6 +40,7 @@ export type MessageRepository = {
     conversationId: ArtifactId,
     clientId: ClientId,
   ): Promise<MessageRow | undefined>;
+  findMessageByOccurrenceKey(occurrenceKey: string): Promise<MessageRow | undefined>;
   insertMessage(input: {
     rootSpaceId: SpaceId | null;
     conversationId: ArtifactId;
@@ -48,6 +49,7 @@ export type MessageRepository = {
     authorId: UserId;
     body: unknown;
     clientId: ClientId | null;
+    occurrenceKey?: string | null;
   }): Promise<MessageRow>;
   loadAttachmentIdsForMessage(messageId: MessageId): Promise<AttachmentId[]>;
   loadAttachmentIdsForMessages(messageIds: readonly MessageId[]): Promise<

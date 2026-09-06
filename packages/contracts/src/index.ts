@@ -11,3 +11,4 @@ export * from "./message-draft.js";
 export * from "./read-state.js";
 export * from "./reaction.js";
 export * from "./scheduling.js";
+export * from "./scheduled-message.js";

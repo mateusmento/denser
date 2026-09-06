@@ -227,6 +227,12 @@ async function findMessagesByIds(ids: readonly MessageId[]): Promise<Map<Message
   return new Map(rows.map((row) => [row.id, row]));
 }
 
+async function findMessageByOccurrenceKey(occurrenceKey: string): Promise<MessageRow | undefined> {
+  return db.query.message.findFirst({
+    where: eq(message.occurrenceKey, occurrenceKey),
+  });
+}
+
 async function findClientMessage(
   conversationId: ArtifactId,
   clientId: ClientId,
@@ -244,6 +250,7 @@ async function insertMessage(input: {
   authorId: UserId;
   body: unknown;
   clientId: ClientId | null;
+  occurrenceKey?: string | null;
 }): Promise<MessageRow> {
   const [created] = await db
     .insert(message)
@@ -255,6 +262,7 @@ async function insertMessage(input: {
       authorId: input.authorId,
       body: input.body,
       clientId: input.clientId,
+      occurrenceKey: input.occurrenceKey ?? null,
     })
     .returning();
 
@@ -304,6 +312,7 @@ export const messageRepository: MessageRepository = {
   findMessageById,
   findMessagesByIds,
   findClientMessage,
+  findMessageByOccurrenceKey,
   insertMessage,
   loadAttachmentIdsForMessage,
   loadAttachmentIdsForMessages,

@@ -150,7 +150,7 @@ async function commitSync(
     conversationId: ArtifactId;
     messageId: MessageId;
     attachmentIds: AttachmentId[];
-    actor: { userId: UserId };
+    actor: { userId: UserId; trustedDelivery?: boolean };
   },
 ): Promise<void> {
   const { getPort } = await import("../../ports/container.js");
@@ -182,4 +182,4 @@ const messageDeps: MessageServiceDeps = {
   loadAuthorDisplay,
 };
 
-const defaultMessageService = createMessageService(messageDeps);
+export const defaultMessageService = createMessageService(messageDeps);
