@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactId, MessageId, SpaceId, UserId } from "@denser/contracts";
+import type { ArtifactId, CreatePollInput, MessageId, PollOptionId, SpaceId, UserId } from "@denser/contracts";
 import { emptyDoc, cloneDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
 import { useQuery } from "@tanstack/vue-query";
@@ -26,6 +26,7 @@ import MessageComposer from "../presentationals/MessageComposer.vue";
 import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
 import ScreenRecordingControlsPopover from "../presentationals/ScreenRecordingControlsPopover.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
+import PollInsertDialog from "../presentationals/PollInsertDialog.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
 import ConversationPaneTabs from "../presentationals/ConversationPaneTabs.vue";
 import ConversationSchedulesList from "../presentationals/ConversationSchedulesList.vue";
@@ -123,6 +124,7 @@ const presence = useConversationPresence(conversationId, {
 });
 
 const channelDraft = ref<JSONContent>(emptyDoc());
+const pollDialogOpen = ref(false);
 const threadDraft = ref<JSONContent>(emptyDoc());
 const activeThreadId = ref<MessageId | null>(null);
 
@@ -455,7 +457,27 @@ function onAction(id: ComposerActionId) {
     screenRecording.openDialog();
     return;
   }
+  if (id === "poll") {
+    pollDialogOpen.value = true;
+    return;
+  }
   toast(`Coming soon · ${id}`);
+}
+
+async function onPollSubmit(payload: CreatePollInput) {
+  try {
+    await messagesSync.send(emptyDoc(), [], [], payload);
+    await channelDraftSync.clearDraft(channelDraft);
+    channelAttachments.clearAfterSend();
+  } catch {
+    toast("Couldn't send poll");
+  }
+}
+
+function onVote(messageId: string, optionId: string) {
+  void messagesSync.votePoll(messageId as MessageId, optionId as PollOptionId).catch(() => {
+    toast("Couldn't record vote");
+  });
 }
 
 async function onJumpToLatest() {
@@ -543,6 +565,7 @@ async function onThreadJumpToLatest() {
         @jump-quote="onJumpQuote"
         @edit="onEdit"
         @delete="onDelete"
+        @vote="onVote"
         @edit-description="onEditDescription"
         @add-people="onAddPeople"
       />
@@ -601,6 +624,7 @@ async function onThreadJumpToLatest() {
         @jump-quote="onJumpQuote"
         @edit="onEdit"
         @delete="onDelete"
+        @vote="onVote"
         @load-previous="threadSync.loadPrevious()"
         @jump-to-latest="onThreadJumpToLatest"
         @remove-attachment="threadAttachments.removeTile"
@@ -615,6 +639,7 @@ async function onThreadJumpToLatest() {
       :presets="schedulePresets"
       @save="onSaveScheduleEdit"
     />
+    <PollInsertDialog v-model:open="pollDialogOpen" @submit="onPollSubmit" />
   </ConversationSurface>
 
   <ScreenRecordingSetupDialog

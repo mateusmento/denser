@@ -42,6 +42,9 @@ import {
   SpaceDetailResponse,
   StartConversationUploadInput,
   StartConversationUploadResponse,
+  VotePollInput,
+  VotePollResponse,
+  CreatePollInput,
   UpsertMessageDraftInput,
   ListScheduledMessagesResponse,
   ScheduleMessageInput,
@@ -642,6 +645,7 @@ export class ApiClient {
       quotesId?: MessageId | null;
       threadId?: MessageId | null;
       attachmentIds?: AttachmentId[];
+      poll?: CreatePollInput;
     },
   ): Promise<PostMessageResponse> {
     const payload = PostMessageInput.parse({
@@ -705,7 +709,6 @@ export class ApiClient {
     return ToggleReactionResponse.parse(body);
   }
 
-
   async listScheduledMessages(
     conversationId: ArtifactId,
   ): Promise<ListScheduledMessagesResponse> {
@@ -762,6 +765,21 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("cancel scheduled message failed", res.status, body);
     return ScheduleMessageResponse.parse(body);
+  }
+
+  async votePoll(
+    conversationId: ArtifactId,
+    messageId: MessageId,
+    input: VotePollInput,
+  ): Promise<VotePollResponse> {
+    const payload = VotePollInput.parse(input);
+    const res = await this.request(
+      `/api/conversations/${conversationId}/messages/${messageId}/poll/vote`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("vote poll failed", res.status, body);
+    return VotePollResponse.parse(body);
   }
 
   async connectRealtime(): Promise<DenserSocket> {

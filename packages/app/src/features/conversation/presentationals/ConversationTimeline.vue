@@ -62,6 +62,7 @@ const emit = defineEmits<{
   jumpQuote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
+  vote: [messageId: string, optionId: string];
   editDescription: [];
   addPeople: [];
   loadPrevious: [];
@@ -158,6 +159,7 @@ defineExpose({
                   @jump-quote="emit('jumpQuote', $event)"
                   @edit="emit('edit', message.id)"
                   @delete="emit('delete', message.id)"
+                  @vote="emit('vote', message.id, $event)"
                 />
               </MessageScrollerItem>
             </ConversationMessageGroup>

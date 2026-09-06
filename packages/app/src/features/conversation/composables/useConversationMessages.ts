@@ -38,7 +38,8 @@ import {
   type MessagesPageParam,
 } from "../lib/message-cache";
 import { applyReactionUpdated, toggleReactionOptimistic } from "../lib/reaction-cache";
-import type { ListMessagesResponse } from "@denser/contracts";
+import { votePollOptimistic } from "../lib/poll-cache";
+import type { CreatePollInput, ListMessagesResponse, PollOptionId } from "@denser/contracts";
 import { toConversationMessageView } from "../lib/toConversationMessageView";
 import type { ConversationMessageView } from "../types";
 
@@ -254,6 +255,7 @@ export function useConversationMessages(
       clientId: ClientId;
       attachmentIds: AttachmentId[];
       attachments: AttachmentDto[];
+      poll?: CreatePollInput;
     }) => {
       const conversation = id.value;
       if (!conversation) throw new Error("no conversation");
@@ -261,6 +263,7 @@ export function useConversationMessages(
         body: input.body,
         clientId: input.clientId,
         ...(input.attachmentIds.length > 0 ? { attachmentIds: input.attachmentIds } : {}),
+        ...(input.poll ? { poll: input.poll } : {}),
       });
     },
     onMutate: async (input) => {
@@ -379,9 +382,10 @@ export function useConversationMessages(
     body: JSONContent,
     attachmentIds: AttachmentId[] = [],
     attachments: AttachmentDto[] = [],
+    poll?: CreatePollInput,
   ) {
-    if (isEmptyBody(body) && attachmentIds.length === 0) return;
-    await sendMutation.mutateAsync({ body, attachmentIds, attachments, clientId: createClientId() });
+    if (isEmptyBody(body) && attachmentIds.length === 0 && !poll) return;
+    await sendMutation.mutateAsync({ body, attachmentIds, attachments, poll, clientId: createClientId() });
   }
 
   async function retrySend() {
@@ -452,6 +456,31 @@ export function useConversationMessages(
     }
   }
 
+  async function votePoll(messageId: MessageId, optionId: PollOptionId) {
+    const conversation = id.value;
+    if (!conversation) return;
+
+    const key = queryKeys.conversationMessages(conversation);
+    await queryClient.cancelQueries({ queryKey: key });
+    const previous = readMessagesQuery(queryClient, conversation);
+    const current = dtos.value.find((message) => message.id === messageId);
+    if (!current) return;
+
+    const optimistic: MessageDto = {
+      ...current,
+      poll: votePollOptimistic(current.poll, optionId),
+    };
+    syncQueryData(applyMessageUpdated(previous, optimistic));
+
+    try {
+      const response = await apiClient.votePoll(conversation, messageId, { optionId });
+      ingestUpdate({ ...current, poll: response.poll });
+    } catch (error) {
+      if (previous) queryClient.setQueryData(key, previous);
+      throw error;
+    }
+  }
+
   return {
     messages,
     isLoading,
@@ -485,6 +514,7 @@ export function useConversationMessages(
     edit,
     remove,
     toggleReaction,
+    votePoll,
     retrySend,
     reload: () => query.refetch(),
   };

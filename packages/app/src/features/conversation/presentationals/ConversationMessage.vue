@@ -6,6 +6,7 @@ import ConversationQuotePreview from "./ConversationQuotePreview.vue";
 import MessageAttachmentList from "./MessageAttachmentList.vue";
 import MessageContextMenu from "./MessageContextMenu.vue";
 import MessageHoverMenu from "./MessageHoverMenu.vue";
+import MessagePollEmbed from "./MessagePollEmbed.vue";
 
 withDefaults(
   defineProps<{
@@ -28,6 +29,7 @@ const emit = defineEmits<{
   jumpQuote: [quotedMessageId: string];
   edit: [];
   delete: [];
+  vote: [optionId: string];
 }>();
 </script>
 
@@ -76,6 +78,11 @@ const emit = defineEmits<{
             <MessageAttachmentList
               v-if="message.attachments?.length"
               :attachments="message.attachments"
+            />
+            <MessagePollEmbed
+              v-if="message.poll"
+              :poll="message.poll"
+              @vote="emit('vote', $event)"
             />
           </div>
         </template>

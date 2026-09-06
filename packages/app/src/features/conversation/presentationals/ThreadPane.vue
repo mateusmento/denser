@@ -57,6 +57,7 @@ const emit = defineEmits<{
   jumpQuote: [messageId: string];
   edit: [messageId: string];
   delete: [messageId: string];
+  vote: [messageId: string, optionId: string];
   loadPrevious: [];
   jumpToLatest: [];
   removeAttachment: [attachmentId: string];
@@ -93,6 +94,7 @@ const emit = defineEmits<{
         @jump-quote="emit('jumpQuote', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @vote="(messageId, optionId) => emit('vote', messageId, optionId)"
         @load-previous="emit('loadPrevious')"
         @jump-to-latest="emit('jumpToLatest')"
       >
@@ -115,6 +117,7 @@ const emit = defineEmits<{
                 @jump-quote="emit('jumpQuote', $event)"
                 @edit="emit('edit', props.thread.parent.id)"
                 @delete="emit('delete', props.thread.parent.id)"
+                @vote="(optionId) => emit('vote', props.thread.parent.id, optionId)"
               />
             </ConversationMessageGroup>
           </MessageScrollerItem>

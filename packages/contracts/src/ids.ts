@@ -39,3 +39,9 @@ export type ScheduledJobId = z.infer<typeof ScheduledJobId>;
 
 export const ClientId = brandedId("ClientId");
 export type ClientId = z.infer<typeof ClientId>;
+
+export const PollId = brandedId("PollId");
+export type PollId = z.infer<typeof PollId>;
+
+export const PollOptionId = brandedId("PollOptionId");
+export type PollOptionId = z.infer<typeof PollOptionId>;
