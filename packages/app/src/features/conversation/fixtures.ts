@@ -23,6 +23,9 @@ export const channelIntro: ConversationIntroView = {
   addPeopleLabel: "Add people to the channel",
 };
 
+const tomorrowMorning = new Date(Date.now() + 86_400_000);
+tomorrowMorning.setHours(9, 0, 0, 0);
+
 export const schedulePresets: readonly SchedulePreset[] = [
   { id: "morning", label: "Tomorrow morning", whenLabel: "Tomorrow, 9:00 AM" },
   { id: "afternoon", label: "Tomorrow afternoon", whenLabel: "Tomorrow, 2:00 PM" },

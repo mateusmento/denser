@@ -90,16 +90,33 @@ export type ComposerActionDef = {
   label: string;
 };
 
+export type ScheduleRecurrencePreset = "once" | "daily" | "weekly";
+
 export type SchedulePreset = {
   id: string;
   label: string;
   whenLabel: string;
+  /** UTC ISO for preset commits (container may omit for story fixtures). */
+  dueAtIso?: string;
 };
 
 export type ScheduleCommitPayload = {
   whenLabel: string;
-  recurringWeekly: boolean;
+  dueAtIso: string;
+  timezone: string;
+  recurrence: ScheduleRecurrencePreset;
   customIso?: string;
+};
+
+export type ConversationScheduledMessageView = {
+  id: string;
+  bodyPreview: string;
+  /** UTC ISO of the next send (or sole send for once jobs). */
+  nextRunAtIso: string;
+  timezone: string | null;
+  recurrenceLabel: string;
+  /** Local wall time label for lists. */
+  nextRunWallTimeLabel: string;
 };
 
 export type ComposerAttachmentTileView =

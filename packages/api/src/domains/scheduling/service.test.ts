@@ -110,3 +110,34 @@ test("a failing handler releases the lock with backoff; max retries dead-letters
     await deleteJob(id);
   }
 });
+test("a recurring daily job advances next_run_at instead of processing", async () => {
+  const dueAt = new Date("2030-01-01T09:00:00.000Z");
+  const job = createScheduledMessageJob(
+    {
+      rootSpaceId: SEED_SPACE_ACME,
+      dueAt: dueAt.toISOString(),
+      nextRunAt: dueAt.toISOString(),
+      timezone: "UTC",
+      recurrence: { frequency: "daily", timeOfDay: "09:00", interval: 1 },
+    },
+    {
+      conversationId: SEED_ARTIFACT_CHAN_GENERAL,
+      senderId: SEED_USER_ALICE,
+      body: { type: "doc", content: [] },
+    },
+  );
+  const id = await createJob(job);
+  registerHandler("scheduled_message", async () => {});
+
+  try {
+    const processed = await runScheduleTick({ limit: 1, now: new Date("2030-01-01T10:00:00.000Z") });
+    assert.equal(processed, 1);
+    const row = await db.query.scheduledJob.findFirst({ where: eq(scheduledJob.id, id) });
+    assert.equal(row?.processed, false);
+    assert.ok(row?.nextRunAt);
+    assert.ok(row!.nextRunAt.getTime() > dueAt.getTime());
+    assert.equal(row?.lastOccurrenceAt?.toISOString(), dueAt.toISOString());
+  } finally {
+    await deleteJob(id);
+  }
+});

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@denser/design-system";
 import { ClockIcon } from "@lucide/vue";
-import { ref } from "vue";
-import type { ScheduleCommitPayload, SchedulePreset } from "../types";
+import { computed, ref } from "vue";
+import type { ScheduleCommitPayload, SchedulePreset, ScheduleRecurrencePreset } from "../types";
 
 const props = defineProps<{
   presets: readonly SchedulePreset[];
   open?: boolean;
+  timezone?: string;
 }>();
 
 const emit = defineEmits<{
@@ -14,21 +15,37 @@ const emit = defineEmits<{
   commit: [payload: ScheduleCommitPayload];
 }>();
 
-const recurring = ref(false);
+const recurrence = ref<ScheduleRecurrencePreset>("once");
 const customIso = ref("");
 
+const resolvedTimezone = computed(
+  () => props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+);
+
+const recurrenceOptions: readonly { value: ScheduleRecurrencePreset; label: string }[] = [
+  { value: "once", label: "Once" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+];
+
 function commitPreset(preset: SchedulePreset) {
+  const dueAtIso = preset.dueAtIso ?? new Date().toISOString();
   emit("commit", {
     whenLabel: preset.whenLabel,
-    recurringWeekly: recurring.value,
+    dueAtIso,
+    timezone: resolvedTimezone.value,
+    recurrence: recurrence.value,
   });
 }
 
 function commitCustom() {
   if (!customIso.value) return;
+  const dueAtIso = new Date(customIso.value).toISOString();
   emit("commit", {
     whenLabel: customIso.value,
-    recurringWeekly: recurring.value,
+    dueAtIso,
+    timezone: resolvedTimezone.value,
+    recurrence: recurrence.value,
     customIso: customIso.value,
   });
 }
@@ -64,10 +81,18 @@ function commitCustom() {
           class="h-8 rounded-md border border-input bg-transparent px-2 text-sm text-foreground"
         />
       </label>
-      <label class="mt-2 flex items-center gap-2 text-sm">
-        <input v-model="recurring" type="checkbox" />
-        Repeat weekly
+      <label class="mt-2 flex flex-col gap-1 text-xs text-muted-foreground">
+        Repeat
+        <select
+          v-model="recurrence"
+          class="h-8 rounded-md border border-input bg-transparent px-2 text-sm text-foreground"
+        >
+          <option v-for="option in recurrenceOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
       </label>
+      <p class="mt-1 text-[11px] text-muted-foreground">Times shown in {{ resolvedTimezone }}</p>
       <Button class="mt-3 w-full" size="sm" :disabled="!customIso" @click="commitCustom">
         Schedule
       </Button>
