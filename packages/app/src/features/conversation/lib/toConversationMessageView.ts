@@ -81,5 +81,6 @@ export function toConversationMessageView(
     attachments: tileAttachments(dto),
     canEdit: isMine && !dto.deletedAt,
     canDelete: isMine && !dto.deletedAt,
+    scheduledCaption: dto.wasScheduled ? "Scheduled send" : undefined,
   };
 }

@@ -43,6 +43,8 @@ export type ConversationMessageView = {
   quoted?: ConversationQuotedPreviewView;
   canEdit?: boolean;
   canDelete?: boolean;
+  /** Muted timeline caption when the message was sent on a schedule. */
+  scheduledCaption?: string;
 };
 
 /** Same-author, near-in-time cluster for timeline chrome (avatar + header once). */
@@ -105,7 +107,22 @@ export type ScheduleCommitPayload = {
   dueAtIso: string;
   timezone: string;
   recurrence: ScheduleRecurrencePreset;
+  presetId?: string;
   customIso?: string;
+};
+
+export type ConversationPane = "messages" | "schedules";
+
+export type ScheduledMessageView = {
+  id: string;
+  senderId: string;
+  isMine: boolean;
+  body: JSONContent;
+  dueAt: string;
+  dueAtLabel: string;
+  threadId: string | null;
+  attachments: readonly ConversationAttachmentView[];
+  processed: boolean;
 };
 
 export type ConversationScheduledMessageView = {

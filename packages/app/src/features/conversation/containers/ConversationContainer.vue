@@ -17,6 +17,8 @@ import { useConversationSync } from "../composables/useConversationSync";
 import { useMessageDraftSync } from "../composables/useMessageDraftSync";
 import { useThreadMessages } from "../composables/useThreadMessages";
 import { channelIntro, conversationMentionItems, schedulePresets } from "../fixtures";
+import { useScheduledMessagesSync } from "../composables/useScheduledMessagesSync";
+import { dueAtFromScheduleCommit } from "../lib/schedule-due-at";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
@@ -25,10 +27,24 @@ import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupD
 import ScreenRecordingControlsPopover from "../presentationals/ScreenRecordingControlsPopover.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
-import type { ComposerActionId, ConversationIntroView, ConversationMessageView, ScheduleCommitPayload } from "../types";
+import ConversationPaneTabs from "../presentationals/ConversationPaneTabs.vue";
+import ConversationSchedulesList from "../presentationals/ConversationSchedulesList.vue";
+import ScheduledMessageEditSheet from "../presentationals/ScheduledMessageEditSheet.vue";
+import type {
+  ComposerActionId,
+  ConversationIntroView,
+  ConversationMessageView,
+  ConversationPane,
+  ScheduleCommitPayload,
+} from "../types";
+import type { ScheduledJobId } from "@denser/contracts";
 
 const route = useRoute();
 const conversationId = computed(() => route.params.conversationId as ArtifactId);
+const conversationPane = ref<ConversationPane>("messages");
+const editingScheduleId = ref<ScheduledJobId | null>(null);
+const scheduleEditOpen = ref(false);
+
 
 const conversationTitle = ref("");
 const conversationSync = useConversationSync(conversationId);
@@ -49,6 +65,8 @@ const workspaceMembersQuery = useQuery({
 const readState = useConversationReadState(conversationId, {
   rootSpaceId: computed(() => workspaceMembersQuery.data.value?.rootSpaceId ?? null),
 });
+
+const scheduledSync = useScheduledMessagesSync(conversationId);
 
 const messagesSync = useConversationMessages(conversationId, {
   openAnchor: computed(() => readState.openAnchor.value),
@@ -308,15 +326,40 @@ function onCancelThreadEdit() {
 }
 
 async function onSchedule(payload: ScheduleCommitPayload) {
-  toast(`Message scheduled · ${payload.whenLabel}`);
-  await channelDraftSync.clearDraft(channelDraft);
-  channelAttachments.clearAfterSend();
+  if (channelAttachments.hasBlockingUpload.value) return;
+  const dueAt = dueAtFromScheduleCommit(payload, schedulePresets);
+  try {
+    await scheduledSync.schedule({
+      body: channelDraft.value,
+      dueAt,
+      attachmentIds: channelAttachments.collectAttachmentIds(channelDraft.value),
+    });
+    await channelDraftSync.clearDraft(channelDraft);
+    channelAttachments.clearAfterSend();
+    toast(`Message scheduled · ${payload.whenLabel}`);
+    conversationPane.value = "schedules";
+  } catch {
+    toast("Couldn't schedule message — schedule API may still be landing (#25)");
+  }
 }
 
 async function onThreadSchedule(payload: ScheduleCommitPayload) {
-  toast(`Reply scheduled · ${payload.whenLabel}`);
-  await threadDraftSync.clearDraft(threadDraft);
-  threadAttachments.clearAfterSend();
+  if (!activeThreadId.value || threadAttachments.hasBlockingUpload.value) return;
+  const dueAt = dueAtFromScheduleCommit(payload, schedulePresets);
+  try {
+    await scheduledSync.schedule({
+      body: threadDraft.value,
+      dueAt,
+      threadId: activeThreadId.value,
+      attachmentIds: threadAttachments.collectAttachmentIds(threadDraft.value),
+    });
+    await threadDraftSync.clearDraft(threadDraft);
+    threadAttachments.clearAfterSend();
+    toast(`Reply scheduled · ${payload.whenLabel}`);
+    conversationPane.value = "schedules";
+  } catch {
+    toast("Couldn't schedule reply — schedule API may still be landing (#25)");
+  }
 }
 
 function onReact(messageId: string, emoji: string) {
@@ -420,6 +463,42 @@ async function onJumpToLatest() {
   await messagesSync.jumpToLatest();
 }
 
+
+const editingSchedule = computed(() =>
+  scheduledSync.schedules.value.find((entry) => entry.id === editingScheduleId.value),
+);
+
+const schedulesErrorLabel = computed(() =>
+  scheduledSync.error.value ? "Couldn't load scheduled messages." : undefined,
+);
+
+function onEditSchedule(id: string) {
+  editingScheduleId.value = id as ScheduledJobId;
+  scheduleEditOpen.value = true;
+}
+
+async function onSaveScheduleEdit(payload: { dueAtIso: string; whenLabel: string }) {
+  if (!editingScheduleId.value) return;
+  try {
+    await scheduledSync.update({
+      jobId: editingScheduleId.value,
+      dueAt: payload.dueAtIso,
+    });
+    toast(`Schedule updated · ${payload.whenLabel}`);
+  } catch {
+    toast("Couldn't update schedule");
+  }
+}
+
+async function onCancelSchedule(id: string) {
+  try {
+    await scheduledSync.cancel(id as ScheduledJobId);
+    toast("Scheduled message cancelled");
+  } catch {
+    toast("Couldn't cancel schedule");
+  }
+}
+
 async function onThreadJumpToLatest() {
   await threadSync.jumpToLatest();
 }
@@ -428,12 +507,22 @@ async function onThreadJumpToLatest() {
 <template>
   <ConversationSurface>
     <template #header>
-      <div class="h-full w-full">
+      <div class="flex h-full w-full flex-col gap-1">
         <ChannelHeader :channel="channelHeader" />
+        <ConversationPaneTabs v-model="conversationPane" />
       </div>
     </template>
     <template #messages>
+      <ConversationSchedulesList
+        v-if="conversationPane === 'schedules'"
+        :schedules="scheduledSync.schedules.value"
+        :loading="scheduledSync.isLoading.value"
+        :error-label="schedulesErrorLabel"
+        @edit="onEditSchedule"
+        @cancel="onCancelSchedule"
+      />
       <ConversationTimeline
+        v-else
         ref="timelineRef"
         :messages="displayMessages"
         :intro="showConversationIntro ? conversationIntro : undefined"
@@ -462,6 +551,7 @@ async function onThreadJumpToLatest() {
       <div class="flex min-h-0 flex-1 flex-col">
         <TypingBanner v-if="presence.typingLabel.value" :label="presence.typingLabel.value" />
         <MessageComposer
+          v-if="conversationPane === 'messages'"
           v-model="channelDraft"
           :view="channelComposer"
           :mention-items="mentionItems"
@@ -519,6 +609,12 @@ async function onThreadJumpToLatest() {
         @dismiss-upload="threadAttachments.dismissFailed"
       />
     </template>
+    <ScheduledMessageEditSheet
+      v-model:open="scheduleEditOpen"
+      :message="editingSchedule"
+      :presets="schedulePresets"
+      @save="onSaveScheduleEdit"
+    />
   </ConversationSurface>
 
   <ScreenRecordingSetupDialog
