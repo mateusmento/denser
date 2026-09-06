@@ -158,7 +158,7 @@ defineExpose({ host });
     <div
       v-if="showWebcamEditor"
       data-slot="screen-recording-camera-editor-bbox"
-      class="pointer-events-auto absolute touch-none border-2 border-dashed border-white/90"
+      class="pointer-events-auto absolute touch-none border-2 border-dashed border-primary"
       :style="bboxStyle"
       @pointerdown="onMovePointerDown"
     >
@@ -167,7 +167,7 @@ defineExpose({ host });
         :key="handle.id"
         :class="
           cn(
-            'absolute size-2 rounded-xs border border-white/90 bg-white shadow-sm',
+            'absolute size-2 rounded-xs border border-primary bg-white shadow-sm',
             handle.class,
           )
         "
