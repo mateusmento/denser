@@ -18,8 +18,9 @@ storybook-static
 .idea
 .vscode
 
-# Drizzle / generated
-packages/api/drizzle/meta
+# Drizzle / generated (keep _journal.json — migrator won't run SQL files missing from it)
+packages/api/drizzle/meta/*
+!packages/api/drizzle/meta/_journal.json
 
 # Theme Lab → live app bridge (dev)
 packages/app/public/theme-dev-override.json
