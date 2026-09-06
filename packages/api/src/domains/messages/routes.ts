@@ -162,11 +162,25 @@ async function commitSync(
   });
 }
 
+
+async function commitRelease(args: {
+  messageId: MessageId;
+  actor: { userId: UserId };
+}): Promise<void> {
+  const { getPort } = await import("../../ports/container.js");
+  await getPort("attachmentReferences").commit({
+    op: "release",
+    anchor: { type: "message", messageId: args.messageId },
+    actor: args.actor,
+  });
+}
+
 const messageDeps: MessageServiceDeps = {
   repo: messageRepository,
   access: defaultAccess,
   attachments: {
     commitSync,
+    commitRelease,
     async loadByIds(ids) {
       const { loadAttachments } = await import("../attachments/repository.js");
       const { toAttachmentDtos } = await import("../attachments/mapper.js");
