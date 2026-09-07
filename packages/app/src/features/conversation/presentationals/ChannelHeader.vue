@@ -12,17 +12,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@denser/design-system";
-import { BellIcon, EllipsisIcon, SettingsIcon, UsersIcon } from "@lucide/vue";
+import { BellIcon, Clock3Icon, EllipsisIcon, SettingsIcon, UsersIcon } from "@lucide/vue";
 import type { ConversationChannelHeaderView } from "../types";
 
 defineProps<{
   channel: ConversationChannelHeaderView;
+  outboxBadgeCount?: number;
 }>();
 
 const emit = defineEmits<{
   notifications: [];
   members: [];
   settings: [];
+  openOutbox: [];
 }>();
 </script>
 
@@ -71,6 +73,17 @@ const emit = defineEmits<{
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" class="min-w-44">
+        <DropdownMenuItem @select="emit('openOutbox')">
+          <Clock3Icon class="size-3.5" />
+          Drafts &amp; scheduled
+          <Badge
+            v-if="outboxBadgeCount && outboxBadgeCount > 0"
+            variant="secondary"
+            class="ms-auto h-5 min-w-5 px-1.5 tabular-nums"
+          >
+            {{ outboxBadgeCount > 99 ? "99+" : outboxBadgeCount }}
+          </Badge>
+        </DropdownMenuItem>
         <DropdownMenuItem @select="emit('notifications')">
           <BellIcon class="size-3.5" />
           Notifications

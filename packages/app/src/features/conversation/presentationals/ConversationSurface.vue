@@ -3,17 +3,17 @@ import { cn } from "@denser/design-system";
 import { useEventListener, useMediaQuery } from "@vueuse/core";
 import { computed, ref, useSlots } from "vue";
 
-const THREAD_MIN_WIDTH = 280;
-const THREAD_MAX_WIDTH = 520;
-const THREAD_DEFAULT_WIDTH = 352;
+const ASIDE_MIN_WIDTH = 280;
+const ASIDE_MAX_WIDTH = 520;
+const ASIDE_DEFAULT_WIDTH = 352;
 
 const slots = useSlots();
-const threadOpen = computed(() => Boolean(slots.thread));
+const asideOpen = computed(() => Boolean(slots.aside));
 const isDesktop = useMediaQuery("(min-width: 640px)");
-const showSplit = computed(() => threadOpen.value && isDesktop.value);
-const showMobileThread = computed(() => threadOpen.value && !isDesktop.value);
+const showSplit = computed(() => asideOpen.value && isDesktop.value);
+const showMobileAside = computed(() => asideOpen.value && !isDesktop.value);
 
-const threadWidth = ref(THREAD_DEFAULT_WIDTH);
+const asideWidth = ref(ASIDE_DEFAULT_WIDTH);
 const resizing = ref(false);
 const dragStartX = ref(0);
 const dragStartWidth = ref(0);
@@ -22,15 +22,15 @@ function onResizePointerDown(event: PointerEvent) {
   if (!showSplit.value) return;
   resizing.value = true;
   dragStartX.value = event.clientX;
-  dragStartWidth.value = threadWidth.value;
+  dragStartWidth.value = asideWidth.value;
 }
 
 useEventListener(window, "pointermove", (moveEvent) => {
   if (!resizing.value) return;
   const delta = dragStartX.value - moveEvent.clientX;
-  threadWidth.value = Math.min(
-    THREAD_MAX_WIDTH,
-    Math.max(THREAD_MIN_WIDTH, dragStartWidth.value + delta),
+  asideWidth.value = Math.min(
+    ASIDE_MAX_WIDTH,
+    Math.max(ASIDE_MIN_WIDTH, dragStartWidth.value + delta),
   );
 });
 
@@ -50,7 +50,7 @@ useEventListener(document, "selectstart", (event) => {
     data-slot="conversation-surface"
   >
     <section
-      v-show="!showMobileThread"
+      v-show="!showMobileAside"
       class="flex min-w-0 flex-1 flex-col"
       aria-label="Conversation"
       data-slot="conversation-column"
@@ -81,7 +81,7 @@ useEventListener(document, "selectstart", (event) => {
       </div>
     </section>
 
-    <template v-if="threadOpen">
+    <template v-if="asideOpen">
       <div
         v-if="showSplit"
         class="group relative z-1 -mx-1 w-2 shrink-0 cursor-col-resize touch-none"
@@ -97,18 +97,18 @@ useEventListener(document, "selectstart", (event) => {
         :class="
           cn(
             'flex min-h-0 flex-col overflow-hidden',
-            showMobileThread
+            showMobileAside
               ? 'absolute inset-3 z-10 min-w-0 rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-black/5 animate-in duration-300 fade-in dark:ring-white/10'
               : 'max-w-none shrink-0 animate-in duration-300 fade-in slide-in-from-right-4',
-            !showMobileThread &&
+            !showMobileAside &&
               'rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10',
           )
         "
-        :style="showSplit ? { width: `${threadWidth}px` } : undefined"
-        aria-label="Thread"
-        data-slot="conversation-thread"
+        :style="showSplit ? { width: `${asideWidth}px` } : undefined"
+        aria-label="Side panel"
+        data-slot="conversation-aside"
       >
-        <slot name="thread" />
+        <slot name="aside" />
       </aside>
     </template>
   </div>

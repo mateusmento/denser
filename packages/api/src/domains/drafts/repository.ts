@@ -5,7 +5,7 @@ import type {
   SpaceId,
   UserId,
 } from "@denser/contracts";
-import { and, asc, eq, isNull, lt } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, lt } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { messageDraft } from "../../db/schema/message-draft.js";
 
@@ -90,6 +90,24 @@ export async function updateDraft(input: {
 
 export async function deleteDraft(draftId: MessageDraftId): Promise<void> {
   await db.delete(messageDraft).where(eq(messageDraft.id, draftId));
+}
+
+export async function listDraftsForUser(
+  rootSpaceId: SpaceId,
+  authorId: UserId,
+  now: Date,
+): Promise<MessageDraftRow[]> {
+  return db
+    .select()
+    .from(messageDraft)
+    .where(
+      and(
+        eq(messageDraft.rootSpaceId, rootSpaceId),
+        eq(messageDraft.authorId, authorId),
+        gt(messageDraft.expiresAt, now),
+      ),
+    )
+    .orderBy(asc(messageDraft.updatedAt), asc(messageDraft.id));
 }
 
 export async function listExpiredDrafts(now: Date, limit: number): Promise<MessageDraftRow[]> {

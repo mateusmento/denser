@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ArtifactId, CreatePollInput, MessageId, PollOptionId, SpaceId, UserId } from "@denser/contracts";
+import type { ArtifactId, AttachmentId, CreatePollInput, MessageId, PollOptionId, SpaceId, UserId } from "@denser/contracts";
 import { emptyDoc, cloneDoc, type JSONContent, type MentionCandidate } from "@/modules/rich-text";
 import { toast } from "@denser/design-system";
 import { useQuery } from "@tanstack/vue-query";
@@ -19,7 +19,9 @@ import { useMessageDraftSync } from "../composables/useMessageDraftSync";
 import { useThreadMessages } from "../composables/useThreadMessages";
 import { channelIntro, conversationMentionItems, schedulePresets } from "../fixtures";
 import { useScheduledMessagesSync } from "../composables/useScheduledMessagesSync";
+import { useWorkspaceOutboxSync } from "../composables/useWorkspaceOutboxSync";
 import { dueAtFromScheduleCommit } from "../lib/schedule-due-at";
+import { toScheduledOutboxRowViewFromMessageView } from "../lib/toOutboxRowView";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
@@ -29,21 +31,22 @@ import ScreenRecordingControlsPopover from "../presentationals/ScreenRecordingCo
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import PollInsertDialog from "../presentationals/PollInsertDialog.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
-import ConversationPaneTabs from "../presentationals/ConversationPaneTabs.vue";
-import ConversationSchedulesList from "../presentationals/ConversationSchedulesList.vue";
+import DraftsScheduledPanel from "../presentationals/DraftsScheduledPanel.vue";
 import RescheduleScheduleDialog from "../presentationals/RescheduleScheduleDialog.vue";
 import type {
   ComposerActionId,
   ConversationIntroView,
   ConversationMessageView,
-  ConversationPane,
+  DraftsScheduledPanelTab,
   ScheduleCommitPayload,
 } from "../types";
 import type { ScheduledJobId } from "@denser/contracts";
 
 const route = useRoute();
 const conversationId = computed(() => route.params.conversationId as ArtifactId);
-const conversationPane = ref<ConversationPane>("messages");
+const outboxPanelOpen = ref(false);
+const outboxPanelTab = ref<DraftsScheduledPanelTab>("drafts");
+const scheduledEditJobId = ref<ScheduledJobId | null>(null);
 const editingScheduleId = ref<ScheduledJobId | null>(null);
 const scheduleEditOpen = ref(false);
 
@@ -79,7 +82,34 @@ const readState = useConversationReadState(conversationId, {
 });
 
 const scheduledSync = useScheduledMessagesSync(conversationId);
+const workspaceOutbox = useWorkspaceOutboxSync(
+  computed(() => workspaceMembersQuery.data.value?.rootSpaceId ?? null),
+);
 const { user } = useAuthSession();
+
+const conversationDraftRows = computed(() =>
+  workspaceOutbox.drafts.value.filter((draft) => draft.conversationId === conversationId.value),
+);
+
+const conversationScheduledRows = computed(() =>
+  scheduledSync.schedules.value
+    .filter((entry) => entry.isMine)
+    .map((entry) =>
+      toScheduledOutboxRowViewFromMessageView(
+        entry,
+        conversationTitle.value || conversationSync.headerView.value.title,
+        conversationId.value,
+      ),
+    ),
+);
+
+const outboxBadgeCount = computed(
+  () => conversationDraftRows.value.length + conversationScheduledRows.value.length,
+);
+
+const scheduledEditEntry = computed(() =>
+  scheduledSync.schedules.value.find((entry) => entry.id === scheduledEditJobId.value),
+);
 
 const messagesSync = useConversationMessages(conversationId, {
   openAnchor: computed(() => readState.openAnchor.value),
@@ -171,7 +201,19 @@ threadDraftSync.bindDraft(threadDraft);
 watch(conversationId, () => {
   activeThreadId.value = null;
   threadDraft.value = emptyDoc();
+  outboxPanelOpen.value = false;
+  scheduledEditJobId.value = null;
 });
+
+watch(
+  () => route.query.thread,
+  (threadId) => {
+    if (typeof threadId === "string") {
+      activeThreadId.value = threadId as MessageId;
+    }
+  },
+  { immediate: true },
+);
 
 const channelAttachments = useComposerAttachments({
   conversationId,
@@ -240,11 +282,21 @@ const scheduleComposerProps = computed(() => ({
 const channelComposer = computed(() =>
   defaultChannelComposerView({
     schedulePresets,
-    sending: messagesSync.isSending.value || messagesSync.isEditing.value,
+    sending: messagesSync.isSending.value || messagesSync.isEditing.value || scheduledSync.isScheduling.value,
     failed: messagesSync.failed.value,
     attachments: channelAttachments.view.value,
     isEditing: editingMessageId.value != null && !editingInThread.value,
-    sendLabel: editingMessageId.value != null && !editingInThread.value ? "Save" : "Send",
+    isScheduledEditing: scheduledEditJobId.value != null && !scheduledEditEntry.value?.threadId,
+    scheduledEditBanner: scheduledEditEntry.value
+      ? `Editing scheduled message · sends ${scheduledEditEntry.value.dueAtLabel}`
+      : undefined,
+    scheduleEnabled: scheduledEditJobId.value == null,
+    sendLabel:
+      scheduledEditJobId.value != null && !scheduledEditEntry.value?.threadId
+        ? "Save"
+        : editingMessageId.value != null && !editingInThread.value
+          ? "Save"
+          : "Send",
     ...scheduleComposerProps.value,
   }),
 );
@@ -277,9 +329,70 @@ function clearEdit() {
   editingInThread.value = false;
 }
 
+function clearScheduledEdit() {
+  scheduledEditJobId.value = null;
+  channelAttachments.clearAfterSend();
+}
+
+function beginScheduledEdit(jobId: ScheduledJobId) {
+  const entry = scheduledSync.schedules.value.find((item) => item.id === jobId);
+  if (!entry) return;
+
+  outboxPanelOpen.value = false;
+  clearEdit();
+  scheduledEditJobId.value = jobId;
+
+  if (entry.threadId) {
+    activeThreadId.value = entry.threadId as MessageId;
+    threadDraft.value = cloneDoc(entry.body);
+    return;
+  }
+
+  activeThreadId.value = null;
+  channelDraft.value = cloneDoc(entry.body);
+  channelAttachments.seedAttachments(
+    entry.attachments.map((attachment) => ({
+      id: attachment.id as AttachmentId,
+      rootSpaceId: (workspaceMembersQuery.data.value?.rootSpaceId ?? conversationId.value) as SpaceId,
+      uploadedBy: (user.value?.id ?? entry.senderId) as UserId,
+      originalFilename: attachment.name,
+      mimeType: attachment.mimeType,
+      url: attachment.url,
+      byteSize: attachment.byteSize,
+      createdAt: new Date().toISOString(),
+      conversationId: conversationId.value,
+    })),
+  );
+}
+
+watch(
+  () => [route.query.scheduledEdit, scheduledSync.isLoading.value] as const,
+  ([scheduledEdit, loading]) => {
+    if (loading || typeof scheduledEdit !== "string") return;
+    beginScheduledEdit(scheduledEdit as ScheduledJobId);
+  },
+);
+
 async function onChannelSend() {
   presence.stopTyping();
   if (channelAttachments.hasBlockingUpload.value) return;
+
+  if (scheduledEditJobId.value && !scheduledEditEntry.value?.threadId) {
+    try {
+      await scheduledSync.update({
+        jobId: scheduledEditJobId.value,
+        body: channelDraft.value,
+        attachmentIds: channelAttachments.collectAttachmentIds(channelDraft.value),
+      });
+      channelDraft.value = emptyDoc();
+      clearScheduledEdit();
+      toast("Scheduled message updated");
+      void workspaceOutbox.invalidate();
+    } catch {
+      toast("Couldn't save scheduled message");
+    }
+    return;
+  }
 
   if (editingMessageId.value && !editingInThread.value) {
     try {
@@ -343,6 +456,11 @@ async function onThreadSend() {
 }
 
 function onCancelChannelEdit() {
+  if (scheduledEditJobId.value) {
+    channelDraft.value = emptyDoc();
+    clearScheduledEdit();
+    return;
+  }
   channelDraft.value = emptyDoc();
   clearEdit();
 }
@@ -366,8 +484,16 @@ async function onSchedule(payload: ScheduleCommitPayload) {
     });
     await channelDraftSync.clearDraft(channelDraft);
     channelAttachments.clearAfterSend();
-    toast(`Message scheduled · ${payload.whenLabel}`);
-    conversationPane.value = "schedules";
+    toast(`Message scheduled · ${payload.whenLabel}`, {
+      action: {
+        label: "View",
+        onClick: () => {
+          outboxPanelTab.value = "scheduled";
+          openOutboxPanel();
+        },
+      },
+    });
+    void workspaceOutbox.invalidate();
   } catch {
     toast("Couldn't schedule message");
   }
@@ -388,8 +514,16 @@ async function onThreadSchedule(payload: ScheduleCommitPayload) {
     });
     await threadDraftSync.clearDraft(threadDraft);
     threadAttachments.clearAfterSend();
-    toast(`Reply scheduled · ${payload.whenLabel}`);
-    conversationPane.value = "schedules";
+    toast(`Reply scheduled · ${payload.whenLabel}`, {
+      action: {
+        label: "View",
+        onClick: () => {
+          outboxPanelTab.value = "scheduled";
+          openOutboxPanel();
+        },
+      },
+    });
+    void workspaceOutbox.invalidate();
   } catch {
     toast("Couldn't schedule reply");
   }
@@ -401,7 +535,28 @@ function onReact(messageId: string, emoji: string) {
   });
 }
 
+function openOutboxPanel() {
+  activeThreadId.value = null;
+  outboxPanelOpen.value = true;
+}
+
+function closeOutboxPanel() {
+  outboxPanelOpen.value = false;
+}
+
+function onOpenOutboxMenu() {
+  openOutboxPanel();
+}
+
+function onOpenDraftFromPanel(draftId: string) {
+  const draft = conversationDraftRows.value.find((row) => row.id === draftId);
+  if (!draft) return;
+  outboxPanelOpen.value = false;
+  activeThreadId.value = draft.threadId ? (draft.threadId as MessageId) : null;
+}
+
 function onOpenThread(messageId: string) {
+  outboxPanelOpen.value = false;
   activeThreadId.value = messageId as MessageId;
 }
 
@@ -530,6 +685,14 @@ function onEditSchedule(id: string) {
   scheduleEditOpen.value = true;
 }
 
+function onRescheduleFromPanel(id: string) {
+  onEditSchedule(id);
+}
+
+function onEditScheduledMessageFromPanel(id: string) {
+  beginScheduledEdit(id as ScheduledJobId);
+}
+
 async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
   if (!editingScheduleId.value) return;
   try {
@@ -541,6 +704,7 @@ async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
       until: payload.until,
     });
     toast(`Schedule updated · ${payload.whenLabel}`);
+    void workspaceOutbox.invalidate();
   } catch {
     toast("Couldn't update schedule");
   }
@@ -550,6 +714,7 @@ async function onCancelSchedule(id: string) {
   try {
     await scheduledSync.cancel(id as ScheduledJobId);
     toast("Scheduled message cancelled");
+    void workspaceOutbox.invalidate();
   } catch {
     toast("Couldn't cancel schedule");
   }
@@ -563,22 +728,14 @@ async function onThreadJumpToLatest() {
 <template>
   <ConversationSurface>
     <template #header>
-      <div class="flex h-full w-full flex-col gap-1">
-        <ChannelHeader :channel="channelHeader" />
-        <ConversationPaneTabs v-model="conversationPane" />
-      </div>
+      <ChannelHeader
+        :channel="channelHeader"
+        :outbox-badge-count="outboxBadgeCount"
+        @open-outbox="onOpenOutboxMenu"
+      />
     </template>
     <template #messages>
-      <ConversationSchedulesList
-        v-if="conversationPane === 'schedules'"
-        :schedules="scheduledSync.schedules.value"
-        :loading="scheduledSync.isLoading.value"
-        :error-label="schedulesErrorLabel"
-        @edit="onEditSchedule"
-        @cancel="onCancelSchedule"
-      />
       <ConversationTimeline
-        v-else
         ref="timelineRef"
         :messages="displayMessages"
         :intro="showConversationIntro ? conversationIntro : undefined"
@@ -608,7 +765,6 @@ async function onThreadJumpToLatest() {
       <div class="flex min-h-0 flex-1 flex-col">
         <TypingBanner v-if="presence.typingLabel.value" :label="presence.typingLabel.value" />
         <MessageComposer
-          v-if="conversationPane === 'messages'"
           v-model="channelDraft"
           :view="channelComposer"
           :mention-items="mentionItems"
@@ -631,7 +787,7 @@ async function onThreadJumpToLatest() {
         />
       </div>
     </template>
-    <template v-if="activeThreadId && threadSync.thread.value" #thread>
+    <template v-if="activeThreadId && threadSync.thread.value" #aside>
       <ThreadPane
         v-model="threadDraft"
         :thread="threadSync.thread.value"
@@ -665,6 +821,23 @@ async function onThreadJumpToLatest() {
         @cancel-upload="threadAttachments.cancelUpload"
         @retry-upload="threadAttachments.retryUpload"
         @dismiss-upload="threadAttachments.dismissFailed"
+      />
+    </template>
+    <template v-else-if="outboxPanelOpen" #aside>
+      <DraftsScheduledPanel
+        v-model:tab="outboxPanelTab"
+        :drafts="conversationDraftRows"
+        :scheduled="conversationScheduledRows"
+        :drafts-loading="workspaceOutbox.isDraftsLoading.value"
+        :scheduled-loading="scheduledSync.isLoading.value"
+        :drafts-error-label="workspaceOutbox.draftsError.value ? 'Couldn\u2019t load drafts.' : undefined"
+        :scheduled-error-label="schedulesErrorLabel"
+        @close="closeOutboxPanel"
+        @open-draft="onOpenDraftFromPanel"
+        @open-scheduled="onEditScheduledMessageFromPanel"
+        @edit-scheduled-message="onEditScheduledMessageFromPanel"
+        @reschedule-scheduled="onRescheduleFromPanel"
+        @cancel-scheduled="onCancelSchedule"
       />
     </template>
     <RescheduleScheduleDialog

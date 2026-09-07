@@ -10,6 +10,7 @@ import { pollRoutes } from "../domains/polls/routes.js";
 import { reactionRoutes } from "../domains/reactions/routes.js";
 import { scheduledMessageRoutes } from "../domains/scheduled-messages/routes.js";
 import { spaceRoutes, spaceSprintRoutes } from "../domains/spaces/routes.js";
+import { outboxRoutes } from "../domains/outbox/routes.js";
 import { documentTypeRoutes } from "../domains/workflows/routes.js";
 
 type Variables = {
@@ -28,5 +29,6 @@ export const apiRoutes = new Hono<{ Variables: Variables }>()
   .route("/", pollRoutes)
   .route("/", reactionRoutes)
   .route("/", scheduledMessageRoutes)
+  .route("/", outboxRoutes)
   .route("/", attachmentRoutes)
   .route("/", documentTypeRoutes);

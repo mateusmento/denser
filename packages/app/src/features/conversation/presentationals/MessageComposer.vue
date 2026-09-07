@@ -227,7 +227,12 @@ function onDrop(event: DragEvent) {
       </ScrollArea>
     </CardContent>
 
-    <p v-if="view.isEditing" class="px-3 text-xs text-muted-foreground">
+    <p v-if="view.isScheduledEditing && view.scheduledEditBanner" class="px-3 text-xs text-muted-foreground">
+      {{ view.scheduledEditBanner }}
+      <button type="button" class="ms-2 underline" @click="emit('cancelEdit')">Cancel</button>
+    </p>
+
+    <p v-else-if="view.isEditing" class="px-3 text-xs text-muted-foreground">
       Editing message
       <button type="button" class="ms-2 underline" @click="emit('cancelEdit')">Cancel</button>
     </p>
@@ -242,7 +247,7 @@ function onDrop(event: DragEvent) {
         <div class="flex w-full items-center gap-1">
           <template v-for="action in partitioned.visible" :key="action.id">
             <SchedulePopover
-              v-if="action.id === 'schedule'"
+              v-if="action.id === 'schedule' && view.scheduleEnabled !== false"
               v-model:open="scheduleOpen"
               :presets="view.schedulePresets"
               :timezone="view.scheduleUserTimezone ?? undefined"

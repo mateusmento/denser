@@ -36,6 +36,7 @@ function toScheduledMessageRow(row: typeof scheduledJob.$inferSelect): Scheduled
 export async function listActiveScheduledMessagesForConversation(
   conversationId: string,
   rootSpaceId: SpaceId,
+  senderId?: UserId,
 ): Promise<ScheduledMessageRow[]> {
   const rows = await db
     .select()
@@ -46,11 +47,52 @@ export async function listActiveScheduledMessagesForConversation(
         eq(scheduledJob.type, "scheduled_message"),
         eq(scheduledJob.processed, false),
         sql`${scheduledJob.payload}->>'conversationId' = ${conversationId}`,
+        ...(senderId
+          ? [sql`${scheduledJob.payload}->>'senderId' = ${senderId}`]
+          : []),
       ),
     )
     .orderBy(scheduledJob.dueAt, scheduledJob.id);
 
   return rows.map(toScheduledMessageRow);
+}
+
+export async function listActiveScheduledMessagesForUser(
+  rootSpaceId: SpaceId,
+  senderId: UserId,
+): Promise<ScheduledMessageRow[]> {
+  const rows = await db
+    .select()
+    .from(scheduledJob)
+    .where(
+      and(
+        eq(scheduledJob.rootSpaceId, rootSpaceId),
+        eq(scheduledJob.type, "scheduled_message"),
+        eq(scheduledJob.processed, false),
+        sql`${scheduledJob.payload}->>'senderId' = ${senderId}`,
+      ),
+    )
+    .orderBy(scheduledJob.nextRunAt, scheduledJob.id);
+
+  return rows.map(toScheduledMessageRow);
+}
+
+export async function countActiveScheduledMessagesForUser(
+  rootSpaceId: SpaceId,
+  senderId: UserId,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(scheduledJob)
+    .where(
+      and(
+        eq(scheduledJob.rootSpaceId, rootSpaceId),
+        eq(scheduledJob.type, "scheduled_message"),
+        eq(scheduledJob.processed, false),
+        sql`${scheduledJob.payload}->>'senderId' = ${senderId}`,
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 export async function listActiveScheduledMessages(): Promise<ScheduledMessageRow[]> {

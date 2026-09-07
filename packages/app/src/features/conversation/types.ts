@@ -130,6 +130,32 @@ export type ScheduleCommitPayload = {
 
 export type ConversationPane = "messages" | "schedules";
 
+export type OutboxContextLabel = "channel" | "thread";
+
+export type DraftOutboxRowView = {
+  id: string;
+  conversationId: string;
+  threadId: string | null;
+  conversationLabel: string;
+  contextLabel: OutboxContextLabel;
+  bodyPreview: string;
+};
+
+export type ScheduledOutboxRowView = {
+  id: string;
+  conversationId: string;
+  threadId: string | null;
+  conversationLabel: string;
+  contextLabel: OutboxContextLabel;
+  bodyPreview: string;
+  nextRunAtIso: string;
+  timezone: string | null;
+  recurrenceLabel: string;
+  nextRunWallTimeLabel: string;
+};
+
+export type DraftsScheduledPanelTab = "drafts" | "scheduled";
+
 export type ScheduledMessageView = {
   id: string;
   senderId: string;
@@ -200,6 +226,10 @@ export type MessageComposerView = {
   failed: boolean;
   /** Composer is saving an in-place message edit. */
   isEditing?: boolean;
+  /** Composer is editing a scheduled message body (timing unchanged). */
+  isScheduledEditing?: boolean;
+  scheduledEditBanner?: string;
+  scheduleEnabled?: boolean;
   schedulePresets: readonly SchedulePreset[];
   scheduleUserTimezone?: string | null;
   scheduleTimezone?: string | null;

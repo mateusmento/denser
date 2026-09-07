@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { defineMeta } from "sb-addon-vue-csf";
 import { formatScheduleWallTime, scheduleRecurrenceLabel } from "../lib/formatScheduleWallTime";
-import ScheduledMessageRow from "../presentationals/ScheduledMessageRow.vue";
-import type { ConversationScheduledMessageView } from "../types";
+import ScheduledOutboxRow from "../presentationals/ScheduledOutboxRow.vue";
+import type { ScheduledOutboxRowView } from "../types";
 
 const { Story } = defineMeta({
-  title: "features/conversation/ScheduledMessageRow",
-  component: ScheduledMessageRow,
+  title: "features/conversation/ScheduledOutboxRow",
+  component: ScheduledOutboxRow,
   tags: ["autodocs"],
 });
 
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const nextRunAtIso = new Date(Date.now() + 86_400_000).toISOString();
 
-const item: ConversationScheduledMessageView = {
+const item: ScheduledOutboxRowView = {
   id: "sched-1",
+  conversationId: "conv-1",
+  threadId: null,
+  conversationLabel: "#engineering",
+  contextLabel: "channel",
   bodyPreview: "Weekly standup notes go out before the meeting.",
   nextRunAtIso,
   timezone,
@@ -29,6 +33,6 @@ const item: ConversationScheduledMessageView = {
 
 <template>
   <Story as-child name="Weekly">
-    <ScheduledMessageRow :item="item" />
+    <ScheduledOutboxRow :item="item" />
   </Story>
 </template>

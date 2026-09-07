@@ -50,6 +50,10 @@ import {
   ScheduleMessageInput,
   ScheduleMessageResponse,
   UpdateScheduledMessageInput,
+  ListDraftOutboxResponse,
+  DraftOutboxCountResponse,
+  ListScheduledOutboxResponse,
+  ScheduledOutboxCountResponse,
 
   type ArtifactId,
   type AttachmentId,
@@ -777,6 +781,38 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("cancel scheduled message failed", res.status, body);
     return ScheduleMessageResponse.parse(body);
+  }
+
+  async listWorkspaceDrafts(rootSpaceId: SpaceId): Promise<ListDraftOutboxResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/drafts`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list workspace drafts failed", res.status, body);
+    return ListDraftOutboxResponse.parse(body);
+  }
+
+  async countWorkspaceDrafts(rootSpaceId: SpaceId): Promise<DraftOutboxCountResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/drafts/count`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("count workspace drafts failed", res.status, body);
+    return DraftOutboxCountResponse.parse(body);
+  }
+
+  async listWorkspaceScheduledMessages(
+    rootSpaceId: SpaceId,
+  ): Promise<ListScheduledOutboxResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/scheduled-messages`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list workspace scheduled messages failed", res.status, body);
+    return ListScheduledOutboxResponse.parse(body);
+  }
+
+  async countWorkspaceScheduledMessages(
+    rootSpaceId: SpaceId,
+  ): Promise<ScheduledOutboxCountResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/scheduled-messages/count`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("count workspace scheduled messages failed", res.status, body);
+    return ScheduledOutboxCountResponse.parse(body);
   }
 
   async votePoll(

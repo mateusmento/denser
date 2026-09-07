@@ -344,6 +344,10 @@ export function useComposerAttachments(options: {
     staged.value = [];
   }
 
+  function seedAttachments(dtos: readonly AttachmentDto[]) {
+    staged.value = [...dtos];
+  }
+
   function hasSendableContent(doc: JSONContent): boolean {
     const text = JSON.stringify(doc);
     const hasBody = text.length > JSON.stringify(emptyDoc()).length;
@@ -362,6 +366,7 @@ export function useComposerAttachments(options: {
     collectAttachmentIds,
     collectAttachmentDtos,
     clearAfterSend,
+    seedAttachments,
     hasSendableContent,
     hasBlockingUpload,
   };

@@ -6,6 +6,8 @@ import DocumentView from "@/views/DocumentView.vue";
 import HomeView from "@/views/HomeView.vue";
 import SignInView from "@/views/SignInView.vue";
 import SpaceView from "@/views/SpaceView.vue";
+import WorkspaceDraftsView from "@/views/WorkspaceDraftsView.vue";
+import WorkspaceScheduledView from "@/views/WorkspaceScheduledView.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -34,6 +36,12 @@ export const router = createRouter({
           name: "conversation",
           component: ConversationView,
           props: true,
+        },
+        { path: "drafts", name: "workspace-drafts", component: WorkspaceDraftsView },
+        {
+          path: "scheduled",
+          name: "workspace-scheduled",
+          component: WorkspaceScheduledView,
         },
       ],
     },

@@ -13,4 +13,5 @@ export * from "./reaction.js";
 export * from "./ephemeral.js";
 export * from "./scheduling.js";
 export * from "./scheduled-message.js";
+export * from "./outbox.js";
 export * from "./poll.js";

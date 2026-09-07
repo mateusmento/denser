@@ -16,7 +16,13 @@ export type WorkspaceNavLink = {
   peerOnline?: boolean;
   unreadCount?: number;
   to: {
-    name: "home" | "space" | "document" | "conversation";
+    name:
+      | "home"
+      | "space"
+      | "document"
+      | "conversation"
+      | "workspace-drafts"
+      | "workspace-scheduled";
     params?: { spaceId?: string; documentId?: string; conversationId?: string };
   };
   isActive: boolean;
@@ -42,6 +48,7 @@ export type WorkspaceNavView = {
   homeSection?: WorkspaceNavSection;
   inSpaceSection?: WorkspaceNavSection;
   directMessagesSection?: WorkspaceNavSection;
+  outboxSection?: WorkspaceNavSection;
   activeRootSpaceId?: string | null;
 };
 

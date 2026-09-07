@@ -30,6 +30,7 @@ import {
 } from "@/features/document/lib/document-query";
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 import { useUnreadSummarySync } from "@/features/conversation/composables/useUnreadSummarySync";
+import { useWorkspaceOutboxSync } from "@/features/conversation/composables/useWorkspaceOutboxSync";
 
 function spaceLink(
   space: Pick<SpaceSummary, "id" | "title" | "icon">,
@@ -268,6 +269,7 @@ export function useWorkspaceNavSync() {
 
   const { isUserOnline } = useWorkspacePresence(workspaceRootId);
   const unreadSummary = useUnreadSummarySync(workspaceRootId);
+  const workspaceOutbox = useWorkspaceOutboxSync(workspaceRootId);
 
   const view = computed((): WorkspaceNavView => {
     const emptyHomeSection = {
@@ -329,6 +331,35 @@ export function useWorkspaceNavSync() {
       : undefined;
 
     const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
+    const outboxSection =
+      rootSpaceId != null
+        ? {
+            label: "Outbox",
+            items: [
+              {
+                id: "workspace-drafts",
+                label: "Drafts",
+                to: { name: "workspace-drafts" as const },
+                isActive: route.name === "workspace-drafts",
+                unreadCount:
+                  workspaceOutbox.draftCount.value > 0
+                    ? workspaceOutbox.draftCount.value
+                    : undefined,
+              },
+              {
+                id: "workspace-scheduled",
+                label: "Scheduled",
+                to: { name: "workspace-scheduled" as const },
+                isActive: route.name === "workspace-scheduled",
+                unreadCount:
+                  workspaceOutbox.scheduledCount.value > 0
+                    ? workspaceOutbox.scheduledCount.value
+                    : undefined,
+              },
+            ],
+            scopeSpaceId: rootSpaceId,
+          }
+        : undefined;
     const directMessagesSection =
       rootSpaceId && directMessagesQuery.data.value
         ? {
@@ -355,6 +386,7 @@ export function useWorkspaceNavSync() {
       homeSection,
       inSpaceSection,
       directMessagesSection,
+      outboxSection,
       activeRootSpaceId: rootSpaceId,
     };
   });
@@ -374,6 +406,18 @@ export function useWorkspaceNavSync() {
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.unreadSummary(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaceDrafts(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaceDraftCount(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaceScheduledMessages(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaceScheduledCount(workspaceRootId.value),
       });
     }
   };

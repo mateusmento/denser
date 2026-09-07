@@ -178,6 +178,7 @@ export async function listScheduledMessages(
   const rows = await repo.listActiveScheduledMessagesForConversation(
     conversationId,
     conversation.rootSpaceId,
+    userId,
   );
   const scheduledMessages = await Promise.all(rows.map((row) => present(row)));
   return { ok: true as const, scheduledMessages };

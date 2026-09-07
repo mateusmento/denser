@@ -14,6 +14,12 @@ export const queryKeys = {
     ["conversation", conversationId, "scheduled-messages"] as const,
   directMessages: (rootSpaceId: string) => ["directMessages", rootSpaceId] as const,
   unreadSummary: (rootSpaceId: string) => ["unreadSummary", rootSpaceId] as const,
+  workspaceDrafts: (rootSpaceId: string) => ["workspaceDrafts", rootSpaceId] as const,
+  workspaceDraftCount: (rootSpaceId: string) => ["workspaceDraftCount", rootSpaceId] as const,
+  workspaceScheduledMessages: (rootSpaceId: string) =>
+    ["workspaceScheduledMessages", rootSpaceId] as const,
+  workspaceScheduledCount: (rootSpaceId: string) =>
+    ["workspaceScheduledCount", rootSpaceId] as const,
   conversationUnread: (conversationId: string) =>
     ["conversation", conversationId, "unread"] as const,
 };
