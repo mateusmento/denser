@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { test } from "node:test";
 import {
   createMeetingStartJob,
   createScheduledMessageJob,
@@ -13,6 +12,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { scheduledJob } from "../../db/schema/scheduled-job.js";
 import { createJob, registerHandler, runScheduleTick } from "./service.js";
+import { schedulingTest } from "./test-cleanup.js";
 
 function jobFixture() {
   const dueAt = new Date("2020-01-01T00:00:00.000Z");
@@ -30,7 +30,7 @@ async function deleteJob(id: ScheduledJobId): Promise<void> {
   await db.delete(scheduledJob).where(eq(scheduledJob.id, id));
 }
 
-test("runScheduleTick dispatches a due job through its handler and marks it processed", async () => {
+schedulingTest("runScheduleTick dispatches a due job through its handler and marks it processed", async () => {
   const id = await createJob(jobFixture());
   const calls: string[] = [];
   registerHandler("scheduled_message", async (job, ctx) => {
@@ -52,7 +52,7 @@ test("runScheduleTick dispatches a due job through its handler and marks it proc
   }
 });
 
-test("an unknown handler type falls back to the noop logger", async () => {
+schedulingTest("an unknown handler type falls back to the noop logger", async () => {
   const dueAt = new Date("2020-01-01T00:00:00.000Z");
   const meetingJob = createMeetingStartJob(
     { rootSpaceId: SEED_SPACE_ACME, dueAt: dueAt.toISOString(), nextRunAt: dueAt.toISOString() },
@@ -75,7 +75,7 @@ test("an unknown handler type falls back to the noop logger", async () => {
   }
 });
 
-test("a failing handler releases the lock with backoff; max retries dead-letters the job", async () => {
+schedulingTest("a failing handler releases the lock with backoff; max retries dead-letters the job", async () => {
   const id = await createJob(jobFixture());
   registerHandler("scheduled_message", async () => {
     throw new Error("kaboom");
@@ -110,7 +110,8 @@ test("a failing handler releases the lock with backoff; max retries dead-letters
     await deleteJob(id);
   }
 });
-test("a recurring daily job advances next_run_at instead of processing", async () => {
+
+schedulingTest("a recurring daily job advances next_run_at instead of processing", async () => {
   const dueAt = new Date("2030-01-01T09:00:00.000Z");
   const job = createScheduledMessageJob(
     {

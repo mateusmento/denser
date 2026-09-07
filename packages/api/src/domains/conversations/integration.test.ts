@@ -1,16 +1,15 @@
+import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
+import { and, eq, inArray } from "drizzle-orm";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
-import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { artifact } from "../../db/schema/artifact.js";
 import { user as userTable } from "../../db/schema/auth.js";
 import { conversation } from "../../db/schema/conversation.js";
 import { space, spaceMembership } from "../../db/schema/space.js";
-import { canAccessArtifact } from "../tenancy/access.js";
 import * as conversationRepository from "./repository.js";
-import { createOrOpenDirectConversation, createConversation, hideDirectConversation, listDirectConversations, patchConversation, unhideDirectConversation } from "./service.js";
-import type { ArtifactId, SpaceId, UserId } from "@denser/contracts";
+import { createConversation, createOrOpenDirectConversation, hideDirectConversation, listDirectConversations, patchConversation, unhideDirectConversation } from "./service.js";
 
 async function makeFixture() {
   const aliceId = randomUUID() as UserId;
@@ -80,6 +79,10 @@ test("regular conversation can move between spaces", async () => {
     await db.insert(space).values([
       { id: childSpaceId, title: "Channel folder", visibility: "private", timezone: "UTC", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
       { id: targetSpaceId, title: "Other folder", visibility: "private", timezone: "UTC", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
+    ]);
+    await db.insert(spaceMembership).values([
+      { spaceId: childSpaceId, userId: f.aliceId, role: "owner" },
+      { spaceId: targetSpaceId, userId: f.aliceId, role: "owner" },
     ]);
 
     const created = await createConversation(f.aliceId, {

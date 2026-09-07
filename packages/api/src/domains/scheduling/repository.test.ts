@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { scheduledJob } from "../../db/schema/scheduled-job.js";
 import { occurrenceKey, claimDueJobs, markFailure, MAX_RETRIES } from "./repository.js";
+import { schedulingTest } from "./test-cleanup.js";
 
 function dueJob() {
   const dueAt = new Date("2020-01-01T00:00:00.000Z");
@@ -57,7 +58,7 @@ test("occurrence key = job id + occurrence instant", () => {
   assert.notEqual(occurrenceKey(id, at), occurrenceKey(id, new Date(at.getTime() + 1)));
 });
 
-test("two concurrent claimants do not double-take the same due job", async () => {
+schedulingTest("two concurrent claimants do not double-take the same due job", async () => {
   const id = await insertJob();
   const now = new Date();
   const staleLockBefore = new Date(now.getTime() - 3_600_000);
@@ -84,7 +85,7 @@ test("two concurrent claimants do not double-take the same due job", async () =>
   }
 });
 
-test("a stale lock is reclaimed after the TTL", async () => {
+schedulingTest("a stale lock is reclaimed after the TTL", async () => {
   const id = await insertJob();
   await db
     .update(scheduledJob)
@@ -104,7 +105,7 @@ test("a stale lock is reclaimed after the TTL", async () => {
   }
 });
 
-test("a non-stale lock is not reclaimable", async () => {
+schedulingTest("a non-stale lock is not reclaimable", async () => {
   const id = await insertJob();
   await db
     .update(scheduledJob)
@@ -123,7 +124,7 @@ test("a non-stale lock is not reclaimable", async () => {
   }
 });
 
-test("failed jobs wait for exponential backoff before being reclaimed", async () => {
+schedulingTest("failed jobs wait for exponential backoff before being reclaimed", async () => {
   const id = await insertJob();
   const now = new Date();
   const staleLockBefore = new Date(now.getTime() - 3_600_000);
@@ -160,7 +161,7 @@ test("failed jobs wait for exponential backoff before being reclaimed", async ()
   }
 });
 
-test("jobs past max retries are never claimed again", async () => {
+schedulingTest("jobs past max retries are never claimed again", async () => {
   const id = await insertJob();
   try {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
