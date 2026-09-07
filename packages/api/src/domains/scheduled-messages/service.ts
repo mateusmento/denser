@@ -18,6 +18,7 @@ import {
   emitScheduledMessageCancelled,
   emitScheduledMessageUpserted,
 } from "../../realtime/scheduled-message-events.js";
+import { findConversationByArtifactId } from "../conversations/repository.js";
 import { deleteMessageDraft } from "../drafts/service.js";
 import type { MessageService } from "../messages/service.js";
 import { requireArtifactAccess } from "../tenancy/access.js";
@@ -25,6 +26,7 @@ import { createJob, registerHandler } from "../scheduling/service.js";
 import { toScheduledMessageDto } from "./mapper.js";
 import * as repo from "./repository.js";
 import { isOnceJob } from "./recurrence.js";
+import { scheduledMessageRootSpaceId } from "./tenant.js";
 
 function isEmptyBody(body: unknown): boolean {
   if (body == null) return true;
@@ -45,8 +47,14 @@ async function requireConversation(
   conversationId: ArtifactId,
 ): Promise<ConversationContext | null> {
   const row = await requireArtifactAccess(userId, conversationId);
-  if (!row || row.kind !== "conversation" || !row.rootSpaceId) return null;
-  return { kind: "conversation", rootSpaceId: row.rootSpaceId };
+  if (!row || row.kind !== "conversation") return null;
+  const conversationRow = await findConversationByArtifactId(conversationId);
+  const rootSpaceId = scheduledMessageRootSpaceId({
+    artifactRootSpaceId: row.rootSpaceId,
+    conversationRootSpaceId: conversationRow?.rootSpaceId,
+  });
+  if (!rootSpaceId) return null;
+  return { kind: "conversation", rootSpaceId };
 }
 
 async function loadScheduledAttachments(jobId: ScheduledJobId): Promise<AttachmentDto[]> {

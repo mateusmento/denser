@@ -3,6 +3,27 @@ import { test } from "node:test";
 import type { ArtifactId, ScheduledJobId, SpaceId, UserId } from "@denser/contracts";
 import { createScheduledMessageJob } from "@denser/contracts";
 import { isOnceJob } from "./recurrence.js";
+import { scheduledMessageRootSpaceId } from "./tenant.js";
+
+test("scheduledMessageRootSpaceId uses conversation root for DMs", () => {
+  assert.equal(
+    scheduledMessageRootSpaceId({
+      artifactRootSpaceId: null,
+      conversationRootSpaceId: "00000000-0000-4000-8000-000000000001" as SpaceId,
+    }),
+    "00000000-0000-4000-8000-000000000001",
+  );
+});
+
+test("scheduledMessageRootSpaceId uses artifact root for channels", () => {
+  assert.equal(
+    scheduledMessageRootSpaceId({
+      artifactRootSpaceId: "00000000-0000-4000-8000-000000000001" as SpaceId,
+      conversationRootSpaceId: null,
+    }),
+    "00000000-0000-4000-8000-000000000001",
+  );
+});
 
 test("isOnceJob treats null recurrence as once", () => {
   assert.equal(isOnceJob({ recurrence: null }), true);

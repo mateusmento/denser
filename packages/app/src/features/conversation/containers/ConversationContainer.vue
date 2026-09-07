@@ -341,7 +341,7 @@ async function onSchedule(payload: ScheduleCommitPayload) {
     toast(`Message scheduled · ${payload.whenLabel}`);
     conversationPane.value = "schedules";
   } catch {
-    toast("Couldn't schedule message — schedule API may still be landing (#25)");
+    toast("Couldn't schedule message");
   }
 }
 
@@ -360,7 +360,7 @@ async function onThreadSchedule(payload: ScheduleCommitPayload) {
     toast(`Reply scheduled · ${payload.whenLabel}`);
     conversationPane.value = "schedules";
   } catch {
-    toast("Couldn't schedule reply — schedule API may still be landing (#25)");
+    toast("Couldn't schedule reply");
   }
 }
 
