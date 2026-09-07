@@ -2,6 +2,7 @@ import type {
   ArtifactId,
   ArtifactSummary,
   ConversationView,
+  SidebarSectionItemLimit,
   SpaceId,
   SpacePreset,
   SpaceSummary,
@@ -21,8 +22,15 @@ import {
   upsertMany,
 } from "@/lib/db";
 import { queryKeys } from "@/lib/query-keys";
-import type { WorkspaceNavHomeButton, WorkspaceNavLink, WorkspaceNavView } from "../types";
-import { truncateInSpaceNavItems } from "../lib/nav-section-items";
+import type {
+  WorkspaceNavHomeButton,
+  WorkspaceNavLink,
+  WorkspaceNavSection,
+  WorkspaceNavSectionItemLimit,
+  WorkspaceNavView,
+} from "../types";
+import { IN_SPACE_SIDEBAR_ITEM_LIMIT, truncateInSpaceNavItems } from "../lib/nav-section-items";
+import { useSidebarPinsSync } from "./useSidebarPinsSync";
 import {
   documentQueryKey,
   fetchDocumentQueryData,
@@ -83,8 +91,48 @@ function sectionItems(
 ): WorkspaceNavLink[] {
   return [
     ...spaces.map((space) => spaceLink(space, activeSpaceId === space.id)),
-    ...artifacts.map((artifact) => artifactLink(artifact, activeArtifactId === artifact.id, artifact.kind === "conversation" ? unreadCountFor?.(artifact.id) : undefined)),
+    ...artifacts.map((artifact) =>
+      artifactLink(
+        artifact,
+        activeArtifactId === artifact.id,
+        artifact.kind === "conversation" ? unreadCountFor?.(artifact.id) : undefined,
+      ),
+    ),
   ];
+}
+
+function buildInSpaceSection(
+  space: Pick<SpaceSummary, "id" | "title">,
+  childSpaces: readonly Pick<SpaceSummary, "id" | "title" | "icon">[],
+  artifacts: readonly Pick<ArtifactSummary, "id" | "title" | "kind">[],
+  options: {
+    activeSpaceId: SpaceId | undefined;
+    activeArtifactId: ArtifactId | undefined;
+    itemLimit: SidebarSectionItemLimit;
+    isPinned?: boolean;
+    unreadCountFor?: (conversationId: string) => number;
+  },
+): WorkspaceNavSection {
+  const allItems = sectionItems(
+    childSpaces,
+    artifacts,
+    options.activeSpaceId,
+    options.activeArtifactId,
+    options.unreadCountFor,
+  );
+  const { visible, overflow } = truncateInSpaceNavItems(allItems, {
+    limit: options.itemLimit,
+    activeSpaceId: options.activeSpaceId,
+    activeArtifactId: options.activeArtifactId,
+  });
+  return {
+    label: `In ${space.title}`,
+    sectionSpaceId: space.id,
+    isPinned: options.isPinned,
+    itemLimit: options.itemLimit,
+    items: visible,
+    overflowItems: overflow.length > 0 ? overflow : undefined,
+  };
 }
 
 function directMessageLinks(
@@ -270,12 +318,38 @@ export function useWorkspaceNavSync() {
   const { isUserOnline } = useWorkspacePresence(workspaceRootId);
   const unreadSummary = useUnreadSummarySync(workspaceRootId);
   const workspaceOutbox = useWorkspaceOutboxSync(workspaceRootId);
+  const sidebarPins = useSidebarPinsSync(workspaceRootId);
+
+  const pinnedSpaceIds = computed(() =>
+    (sidebarPins.pins.value ?? []).map((pin) => pin.spaceId),
+  );
+
+  const pinnedSpaceDetailsQuery = useQuery({
+    queryKey: computed(() =>
+      queryKeys.pinnedSpaceDetails(workspaceRootId.value ?? "", pinnedSpaceIds.value),
+    ),
+    enabled: computed(
+      () => inPrivateWorkspace.value && workspaceRootId.value != null && pinnedSpaceIds.value.length > 0,
+    ),
+    queryFn: async () => {
+      const details = await Promise.all(
+        pinnedSpaceIds.value.map((spaceId) => apiClient.getSpace(spaceId)),
+      );
+      for (const detail of details) {
+        upsertInCollection(spacesCollection, detail.space);
+        upsertMany(spacesCollection, detail.childSpaces);
+        upsertMany(artifactsCollection, detail.artifacts);
+      }
+      return details;
+    },
+  });
 
   const view = computed((): WorkspaceNavView => {
-    const emptyHomeSection = {
+    const emptyHomeSection: WorkspaceNavSection = {
       label: "Home",
-      items: [] as WorkspaceNavLink[],
-      scopeSpaceId: null,
+      items: [],
+      sectionSpaceId: "",
+      itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
     };
 
     if (homeQuery.isLoading.value) {
@@ -300,41 +374,59 @@ export function useWorkspaceNavSync() {
       ? undefined
       : {
           label: "Home",
-          items: sectionItems(liveRootSpaces.value, homeArtifacts, activeSpace, activeArtifact, unreadCountFor),
-          scopeSpaceId: null,
+          items: sectionItems(
+            liveRootSpaces.value,
+            homeArtifacts,
+            activeSpace,
+            activeArtifact,
+            unreadCountFor,
+          ),
+          sectionSpaceId: "",
+          itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
         };
 
     const detail = contextDetail.value;
     const inSpaceSection = detail
-      ? (() => {
-          const space = liveContextSpace.value ?? detail.space;
-          const allItems = sectionItems(
-            liveContextChildSpaces.value,
-            detail.artifacts,
-            activeSpace,
-            activeArtifact,
-            unreadCountFor,
-          );
-          const { items, seeAllLink } = truncateInSpaceNavItems(allItems, {
-            scopeSpaceId: detail.space.id,
-            scopeSpaceTitle: space.title,
+      ? buildInSpaceSection(
+          liveContextSpace.value ?? detail.space,
+          liveContextChildSpaces.value,
+          detail.artifacts,
+          {
             activeSpaceId: activeSpace,
             activeArtifactId: activeArtifact,
-          });
-          return {
-            label: `In ${space.title}`,
-            items,
-            seeAllLink,
-            scopeSpaceId: detail.space.id,
-          };
-        })()
+            itemLimit: sidebarPins.itemLimitFor(detail.space.id),
+            unreadCountFor,
+          },
+        )
       : undefined;
+
+    const pinnedSections: WorkspaceNavSection[] = [];
+    if (pinnedSpaceDetailsQuery.data.value) {
+      const detailsBySpaceId = new Map(
+        pinnedSpaceDetailsQuery.data.value.map((detail) => [detail.space.id, detail]),
+      );
+      for (const pin of sidebarPins.pins.value) {
+        const pinDetail = detailsBySpaceId.get(pin.spaceId);
+        if (!pinDetail) continue;
+        pinnedSections.push(
+          buildInSpaceSection(pinDetail.space, pinDetail.childSpaces, pinDetail.artifacts, {
+            activeSpaceId: activeSpace,
+            activeArtifactId: activeArtifact,
+            itemLimit: sidebarPins.itemLimitFor(pin.spaceId),
+            isPinned: true,
+            unreadCountFor,
+          }),
+        );
+      }
+    }
 
     const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
     const outboxSection =
       rootSpaceId != null
         ? {
             label: "Outbox",
+            sectionSpaceId: rootSpaceId,
+            itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
             items: [
               {
                 id: "workspace-drafts",
@@ -357,26 +449,27 @@ export function useWorkspaceNavSync() {
                     : undefined,
               },
             ],
-            scopeSpaceId: rootSpaceId,
           }
         : undefined;
     const directMessagesSection =
       rootSpaceId && directMessagesQuery.data.value
         ? {
             label: "Direct messages",
+            sectionSpaceId: rootSpaceId,
+            itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
             items: directMessageLinks(
               directMessagesQuery.data.value,
               activeArtifact,
               isUserOnline,
               unreadCountFor,
             ),
-            scopeSpaceId: rootSpaceId,
           }
         : rootSpaceId && directMessagesQuery.isLoading.value
           ? {
               label: "Direct messages",
+              sectionSpaceId: rootSpaceId,
+              itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
               items: [] as WorkspaceNavLink[],
-              scopeSpaceId: rootSpaceId,
             }
           : undefined;
 
@@ -385,6 +478,7 @@ export function useWorkspaceNavSync() {
       homeButton: homeButton.value,
       homeSection,
       inSpaceSection,
+      pinnedSections: pinnedSections.length > 0 ? pinnedSections : undefined,
       directMessagesSection,
       outboxSection,
       activeRootSpaceId: rootSpaceId,
@@ -419,8 +513,16 @@ export function useWorkspaceNavSync() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspaceScheduledCount(workspaceRootId.value),
       });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.sidebarPins(workspaceRootId.value),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.sidebarSectionPreferences(workspaceRootId.value),
+      });
     }
   };
+
+  const pinnedSpaceIdsSet = computed(() => new Set(pinnedSpaceIds.value));
 
   const createSpaceMutation = useMutation({
     mutationFn: ({
@@ -468,6 +570,10 @@ export function useWorkspaceNavSync() {
     view,
     isHomeActive,
     reload,
+    pinnedSpaceIds: pinnedSpaceIdsSet,
+    pinSpace: sidebarPins.pinSpace,
+    unpinSpace: sidebarPins.unpinSpace,
+    setSectionItemLimit: sidebarPins.setItemLimit,
     createSpace: (title: string, parentSpaceId?: SpaceId | null, preset?: SpacePreset) =>
       createSpaceMutation.mutateAsync({ title, parentSpaceId, preset }),
     createDirectMessage: (rootSpaceId: SpaceId, username: string, spaceId?: SpaceId) =>

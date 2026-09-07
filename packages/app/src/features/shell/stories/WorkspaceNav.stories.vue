@@ -19,7 +19,8 @@ const { Story } = defineMeta({
 
 const homeSection = {
   label: "Home",
-  scopeSpaceId: null,
+  sectionSpaceId: "",
+  itemLimit: 7 as const,
   items: [
     {
       id: SEED_SPACE_ACME,
@@ -43,7 +44,8 @@ const inWorkspaceView: WorkspaceNavView = {
   homeButton: { label: "Acme", showBackHint: true },
   inSpaceSection: {
     label: "In Acme",
-    scopeSpaceId: SEED_SPACE_ACME,
+    sectionSpaceId: SEED_SPACE_ACME,
+    itemLimit: 7,
     items: [
       {
         id: SEED_SPACE_ENGINEERING,
@@ -62,7 +64,8 @@ const truncatedInSpaceView: WorkspaceNavView = {
   homeButton: { label: "Acme", showBackHint: true },
   inSpaceSection: {
     label: "In Acme",
-    scopeSpaceId: SEED_SPACE_ACME,
+    sectionSpaceId: SEED_SPACE_ACME,
+    itemLimit: 7,
     items: Array.from({ length: 7 }, (_, index) => ({
       id: `space-${index}`,
       label: `Channel ${index + 1}`,
@@ -70,13 +73,51 @@ const truncatedInSpaceView: WorkspaceNavView = {
       to: { name: "conversation" as const, params: { conversationId: `space-${index}` } },
       isActive: index === 0,
     })),
-    seeAllLink: {
-      id: `see-all-${SEED_SPACE_ACME}`,
-      label: "See all in Acme",
-      to: { name: "space", params: { spaceId: SEED_SPACE_ACME } },
+    overflowItems: Array.from({ length: 3 }, (_, index) => ({
+      id: `overflow-${index}`,
+      label: `Overflow ${index + 1}`,
+      artifactKind: "conversation" as const,
+      to: { name: "conversation" as const, params: { conversationId: `overflow-${index}` } },
       isActive: false,
-    },
+    })),
   },
+  activeRootSpaceId: SEED_SPACE_ACME,
+};
+
+const pinnedSectionsView: WorkspaceNavView = {
+  state: "ready",
+  homeButton: { label: "Acme", showBackHint: true },
+  inSpaceSection: {
+    label: "In Acme",
+    sectionSpaceId: SEED_SPACE_ACME,
+    itemLimit: 7,
+    items: [
+      {
+        id: SEED_SPACE_ENGINEERING,
+        label: "Engineering",
+        icon: "code",
+        to: { name: "space", params: { spaceId: SEED_SPACE_ENGINEERING } },
+        isActive: false,
+      },
+    ],
+  },
+  pinnedSections: [
+    {
+      label: "In Design",
+      sectionSpaceId: "00000000-0000-4000-8000-000000000099",
+      isPinned: true,
+      itemLimit: 15,
+      items: [
+        {
+          id: "design-system",
+          label: "Design system",
+          icon: "folder",
+          to: { name: "space", params: { spaceId: "design-system" } },
+          isActive: false,
+        },
+      ],
+    },
+  ],
   activeRootSpaceId: SEED_SPACE_ACME,
 };
 
@@ -85,7 +126,8 @@ const unreadBadgesView: WorkspaceNavView = {
   homeButton: { label: "Home", showBackHint: false },
   inSpaceSection: {
     label: "In Engineering",
-    scopeSpaceId: SEED_SPACE_ENGINEERING,
+    sectionSpaceId: SEED_SPACE_ENGINEERING,
+    itemLimit: 7,
     items: [
       {
         id: "conv-launch",
@@ -118,6 +160,8 @@ const onHomeView: WorkspaceNavView = {
     ),
   },
 };
+
+const pinnedSpaceIds = new Set(["00000000-0000-4000-8000-000000000099"]);
 </script>
 
 <template>
@@ -159,6 +203,33 @@ const onHomeView: WorkspaceNavView = {
           @retry="action('retry')()"
           @space-action="(kind, link) => action('spaceAction')(kind, link)"
           @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
+          @section-limit-change="(id, limit) => action('sectionLimitChange')(id, limit)"
+        />
+      </Sidebar>
+      <SidebarInset class="p-6">
+        <p class="text-sm text-muted-foreground">Main content</p>
+      </SidebarInset>
+    </SidebarProvider>
+  </Story>
+
+  <Story as-child name="Pinned sections">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader
+          class="flex h-surface-header shrink-0 flex-row items-center border-b border-sidebar-border px-3"
+        >
+          <span class="text-sm font-semibold">Denser</span>
+        </SidebarHeader>
+        <WorkspaceNav
+          :view="pinnedSectionsView"
+          :is-home-active="false"
+          :pinned-space-ids="pinnedSpaceIds"
+          @create="(kind) => action('create')(kind)"
+          @retry="action('retry')()"
+          @space-action="(kind, link) => action('spaceAction')(kind, link)"
+          @artifact-action="(kind, link) => action('artifactAction')(kind, link)"
+          @section-limit-change="(id, limit) => action('sectionLimitChange')(id, limit)"
+          @section-unpin="(id) => action('sectionUnpin')(id)"
         />
       </Sidebar>
       <SidebarInset class="p-6">

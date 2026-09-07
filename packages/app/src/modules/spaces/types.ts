@@ -25,7 +25,13 @@ export type SpaceGallerySpace = Pick<
   "id" | "title" | "icon" | "parentSpaceId" | "sprintRole"
 >;
 
-export type SpaceGallerySpaceAction = "open" | "rename" | "openSettings" | "delete";
+export type SpaceGallerySpaceAction =
+  | "open"
+  | "rename"
+  | "openSettings"
+  | "delete"
+  | "pin"
+  | "unpin";
 
 export type SpaceGalleryArtifact = Pick<
   ArtifactSummary,

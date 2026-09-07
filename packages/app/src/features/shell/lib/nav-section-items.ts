@@ -7,15 +7,13 @@ export function truncateInSpaceNavItems(
   items: readonly WorkspaceNavLink[],
   options: {
     limit?: number;
-    scopeSpaceId: SpaceId;
-    scopeSpaceTitle: string;
     activeSpaceId?: SpaceId;
     activeArtifactId?: ArtifactId;
   },
-): { items: WorkspaceNavLink[]; seeAllLink?: WorkspaceNavLink } {
+): { visible: WorkspaceNavLink[]; overflow: WorkspaceNavLink[] } {
   const limit = options.limit ?? IN_SPACE_SIDEBAR_ITEM_LIMIT;
   if (items.length <= limit) {
-    return { items: [...items] };
+    return { visible: [...items], overflow: [] };
   }
 
   const activeId = options.activeArtifactId ?? options.activeSpaceId;
@@ -26,17 +24,14 @@ export function truncateInSpaceNavItems(
       ? [...items.slice(0, limit - 1), items[activeIndex]!]
       : items.slice(0, limit);
 
-  const hiddenCount = items.length - limit;
-  const seeAllLink: WorkspaceNavLink = {
-    id: `see-all-${options.scopeSpaceId}`,
-    label:
-      hiddenCount === 1
-        ? `See 1 more in ${options.scopeSpaceTitle}`
-        : `See all in ${options.scopeSpaceTitle}`,
-    to: { name: "space", params: { spaceId: options.scopeSpaceId } },
-    isActive:
-      options.activeSpaceId === options.scopeSpaceId && options.activeArtifactId == null,
-  };
+  const visibleIds = new Set(visible.map((item) => item.id));
+  const overflow = items.filter((item) => !visibleIds.has(item.id));
 
-  return { items: visible, seeAllLink };
+  return { visible, overflow };
+}
+
+export function overflowNavLabel(hiddenCount: number, spaceTitle: string): string {
+  return hiddenCount === 1
+    ? `See 1 more in ${spaceTitle}`
+    : `See all in ${spaceTitle}`;
 }

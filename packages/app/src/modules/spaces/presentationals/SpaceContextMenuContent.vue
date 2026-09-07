@@ -12,9 +12,12 @@ import type { SpaceGallerySpaceAction } from "../types";
 withDefaults(
   defineProps<{
     showOpen?: boolean;
+    isPinned?: boolean;
+    showPinToggle?: boolean;
   }>(),
   {
     showOpen: true,
+    showPinToggle: false,
   },
 );
 
@@ -34,6 +37,12 @@ const emit = defineEmits<{
       </ContextMenuSubContent>
     </ContextMenuSub>
     <ContextMenuItem @select="emit('action', 'openSettings')">Space settings</ContextMenuItem>
+    <ContextMenuItem
+      v-if="showPinToggle"
+      @select="emit('action', isPinned ? 'unpin' : 'pin')"
+    >
+      {{ isPinned ? "Unpin from sidebar" : "Pin to sidebar" }}
+    </ContextMenuItem>
     <ContextMenuSeparator />
     <ContextMenuItem variant="destructive" @select="emit('action', 'delete')">Delete</ContextMenuItem>
   </ContextMenuContent>

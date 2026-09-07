@@ -27,6 +27,8 @@ import type {
 const props = defineProps<{
   link: WorkspaceNavLink;
   isRenaming?: boolean;
+  isPinnedToSidebar?: boolean;
+  showPinToggle?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -189,6 +191,12 @@ function cancelRename() {
         <ContextMenuItem @select="onSpaceAction('open')">Open</ContextMenuItem>
         <ContextMenuItem @select="onSpaceAction('rename')">Rename</ContextMenuItem>
         <ContextMenuItem @select="onSpaceAction('openSettings')">Space settings</ContextMenuItem>
+        <ContextMenuItem
+          v-if="showPinToggle"
+          @select="onSpaceAction(isPinnedToSidebar ? 'unpin' : 'pin')"
+        >
+          {{ isPinnedToSidebar ? "Unpin from sidebar" : "Pin to sidebar" }}
+        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" @select="onSpaceAction('delete')">
           Delete

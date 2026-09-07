@@ -8,16 +8,28 @@ import {
   useWorkspaceCommandPrompts,
 } from "@/modules/spaces";
 import { useWorkspaceCreateActions } from "@/modules/workspace";
+import { confirm } from "@/lib/dialog";
 import SpaceSettingsContainer from "@/features/spaces/containers/SpaceSettingsContainer.vue";
 import { useWorkspaceNavSync } from "../composables/useWorkspaceNavSync";
 import type {
   WorkspaceNavArtifactAction,
   WorkspaceNavLink,
+  WorkspaceNavSectionItemLimit,
   WorkspaceNavSpaceAction,
 } from "../types";
 import WorkspaceNav from "../presentationals/WorkspaceNav.vue";
 
-const { view, isHomeActive, reload, createSpace, createDirectMessage } = useWorkspaceNavSync();
+const {
+  view,
+  isHomeActive,
+  reload,
+  pinnedSpaceIds,
+  pinSpace,
+  unpinSpace,
+  setSectionItemLimit,
+  createSpace,
+  createDirectMessage,
+} = useWorkspaceNavSync();
 const { openSpace, renameSpace, deleteSpace } = useSpaceCommands();
 const { openArtifact, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
 const prompts = useWorkspaceCommandPrompts();
@@ -26,7 +38,37 @@ const { onCreate } = useWorkspaceCreateActions(createSpace);
 
 const renamingItemId = ref<string | null>(null);
 
+async function onPinSpace(link: WorkspaceNavLink) {
+  const rootSpaceId = view.value.activeRootSpaceId;
+  if (!rootSpaceId) return;
+  await pinSpace(link.id as SpaceId);
+}
+
+async function onUnpinSpace(link: WorkspaceNavLink) {
+  const rootSpaceId = view.value.activeRootSpaceId;
+  if (!rootSpaceId) return;
+  if (
+    !(await confirm({
+      title: "Unpin from sidebar?",
+      description: `${link.label} will be removed from your sidebar pins.`,
+    }))
+  ) {
+    return;
+  }
+  await unpinSpace(link.id as SpaceId);
+}
+
 function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) {
+  if (action === "pin") {
+    void onPinSpace(link);
+    return;
+  }
+
+  if (action === "unpin") {
+    void onUnpinSpace(link);
+    return;
+  }
+
   if (action === "openSettings") {
     openSettings({ id: link.id as SpaceId, title: link.label });
     return;
@@ -109,8 +151,27 @@ async function onCreateDirectMessage(rootSpaceId: string) {
   const username = await prompts.promptDirectMessageUsername();
   if (!username) return;
 
-  const scopeSpaceId = view.value.inSpaceSection?.scopeSpaceId ?? undefined;
+  const scopeSpaceId = view.value.inSpaceSection?.sectionSpaceId ?? undefined;
   await createDirectMessage(rootSpaceId as SpaceId, username, scopeSpaceId as SpaceId | undefined);
+}
+
+async function onSectionUnpin(sectionSpaceId: string) {
+  const section = view.value.pinnedSections?.find((item) => item.sectionSpaceId === sectionSpaceId);
+  if (
+    !(await confirm({
+      title: "Unpin from sidebar?",
+      description: section
+        ? `${section.label} will be removed from your sidebar pins.`
+        : "This section will be removed from your sidebar pins.",
+    }))
+  ) {
+    return;
+  }
+  await unpinSpace(sectionSpaceId as SpaceId);
+}
+
+async function onSectionLimitChange(sectionSpaceId: string, limit: WorkspaceNavSectionItemLimit) {
+  await setSectionItemLimit(sectionSpaceId as SpaceId, limit);
 }
 </script>
 
@@ -119,13 +180,16 @@ async function onCreateDirectMessage(rootSpaceId: string) {
     :view="view"
     :is-home-active="isHomeActive"
     :renaming-item-id="renamingItemId"
+    :pinned-space-ids="pinnedSpaceIds"
     @retry="reload"
-    @create="(action, scopeSpaceId) => onCreate(action, scopeSpaceId as SpaceId | null)"
+    @create="(action, parentSpaceId) => onCreate(action, parentSpaceId as SpaceId | null)"
     @create-direct-message="onCreateDirectMessage"
     @space-action="onSpaceAction"
     @artifact-action="onArtifactAction"
     @rename-submit="onRenameSubmit"
     @rename-cancel="onRenameCancel"
+    @section-limit-change="onSectionLimitChange"
+    @section-unpin="onSectionUnpin"
   />
 
   <SpaceSettingsContainer

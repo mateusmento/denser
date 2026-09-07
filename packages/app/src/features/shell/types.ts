@@ -1,6 +1,13 @@
+import type { SidebarSectionItemLimit } from "@denser/contracts";
 import type { SpaceIcon } from "@denser/contracts";
 
-export type WorkspaceNavSpaceAction = "open" | "rename" | "openSettings" | "delete";
+export type WorkspaceNavSpaceAction =
+  | "open"
+  | "rename"
+  | "openSettings"
+  | "delete"
+  | "pin"
+  | "unpin";
 
 export type WorkspaceNavArtifactAction = "open" | "rename" | "duplicate" | "delete";
 
@@ -28,12 +35,19 @@ export type WorkspaceNavLink = {
   isActive: boolean;
 };
 
+export type WorkspaceNavSectionItemLimit = SidebarSectionItemLimit;
+
+export const WORKSPACE_NAV_SECTION_ITEM_LIMITS: readonly WorkspaceNavSectionItemLimit[] = [
+  5, 7, 15, 30, 50,
+];
+
 export type WorkspaceNavSection = {
   label: string;
   items: readonly WorkspaceNavLink[];
-  scopeSpaceId?: string | null;
-  /** Shown when items exceed the in-space sidebar limit — opens the space gallery. */
-  seeAllLink?: WorkspaceNavLink;
+  sectionSpaceId: string;
+  isPinned?: boolean;
+  itemLimit: WorkspaceNavSectionItemLimit;
+  overflowItems?: readonly WorkspaceNavLink[];
 };
 
 export type WorkspaceNavHomeButton = {
@@ -47,6 +61,7 @@ export type WorkspaceNavView = {
   homeButton: WorkspaceNavHomeButton;
   homeSection?: WorkspaceNavSection;
   inSpaceSection?: WorkspaceNavSection;
+  pinnedSections?: readonly WorkspaceNavSection[];
   directMessagesSection?: WorkspaceNavSection;
   outboxSection?: WorkspaceNavSection;
   activeRootSpaceId?: string | null;

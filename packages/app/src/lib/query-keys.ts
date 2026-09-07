@@ -20,6 +20,11 @@ export const queryKeys = {
     ["workspaceScheduledMessages", rootSpaceId] as const,
   workspaceScheduledCount: (rootSpaceId: string) =>
     ["workspaceScheduledCount", rootSpaceId] as const,
+  sidebarPins: (rootSpaceId: string) => ["sidebarPins", rootSpaceId] as const,
+  sidebarSectionPreferences: (rootSpaceId: string) =>
+    ["sidebarSectionPreferences", rootSpaceId] as const,
+  pinnedSpaceDetails: (rootSpaceId: string, spaceIds: readonly string[]) =>
+    ["pinnedSpaceDetails", rootSpaceId, ...spaceIds] as const,
   conversationUnread: (conversationId: string) =>
     ["conversation", conversationId, "unread"] as const,
 };
