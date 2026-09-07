@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toast } from "@denser/design-system";
 import type { ArtifactId, ScheduledJobId, SpaceId } from "@denser/contracts";
+import { useQuery } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useWorkspaceOutboxSync } from "../composables/useWorkspaceOutboxSync";
@@ -33,6 +34,32 @@ const editingSchedule = computed(() => {
   if (!editingJobId.value) return undefined;
   const item = outbox.scheduledItems.value.find((row) => row.jobId === editingJobId.value);
   return item ? toScheduledMessageViewFromOutboxItem(item, user.value) : undefined;
+});
+
+const rescheduleContextQuery = useQuery({
+  queryKey: computed(
+    () => ["workspace-schedule-context", editingConversationId.value] as const,
+  ),
+  enabled: computed(() => editingConversationId.value != null),
+  queryFn: async () => {
+    const { conversation } = await apiClient.getConversation(editingConversationId.value!);
+    const conversationRootSpaceId = conversation.rootSpaceId;
+    if (!conversationRootSpaceId) {
+      return {
+        members: [] as { userId: string; name: string; timezone: string | null }[],
+        scheduleTimezone: conversation.scheduleTimezone ?? null,
+      };
+    }
+    const detail = await apiClient.getSpace(conversationRootSpaceId);
+    return {
+      members: (detail.assignableMembers ?? detail.members).map((member) => ({
+        userId: member.userId,
+        name: member.name,
+        timezone: member.timezone ?? null,
+      })),
+      scheduleTimezone: conversation.scheduleTimezone ?? null,
+    };
+  },
 });
 
 function navigateToConversation(conversationId: string, threadId: string | null) {
@@ -85,6 +112,18 @@ async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
     toast("Couldn't update schedule");
   }
 }
+
+async function onCancelScheduled(id: string) {
+  const item = outbox.scheduledItems.value.find((row) => row.jobId === id);
+  if (!item) return;
+  try {
+    await apiClient.cancelScheduledMessage(item.conversationId, id as ScheduledJobId);
+    toast("Scheduled message cancelled");
+    void outbox.invalidate();
+  } catch {
+    toast("Couldn't cancel schedule");
+  }
+}
 </script>
 
 <template>
@@ -109,7 +148,7 @@ async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
     @open-scheduled="onOpenScheduled"
     @edit-scheduled-message="onOpenScheduled"
     @reschedule-scheduled="onRescheduleScheduled"
-    @cancel-scheduled="onOpenScheduled"
+    @cancel-scheduled="onCancelScheduled"
   />
 
   <RescheduleScheduleDialog
@@ -117,7 +156,9 @@ async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
     :message="editingSchedule"
     :presets="schedulePresets"
     :user-timezone="user?.timezone ?? null"
+    :schedule-timezone="rescheduleContextQuery.data.value?.scheduleTimezone ?? null"
     :scheduler-user-id="user?.id ?? null"
+    :members="rescheduleContextQuery.data.value?.members ?? []"
     @save="onSaveScheduleEdit"
   />
 </template>

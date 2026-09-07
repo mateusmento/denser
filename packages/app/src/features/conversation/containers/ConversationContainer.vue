@@ -303,11 +303,25 @@ const channelComposer = computed(() =>
 
 const threadComposer = computed(() =>
   defaultThreadComposerView({
-    sending: threadSync.isSending.value || messagesSync.isEditing.value,
+    sending:
+      threadSync.isSending.value ||
+      messagesSync.isEditing.value ||
+      scheduledSync.isScheduling.value,
     failed: threadSync.failed.value,
     attachments: threadAttachments.view.value,
     isEditing: editingMessageId.value != null && editingInThread.value,
-    sendLabel: editingMessageId.value != null && editingInThread.value ? "Save" : "Reply",
+    isScheduledEditing:
+      scheduledEditJobId.value != null && Boolean(scheduledEditEntry.value?.threadId),
+    scheduledEditBanner: scheduledEditEntry.value?.threadId
+      ? `Editing scheduled message · sends ${scheduledEditEntry.value.dueAtLabel}`
+      : undefined,
+    scheduleEnabled: scheduledEditJobId.value == null,
+    sendLabel:
+      scheduledEditJobId.value != null && scheduledEditEntry.value?.threadId
+        ? "Save"
+        : editingMessageId.value != null && editingInThread.value
+          ? "Save"
+          : "Reply",
   }),
 );
 
@@ -330,8 +344,13 @@ function clearEdit() {
 }
 
 function clearScheduledEdit() {
+  const wasThread = Boolean(scheduledEditEntry.value?.threadId);
   scheduledEditJobId.value = null;
-  channelAttachments.clearAfterSend();
+  if (wasThread) {
+    threadAttachments.clearAfterSend();
+  } else {
+    channelAttachments.clearAfterSend();
+  }
 }
 
 function beginScheduledEdit(jobId: ScheduledJobId) {
@@ -345,6 +364,19 @@ function beginScheduledEdit(jobId: ScheduledJobId) {
   if (entry.threadId) {
     activeThreadId.value = entry.threadId as MessageId;
     threadDraft.value = cloneDoc(entry.body);
+    threadAttachments.seedAttachments(
+      entry.attachments.map((attachment) => ({
+        id: attachment.id as AttachmentId,
+        rootSpaceId: (workspaceMembersQuery.data.value?.rootSpaceId ?? conversationId.value) as SpaceId,
+        uploadedBy: (user.value?.id ?? entry.senderId) as UserId,
+        originalFilename: attachment.name,
+        mimeType: attachment.mimeType,
+        url: attachment.url,
+        byteSize: attachment.byteSize,
+        createdAt: new Date().toISOString(),
+        conversationId: conversationId.value,
+      })),
+    );
     return;
   }
 
@@ -429,6 +461,23 @@ async function onChannelSend() {
 async function onThreadSend() {
   if (threadAttachments.hasBlockingUpload.value) return;
 
+  if (scheduledEditJobId.value && scheduledEditEntry.value?.threadId) {
+    try {
+      await scheduledSync.update({
+        jobId: scheduledEditJobId.value,
+        body: threadDraft.value,
+        attachmentIds: threadAttachments.collectAttachmentIds(threadDraft.value),
+      });
+      threadDraft.value = emptyDoc();
+      clearScheduledEdit();
+      toast("Scheduled message updated");
+      void workspaceOutbox.invalidate();
+    } catch {
+      toast("Couldn't save scheduled message");
+    }
+    return;
+  }
+
   if (editingMessageId.value && editingInThread.value) {
     try {
       await messagesSync.edit(editingMessageId.value, threadDraft.value);
@@ -466,6 +515,11 @@ function onCancelChannelEdit() {
 }
 
 function onCancelThreadEdit() {
+  if (scheduledEditJobId.value) {
+    threadDraft.value = emptyDoc();
+    clearScheduledEdit();
+    return;
+  }
   threadDraft.value = emptyDoc();
   clearEdit();
 }
