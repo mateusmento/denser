@@ -76,6 +76,7 @@ Same row pattern in workspace pages and per-channel panel tabs.
 
 1. **Line 1 (inline):** next send time + destination + thread indicator — e.g. `Tomorrow 9:00 AM · #engineering · Thread`
 2. **Line 2:** truncated message body preview
+3. **Trailing actions (icon buttons):** **Edit message** (`SquarePenIcon`) and **Reschedule** (`ClockIcon`) — see [Interactions](#interactions). **Cancel** stays in overflow menu (destructive).
 
 Show recurrence hint on line 1 when applicable (e.g. `· Weekly`).
 
@@ -86,9 +87,21 @@ Show recurrence hint on line 1 when applicable (e.g. `· Weekly`).
 | Action | Behavior |
 | --- | --- |
 | **Click draft** (workspace list or panel) | Navigate to conversation → open thread if `threadId` → focus composer with draft loaded |
-| **Click scheduled** (workspace list or panel) | Same (Slack-style): navigate → thread context if set → composer loaded with scheduled content for edit |
+| **Click scheduled row** (workspace list or panel) | Same as **Edit message** (Slack-style): navigate to conversation with context restored |
+| **Edit message** (`SquarePenIcon` on row) | Navigate to `conversationId` → **open thread pane** when `threadId` is set → **main timeline visible** (not schedules tab) → **composer in scheduled-edit mode**: body + attachments hydrated from the job; timing **unchanged**. Banner: e.g. `Editing scheduled message · sends {workspace wall time}`. Save → PATCH scheduled message payload only. See **27** for reschedule (timing/recurrence). |
+| **Reschedule** (`ClockIcon` on row) | Open **reschedule dialog** in place (no navigation): time + recurrence via full `SchedulePopover` (+ member matrix from **27**). Does **not** edit body/attachments. Implemented in **27**; row button wired here. |
 | **After scheduling from composer** | Stay on timeline → toast (`Message scheduled for …`) with **View** link → opens per-channel side panel on **Scheduled** tab |
 | **Badges** | Workspace sidebar: count on **Drafts** and **Scheduled**; channel ⋮ menu: dot/count when this conversation has non-empty drafts or pending scheduled messages |
+
+### Scheduled edit navigation (composer)
+
+When opening a scheduled message for **Edit message** (row click or `SquarePenIcon`):
+
+1. Route to the conversation (`conversationId` from list item).
+2. If `threadId` is present, open **ThreadPane** for that thread; otherwise show main channel timeline.
+3. Close drafts/scheduled side panel if open (mutually exclusive with thread — user lands on compose surface).
+4. Hydrate **MessageComposer** in **scheduled-edit mode** (`scheduledJobId` + body + attachment tiles from job anchor).
+5. Do **not** open the reschedule dialog or change `next_run_at` until user explicitly taps **Reschedule** (`ClockIcon`).
 
 ---
 
@@ -155,8 +168,15 @@ Per-conversation scheduled list: filter to `senderId = userId` (update **25** li
 
 ### Composer integration
 
-- [ ] Deep link / navigation restores thread + hydrates composer (draft or scheduled edit mode)
+- [ ] Deep link / navigation restores thread + hydrates composer (draft or **scheduled-edit mode**)
+- [ ] Scheduled-edit mode: load job body + attachments; save PATCHes payload only (timing untouched)
 - [ ] Post-schedule toast with View → open side panel Scheduled tab
+
+### Scheduled list rows
+
+- [ ] Shared `ScheduledOutboxRow` (or extend existing row): **Edit message** + **Reschedule** as trailing **icon buttons** (`SquarePenIcon`, `ClockIcon`); cancel in overflow menu
+- [ ] Row click = Edit message (same navigation as `SquarePenIcon`)
+- [ ] Reschedule icon → emit to container → reschedule dialog from **27**
 
 ### Contracts / cache
 
