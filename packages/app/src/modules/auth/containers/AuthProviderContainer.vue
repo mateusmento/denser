@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { provideAuthSession } from "../composables/useAuthSession";
 import { useUserTimezoneSync } from "../composables/useUserTimezoneSync";
+import { useSchedulerTimezoneNotifications } from "../composables/useSchedulerTimezoneNotifications";
 
 const sessionQuery = useQuery({
   queryKey: queryKeys.session(),
@@ -30,6 +31,7 @@ const isLoading = computed(() => sessionQuery.isLoading.value);
 
 provideAuthSession({ user, isAuthenticated, isLoading });
 useUserTimezoneSync();
+useSchedulerTimezoneNotifications();
 </script>
 
 <template>

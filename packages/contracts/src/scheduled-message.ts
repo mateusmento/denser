@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { AttachmentDto } from "./attachment.js";
-import { ArtifactId, AttachmentId, MessageId, ScheduledJobId } from "./ids.js";
+import { ArtifactId, AttachmentId, MessageId, ScheduledJobId, SpaceId } from "./ids.js";
 import type { ScheduledJobDto } from "./scheduling.js";
 
 export const SCHEDULED_MESSAGE_UPSERTED_EVENT = "scheduled_message.upserted" as const;
 export const SCHEDULED_MESSAGE_CANCELLED_EVENT = "scheduled_message.cancelled" as const;
+export const SCHEDULER_TIMEZONE_CHANGED_EVENT = "scheduler_timezone.changed" as const;
 
 export const ScheduleRecurrenceInput = z.enum(["once", "daily", "weekly"]);
 export type ScheduleRecurrenceInput = z.infer<typeof ScheduleRecurrenceInput>;
@@ -95,3 +96,10 @@ export type ScheduledMessageCancelledEvent = {
   conversationId: ArtifactId;
   scheduledJobId: ScheduledJobId;
 };
+
+export const SchedulerTimezoneChangedEventSchema = z.object({
+  spaceId: SpaceId,
+  spaceTitle: z.string().min(1),
+  adjustedJobCount: z.number().int().positive(),
+});
+export type SchedulerTimezoneChangedEvent = z.infer<typeof SchedulerTimezoneChangedEventSchema>;

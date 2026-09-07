@@ -31,10 +31,12 @@ import { REACTION_UPDATED_EVENT, ReactionUpdatedEvent } from "./reaction.js";
 import {
   SCHEDULED_MESSAGE_CANCELLED_EVENT,
   SCHEDULED_MESSAGE_UPSERTED_EVENT,
+  SCHEDULER_TIMEZONE_CHANGED_EVENT,
 } from "./scheduled-message.js";
 import type {
   ScheduledMessageCancelledEvent,
   ScheduledMessageUpsertedEvent,
+  SchedulerTimezoneChangedEvent,
 } from "./scheduled-message.js";
 import { z } from "zod";
 
@@ -56,6 +58,7 @@ export type ServerToClientEvents = {
   [WORKSPACE_PRESENCE_SNAPSHOT_EVENT]: (payload: WorkspacePresenceSnapshotEvent) => void;
   [SCHEDULED_MESSAGE_UPSERTED_EVENT]: (payload: ScheduledMessageUpsertedEvent) => void;
   [SCHEDULED_MESSAGE_CANCELLED_EVENT]: (payload: ScheduledMessageCancelledEvent) => void;
+  [SCHEDULER_TIMEZONE_CHANGED_EVENT]: (payload: SchedulerTimezoneChangedEvent) => void;
 };
 
 export type ClientToServerEvents = {

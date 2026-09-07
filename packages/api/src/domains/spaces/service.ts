@@ -408,7 +408,17 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
     const { recomputeScheduledJobsForPrivateSpace } = await import(
       "../scheduled-messages/timezone-recompute.js"
     );
-    await recomputeScheduledJobsForPrivateSpace(updated.id, input.timezone);
+    const { notifySchedulersTimezoneChanged } = await import(
+      "../scheduled-messages/notify-schedulers-timezone-change.js"
+    );
+    const { updated: adjustedJobCount, schedulerIds } =
+      await recomputeScheduledJobsForPrivateSpace(updated.id, input.timezone);
+    await notifySchedulersTimezoneChanged({
+      spaceId: updated.id,
+      spaceTitle: updated.title,
+      schedulerIds,
+      adjustedJobCount,
+    });
   }
 
   return { ok: true as const, space: toSpaceSummary(updated) };

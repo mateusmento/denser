@@ -7,6 +7,7 @@ import { isMemberOfSpace, requireArtifactAccess } from "../domains/tenancy/acces
 import { getSharedRedisClient, resolveRealtimeAdapter } from "../domains/ephemeral/ephemeral-store-env.js";
 import { bindRealtimeServer } from "./emit.js";
 import { bindScheduledMessageRealtime } from "./scheduled-message-events.js";
+import { bindUserNotificationsRealtime } from "./user-notifications.js";
 import { registerPresenceHandlers } from "./handlers.js";
 import { userRoom } from "./rooms.js";
 
@@ -42,6 +43,7 @@ export async function attachRealtime(httpServer: HttpServer, appOrigin: string):
 
   bindRealtimeServer(io);
   bindScheduledMessageRealtime(io);
+  bindUserNotificationsRealtime(io);
 
   io.use(async (socket, next) => {
     try {
