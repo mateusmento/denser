@@ -6,8 +6,14 @@ import type { ScheduledJobDto } from "./scheduling.js";
 export const SCHEDULED_MESSAGE_UPSERTED_EVENT = "scheduled_message.upserted" as const;
 export const SCHEDULED_MESSAGE_CANCELLED_EVENT = "scheduled_message.cancelled" as const;
 
+export const ScheduleRecurrenceInput = z.enum(["once", "daily", "weekly"]);
+export type ScheduleRecurrenceInput = z.infer<typeof ScheduleRecurrenceInput>;
+
 export const ScheduleMessageInput = z.object({
   dueAt: z.string().min(1),
+  recurrence: ScheduleRecurrenceInput.default("once"),
+  weekdays: z.array(z.number().int().min(0).max(6)).min(1).optional(),
+  until: z.string().datetime().optional(),
   body: z.unknown(),
   quotesId: MessageId.nullable().optional(),
   threadId: MessageId.nullable().optional(),
@@ -18,19 +24,41 @@ export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 export const UpdateScheduledMessageInput = z
   .object({
     dueAt: z.string().min(1).optional(),
+    recurrence: ScheduleRecurrenceInput.optional(),
+    weekdays: z.array(z.number().int().min(0).max(6)).min(1).optional(),
+    until: z.string().datetime().nullable().optional(),
     body: z.unknown().optional(),
     quotesId: MessageId.nullable().optional(),
     threadId: MessageId.nullable().optional(),
     attachmentIds: z.array(AttachmentId).optional(),
   })
   .refine(
-    (value) =>
-      value.dueAt !== undefined ||
-      value.body !== undefined ||
-      value.quotesId !== undefined ||
-      value.threadId !== undefined ||
-      value.attachmentIds !== undefined,
+    (value) => {
+      const hasTiming =
+        value.dueAt !== undefined ||
+        value.recurrence !== undefined ||
+        value.weekdays !== undefined ||
+        value.until !== undefined;
+      const hasContent =
+        value.body !== undefined ||
+        value.quotesId !== undefined ||
+        value.threadId !== undefined ||
+        value.attachmentIds !== undefined;
+      return hasTiming || hasContent;
+    },
     { message: "At least one field is required" },
+  )
+  .refine(
+    (value) => {
+      const hasTiming =
+        value.dueAt !== undefined ||
+        value.recurrence !== undefined ||
+        value.weekdays !== undefined ||
+        value.until !== undefined;
+      const hasContent = value.body !== undefined || value.attachmentIds !== undefined;
+      return !(hasTiming && hasContent);
+    },
+    { message: "Cannot mix timing and content updates" },
   );
 export type UpdateScheduledMessageInput = z.infer<typeof UpdateScheduledMessageInput>;
 

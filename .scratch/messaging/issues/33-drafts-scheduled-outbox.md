@@ -5,7 +5,7 @@
 **Domain:** [MESSAGE-DRAFTS.md](../../../docs/MESSAGE-DRAFTS.md) · [SCHEDULING.md](../../../docs/SCHEDULING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
 **Status:** open  
 **GitHub:** [#33](https://github.com/mateusmento/denser/issues/33)  
-**Blocked by:** 22 — Drafts API; 23 — Drafts app; 25 — Schedule message API; 26 — Schedule app; 07 — Threads app; 15 — Conversation shell  
+**Blocked by:** 22 — Drafts API; 23 — Drafts app; 25 — Schedule message API; 26 — Schedule app; 07 — Threads app; 15 — Conversation shell; **27a** — timezone infra; **27b** — recurrence API + reschedule dialog + time label formatters (scheduled tab can stub until 27b lands)  
 **Specs:** [CHUNKS.md](../CHUNKS.md) · [COVERAGE.md](../COVERAGE.md)
 
 Product decisions from grilling session (2026-09-06). Replaces header **Messages / Scheduled** tabs with workspace-level lists + per-channel side panel.
@@ -78,9 +78,31 @@ Same row pattern in workspace pages and per-channel panel tabs.
 2. **Line 2:** truncated message body preview
 3. **Trailing actions (icon buttons):** **Edit message** (`SquarePenIcon`) and **Reschedule** (`ClockIcon`) — see [Interactions](#interactions). **Cancel** stays in overflow menu (destructive).
 
-Show recurrence hint on line 1 when applicable (e.g. `· Weekly`).
+Show recurrence hint on line 1 when applicable (e.g. `· Weekly`). Time/recurrence strings come from **27b** formatters (`formatScheduleWallTime`, `recurrenceLabel`) — workspace wall time primary; scheduler local time muted secondary when shown.
 
 ---
+
+## Boundary with **27**
+
+**#27** owns scheduling **primitives**; **#33** owns outbox **surfaces**. See [27-schedule-recurrence.md](./27-schedule-recurrence.md#boundary-with-33).
+
+**Handled by #33 (not #27):**
+
+- Remove `ConversationPaneTabs`, `ConversationSchedulesList`, schedules main-pane tab
+- `ScheduledOutboxRow` + side panel / workspace **Scheduled** pages
+- Row `SquarePenIcon` / `ClockIcon` / cancel overflow; row click → edit message
+- Edit message navigation + composer **scheduled-edit mode** + edit banner
+- Post-schedule toast + “View” → side panel Scheduled tab
+- Workspace list/count APIs (`GET /root-spaces/:id/scheduled-messages`)
+- Badges, deep links, mobile overlay
+
+**Consumed from #27 (do not reimplement in #33):**
+
+- **27a:** `user.timezone` / `workspace.timezone` for matrix + labels
+- **27b:** `RescheduleScheduleDialog`, `SchedulePopover` recurrence fields, timing PATCH API
+- **27b:** `formatScheduleWallTime` + recurrence summary for row line 1
+
+**Parallel work:** #33 API (draft/scheduled list counts) and panel shell can start before **27b**; Scheduled tab rows should use placeholder labels until **27b** formatters land, or ship Scheduled tab after **27b**.
 
 ## Interactions
 
@@ -141,7 +163,9 @@ Per-conversation scheduled list: filter to `senderId = userId` (update **25** li
 
 **Owns:** list/count repositories + routes; per-conversation scheduled mine-only filter.
 
-**Must not touch:** draft upsert/TTL (**22**); schedule fire/cancel (**25**); recurrence (**27**).
+**Must not touch:** draft upsert/TTL (**22**); schedule fire/cancel (**25**); recurrence engine / `buildJobScheduleTiming` (**27**); `SchedulePopover` / reschedule dialog internals (**27b**).
+
+**Consumes:** list/count APIs from this ticket's API half; existing draft sync (**23**); schedule timing + body PATCH APIs (**27b**); reschedule dialog (**27b**); thread pane (**07**).
 
 ---
 
@@ -174,9 +198,11 @@ Per-conversation scheduled list: filter to `senderId = userId` (update **25** li
 
 ### Scheduled list rows
 
-- [ ] Shared `ScheduledOutboxRow` (or extend existing row): **Edit message** + **Reschedule** as trailing **icon buttons** (`SquarePenIcon`, `ClockIcon`); cancel in overflow menu
+- [ ] Shared `ScheduledOutboxRow`: line 1 uses **27b** `formatScheduleWallTime` + recurrence summary
+- [ ] Trailing icon buttons: `SquarePenIcon` (edit message), `ClockIcon` (reschedule → **27b** dialog)
 - [ ] Row click = Edit message (same navigation as `SquarePenIcon`)
-- [ ] Reschedule icon → emit to container → reschedule dialog from **27**
+- [ ] Cancel in overflow menu (destructive)
+- [ ] Deprecate / delete `ConversationSchedulesList` (do not extend in **27**)
 
 ### Contracts / cache
 
@@ -186,9 +212,9 @@ Per-conversation scheduled list: filter to `senderId = userId` (update **25** li
 - [ ] Storybook stories for list rows and side panel
 - [ ] Update `docs/ui-surfaces/conversation.md` and `docs/MESSAGE-DRAFTS.md` (deferred list/badge → implemented)
 
-**Owns:** outbox UI, nav, panel, workspace pages, badges, toast.
+**Owns:** outbox UI, nav, panel, workspace pages, badges, toast, scheduled-edit composer navigation.
 
-**Consumes:** list/count APIs from this ticket's API half; existing draft sync (**23**); schedule edit (**26**); thread pane (**07**).
+**Consumes:** list/count APIs from this ticket's API half; existing draft sync (**23**); schedule APIs (**27b**); thread pane (**07**).
 
 ---
 

@@ -56,16 +56,22 @@ export function recurrenceFromPreset(
   preset: ScheduleRecurrencePreset,
   dueAtUtc: string,
   timezone: string,
+  options?: { weekdays?: number[]; until?: string },
 ): ScheduledJobRecurrence {
   if (preset === "once") {
     return { frequency: "once" };
   }
   const timeOfDay = deriveTimeOfDayInZone(dueAtUtc, timezone);
   if (preset === "daily") {
-    return { frequency: "daily", interval: 1, timeOfDay };
+    const rule = { frequency: "daily" as const, interval: 1, timeOfDay };
+    return options?.until ? { ...rule, until: options.until } : rule;
   }
-  const weekday = deriveWeekdayInZone(dueAtUtc, timezone);
-  return { frequency: "weekly", interval: 1, timeOfDay, weekdays: [weekday] };
+  const weekdays =
+    options?.weekdays && options.weekdays.length > 0
+      ? [...options.weekdays].sort((a, b) => a - b)
+      : [deriveWeekdayInZone(dueAtUtc, timezone)];
+  const rule = { frequency: "weekly" as const, interval: 1, timeOfDay, weekdays };
+  return options?.until ? { ...rule, until: options.until } : rule;
 }
 
 export function resolveScheduleTiming(input: ResolveScheduleTimingInput): ResolvedScheduleTiming {

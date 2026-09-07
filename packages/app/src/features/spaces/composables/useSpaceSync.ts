@@ -177,6 +177,8 @@ export function useSpaceSync(spaceId: ReadonlyRefOrGetter<SpaceId | undefined>) 
     return {
       title: space.title,
       icon: space.icon,
+      visibility: space.visibility,
+      timezone: space.timezone ?? null,
       allowedArtifactKinds: space.allowedArtifactKinds,
       allowedDocumentTypeIds: space.allowedDocumentTypeIds,
       defaultDocumentTypeId: space.defaultDocumentTypeId,

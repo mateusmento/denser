@@ -46,15 +46,18 @@ export async function insertRootSpace(input: {
   title: string;
   createdBy: UserId;
   visibility?: SpaceVisibility;
+  timezone?: string | null;
   planning?: SpacePlanningInsert;
 }): Promise<SpaceRow> {
   const planning = planningValues(input.planning);
+  const visibility = input.visibility ?? "public";
   const [created] = await db
     .insert(space)
     .values({
       title: input.title,
       icon: DEFAULT_SPACE_ICON,
-      visibility: input.visibility ?? "public",
+      visibility,
+      timezone: visibility === "private" ? (input.timezone ?? "UTC") : null,
       createdBy: input.createdBy,
       showBacklog: planning.showBacklog ?? false,
       showBoard: planning.showBoard ?? false,
@@ -76,9 +79,11 @@ export async function insertNestedSpace(input: {
   rootSpaceId: SpaceId;
   createdBy: UserId;
   visibility?: SpaceVisibility;
+  timezone?: string | null;
   planning?: SpacePlanningInsert;
 }): Promise<SpaceRow> {
   const planning = planningValues(input.planning);
+  const visibility = input.visibility ?? "public";
   const [created] = await db
     .insert(space)
     .values({
@@ -86,7 +91,8 @@ export async function insertNestedSpace(input: {
       icon: DEFAULT_SPACE_ICON,
       parentSpaceId: input.parentSpaceId,
       rootSpaceId: input.rootSpaceId,
-      visibility: input.visibility ?? "public",
+      visibility,
+      timezone: visibility === "private" ? (input.timezone ?? "UTC") : null,
       createdBy: input.createdBy,
       showBacklog: planning.showBacklog ?? false,
       showBoard: planning.showBoard ?? false,
@@ -120,6 +126,7 @@ export async function updateSpace(
     upcomingSprintId?: SpaceId | null;
     parentSpaceId?: SpaceId | null;
     rootSpaceId?: SpaceId | null;
+    timezone?: string | null;
   },
 ): Promise<SpaceRow | undefined> {
   const values: Partial<typeof space.$inferInsert> = { updatedAt: new Date() };
@@ -137,6 +144,7 @@ export async function updateSpace(
   if (patch.upcomingSprintId !== undefined) values.upcomingSprintId = patch.upcomingSprintId;
   if (patch.parentSpaceId !== undefined) values.parentSpaceId = patch.parentSpaceId;
   if (patch.rootSpaceId !== undefined) values.rootSpaceId = patch.rootSpaceId;
+  if (patch.timezone !== undefined) values.timezone = patch.timezone;
 
   const [updated] = await db.update(space).set(values).where(eq(space.id, spaceId)).returning();
   return updated;

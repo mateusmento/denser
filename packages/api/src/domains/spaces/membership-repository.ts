@@ -15,6 +15,7 @@ export type SpaceMemberRow = {
   username: string | null;
   role: SpaceRole;
   createdAt: string;
+  timezone: string | null;
 };
 
 export async function listSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow[]> {
@@ -25,6 +26,7 @@ export async function listSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow
       createdAt: spaceMembership.createdAt,
       name: user.name,
       username: user.username,
+      timezone: user.timezone,
     })
     .from(spaceMembership)
     .innerJoin(user, eq(user.id, spaceMembership.userId))
@@ -37,6 +39,7 @@ export async function listSpaceMembers(spaceId: SpaceId): Promise<SpaceMemberRow
     username: row.username,
     role: row.role,
     createdAt: toIso(row.createdAt),
+    timezone: row.timezone,
   }));
 }
 

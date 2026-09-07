@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, nextTick, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { apiClient } from "@/lib/api";
+import { useAuthSession } from "@/modules/auth/composables/useAuthSession";
 import { buildPersonRoster, personFromUserId } from "@/modules/presence/lib/person-label";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
@@ -30,7 +31,7 @@ import PollInsertDialog from "../presentationals/PollInsertDialog.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
 import ConversationPaneTabs from "../presentationals/ConversationPaneTabs.vue";
 import ConversationSchedulesList from "../presentationals/ConversationSchedulesList.vue";
-import ScheduledMessageEditSheet from "../presentationals/ScheduledMessageEditSheet.vue";
+import RescheduleScheduleDialog from "../presentationals/RescheduleScheduleDialog.vue";
 import type {
   ComposerActionId,
   ConversationIntroView,
@@ -57,9 +58,19 @@ const workspaceMembersQuery = useQuery({
   queryFn: async () => {
     const { conversation } = await apiClient.getConversation(conversationId.value!);
     const rootSpaceId = conversation.rootSpaceId;
-    if (!rootSpaceId) return { members: [], rootSpaceId: null as SpaceId | null };
+    if (!rootSpaceId) {
+      return {
+        members: [],
+        rootSpaceId: null as SpaceId | null,
+        scheduleTimezone: conversation.scheduleTimezone ?? null,
+      };
+    }
     const detail = await apiClient.getSpace(rootSpaceId);
-    return { members: detail.assignableMembers ?? detail.members, rootSpaceId };
+    return {
+      members: detail.assignableMembers ?? detail.members,
+      rootSpaceId,
+      scheduleTimezone: conversation.scheduleTimezone ?? null,
+    };
   },
 });
 
@@ -68,6 +79,7 @@ const readState = useConversationReadState(conversationId, {
 });
 
 const scheduledSync = useScheduledMessagesSync(conversationId);
+const { user } = useAuthSession();
 
 const messagesSync = useConversationMessages(conversationId, {
   openAnchor: computed(() => readState.openAnchor.value),
@@ -213,6 +225,18 @@ const showConversationIntro = computed(
     conversationIntro.value != null,
 );
 
+const scheduleComposerProps = computed(() => ({
+  scheduleUserTimezone: user.value?.timezone ?? null,
+  scheduleTimezone: workspaceMembersQuery.data.value?.scheduleTimezone ?? null,
+  scheduleTimezoneLabel: workspaceMembersQuery.data.value?.scheduleTimezone ?? null,
+  scheduleSchedulerUserId: user.value?.id ?? null,
+  scheduleMembers: (workspaceMembersQuery.data.value?.members ?? []).map((member) => ({
+    userId: member.userId,
+    name: member.name,
+    timezone: member.timezone ?? null,
+  })),
+}));
+
 const channelComposer = computed(() =>
   defaultChannelComposerView({
     schedulePresets,
@@ -221,6 +245,7 @@ const channelComposer = computed(() =>
     attachments: channelAttachments.view.value,
     isEditing: editingMessageId.value != null && !editingInThread.value,
     sendLabel: editingMessageId.value != null && !editingInThread.value ? "Save" : "Send",
+    ...scheduleComposerProps.value,
   }),
 );
 
@@ -334,6 +359,9 @@ async function onSchedule(payload: ScheduleCommitPayload) {
     await scheduledSync.schedule({
       body: channelDraft.value,
       dueAt,
+      recurrence: payload.recurrence,
+      weekdays: payload.weekdays,
+      until: payload.until,
       attachmentIds: channelAttachments.collectAttachmentIds(channelDraft.value),
     });
     await channelDraftSync.clearDraft(channelDraft);
@@ -352,6 +380,9 @@ async function onThreadSchedule(payload: ScheduleCommitPayload) {
     await scheduledSync.schedule({
       body: threadDraft.value,
       dueAt,
+      recurrence: payload.recurrence,
+      weekdays: payload.weekdays,
+      until: payload.until,
       threadId: activeThreadId.value,
       attachmentIds: threadAttachments.collectAttachmentIds(threadDraft.value),
     });
@@ -499,12 +530,15 @@ function onEditSchedule(id: string) {
   scheduleEditOpen.value = true;
 }
 
-async function onSaveScheduleEdit(payload: { dueAtIso: string; whenLabel: string }) {
+async function onSaveScheduleEdit(payload: ScheduleCommitPayload) {
   if (!editingScheduleId.value) return;
   try {
     await scheduledSync.update({
       jobId: editingScheduleId.value,
       dueAt: payload.dueAtIso,
+      recurrence: payload.recurrence,
+      weekdays: payload.weekdays,
+      until: payload.until,
     });
     toast(`Schedule updated · ${payload.whenLabel}`);
   } catch {
@@ -633,10 +667,14 @@ async function onThreadJumpToLatest() {
         @dismiss-upload="threadAttachments.dismissFailed"
       />
     </template>
-    <ScheduledMessageEditSheet
+    <RescheduleScheduleDialog
       v-model:open="scheduleEditOpen"
       :message="editingSchedule"
       :presets="schedulePresets"
+      :user-timezone="user?.timezone ?? null"
+      :schedule-timezone="workspaceMembersQuery.data.value?.scheduleTimezone ?? null"
+      :scheduler-user-id="user?.id ?? null"
+      :members="scheduleComposerProps.scheduleMembers"
       @save="onSaveScheduleEdit"
     />
     <PollInsertDialog v-model:open="pollDialogOpen" @submit="onPollSubmit" />

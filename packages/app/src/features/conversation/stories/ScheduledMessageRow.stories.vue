@@ -18,7 +18,11 @@ const item: ConversationScheduledMessageView = {
   bodyPreview: "Weekly standup notes go out before the meeting.",
   nextRunAtIso,
   timezone,
-  recurrenceLabel: scheduleRecurrenceLabel("weekly"),
+  recurrenceLabel: scheduleRecurrenceLabel({
+    frequency: "weekly",
+    timeOfDay: "09:00",
+    weekdays: [1, 3, 5],
+  }),
   nextRunWallTimeLabel: formatScheduleWallTime(nextRunAtIso, timezone),
 };
 </script>

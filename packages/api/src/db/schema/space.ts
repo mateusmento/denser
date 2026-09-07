@@ -29,6 +29,7 @@ export const space = pgTable(
     rootSpaceId: uuid("root_space_id").$type<SpaceId>(),
     visibility: spaceVisibilityEnum("visibility").notNull().default("public"),
     icon: text("icon").default(DEFAULT_SPACE_ICON),
+    timezone: text("timezone"),
     createdBy: uuid("created_by")
       .$type<UserId>()
       .notNull()
@@ -61,6 +62,13 @@ export const space = pgTable(
       sql`(
         (${table.parentSpaceId} IS NULL AND ${table.rootSpaceId} IS NULL) OR
         (${table.parentSpaceId} IS NOT NULL AND ${table.rootSpaceId} IS NOT NULL)
+      )`,
+    ),
+    check(
+      "space_timezone_visibility",
+      sql`(
+        (${table.visibility} = 'public' AND ${table.timezone} IS NULL) OR
+        (${table.visibility} = 'private' AND ${table.timezone} IS NOT NULL)
       )`,
     ),
   ],

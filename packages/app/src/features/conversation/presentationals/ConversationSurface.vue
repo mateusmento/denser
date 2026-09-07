@@ -15,30 +15,28 @@ const showMobileThread = computed(() => threadOpen.value && !isDesktop.value);
 
 const threadWidth = ref(THREAD_DEFAULT_WIDTH);
 const resizing = ref(false);
+const dragStartX = ref(0);
+const dragStartWidth = ref(0);
 
 function onResizePointerDown(event: PointerEvent) {
   if (!showSplit.value) return;
   resizing.value = true;
-  const startX = event.clientX;
-  const startWidth = threadWidth.value;
-
-  function onMove(moveEvent: PointerEvent) {
-    const delta = startX - moveEvent.clientX;
-    threadWidth.value = Math.min(
-      THREAD_MAX_WIDTH,
-      Math.max(THREAD_MIN_WIDTH, startWidth + delta),
-    );
-  }
-
-  function onUp() {
-    resizing.value = false;
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-  }
-
-  window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
+  dragStartX.value = event.clientX;
+  dragStartWidth.value = threadWidth.value;
 }
+
+useEventListener(window, "pointermove", (moveEvent) => {
+  if (!resizing.value) return;
+  const delta = dragStartX.value - moveEvent.clientX;
+  threadWidth.value = Math.min(
+    THREAD_MAX_WIDTH,
+    Math.max(THREAD_MIN_WIDTH, dragStartWidth.value + delta),
+  );
+});
+
+useEventListener(window, "pointerup", () => {
+  resizing.value = false;
+});
 
 useEventListener(document, "selectstart", (event) => {
   if (resizing.value) event.preventDefault();

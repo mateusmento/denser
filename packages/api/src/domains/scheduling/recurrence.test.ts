@@ -45,6 +45,16 @@ test("weekly preset keeps weekday from anchor", () => {
   }
 });
 
+test("recurrenceFromPreset accepts multi-day weekdays", () => {
+  const recurrence = recurrenceFromPreset("weekly", "2030-01-15T12:00:00.000Z", "UTC", {
+    weekdays: [1, 3, 5],
+  });
+  assert.equal(recurrence.frequency, "weekly");
+  if (recurrence.frequency === "weekly") {
+    assert.deepEqual(recurrence.weekdays, [1, 3, 5]);
+  }
+});
+
 test("formatScheduleWallTime renders in job timezone", () => {
   const label = formatScheduleWallTime("2030-06-15T03:00:00.000Z", "America/New_York", "en-US");
   assert.match(label, /Jun/);

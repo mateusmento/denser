@@ -145,6 +145,7 @@ export const SpaceSummary = z.object({
   parentSpaceId: SpaceId.nullable(),
   rootSpaceId: SpaceId.nullable(),
   visibility: SpaceVisibility,
+  timezone: z.string().nullable().optional(),
   createdBy: UserId,
   showBacklog: z.boolean(),
   showBoard: z.boolean(),
@@ -186,6 +187,8 @@ export const SpaceMember = z.object({
   username: z.string().nullable(),
   role: SpaceRole,
   createdAt: z.string().datetime(),
+  /** Profile timezone for schedule member matrix labels. */
+  timezone: z.string().nullable().optional(),
 });
 export type SpaceMember = z.infer<typeof SpaceMember>;
 
@@ -301,6 +304,7 @@ export const PatchSpaceInput = z.object({
   icon: SpaceIcon.nullable().optional(),
   visibility: SpaceVisibility.optional(),
   parentSpaceId: SpaceId.nullable().optional(),
+  timezone: z.string().min(1).optional(),
   allowedArtifactKinds: z.array(ArtifactKind).nullable().optional(),
   allowedDocumentTypeIds: z.array(DocumentTypeId).nullable().optional(),
   defaultDocumentTypeId: DocumentTypeId.nullable().optional(),
@@ -385,6 +389,8 @@ export const ConversationView = ArtifactSummary.extend({
   conversationKind: ConversationKind,
   /** 1:1 direct only — other participant for presence dots and sidebar label. */
   peerUserId: UserId.nullable().optional(),
+  /** Resolved schedule timezone for this conversation (private ancestor walk). */
+  scheduleTimezone: z.string().nullable().optional(),
 });
 export type ConversationView = z.infer<typeof ConversationView>;
 

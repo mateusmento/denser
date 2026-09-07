@@ -3,11 +3,11 @@ import { defineMeta } from "sb-addon-vue-csf";
 import { ref } from "vue";
 import { emptyDoc } from "@/modules/rich-text";
 import { schedulePresets } from "../fixtures";
-import ScheduledMessageEditSheet from "../presentationals/ScheduledMessageEditSheet.vue";
+import RescheduleScheduleDialog from "../presentationals/RescheduleScheduleDialog.vue";
 
 const { Story } = defineMeta({
-  title: "features/conversation/ScheduledMessageEditSheet",
-  component: ScheduledMessageEditSheet,
+  title: "features/conversation/RescheduleScheduleDialog",
+  component: RescheduleScheduleDialog,
   tags: ["autodocs"],
 });
 
@@ -16,7 +16,7 @@ const open = ref(true);
 
 <template>
   <Story as-child name="Open">
-    <ScheduledMessageEditSheet
+    <RescheduleScheduleDialog
       v-model:open="open"
       :presets="schedulePresets"
       :message="{

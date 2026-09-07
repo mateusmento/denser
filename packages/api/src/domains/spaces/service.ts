@@ -41,6 +41,8 @@ import {
   type SpacePlanningInsert,
   type SpaceRow,
 } from "./repository.js";
+import { initialTimezoneForNewPrivateSpace } from "./timezone.js";
+import { findUserTimezone } from "../users/repository.js";
 
 function planningForPreset(preset: SpacePreset | undefined): SpacePlanningInsert {
   if (preset === "project") {
@@ -118,6 +120,14 @@ async function enableMembership(spaceRow: SpaceRow): Promise<void> {
   }
 }
 
+async function privateSpaceTimezone(
+  userId: UserId,
+  parentSpaceId: SpaceId | null,
+): Promise<string> {
+  const ownerTz = (await findUserTimezone(userId))?.timezone ?? null;
+  return initialTimezoneForNewPrivateSpace({ parentSpaceId, ownerUserTimezone: ownerTz });
+}
+
 export async function createSpace(userId: UserId, input: CreateSpaceInput) {
   const planning = planningForPreset(input.preset);
 
@@ -128,12 +138,15 @@ export async function createSpace(userId: UserId, input: CreateSpaceInput) {
     }
 
     const visibility = input.visibility ?? "public";
+    const timezone =
+      visibility === "private" ? await privateSpaceTimezone(userId, parent.id) : null;
     const created = await insertNestedSpace({
       title: input.title,
       parentSpaceId: parent.id,
       rootSpaceId: parent.rootSpaceId ?? parent.id,
       createdBy: userId,
       visibility,
+      timezone,
       planning,
     });
 
@@ -146,10 +159,13 @@ export async function createSpace(userId: UserId, input: CreateSpaceInput) {
   }
 
   const visibility = input.visibility ?? "public";
+  const timezone =
+    visibility === "private" ? await privateSpaceTimezone(userId, null) : null;
   const created = await insertRootSpace({
     title: input.title,
     createdBy: userId,
     visibility,
+    timezone,
     planning,
   });
   if (visibility === "private") {
@@ -328,9 +344,19 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
   const hasIcon = input.icon !== undefined;
   const hasVisibility = input.visibility !== undefined;
   const hasParent = input.parentSpaceId !== undefined;
+  const hasTimezone = input.timezone !== undefined;
 
-  if (!hasTitle && !hasIcon && !hasVisibility && !hasParent) {
+  if (!hasTitle && !hasIcon && !hasVisibility && !hasParent && !hasTimezone) {
     return { ok: true as const, space: toSpaceSummary(spaceRow) };
+  }
+
+  if (input.timezone !== undefined) {
+    if (spaceRow.visibility !== "private") {
+      return { ok: false as const, reason: "invalid_timezone" as const };
+    }
+    if (!input.timezone.trim()) {
+      return { ok: false as const, reason: "invalid_timezone" as const };
+    }
   }
 
   if (input.visibility !== undefined) {
@@ -341,6 +367,14 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
     const previousVisibility = spaceRow.visibility;
     if (previousVisibility === "public" && input.visibility === "private") {
       await enableMembership(spaceRow);
+      if (!spaceRow.timezone) {
+        const timezone = await privateSpaceTimezone(
+          userId,
+          spaceRow.parentSpaceId ?? null,
+        );
+        await updateSpace(spaceId, { timezone });
+        spaceRow = { ...spaceRow, timezone };
+      }
     }
   }
 
@@ -353,14 +387,28 @@ export async function patchSpace(userId: UserId, spaceId: SpaceId, input: PatchS
     }
   }
 
+  const previousTimezone = spaceRow.timezone;
   const updated = await updateSpace(spaceId, {
     ...(input.title !== undefined ? { title: input.title } : {}),
     ...(input.icon !== undefined ? { icon: input.icon ?? DEFAULT_SPACE_ICON } : {}),
     ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
+    ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
   });
 
   if (!updated) {
     return { ok: false as const, reason: "not_found" as const };
+  }
+
+  if (
+    input.timezone !== undefined &&
+    updated.visibility === "private" &&
+    previousTimezone &&
+    previousTimezone !== updated.timezone
+  ) {
+    const { recomputeScheduledJobsForPrivateSpace } = await import(
+      "../scheduled-messages/timezone-recompute.js"
+    );
+    await recomputeScheduledJobsForPrivateSpace(updated.id, input.timezone);
   }
 
   return { ok: true as const, space: toSpaceSummary(updated) };

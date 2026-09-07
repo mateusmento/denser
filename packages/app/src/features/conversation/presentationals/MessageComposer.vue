@@ -245,6 +245,11 @@ function onDrop(event: DragEvent) {
               v-if="action.id === 'schedule'"
               v-model:open="scheduleOpen"
               :presets="view.schedulePresets"
+              :timezone="view.scheduleUserTimezone ?? undefined"
+              :schedule-timezone="view.scheduleTimezone ?? undefined"
+              :schedule-timezone-label="view.scheduleTimezoneLabel ?? null"
+              :scheduler-user-id="view.scheduleSchedulerUserId ?? undefined"
+              :members="view.scheduleMembers"
               @commit="emit('schedule', $event)"
             >
               <template #trigger>

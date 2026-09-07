@@ -76,6 +76,29 @@ config({
 
 type Hero = { id: string; username: string; displayName: string };
 
+const SEED_USER_TIMEZONES: Record<
+  string,
+  { timezone: string; timezoneSource: "auto" | "manual" }
+> = {
+  alice: { timezone: "America/Los_Angeles", timezoneSource: "auto" },
+  bob: { timezone: "America/New_York", timezoneSource: "auto" },
+  carol: { timezone: "America/Chicago", timezoneSource: "manual" },
+  david: { timezone: "Europe/London", timezoneSource: "auto" },
+  emma: { timezone: "Europe/Berlin", timezoneSource: "auto" },
+  frank: { timezone: "Asia/Tokyo", timezoneSource: "manual" },
+};
+
+const SEED_BULK_TIMEZONES = [
+  "America/Los_Angeles",
+  "America/New_York",
+  "America/Chicago",
+  "Europe/London",
+  "Europe/Berlin",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "America/Sao_Paulo",
+] as const;
+
 const password = process.env.SEED_PASSWORD ?? "password";
 const mode = process.env.SEED_MODE === "full" ? "full" : "minimal";
 const reset = process.env.SEED_RESET === "1";
@@ -530,7 +553,13 @@ async function upsertCredentialUser(input: {
   id: UserId;
   username: string;
   displayName: string;
+  timezone?: string;
+  timezoneSource?: "auto" | "manual";
 }): Promise<UserId> {
+  const timezoneConfig = SEED_USER_TIMEZONES[input.username];
+  const timezone = input.timezone ?? timezoneConfig?.timezone ?? "UTC";
+  const timezoneSource = input.timezoneSource ?? timezoneConfig?.timezoneSource ?? "auto";
+
   const [row] = await db
     .insert(user)
     .values({
@@ -540,6 +569,8 @@ async function upsertCredentialUser(input: {
       emailVerified: true,
       username: input.username,
       displayUsername: input.username,
+      timezone,
+      timezoneSource,
     })
     .onConflictDoUpdate({
       target: user.username,
@@ -548,6 +579,8 @@ async function upsertCredentialUser(input: {
         email: `${input.username}@local.dev`,
         emailVerified: true,
         displayUsername: input.username,
+        timezone,
+        timezoneSource,
         updatedAt: new Date(),
       },
     })
@@ -594,6 +627,7 @@ async function seedBulkUsers(): Promise<void> {
   );
 
   for (const row of unique) {
+    const timezone = faker.helpers.arrayElement(SEED_BULK_TIMEZONES);
     const [upserted] = await db
       .insert(user)
       .values({
@@ -602,11 +636,15 @@ async function seedBulkUsers(): Promise<void> {
         emailVerified: true,
         username: row.username,
         displayUsername: row.username,
+        timezone,
+        timezoneSource: "auto",
       })
       .onConflictDoUpdate({
         target: user.username,
         set: {
           name: row.displayName,
+          timezone,
+          timezoneSource: "auto",
           updatedAt: new Date(),
         },
       })
@@ -641,6 +679,7 @@ async function upsertSpace(input: {
   title: string;
   icon?: string | null | undefined;
   visibility?: "public" | "private" | undefined;
+  timezone?: string | null | undefined;
   parentSpaceId?: SpaceId | null | undefined;
   rootSpaceId?: SpaceId | null | undefined;
   createdBy: UserId;
@@ -657,13 +696,17 @@ async function upsertSpace(input: {
   activeSprintId?: SpaceId | null | undefined;
   upcomingSprintId?: SpaceId | null | undefined;
 }): Promise<void> {
+  const visibility = input.visibility ?? "public";
+  const timezone = visibility === "private" ? (input.timezone ?? "UTC") : null;
+
   await db
     .insert(space)
     .values({
       id: input.id,
       title: input.title,
       icon: input.icon ?? "folder",
-      visibility: input.visibility ?? "public",
+      visibility,
+      timezone,
       parentSpaceId: input.parentSpaceId ?? null,
       rootSpaceId: input.rootSpaceId ?? null,
       createdBy: input.createdBy,
@@ -685,7 +728,8 @@ async function upsertSpace(input: {
       set: {
         title: input.title,
         icon: input.icon ?? "folder",
-        visibility: input.visibility ?? "public",
+        visibility,
+        timezone,
         parentSpaceId: input.parentSpaceId ?? null,
         rootSpaceId: input.rootSpaceId ?? null,
         createdBy: input.createdBy,
@@ -900,6 +944,7 @@ await upsertSpace({
   title: "Acme",
   icon: "briefcase",
   visibility: "private",
+  timezone: "America/Los_Angeles",
   createdBy: aliceId,
 });
 
@@ -1767,6 +1812,7 @@ await upsertSpace({
   title: "Leadership & Strategy",
   icon: "users",
   visibility: "private",
+  timezone: "America/New_York",
   parentSpaceId: SEED_SPACE_ACME,
   rootSpaceId: SEED_SPACE_ACME,
   createdBy: aliceId,
@@ -1930,7 +1976,10 @@ console.log(
 );
 console.log(`  Users seeded:        ${heroes.map((h) => h.username).join(", ")}`);
 console.log(
-  `  Root workspaces:     Acme (${SEED_SPACE_ACME}), Design System (${SEED_SPACE_DESIGN_SYSTEM}), Research (${SEED_SPACE_RESEARCH})`,
+  `  User timezones:      ${heroes.map((h) => `${h.username}=${SEED_USER_TIMEZONES[h.username]?.timezone ?? "UTC"}`).join(", ")}`,
+);
+console.log(
+  `  Root workspaces:     Acme (${SEED_SPACE_ACME}, America/Los_Angeles), Design System (${SEED_SPACE_DESIGN_SYSTEM}), Research (${SEED_SPACE_RESEARCH})`,
 );
 console.log(
   `  Scrum projects:      Core Platform (${SEED_SPACE_CORE_PLATFORM}), Growth & Analytics (${SEED_SPACE_GROWTH_SCRUM})`,

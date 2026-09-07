@@ -6,6 +6,7 @@ import type {
   ClientId,
   MessageId,
   ScheduleMessageInput,
+  ScheduleRecurrenceInput,
   ScheduledJobId,
   ScheduledMessageDto,
   SpaceId,
@@ -27,6 +28,10 @@ import { toScheduledMessageDto } from "./mapper.js";
 import * as repo from "./repository.js";
 import { isOnceJob } from "./recurrence.js";
 import { scheduledMessageRootSpaceId } from "./tenant.js";
+import {
+  buildScheduledMessageTiming,
+  resolveScheduleTimezoneForConversation,
+} from "./timing.js";
 
 function isEmptyBody(body: unknown): boolean {
   if (body == null) return true;
@@ -117,13 +122,22 @@ export async function scheduleMessage(
   }
 
   const dueAt = input.dueAt;
+  const scheduleTz = await resolveScheduleTimezoneForConversation(conversationId);
+  const timing = buildScheduledMessageTiming({
+    dueAt,
+    recurrence: input.recurrence ?? "once",
+    ...(input.weekdays ? { weekdays: input.weekdays } : {}),
+    until: input.until ?? null,
+    timezone: scheduleTz,
+  });
+
   const draft = createScheduledMessageJob(
     {
       rootSpaceId: conversation.rootSpaceId,
-      dueAt,
-      nextRunAt: dueAt,
-      timezone: null,
-      recurrence: null,
+      dueAt: timing.dueAt,
+      nextRunAt: timing.nextRunAt,
+      timezone: timing.timezone,
+      recurrence: timing.recurrence,
     },
     {
       conversationId,
@@ -220,6 +234,17 @@ export async function updateScheduledMessage(
     return { ok: false as const, reason: "processed" as const };
   }
 
+  const hasTiming =
+    input.dueAt !== undefined ||
+    input.recurrence !== undefined ||
+    input.weekdays !== undefined ||
+    input.until !== undefined;
+  const hasContent =
+    input.body !== undefined ||
+    input.quotesId !== undefined ||
+    input.threadId !== undefined ||
+    input.attachmentIds !== undefined;
+
   const nextBody = input.body !== undefined ? input.body : existing.payload.body;
   if (input.body !== undefined && isEmptyBody(input.body) && (input.attachmentIds ?? []).length === 0) {
     const currentAttachments = await loadScheduledAttachments(jobId);
@@ -228,10 +253,47 @@ export async function updateScheduledMessage(
     }
   }
 
-  const dueAt = input.dueAt ?? existing.dueAt;
+  let dueAt = existing.dueAt;
+  let nextRunAt = existing.nextRunAt;
+  let timezone = existing.timezone;
+  let recurrence = existing.recurrence;
+
+  if (hasTiming) {
+    const scheduleTz = await resolveScheduleTimezoneForConversation(conversationId);
+    const recurrencePreset: ScheduleRecurrenceInput =
+      input.recurrence ??
+      (existing.recurrence?.frequency === "once"
+        ? "once"
+        : existing.recurrence?.frequency === "daily"
+          ? "daily"
+          : existing.recurrence?.frequency === "weekly"
+            ? "weekly"
+            : "once");
+    const timing = buildScheduledMessageTiming({
+      dueAt: input.dueAt ?? existing.dueAt,
+      recurrence: recurrencePreset,
+      ...(input.weekdays
+        ? { weekdays: input.weekdays }
+        : existing.recurrence?.frequency === "weekly"
+          ? { weekdays: existing.recurrence.weekdays }
+          : {}),
+      until:
+        input.until !== undefined
+          ? input.until
+          : existing.recurrence && existing.recurrence.frequency !== "once"
+            ? existing.recurrence.until ?? null
+            : null,
+      timezone: scheduleTz,
+    });
+    dueAt = timing.dueAt;
+    nextRunAt = timing.nextRunAt;
+    timezone = timing.timezone;
+    recurrence = timing.recurrence;
+  }
+
   const payload = {
     ...existing.payload,
-    body: nextBody,
+    ...(hasContent ? { body: nextBody } : {}),
     ...(input.quotesId !== undefined ? { quotesId: input.quotesId } : {}),
     ...(input.threadId !== undefined ? { threadId: input.threadId } : {}),
   };
@@ -241,7 +303,8 @@ export async function updateScheduledMessage(
     rootSpaceId: conversation.rootSpaceId,
     payload,
     dueAt,
-    nextRunAt: dueAt,
+    nextRunAt,
+    ...(hasTiming ? { timezone, recurrence } : {}),
   });
   if (!updated) {
     return { ok: false as const, reason: "processed" as const };

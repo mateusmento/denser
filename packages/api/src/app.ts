@@ -36,13 +36,38 @@ app.use("/api/*", async (c, next) => {
   await next();
 });
 
-app.get("/api/me", (c) => {
+app.get("/api/me", async (c) => {
   const user = c.get("user");
+  const timezoneRow = await import("./domains/users/repository.js").then((m) =>
+    m.findUserTimezone(user.id as import("@denser/contracts").UserId),
+  );
   return c.json({
     user: {
       id: user.id,
       name: user.name,
       email: user.email,
+      timezone: timezoneRow?.timezone ?? null,
+      timezoneSource: timezoneRow?.timezoneSource ?? "auto",
+    },
+  });
+});
+
+app.patch("/api/me", async (c) => {
+  const { PatchMeInput } = await import("@denser/contracts");
+  const user = c.get("user");
+  const body = PatchMeInput.parse(await c.req.json());
+  const { updateUserTimezone } = await import("./domains/users/repository.js");
+  const updated = await updateUserTimezone(user.id as import("@denser/contracts").UserId, {
+    timezone: body.timezone,
+    timezoneSource: body.timezoneSource ?? "manual",
+  });
+  return c.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      timezone: updated?.timezone ?? body.timezone,
+      timezoneSource: updated?.timezoneSource ?? body.timezoneSource ?? "manual",
     },
   });
 });

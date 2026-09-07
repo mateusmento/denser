@@ -40,6 +40,9 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
     mutationFn: async (input: {
       body: JSONContent;
       dueAt: string;
+      recurrence?: "once" | "daily" | "weekly";
+      weekdays?: number[];
+      until?: string | null;
       threadId?: MessageId | null;
       attachmentIds?: AttachmentId[];
     }) => {
@@ -47,6 +50,9 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
       return apiClient.scheduleMessage(id.value, {
         body: input.body,
         dueAt: input.dueAt,
+        recurrence: input.recurrence ?? "once",
+        weekdays: input.weekdays,
+        until: input.until ?? undefined,
         threadId: input.threadId ?? null,
         attachmentIds: input.attachmentIds,
       });
@@ -58,12 +64,18 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
     mutationFn: async (input: {
       jobId: ScheduledJobId;
       dueAt?: string;
+      recurrence?: "once" | "daily" | "weekly";
+      weekdays?: number[];
+      until?: string | null;
       body?: JSONContent;
       attachmentIds?: AttachmentId[];
     }) => {
       if (!id.value) throw new Error("missing conversation");
       return apiClient.updateScheduledMessage(id.value, input.jobId, {
         dueAt: input.dueAt,
+        recurrence: input.recurrence,
+        weekdays: input.weekdays,
+        until: input.until,
         body: input.body,
         attachmentIds: input.attachmentIds,
       });
@@ -87,12 +99,18 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
     schedule: (input: {
       body: JSONContent;
       dueAt: string;
+      recurrence?: "once" | "daily" | "weekly";
+      weekdays?: number[];
+      until?: string | null;
       threadId?: MessageId | null;
       attachmentIds?: AttachmentId[];
     }) => scheduleMutation.mutateAsync(input),
     update: (input: {
       jobId: ScheduledJobId;
       dueAt?: string;
+      recurrence?: "once" | "daily" | "weekly";
+      weekdays?: number[];
+      until?: string | null;
       body?: JSONContent;
       attachmentIds?: AttachmentId[];
     }) => updateMutation.mutateAsync(input),

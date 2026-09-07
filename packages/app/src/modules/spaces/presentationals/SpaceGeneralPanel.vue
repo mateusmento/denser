@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ArtifactKind, DocumentTypeId, SpaceIcon } from "@denser/contracts";
-import { Button, Checkbox, Input, Label, Skeleton, cn } from "@denser/design-system";
+import { Button, Checkbox, Input, Label, Skeleton, cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@denser/design-system";
 import { computed, ref, watch } from "vue";
 import { DEFAULT_SPACE_ICON, SPACE_ICON_OPTIONS } from "@/modules/spaces/lib/space-icons";
 import type { SpaceGeneralView } from "@/modules/spaces/types";
@@ -14,6 +14,7 @@ const emit = defineEmits<{
   save: [input: {
     title: string;
     icon: SpaceIcon;
+    timezone?: string;
     allowedArtifactKinds?: ArtifactKind[] | null;
     allowedDocumentTypeIds?: DocumentTypeId[] | null;
     defaultDocumentTypeId?: DocumentTypeId | null;
@@ -22,6 +23,11 @@ const emit = defineEmits<{
 
 const title = ref("");
 const icon = ref<SpaceIcon>(DEFAULT_SPACE_ICON);
+const timezone = ref("UTC");
+const timezoneOptions = Intl.supportedValuesOf("timeZone").map((zone) => ({
+  value: zone,
+  label: zone,
+}));
 const allowDocuments = ref(true);
 const allowConversations = ref(true);
 const selectedDocumentTypeIds = ref<string[]>([]);
@@ -33,6 +39,7 @@ watch(
     if (!view) return;
     title.value = view.title;
     icon.value = view.icon ?? DEFAULT_SPACE_ICON;
+    timezone.value = view.timezone ?? "UTC";
     if (view.allowedArtifactKinds) {
       allowDocuments.value = view.allowedArtifactKinds.includes("document");
       allowConversations.value = view.allowedArtifactKinds.includes("conversation");
@@ -52,6 +59,7 @@ const isDirty = computed(() => {
   return (
     title.value.trim() !== view.title ||
     icon.value !== (view.icon ?? DEFAULT_SPACE_ICON) ||
+    (view.visibility === "private" && timezone.value !== (view.timezone ?? "UTC")) ||
     allowDocuments.value !== (!view.allowedArtifactKinds || view.allowedArtifactKinds.includes("document")) ||
     allowConversations.value !== (!view.allowedArtifactKinds || view.allowedArtifactKinds.includes("conversation")) ||
     JSON.stringify(selectedDocumentTypeIds.value) !== JSON.stringify(view.allowedDocumentTypeIds ?? []) ||
@@ -81,6 +89,7 @@ function onSave() {
   emit("save", {
     title: trimmed,
     icon: icon.value,
+    ...(props.view?.visibility === "private" ? { timezone: timezone.value } : {}),
     allowedArtifactKinds: kinds.length === 2 ? null : kinds,
     allowedDocumentTypeIds: selectedDocumentTypeIds.value.length === 0 ? null : (selectedDocumentTypeIds.value as any),
     defaultDocumentTypeId: (defaultDocTypeId.value as any) ?? null,
@@ -143,6 +152,27 @@ function onSave() {
         </div>
         <p class="text-xs text-muted-foreground">
           Select an icon, or tap again to reset to the folder.
+        </p>
+      </div>
+
+      <div v-if="view.visibility === 'private'" class="space-y-2 border-t border-border pt-4">
+        <Label for="space-timezone">Timezone</Label>
+        <Select
+          :model-value="timezone"
+          :disabled="!view.canManage || view.isSaving"
+          @update:model-value="timezone = String($event ?? '')"
+        >
+          <SelectTrigger id="space-timezone" class="h-9 w-full max-w-md">
+            <SelectValue placeholder="Select timezone" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="zone in timezoneOptions" :key="zone.value" :value="zone.value">
+              {{ zone.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <p class="text-xs text-muted-foreground">
+          Scheduled messages in this space use this timezone for recurrence.
         </p>
       </div>
 

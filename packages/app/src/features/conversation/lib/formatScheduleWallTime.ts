@@ -1,4 +1,9 @@
-import { formatScheduleWallTime as formatScheduleWallTimeUtc } from "@denser/contracts";
+import {
+  formatScheduleWallTime as formatScheduleWallTimeUtc,
+  type ScheduledJobRecurrence,
+} from "@denser/contracts";
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 export function formatScheduleWallTime(
   isoUtc: string,
@@ -9,14 +14,17 @@ export function formatScheduleWallTime(
 }
 
 export function scheduleRecurrenceLabel(
-  recurrence: "once" | "daily" | "weekly" | null | undefined,
+  recurrence: ScheduledJobRecurrence | null | undefined,
 ): string {
-  switch (recurrence) {
-    case "daily":
-      return "Daily";
-    case "weekly":
-      return "Weekly";
-    default:
-      return "Once";
+  if (!recurrence || recurrence.frequency === "once") return "Once";
+  if (recurrence.frequency === "daily") {
+    return recurrence.until ? `Daily · until ${formatUntil(recurrence.until)}` : "Daily";
   }
+  const days = recurrence.weekdays.map((day) => WEEKDAY_LABELS[day] ?? "?").join(", ");
+  const base = `Weekly · ${days}`;
+  return recurrence.until ? `${base} · until ${formatUntil(recurrence.until)}` : base;
+}
+
+function formatUntil(iso: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(iso));
 }

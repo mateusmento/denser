@@ -16,6 +16,7 @@ import { findUserByUsername } from "../spaces/membership-repository.js";
 import { resolveArtifactSpaceMove, resolveTenantRootSpaceId } from "../spaces/service.js";
 import { requireArtifactAccess, requireSpaceAccess, canAccessSpace } from "../tenancy/access.js";
 import { findSpaceById } from "../spaces/repository.js";
+import { resolveScheduleTimezoneForConversation } from "../scheduled-messages/timing.js";
 import { toConversationView } from "./mapper.js";
 import type { ConversationRow } from "./repository.js";
 import * as conversationRepository from "./repository.js";
@@ -26,8 +27,15 @@ async function enrichDirectConversationView(
   conversationRow: ConversationRow,
 ): Promise<ConversationView> {
   const base = toConversationView(artifactRow, conversationRow);
+  let scheduleTimezone: string | null = null;
+  try {
+    scheduleTimezone = await resolveScheduleTimezoneForConversation(artifactRow.id);
+  } catch {
+    scheduleTimezone = null;
+  }
+
   if (conversationRow.conversationKind !== "direct") {
-    return base;
+    return { ...base, scheduleTimezone };
   }
 
   const peerIds = await conversationRepository.listPeerUserIds(artifactRow.id);
@@ -37,6 +45,7 @@ async function enrichDirectConversationView(
     ...base,
     title,
     peerUserId: otherIds.length === 1 ? otherIds[0]! : null,
+    scheduleTimezone,
   };
 }
 

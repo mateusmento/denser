@@ -10,6 +10,8 @@ import type {
 export type SpaceGeneralView = {
   title: string;
   icon: SpaceIcon | null;
+  visibility?: "public" | "private";
+  timezone?: string | null;
   allowedArtifactKinds?: ArtifactKind[] | null;
   allowedDocumentTypeIds?: DocumentTypeId[] | null;
   defaultDocumentTypeId?: DocumentTypeId | null;

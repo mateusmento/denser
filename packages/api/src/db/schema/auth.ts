@@ -1,6 +1,8 @@
 import type { UserId } from "@denser/contracts";
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+export const userTimezoneSourceEnum = pgEnum("user_timezone_source", ["auto", "manual"]);
 
 export const user = pgTable("user", {
   id: uuid("id").primaryKey().$type<UserId>().defaultRandom(),
@@ -8,6 +10,8 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  timezone: text("timezone"),
+  timezoneSource: userTimezoneSourceEnum("timezone_source").notNull().default("auto"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

@@ -1,4 +1,4 @@
-import { useDevicesList } from "@vueuse/core";
+import { useDevicesList, useEventListener } from "@vueuse/core";
 import { computed, onScopeDispose, ref, shallowRef, watch } from "vue";
 import {
   clampCameraLayout,
@@ -60,7 +60,16 @@ export function useScreenRecordingSetup() {
   let previewCompositor: ReturnType<typeof createPreviewCompositor> | null = null;
   let activeRecording: ActiveRecording | null = null;
   let elapsedTimer: ReturnType<typeof setInterval> | null = null;
-  let screenTrackEndedHandler: (() => void) | null = null;
+
+  const screenVideoTrack = computed(
+    () => acquired.value?.screenStream.getVideoTracks()[0] ?? undefined,
+  );
+
+  useEventListener(screenVideoTrack, "ended", () => {
+    if (!acquired.value) return;
+    error.value = "Screen sharing ended";
+    cancel();
+  });
 
   function isWebcamOverlayVisible(): boolean {
     return shouldDrawWebcamOnCanvas(webcamEnabled.value, acquired.value?.webcamVideo != null);
@@ -203,11 +212,6 @@ export function useScreenRecordingSetup() {
     }
     activeRecording = null;
     const streams = acquired.value;
-    if (streams?.screenStream && screenTrackEndedHandler) {
-      const track = streams.screenStream.getVideoTracks()[0];
-      track?.removeEventListener("ended", screenTrackEndedHandler);
-    }
-    screenTrackEndedHandler = null;
     releaseAcquiredStreams(streams);
     acquired.value = null;
     clearCompositorCanvasMount();
@@ -241,13 +245,6 @@ export function useScreenRecordingSetup() {
       await ensurePermissions();
       syncSelectedDeviceIds(streams);
       cameraLayout.value = defaultCameraLayout(streams.frameWidth, streams.frameHeight);
-
-      const track = streams.screenStream.getVideoTracks()[0];
-      screenTrackEndedHandler = () => {
-        error.value = "Screen sharing ended";
-        cancel();
-      };
-      track?.addEventListener("ended", screenTrackEndedHandler);
 
       previewCompositor = createPreviewCompositor(
         streams,

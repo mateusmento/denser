@@ -60,7 +60,7 @@ import {
   type ScheduledJobId,
   type UserId,
 } from "@denser/contracts";
-import { HealthResponse, MeResponse, Session, type SignInInput } from "@denser/contracts";
+import { HealthResponse, MeResponse, PatchMeInput, Session, type SignInInput } from "@denser/contracts";
 import { connectSocket, type DenserSocket } from "./socket.js";
 
 export type ApiClientOptions = {
@@ -170,6 +170,18 @@ export class ApiClient {
     const res = await this.request("/api/me");
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("me failed", res.status, body);
+    return MeResponse.parse(body);
+  }
+
+  async patchMe(input: PatchMeInput): Promise<MeResponse> {
+    const payload = PatchMeInput.parse(input);
+    const res = await this.request("/api/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("patch me failed", res.status, body);
     return MeResponse.parse(body);
   }
 

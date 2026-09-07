@@ -2,14 +2,8 @@ import type { ScheduledMessageDto, SessionUser } from "@denser/contracts";
 import type { JSONContent } from "@/modules/rich-text";
 import type { ConversationAttachmentView, ScheduledMessageView } from "../types";
 import { collectImageAttachmentIdsFromDoc } from "./collect-image-attachment-ids";
+import { formatScheduleWallTime, scheduleRecurrenceLabel } from "./formatScheduleWallTime";
 import { isMediaMime } from "./is-media-mime";
-
-function dueAtLabel(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(iso));
-}
 
 function tileAttachments(
   body: JSONContent,
@@ -33,13 +27,24 @@ export function toScheduledMessageView(
   currentUser: SessionUser | null,
 ): ScheduledMessageView {
   const body = job.payload.body as JSONContent;
+  const scheduleTz = job.timezone;
+  const userTz = currentUser?.timezone ?? null;
+  const dueAtLabel = formatScheduleWallTime(job.nextRunAt ?? job.dueAt, scheduleTz);
+  const userDueAtLabel =
+    userTz && userTz !== scheduleTz
+      ? formatScheduleWallTime(job.nextRunAt ?? job.dueAt, userTz)
+      : null;
+
   return {
     id: job.id,
     senderId: job.payload.senderId,
     isMine: currentUser?.id === job.payload.senderId,
     body,
     dueAt: job.dueAt,
-    dueAtLabel: dueAtLabel(job.dueAt),
+    dueAtLabel,
+    userDueAtLabel,
+    scheduleTimezone: scheduleTz,
+    recurrenceLabel: scheduleRecurrenceLabel(job.recurrence),
     threadId: job.payload.threadId ?? null,
     attachments: tileAttachments(body, job),
     processed: job.processed,

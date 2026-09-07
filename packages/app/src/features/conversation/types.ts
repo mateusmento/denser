@@ -122,6 +122,8 @@ export type ScheduleCommitPayload = {
   dueAtIso: string;
   timezone: string;
   recurrence: ScheduleRecurrencePreset;
+  weekdays?: number[];
+  until?: string | null;
   presetId?: string;
   customIso?: string;
 };
@@ -135,6 +137,9 @@ export type ScheduledMessageView = {
   body: JSONContent;
   dueAt: string;
   dueAtLabel: string;
+  userDueAtLabel?: string | null;
+  scheduleTimezone?: string | null;
+  recurrenceLabel?: string;
   threadId: string | null;
   attachments: readonly ConversationAttachmentView[];
   processed: boolean;
@@ -196,6 +201,11 @@ export type MessageComposerView = {
   /** Composer is saving an in-place message edit. */
   isEditing?: boolean;
   schedulePresets: readonly SchedulePreset[];
+  scheduleUserTimezone?: string | null;
+  scheduleTimezone?: string | null;
+  scheduleTimezoneLabel?: string | null;
+  scheduleSchedulerUserId?: string | null;
+  scheduleMembers?: readonly { userId: string; name: string; timezone: string | null }[];
   attachments?: ComposerAttachmentsView;
 };
 

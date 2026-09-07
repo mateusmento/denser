@@ -48,6 +48,12 @@ const emit = defineEmits<{
               />
               <p class="text-xs text-muted-foreground">
                 Sends {{ item.dueAtLabel }}
+                <span v-if="item.recurrenceLabel && item.recurrenceLabel !== 'Once'">
+                  · {{ item.recurrenceLabel }}
+                </span>
+                <span v-if="item.userDueAtLabel" class="text-muted-foreground/80">
+                  · your time {{ item.userDueAtLabel }}
+                </span>
                 <span v-if="item.threadId" class="text-muted-foreground/80"> · thread reply</span>
               </p>
             </div>

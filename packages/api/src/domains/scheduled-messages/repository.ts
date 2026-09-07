@@ -53,6 +53,16 @@ export async function listActiveScheduledMessagesForConversation(
   return rows.map(toScheduledMessageRow);
 }
 
+export async function listActiveScheduledMessages(): Promise<ScheduledMessageRow[]> {
+  const rows = await db
+    .select()
+    .from(scheduledJob)
+    .where(and(eq(scheduledJob.type, "scheduled_message"), eq(scheduledJob.processed, false)))
+    .orderBy(scheduledJob.dueAt, scheduledJob.id);
+
+  return rows.map(toScheduledMessageRow);
+}
+
 export async function findScheduledMessageJob(
   jobId: ScheduledJobId,
   rootSpaceId: SpaceId,
@@ -73,6 +83,8 @@ export async function updateScheduledMessageJob(input: {
   payload: ScheduledJobDto<"scheduled_message">["payload"];
   dueAt: string;
   nextRunAt: string;
+  timezone?: string | null;
+  recurrence?: ScheduledJobDto<"scheduled_message">["recurrence"];
 }): Promise<ScheduledMessageRow | null> {
   const [row] = await db
     .update(scheduledJob)
@@ -80,6 +92,8 @@ export async function updateScheduledMessageJob(input: {
       payload: input.payload,
       dueAt: new Date(input.dueAt),
       nextRunAt: new Date(input.nextRunAt),
+      ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
+      ...(input.recurrence !== undefined ? { recurrence: input.recurrence } : {}),
     })
     .where(
       and(

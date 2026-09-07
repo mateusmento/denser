@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import {
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Sidebar,
   SidebarHeader,
   SidebarInset,
@@ -8,11 +12,14 @@ import {
   SidebarTrigger,
 } from "@denser/design-system";
 import { RouterLink } from "vue-router";
+import { ref } from "vue";
 import { ThemeSwitcher } from "@/modules/theme";
 import { useAuthSession, useAuthSync } from "@/modules/auth";
+import UserPreferencesDialog from "@/modules/auth/presentationals/UserPreferencesDialog.vue";
 
 const { user } = useAuthSession();
 const { signOut } = useAuthSync();
+const preferencesOpen = ref(false);
 
 async function onSignOut() {
   await signOut();
@@ -40,7 +47,15 @@ async function onSignOut() {
           <span v-if="user?.name" class="hidden text-xs text-muted-foreground sm:inline">
             {{ user.name }}
           </span>
-          <Button v-if="user" variant="ghost" size="sm" @click="onSignOut">Sign out</Button>
+          <DropdownMenu v-if="user">
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" size="sm">Account</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @select="preferencesOpen = true">Preferences</DropdownMenuItem>
+              <DropdownMenuItem @select="onSignOut">Sign out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <ThemeSwitcher />
         </div>
       </header>
@@ -48,5 +63,6 @@ async function onSignOut() {
         <slot />
       </main>
     </SidebarInset>
+    <UserPreferencesDialog v-model:open="preferencesOpen" />
   </SidebarProvider>
 </template>

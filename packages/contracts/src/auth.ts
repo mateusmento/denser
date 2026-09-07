@@ -19,8 +19,16 @@ export const SessionUser = z.object({
   id: z.string().min(1),
   name: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  timezoneSource: z.enum(["auto", "manual"]).optional(),
 });
 export type SessionUser = z.infer<typeof SessionUser>;
+
+export const PatchMeInput = z.object({
+  timezone: z.string().min(1),
+  timezoneSource: z.enum(["auto", "manual"]).optional(),
+});
+export type PatchMeInput = z.infer<typeof PatchMeInput>;
 
 export const Session = z.object({
   user: SessionUser.nullable().optional(),

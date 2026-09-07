@@ -30,6 +30,7 @@ export function toSpaceSummary(row: typeof space.$inferSelect): SpaceSummary {
     parentSpaceId: row.parentSpaceId,
     rootSpaceId: row.rootSpaceId,
     visibility: row.visibility,
+    timezone: row.visibility === "private" ? row.timezone : null,
     createdBy: row.createdBy,
     showBacklog: row.showBacklog,
     showBoard: row.showBoard,
@@ -50,5 +51,6 @@ export function toSpaceMember(row: SpaceMemberRow): SpaceMember {
     username: row.username,
     role: row.role,
     createdAt: row.createdAt,
+    timezone: row.timezone,
   };
 }
