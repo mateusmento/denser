@@ -4,6 +4,7 @@ import {
 } from "@denser/contracts";
 import { toast } from "@denser/design-system";
 import { onScopeDispose, watch } from "vue";
+import { useRouter } from "vue-router";
 import { useRealtimeSocket } from "@/lib/realtime/useRealtimeSocket";
 import { useAuthSession } from "./useAuthSession";
 
@@ -12,13 +13,21 @@ function formatSchedulerTimezoneChangedMessage(payload: SchedulerTimezoneChanged
 }
 
 export function useSchedulerTimezoneNotifications(): void {
+  const router = useRouter();
   const { isAuthenticated } = useAuthSession();
   const { ensureSocket } = useRealtimeSocket();
   let cancelled = false;
   let attached = false;
 
   function onTimezoneChanged(payload: SchedulerTimezoneChangedEvent) {
-    toast(formatSchedulerTimezoneChangedMessage(payload));
+    toast(formatSchedulerTimezoneChangedMessage(payload), {
+      action: {
+        label: "View scheduled messages",
+        onClick: () => {
+          router.push({ name: "workspace-scheduled" }).catch(() => {});
+        },
+      },
+    });
   }
 
   async function attach() {
