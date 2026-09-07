@@ -135,6 +135,7 @@ async function makeFixture(): Promise<Fixture> {
     id: spaceId,
     title: "Messages Integration Workspace",
     visibility: "private",
+    timezone: "UTC",
     createdBy: userId,
   });
   await db.insert(spaceMembership).values({ spaceId, userId, role: "owner" });

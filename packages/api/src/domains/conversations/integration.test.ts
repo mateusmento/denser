@@ -20,7 +20,7 @@ async function makeFixture() {
     { id: aliceId, name: "Alice", email: `alice-${aliceId}@denser.test` },
     { id: bobId, name: "Bob", email: `bob-${bobId}@denser.test` },
   ]);
-  await db.insert(space).values({ id: rootSpaceId, title: "DM Peers Test Workspace", visibility: "private", createdBy: aliceId });
+  await db.insert(space).values({ id: rootSpaceId, title: "DM Peers Test Workspace", visibility: "private", timezone: "UTC", createdBy: aliceId });
   await db.insert(spaceMembership).values([
     { spaceId: rootSpaceId, userId: aliceId, role: "owner" },
     { spaceId: rootSpaceId, userId: bobId, role: "member" },
@@ -78,8 +78,8 @@ test("regular conversation can move between spaces", async () => {
   const targetSpaceId = randomUUID() as SpaceId;
   try {
     await db.insert(space).values([
-      { id: childSpaceId, title: "Channel folder", visibility: "private", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
-      { id: targetSpaceId, title: "Other folder", visibility: "private", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
+      { id: childSpaceId, title: "Channel folder", visibility: "private", timezone: "UTC", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
+      { id: targetSpaceId, title: "Other folder", visibility: "private", timezone: "UTC", parentSpaceId: f.rootSpaceId, rootSpaceId: f.rootSpaceId, createdBy: f.aliceId },
     ]);
 
     const created = await createConversation(f.aliceId, {

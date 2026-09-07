@@ -3,12 +3,17 @@ import { cn } from "@denser/design-system";
 import { useEventListener, useMediaQuery } from "@vueuse/core";
 import { computed, ref, useSlots } from "vue";
 
+const props = defineProps<{
+  /** Parent must set when using conditional #aside slots — useSlots() is not reactive. */
+  asideOpen?: boolean;
+}>();
+
 const ASIDE_MIN_WIDTH = 280;
 const ASIDE_MAX_WIDTH = 520;
 const ASIDE_DEFAULT_WIDTH = 352;
 
 const slots = useSlots();
-const asideOpen = computed(() => Boolean(slots.aside));
+const asideOpen = computed(() => props.asideOpen ?? Boolean(slots.aside));
 const isDesktop = useMediaQuery("(min-width: 640px)");
 const showSplit = computed(() => asideOpen.value && isDesktop.value);
 const showMobileAside = computed(() => asideOpen.value && !isDesktop.value);
@@ -45,22 +50,28 @@ useEventListener(document, "selectstart", (event) => {
 
 <template>
   <div
-    class="relative flex min-h-0 min-w-0 flex-1 p-3"
-    :class="showSplit ? 'gap-0' : 'gap-3'"
+    class="relative flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden p-3 gap-3"
     data-slot="conversation-surface"
   >
     <section
       v-show="!showMobileAside"
-      class="flex min-w-0 flex-1 flex-col"
+      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       aria-label="Conversation"
       data-slot="conversation-column"
     >
       <div
-        class="-mx-3 flex min-h-surface-header shrink-0 items-center border-b border-border pb-2"
+        :class="
+          cn(
+            'flex min-h-surface-header shrink-0 items-center border-b border-border pb-2',
+            !showSplit && '-mx-3',
+          )
+        "
       >
         <slot name="header" />
       </div>
-      <div class="relative -mx-3 min-h-0 flex-1">
+      <div
+        :class="cn('relative min-h-0 flex-1', !showSplit && '-mx-3')"
+      >
         <div
           class="pointer-events-none absolute inset-x-px top-0 z-2 h-5 bg-linear-to-b from-background via-35% to-transparent"
           aria-hidden="true"
@@ -74,7 +85,7 @@ useEventListener(document, "selectstart", (event) => {
         </div>
       </div>
       <div
-        class="z-3 box-border flex max-h-96 shrink-0 basis-surface-footer flex-col"
+        class="relative z-0 box-border flex max-h-96 shrink-0 basis-surface-footer flex-col"
         data-slot="conversation-footer"
       >
         <slot name="composer" />
@@ -84,7 +95,7 @@ useEventListener(document, "selectstart", (event) => {
     <template v-if="asideOpen">
       <div
         v-if="showSplit"
-        class="group relative z-1 -mx-1 w-2 shrink-0 cursor-col-resize touch-none"
+        class="group relative w-2 shrink-0 cursor-col-resize touch-none self-stretch"
         aria-hidden="true"
         @pointerdown="onResizePointerDown"
       >
@@ -99,7 +110,7 @@ useEventListener(document, "selectstart", (event) => {
             'flex min-h-0 flex-col overflow-hidden',
             showMobileAside
               ? 'absolute inset-3 z-10 min-w-0 rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-black/5 animate-in duration-300 fade-in dark:ring-white/10'
-              : 'max-w-none shrink-0 animate-in duration-300 fade-in slide-in-from-right-4',
+              : 'max-w-none shrink-0 self-stretch animate-in duration-300 fade-in slide-in-from-right-4',
             !showMobileAside &&
               'rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10',
           )

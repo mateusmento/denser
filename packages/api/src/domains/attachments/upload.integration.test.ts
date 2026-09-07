@@ -116,6 +116,7 @@ async function makeUploadFixture(): Promise<UploadFixture> {
     id: spaceId,
     title: "Upload Test Workspace",
     visibility: "private",
+    timezone: "UTC",
     createdBy: userId,
   });
 

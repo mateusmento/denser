@@ -39,7 +39,7 @@ export function defaultThreadComposerView(
   overrides: Partial<MessageComposerView> = {},
 ): MessageComposerView {
   return defaultChannelComposerView({
-    shape: "thread",
+    shape: "channel",
     sendLabel: "Reply",
     placeholder: "Reply in thread…",
     ...overrides,

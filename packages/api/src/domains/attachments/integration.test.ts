@@ -103,6 +103,7 @@ async function makeFixture(): Promise<Fixture> {
     id: spaceId,
     title: "Attachment Test Workspace",
     visibility: "private",
+    timezone: "UTC",
     createdBy: userId,
   });
 

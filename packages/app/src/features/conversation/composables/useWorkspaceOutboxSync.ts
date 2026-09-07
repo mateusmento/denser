@@ -39,8 +39,12 @@ export function useWorkspaceOutboxSync(rootSpaceId: ReadonlyRefOrGetter<SpaceId 
     (draftsQuery.data.value?.drafts ?? []).map(toDraftOutboxRowView),
   );
 
+  const scheduledItems = computed(
+    () => scheduledQuery.data.value?.scheduledMessages ?? [],
+  );
+
   const scheduledMessages = computed((): readonly ScheduledOutboxRowView[] =>
-    (scheduledQuery.data.value?.scheduledMessages ?? []).map(toScheduledOutboxRowView),
+    scheduledItems.value.map(toScheduledOutboxRowView),
   );
 
   async function invalidate() {
@@ -57,6 +61,7 @@ export function useWorkspaceOutboxSync(rootSpaceId: ReadonlyRefOrGetter<SpaceId 
 
   return {
     drafts,
+    scheduledItems,
     scheduledMessages,
     draftCount: computed(() => draftCountQuery.data.value?.count ?? 0),
     scheduledCount: computed(() => scheduledCountQuery.data.value?.count ?? 0),

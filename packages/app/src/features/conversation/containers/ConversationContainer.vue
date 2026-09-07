@@ -681,6 +681,8 @@ const schedulesErrorLabel = computed(() =>
 );
 
 function onEditSchedule(id: string) {
+  const entry = scheduledSync.schedules.value.find((item) => item.id === id);
+  if (!entry) return;
   editingScheduleId.value = id as ScheduledJobId;
   scheduleEditOpen.value = true;
 }
@@ -726,7 +728,12 @@ async function onThreadJumpToLatest() {
 </script>
 
 <template>
-  <ConversationSurface>
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+    <ConversationSurface
+      :aside-open="
+        outboxPanelOpen || Boolean(activeThreadId && threadSync.thread.value)
+      "
+    >
     <template #header>
       <ChannelHeader
         :channel="channelHeader"
@@ -840,18 +847,20 @@ async function onThreadJumpToLatest() {
         @cancel-scheduled="onCancelSchedule"
       />
     </template>
-    <RescheduleScheduleDialog
-      v-model:open="scheduleEditOpen"
-      :message="editingSchedule"
-      :presets="schedulePresets"
-      :user-timezone="user?.timezone ?? null"
-      :schedule-timezone="workspaceMembersQuery.data.value?.scheduleTimezone ?? null"
-      :scheduler-user-id="user?.id ?? null"
-      :members="scheduleComposerProps.scheduleMembers"
-      @save="onSaveScheduleEdit"
-    />
-    <PollInsertDialog v-model:open="pollDialogOpen" @submit="onPollSubmit" />
   </ConversationSurface>
+  </div>
+
+  <RescheduleScheduleDialog
+    v-model:open="scheduleEditOpen"
+    :message="editingSchedule"
+    :presets="schedulePresets"
+    :user-timezone="user?.timezone ?? null"
+    :schedule-timezone="workspaceMembersQuery.data.value?.scheduleTimezone ?? null"
+    :scheduler-user-id="user?.id ?? null"
+    :members="scheduleComposerProps.scheduleMembers"
+    @save="onSaveScheduleEdit"
+  />
+  <PollInsertDialog v-model:open="pollDialogOpen" @submit="onPollSubmit" />
 
   <ScreenRecordingSetupDialog
     v-model:open="screenRecording.open"

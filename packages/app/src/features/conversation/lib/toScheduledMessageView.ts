@@ -1,5 +1,6 @@
-import type { ScheduledMessageDto, SessionUser } from "@denser/contracts";
+import type { ScheduledMessageDto, ScheduledOutboxItemDto, SessionUser } from "@denser/contracts";
 import type { JSONContent } from "@/modules/rich-text";
+import { emptyDoc } from "@/modules/rich-text";
 import type { ConversationAttachmentView, ScheduledMessageView } from "../types";
 import { collectImageAttachmentIdsFromDoc } from "./collect-image-attachment-ids";
 import { formatScheduleWallTime, scheduleRecurrenceLabel } from "./formatScheduleWallTime";
@@ -48,5 +49,32 @@ export function toScheduledMessageView(
     threadId: job.payload.threadId ?? null,
     attachments: tileAttachments(body, job),
     processed: job.processed,
+  };
+}
+
+export function toScheduledMessageViewFromOutboxItem(
+  item: ScheduledOutboxItemDto,
+  currentUser: SessionUser | null,
+): ScheduledMessageView {
+  const nextRunAt = item.nextRunAt ?? item.dueAt;
+  const scheduleTz = item.timezone;
+  const userTz = currentUser?.timezone ?? null;
+
+  return {
+    id: item.jobId,
+    senderId: currentUser?.id ?? "",
+    isMine: true,
+    body: emptyDoc(),
+    dueAt: nextRunAt,
+    dueAtLabel: formatScheduleWallTime(nextRunAt, scheduleTz),
+    userDueAtLabel:
+      userTz && userTz !== scheduleTz
+        ? formatScheduleWallTime(nextRunAt, userTz)
+        : null,
+    scheduleTimezone: scheduleTz,
+    recurrenceLabel: scheduleRecurrenceLabel(item.recurrence),
+    threadId: item.threadId,
+    attachments: [],
+    processed: false,
   };
 }
