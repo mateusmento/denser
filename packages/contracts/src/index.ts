@@ -15,3 +15,4 @@ export * from "./scheduling.js";
 export * from "./scheduled-message.js";
 export * from "./outbox.js";
 export * from "./poll.js";
+export * from "./sidebar-pins.js";

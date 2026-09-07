@@ -54,6 +54,12 @@ import {
   DraftOutboxCountResponse,
   ListScheduledOutboxResponse,
   ScheduledOutboxCountResponse,
+  ListSidebarPinsResponse,
+  ListSidebarSectionPreferencesResponse,
+  PutSidebarSectionPreferenceResponse,
+  SidebarSectionPreference,
+  UpdateSidebarSectionPreferenceInput,
+  PutSidebarSectionPreferenceInput,
 
   type ArtifactId,
   type AttachmentId,
@@ -421,6 +427,60 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("get unread summary failed", res.status, body);
     return GetUnreadSummaryResponse.parse(body);
+  }
+
+  async listSidebarPins(rootSpaceId: SpaceId): Promise<ListSidebarPinsResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/sidebar-pins`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list sidebar pins failed", res.status, body);
+    return ListSidebarPinsResponse.parse(body);
+  }
+
+  async pinSidebarSpace(rootSpaceId: SpaceId, spaceId: SpaceId): Promise<void> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/sidebar-pins/${spaceId}`, {
+      method: "PUT",
+    });
+    if (!res.ok) {
+      throw new ApiError("pin sidebar space failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async unpinSidebarSpace(rootSpaceId: SpaceId, spaceId: SpaceId): Promise<void> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/sidebar-pins/${spaceId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      throw new ApiError("unpin sidebar space failed", res.status, await this.parseJson(res));
+    }
+  }
+
+  async listSidebarSectionPreferences(
+    rootSpaceId: SpaceId,
+  ): Promise<ListSidebarSectionPreferencesResponse> {
+    const res = await this.request(`/api/root-spaces/${rootSpaceId}/sidebar-section-preferences`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list sidebar section preferences failed", res.status, body);
+    return ListSidebarSectionPreferencesResponse.parse(body);
+  }
+
+  async updateSidebarSectionPreference(
+    rootSpaceId: SpaceId,
+    spaceId: SpaceId,
+    input: UpdateSidebarSectionPreferenceInput,
+  ): Promise<SidebarSectionPreference> {
+    const payload = UpdateSidebarSectionPreferenceInput.parse(input);
+    const res = await this.request(
+      `/api/root-spaces/${rootSpaceId}/sidebar-section-preferences/${spaceId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("update sidebar section preference failed", res.status, body);
+    const parsed = PutSidebarSectionPreferenceResponse.parse(body);
+    return parsed.preference;
   }
 
   async getConversationUnread(

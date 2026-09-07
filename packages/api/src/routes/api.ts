@@ -11,6 +11,7 @@ import { reactionRoutes } from "../domains/reactions/routes.js";
 import { scheduledMessageRoutes } from "../domains/scheduled-messages/routes.js";
 import { spaceRoutes, spaceSprintRoutes } from "../domains/spaces/routes.js";
 import { outboxRoutes } from "../domains/outbox/routes.js";
+import { sidebarPinRoutes } from "../domains/sidebar-pins/routes.js";
 import { documentTypeRoutes } from "../domains/workflows/routes.js";
 
 type Variables = {
@@ -30,5 +31,6 @@ export const apiRoutes = new Hono<{ Variables: Variables }>()
   .route("/", reactionRoutes)
   .route("/", scheduledMessageRoutes)
   .route("/", outboxRoutes)
+  .route("/", sidebarPinRoutes)
   .route("/", attachmentRoutes)
   .route("/", documentTypeRoutes);

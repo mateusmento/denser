@@ -10,6 +10,7 @@ import { message, readState } from "./message.js";
 import { messageReaction } from "./message-reaction.js";
 import { messageDraft, messageDraftAttachment } from "./message-draft.js";
 import { scheduledJob, scheduledJobAttachment } from "./scheduled-job.js";
+import { sidebarSectionPreference, spaceSidebarPin } from "./sidebar-pins.js";
 import { space, spaceMembership } from "./space.js";
 import { documentType, workflow, workflowStage } from "./workflow.js";
 
@@ -36,6 +37,8 @@ export const spaceRelations = relations(space, ({ one, many }) => ({
   artifacts: many(artifact),
   workflows: many(workflow),
   documentTypes: many(documentType),
+  sidebarPins: many(spaceSidebarPin),
+  sidebarSectionPreferences: many(sidebarSectionPreference),
 }));
 
 export const spaceMembershipRelations = relations(spaceMembership, ({ one }) => ({
@@ -96,6 +99,40 @@ export const dmSidebarPreferenceRelations = relations(dmSidebarPreference, ({ on
   user: one(user, {
     fields: [dmSidebarPreference.userId],
     references: [user.id],
+  }),
+}));
+
+export const spaceSidebarPinRelations = relations(spaceSidebarPin, ({ one }) => ({
+  user: one(user, {
+    fields: [spaceSidebarPin.userId],
+    references: [user.id],
+  }),
+  rootSpace: one(space, {
+    fields: [spaceSidebarPin.rootSpaceId],
+    references: [space.id],
+    relationName: "sidebar_pin_root_space",
+  }),
+  pinnedSpace: one(space, {
+    fields: [spaceSidebarPin.spaceId],
+    references: [space.id],
+    relationName: "sidebar_pin_space",
+  }),
+}));
+
+export const sidebarSectionPreferenceRelations = relations(sidebarSectionPreference, ({ one }) => ({
+  user: one(user, {
+    fields: [sidebarSectionPreference.userId],
+    references: [user.id],
+  }),
+  rootSpace: one(space, {
+    fields: [sidebarSectionPreference.rootSpaceId],
+    references: [space.id],
+    relationName: "sidebar_section_pref_root_space",
+  }),
+  sectionSpace: one(space, {
+    fields: [sidebarSectionPreference.spaceId],
+    references: [space.id],
+    relationName: "sidebar_section_pref_space",
   }),
 }));
 
