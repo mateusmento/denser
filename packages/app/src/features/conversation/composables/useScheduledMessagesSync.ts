@@ -1,11 +1,20 @@
-import type { ArtifactId, AttachmentId, MessageId, ScheduledJobId } from "@denser/contracts";
+import type { ArtifactId, AttachmentId, MessageId, ScheduledJobId, SpaceId } from "@denser/contracts";
+import {
+  SCHEDULED_MESSAGE_CANCELLED_EVENT,
+  SCHEDULED_MESSAGE_UPSERTED_EVENT,
+  type ScheduledMessageCancelledEvent,
+  type ScheduledMessageUpsertedEvent,
+} from "@denser/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { computed } from "vue";
+import { computed, onScopeDispose } from "vue";
 import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { useConversationRoom } from "@/lib/realtime/useConversationRoom";
+import { useRealtimeSocket } from "@/lib/realtime/useRealtimeSocket";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import type { JSONContent } from "@/modules/rich-text";
 import { useAuthSession } from "@/modules/auth/composables/useAuthSession";
+import { invalidateWorkspaceScheduledOutbox } from "../lib/invalidate-outbox-queries";
 import { toScheduledMessageView } from "../lib/toScheduledMessageView";
 import type { ScheduledMessageView } from "../types";
 
@@ -29,12 +38,49 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
       .map((job) => toScheduledMessageView(job, user.value));
   });
 
-  async function invalidate() {
+  async function invalidateConversation() {
     if (!id.value) return;
     await queryClient.invalidateQueries({
       queryKey: queryKeys.conversationScheduledMessages(id.value),
     });
   }
+
+  async function invalidate() {
+    await invalidateConversation();
+  }
+
+  async function invalidateAll(rootSpaceId?: SpaceId | null) {
+    await invalidateConversation();
+    await invalidateWorkspaceScheduledOutbox(queryClient, rootSpaceId);
+  }
+
+  function onScheduledUpserted(event: ScheduledMessageUpsertedEvent) {
+    if (id.value && event.conversationId !== id.value) return;
+    void invalidateAll(event.scheduledMessage.rootSpaceId);
+  }
+
+  function onScheduledCancelled(event: ScheduledMessageCancelledEvent) {
+    if (id.value && event.conversationId !== id.value) return;
+    void invalidateAll();
+  }
+
+  useConversationRoom(id);
+  const { ensureSocket } = useRealtimeSocket();
+  let cancelled = false;
+
+  void ensureSocket().then((socket) => {
+    if (cancelled) return;
+    socket.on(SCHEDULED_MESSAGE_UPSERTED_EVENT, onScheduledUpserted);
+    socket.on(SCHEDULED_MESSAGE_CANCELLED_EVENT, onScheduledCancelled);
+  });
+
+  onScopeDispose(() => {
+    cancelled = true;
+    const socket = useRealtimeSocket().socket.value;
+    if (!socket) return;
+    socket.off(SCHEDULED_MESSAGE_UPSERTED_EVENT, onScheduledUpserted);
+    socket.off(SCHEDULED_MESSAGE_CANCELLED_EVENT, onScheduledCancelled);
+  });
 
   const scheduleMutation = useMutation({
     mutationFn: async (input: {
@@ -57,7 +103,7 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
         attachmentIds: input.attachmentIds,
       });
     },
-    onSuccess: () => invalidate(),
+    onSuccess: (response) => invalidateAll(response.scheduledMessage.rootSpaceId),
   });
 
   const updateMutation = useMutation({
@@ -80,7 +126,7 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
         attachmentIds: input.attachmentIds,
       });
     },
-    onSuccess: () => invalidate(),
+    onSuccess: (response) => invalidateAll(response.scheduledMessage.rootSpaceId),
   });
 
   const cancelMutation = useMutation({
@@ -88,7 +134,7 @@ export function useScheduledMessagesSync(conversationId: ReadonlyRefOrGetter<Art
       if (!id.value) throw new Error("missing conversation");
       return apiClient.cancelScheduledMessage(id.value, jobId);
     },
-    onSuccess: () => invalidate(),
+    onSuccess: (response) => invalidateAll(response.scheduledMessage.rootSpaceId),
   });
 
   return {

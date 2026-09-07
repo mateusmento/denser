@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { emptyDoc, type JSONContent } from "@/modules/rich-text/types";
 import { isEmptyComposerBody } from "../lib/composer-content";
+import { invalidateWorkspaceDraftOutbox } from "../lib/invalidate-outbox-queries";
 
 import { adoptDraftBody, reconcileDraftConflict } from "../lib/draft-conflict";
 
@@ -63,6 +64,7 @@ export function useMessageDraftSync(
     },
     onSuccess: (draft) => {
       queryClient.setQueryData(draftQueryKey.value, draft);
+      void invalidateWorkspaceDraftOutbox(queryClient);
     },
   });
 
@@ -74,6 +76,7 @@ export function useMessageDraftSync(
     },
     onSuccess: () => {
       queryClient.setQueryData(draftQueryKey.value, null);
+      void invalidateWorkspaceDraftOutbox(queryClient);
     },
   });
 

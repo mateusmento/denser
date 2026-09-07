@@ -29,10 +29,22 @@ const item: ScheduledOutboxRowView = {
   }),
   nextRunWallTimeLabel: formatScheduleWallTime(nextRunAtIso, timezone),
 };
+
+const onceItem: ScheduledOutboxRowView = {
+  ...item,
+  id: "sched-2",
+  threadId: "msg-thread",
+  contextLabel: "thread",
+  bodyPreview: "One-off reminder in a thread.",
+  recurrenceLabel: scheduleRecurrenceLabel({ frequency: "once" }),
+};
 </script>
 
 <template>
   <Story as-child name="Weekly">
     <ScheduledOutboxRow :item="item" />
+  </Story>
+  <Story as-child name="OnceInThread">
+    <ScheduledOutboxRow :item="onceItem" />
   </Story>
 </template>

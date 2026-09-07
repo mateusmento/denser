@@ -1,9 +1,20 @@
 import type { SpaceId } from "@denser/contracts";
+import {
+  SCHEDULED_MESSAGE_CANCELLED_EVENT,
+  SCHEDULED_MESSAGE_UPSERTED_EVENT,
+  type ScheduledMessageCancelledEvent,
+  type ScheduledMessageUpsertedEvent,
+} from "@denser/contracts";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
-import { computed } from "vue";
+import { computed, onScopeDispose } from "vue";
 import { apiClient } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { useRealtimeSocket } from "@/lib/realtime/useRealtimeSocket";
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
+import {
+  invalidateWorkspaceDraftOutbox,
+  invalidateWorkspaceScheduledOutbox,
+} from "../lib/invalidate-outbox-queries";
 import { toDraftOutboxRowView, toScheduledOutboxRowView } from "../lib/toOutboxRowView";
 import type { DraftOutboxRowView, ScheduledOutboxRowView } from "../types";
 
@@ -50,14 +61,37 @@ export function useWorkspaceOutboxSync(rootSpaceId: ReadonlyRefOrGetter<SpaceId 
   async function invalidate() {
     if (!rootId.value) return;
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaceDrafts(rootId.value) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaceDraftCount(rootId.value) }),
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.workspaceScheduledMessages(rootId.value),
-      }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaceScheduledCount(rootId.value) }),
+      invalidateWorkspaceDraftOutbox(queryClient, rootId.value),
+      invalidateWorkspaceScheduledOutbox(queryClient, rootId.value),
     ]);
   }
+
+  function onScheduledUpserted(event: ScheduledMessageUpsertedEvent) {
+    const rootSpaceId = event.scheduledMessage.rootSpaceId;
+    if (rootId.value && rootSpaceId !== rootId.value) return;
+    void invalidateWorkspaceScheduledOutbox(queryClient, rootSpaceId);
+  }
+
+  function onScheduledCancelled(event: ScheduledMessageCancelledEvent) {
+    void invalidateWorkspaceScheduledOutbox(queryClient, rootId.value);
+  }
+
+  const { ensureSocket } = useRealtimeSocket();
+  let cancelled = false;
+
+  void ensureSocket().then((socket) => {
+    if (cancelled) return;
+    socket.on(SCHEDULED_MESSAGE_UPSERTED_EVENT, onScheduledUpserted);
+    socket.on(SCHEDULED_MESSAGE_CANCELLED_EVENT, onScheduledCancelled);
+  });
+
+  onScopeDispose(() => {
+    cancelled = true;
+    const socket = useRealtimeSocket().socket.value;
+    if (!socket) return;
+    socket.off(SCHEDULED_MESSAGE_UPSERTED_EVENT, onScheduledUpserted);
+    socket.off(SCHEDULED_MESSAGE_CANCELLED_EVENT, onScheduledCancelled);
+  });
 
   return {
     drafts,
