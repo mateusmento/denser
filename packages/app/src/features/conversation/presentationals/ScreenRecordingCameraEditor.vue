@@ -191,7 +191,7 @@ defineExpose({ host });
 <template>
   <div
     ref="host"
-    class="pointer-events-none absolute inset-0 z-10"
+    class="pointer-events-none absolute inset-0 z-30"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @pointercancel="onPointerUp"

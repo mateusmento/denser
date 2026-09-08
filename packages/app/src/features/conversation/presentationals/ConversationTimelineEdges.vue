@@ -53,11 +53,17 @@ const jumpActive = computed(() => {
   return scrollable.value.end;
 });
 
+const reloadOnJump = computed(() => props.showJumpToLatest || props.nextPage.hasNext);
+
 function onJumpToLatest() {
   emit("jumpToLatest");
 }
 </script>
 
 <template>
-  <MessageScrollerButton :active="jumpActive" @action="onJumpToLatest" />
+  <MessageScrollerButton
+    :active="jumpActive"
+    :defer-scroll="reloadOnJump"
+    @action="onJumpToLatest"
+  />
 </template>

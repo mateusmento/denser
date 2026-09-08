@@ -1,5 +1,5 @@
 import type { InfiniteData } from "@tanstack/vue-query";
-import type { ArtifactId, ClientId, MessageDto, MessageId } from "@denser/contracts";
+import type { ArtifactId, AttachmentDto, AttachmentId, ClientId, MessageDto, MessageId } from "@denser/contracts";
 import {
   MESSAGE_CREATED_EVENT,
   MESSAGE_DELETED_EVENT,
@@ -255,7 +255,12 @@ export function useThreadMessages(
   });
 
   const sendMutation = useMutation({
-    mutationFn: async (input: { body: JSONContent; clientId: ClientId }) => {
+    mutationFn: async (input: {
+      body: JSONContent;
+      clientId: ClientId;
+      attachmentIds: AttachmentId[];
+      attachments: AttachmentDto[];
+    }) => {
       const conversationIdValue = conversation.value;
       const threadIdValue = thread.value;
       if (!conversationIdValue || !threadIdValue) throw new Error("no thread");
@@ -263,6 +268,7 @@ export function useThreadMessages(
         body: input.body,
         clientId: input.clientId,
         threadId: threadIdValue,
+        ...(input.attachmentIds.length > 0 ? { attachmentIds: input.attachmentIds } : {}),
       });
     },
     onMutate: async (input) => {
@@ -286,7 +292,8 @@ export function useThreadMessages(
         createdAt: new Date().toISOString(),
         editedAt: null,
         deletedAt: null,
-        attachmentIds: [],
+        attachmentIds: input.attachmentIds,
+        attachments: input.attachments,
       };
 
       syncQueryData(applyMessageCreated(previous, optimistic));
@@ -304,17 +311,30 @@ export function useThreadMessages(
     },
   });
 
-  async function send(body: JSONContent) {
-    if (isEmptyBody(body)) return;
-    await sendMutation.mutateAsync({ body, clientId: createClientId() });
+  async function send(
+    body: JSONContent,
+    attachmentIds: AttachmentId[] = [],
+    attachments: AttachmentDto[] = [],
+  ) {
+    if (isEmptyBody(body) && attachmentIds.length === 0) return;
+    await sendMutation.mutateAsync({
+      body,
+      attachmentIds,
+      attachments,
+      clientId: createClientId(),
+    });
   }
 
   async function retrySend() {
     if (!failedClientId.value) return;
     const current = dtos.value.find((message) => message.clientId === failedClientId.value);
-    if (!current?.body) return;
+    if (!current) return;
+    const attachmentIds = (current.attachmentIds ?? []) as AttachmentId[];
+    if (isEmptyBody(current.body as JSONContent) && attachmentIds.length === 0) return;
     await sendMutation.mutateAsync({
       body: current.body as JSONContent,
+      attachmentIds,
+      attachments: current.attachments ?? [],
       clientId: failedClientId.value,
     });
   }

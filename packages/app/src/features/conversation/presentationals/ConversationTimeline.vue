@@ -110,6 +110,11 @@ defineExpose({
       NonNullable<typeof scrollerBridge.value>["scrollToMessage"]
     >[1],
   ) => scrollerBridge.value?.scrollToMessage(messageId, options) ?? false,
+  scrollToEnd: (
+    options?: Parameters<
+      NonNullable<typeof scrollerBridge.value>["scrollToEnd"]
+    >[0],
+  ) => scrollerBridge.value?.scrollToEnd(options) ?? false,
 });
 </script>
 

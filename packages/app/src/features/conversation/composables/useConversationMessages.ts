@@ -198,6 +198,7 @@ export function useConversationMessages(
 
   function ingestMessage(event: MessageDto) {
     if (!id.value || event.conversationId !== id.value) return;
+    if (event.threadId) return;
     upsertInCollection(messagesCollection, event);
     const current = readMessagesQuery(queryClient, id.value);
     syncQueryData(applyMessageCreated(current, event));

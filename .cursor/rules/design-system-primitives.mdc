@@ -1,0 +1,35 @@
+---
+description: Prefer @denser/design-system primitives (ScrollArea, Tabs, Button, Select) over native HTML or overflow-auto scroll chrome
+globs: packages/app/**/*.{vue,ts,tsx}
+alwaysApply: false
+---
+
+# Design system primitives (app)
+
+Import from `@denser/design-system`. Full rule: `.cursor/skills/frontend-patterns/rules/design-system-primitives.md`.
+
+## Defaults
+
+| Need | Use | Avoid |
+| --- | --- | --- |
+| Scrollable list / menu / panel | `ScrollArea` with explicit height (`h-56`, `max-h-64`, `h-full min-h-0`) | `overflow-y-auto` / `overflow-auto` on wrappers |
+| Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | Hand-rolled tab strips |
+| Actions / triggers | `Button` | Raw `<button>` for product chrome |
+| Option picking | `Select` (+ trigger/content/items) | `<select>`, `NativeSelect` (except native-form exceptions) |
+| Message timelines | `MessageScroller` | `ScrollArea` on chat lists |
+
+## ScrollArea in menus
+
+```vue
+<DropdownMenuContent class="w-56 overflow-hidden p-0">
+  <ScrollArea class="max-h-64">
+    <DropdownMenuItem v-for="item in items" :key="item.id">…</DropdownMenuItem>
+  </ScrollArea>
+</DropdownMenuContent>
+```
+
+## Exceptions
+
+- Virtualized or DS-owned scroll roots (`MessageScroller`, etc.)
+- `overflow-hidden` for clipping only (not scrolling)
+- `NativeSelect` only when native semantics are intentional (calendar internals, documented form exceptions)

@@ -17,6 +17,8 @@ const props = withDefaults(
     size?: ButtonVariants["size"];
     /** When set, overrides scroll-derived visibility for the jump pill. */
     active?: boolean;
+    /** Emit action before scrolling so the parent can reload the window first. */
+    deferScroll?: boolean;
   }>(),
   {
     direction: "end",
@@ -43,6 +45,10 @@ function onClick(event: MouseEvent) {
   const target = event.currentTarget as HTMLElement | null;
   target?.blur();
   if (event.defaultPrevented) return;
+  if (props.deferScroll) {
+    emit("action");
+    return;
+  }
   if (props.direction === "start") scrollToStart({ behavior: props.behavior });
   else scrollToEnd({ behavior: props.behavior });
   emit("action");

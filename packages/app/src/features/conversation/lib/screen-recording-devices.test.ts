@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  dedicatedMicrophoneDevices,
+  isCameraBoundMicrophone,
   microphoneAudioConstraints,
   streamNeedsDeviceSwitch,
   toRecordingDeviceOptions,
@@ -44,4 +46,65 @@ test("streamNeedsDeviceSwitch acquires when missing and switches only on an expl
   assert.equal(streamNeedsDeviceSwitch(true, "cam-1", null), false);
   assert.equal(streamNeedsDeviceSwitch(true, "cam-1", "cam-1"), false);
   assert.equal(streamNeedsDeviceSwitch(true, "cam-1", "cam-2"), true);
+});
+
+test("dedicatedMicrophoneDevices excludes camera-bound audio inputs", () => {
+  const videoInputs = [
+    { deviceId: "cam-1", groupId: "group-cam", kind: "videoinput", label: "Webcam" },
+  ] as MediaDeviceInfo[];
+  const audioInputs = [
+    { deviceId: "mic-1", groupId: "group-mic", kind: "audioinput", label: "Headset" },
+    { deviceId: "cam-mic", groupId: "group-cam", kind: "audioinput", label: "Webcam Mono" },
+  ] as MediaDeviceInfo[];
+
+  assert.deepEqual(
+    dedicatedMicrophoneDevices(audioInputs, videoInputs).map((device) => device.deviceId),
+    ["mic-1"],
+  );
+});
+
+test("dedicatedMicrophoneDevices excludes webcam mics by label when groupId is missing", () => {
+  const videoInputs = [
+    { deviceId: "cam-1", groupId: "", kind: "videoinput", label: "Webcam C270" },
+  ] as MediaDeviceInfo[];
+  const audioInputs = [
+    {
+      deviceId: "mic-1",
+      groupId: "",
+      kind: "audioinput",
+      label: "HDA Intel PCH Analog Stereo",
+    },
+    {
+      deviceId: "cam-mic",
+      groupId: "",
+      kind: "audioinput",
+      label: "Webcam C270 Mono",
+    },
+  ] as MediaDeviceInfo[];
+
+  assert.deepEqual(
+    dedicatedMicrophoneDevices(audioInputs, videoInputs).map((device) => device.deviceId),
+    ["mic-1"],
+  );
+});
+
+test("isCameraBoundMicrophone matches common webcam model names", () => {
+  assert.equal(
+    isCameraBoundMicrophone(
+      { kind: "audioinput", groupId: "", label: "Webcam C270 Mono" },
+      [],
+    ),
+    true,
+  );
+});
+
+test("dedicatedMicrophoneDevices returns empty when only camera mics exist", () => {
+  const videoInputs = [
+    { deviceId: "cam-1", groupId: "group-cam", kind: "videoinput", label: "Webcam" },
+  ] as MediaDeviceInfo[];
+  const audioInputs = [
+    { deviceId: "cam-mic", groupId: "group-cam", kind: "audioinput", label: "Webcam Mono" },
+  ] as MediaDeviceInfo[];
+
+  assert.deepEqual(dedicatedMicrophoneDevices(audioInputs, videoInputs), []);
 });

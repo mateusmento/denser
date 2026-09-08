@@ -10,15 +10,18 @@ import {
   type NextPageState,
   type PreviousPageState,
 } from "@/lib/async";
+import AudioRecordingBadge from "./AudioRecordingBadge.vue";
 import ConversationMessage from "./ConversationMessage.vue";
 import ConversationMessageGroup from "./ConversationMessageGroup.vue";
 import ConversationTimeline from "./ConversationTimeline.vue";
 import MessageComposer from "./MessageComposer.vue";
 import type {
+  AudioRecordingBadgeView,
   ComposerActionId,
   ConversationThreadView,
   MessageComposerView,
   ScheduleCommitPayload,
+  ScreenRecordingDeviceOption,
 } from "../types";
 
 const draft = defineModel<JSONContent>({ required: true });
@@ -34,6 +37,10 @@ const props = withDefaults(
     previousPage?: PreviousPageState;
     nextPage?: NextPageState;
     showJumpToLatest?: boolean;
+    audioRecordingBadge?: AudioRecordingBadgeView | null;
+    audioMicDevices?: readonly ScreenRecordingDeviceOption[];
+    audioMicDeviceId?: string | null;
+    onPrepareAudioMicPicker?: () => void | Promise<void>;
   }>(),
   {
     previousPage: () => emptyPreviousPageState(),
@@ -65,6 +72,8 @@ const emit = defineEmits<{
   cancelUpload: [clientId: string];
   retryUpload: [clientId: string];
   dismissUpload: [clientId: string];
+  "update:audioMicDeviceId": [deviceId: string];
+  stopAudioRecording: [];
 }>();
 </script>
 
@@ -126,7 +135,12 @@ const emit = defineEmits<{
       </ConversationTimeline>
     </div>
 
-    <div class="box-border flex shrink-0 basis-surface-footer flex-col p-2 pt-0">
+    <div class="box-border flex shrink-0 basis-surface-footer flex-col gap-2 overflow-visible p-2 pt-0">
+      <AudioRecordingBadge
+        v-if="props.audioRecordingBadge"
+        :view="props.audioRecordingBadge"
+        @stop="emit('stopAudioRecording')"
+      />
       <MessageComposer
         v-model="draft"
         :view="composer"
@@ -135,6 +149,10 @@ const emit = defineEmits<{
         :upload-image="uploadImage"
         :on-stage-files="onStageFiles"
         :can-send="canSend"
+        :audio-mic-devices="audioMicDevices"
+        :audio-mic-device-id="audioMicDeviceId"
+        :on-prepare-audio-mic-picker="onPrepareAudioMicPicker"
+        @update:audio-mic-device-id="emit('update:audioMicDeviceId', $event)"
         @mention-search="emit('mentionSearch', $event)"
         @send="emit('send')"
         @cancel-edit="emit('cancelEdit')"

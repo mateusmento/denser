@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   shouldDrawWebcamOverlay,
+  shouldShowOverlayEditButton,
   shouldShowWebcamEditor,
 } from "./screen-recording-overlay-visibility.js";
 
@@ -57,4 +58,9 @@ test("editor visibility follows combined overlay mode", () => {
   const view = { ...setupView, showCameraOverlayEditor: false };
   assert.equal(shouldShowWebcamEditor(view, true), false);
   assert.equal(shouldDrawWebcamOverlay(true, true, true, true), true);
+});
+
+test("shouldShowOverlayEditButton appears in setup before edit mode", () => {
+  assert.equal(shouldShowOverlayEditButton(setupView, true), true);
+  assert.equal(shouldShowOverlayEditButton({ ...setupView, overlayEditMode: true }, true), false);
 });

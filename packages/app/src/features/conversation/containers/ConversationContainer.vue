@@ -7,7 +7,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { apiClient } from "@/lib/api";
 import { useAuthSession } from "@/modules/auth/composables/useAuthSession";
-import { buildPersonRoster, personFromUserId } from "@/modules/presence/lib/person-label";
+import { buildPersonRoster, enrichMessageAuthors, personFromUserId } from "@/modules/presence/lib/person-label";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
 import { useMessageComposerScreenRecording } from "../composables/useMessageComposerScreenRecording";
@@ -151,20 +151,6 @@ watch(
   },
 );
 
-const roster = computed(() =>
-  buildPersonRoster(
-    workspaceMembersQuery.data.value?.members ?? [],
-    messagesSync.messages.value,
-  ),
-);
-
-const displayMessages = computed(() =>
-  messagesSync.messages.value.map((message) => ({
-    ...message,
-    author: personFromUserId(message.author.id as UserId, roster.value),
-  })),
-);
-
 const presence = useConversationPresence(conversationId, {
   members: computed(() => workspaceMembersQuery.data.value?.members ?? []),
   messages: computed(() => messagesSync.messages.value),
@@ -222,14 +208,48 @@ watch(
   { immediate: true },
 );
 
+const recordingSurface = ref<"channel" | "thread">("channel");
+
 const channelAttachments = useComposerAttachments({
   conversationId,
   body: channelDraft,
   syncDraftMetadata: (draft) => channelDraftSync.syncServerDraftMetadata(draft),
 });
 
-const screenRecording = useMessageComposerScreenRecording({
+const channelAudioRecording = useMessageComposerAudioRecording({
   stageFiles: (files) => channelAttachments.stageFiles(files),
+  disabled: () => !conversationId.value,
+});
+
+const filesSync = useConversationFilesSync(conversationId, {
+  currentUserId: computed(() => user.value?.id as UserId | undefined),
+  enabled: computed(() => filesPaneOpen.value),
+  resolveUploaderName: (userId) => {
+    const member = workspaceMembersQuery.data.value?.members.find((entry) => entry.userId === userId);
+    return member?.name ?? "Someone";
+  },
+});
+
+const threadAttachments = useComposerAttachments({
+  conversationId,
+  threadId: activeThreadId,
+  body: threadDraft,
+  syncDraftMetadata: (draft) => threadDraftSync.syncServerDraftMetadata(draft),
+});
+
+const threadAudioRecording = useMessageComposerAudioRecording({
+  stageFiles: (files) => threadAttachments.stageFiles(files),
+  disabled: () => !conversationId.value || !activeThreadId.value,
+});
+
+const screenRecording = useMessageComposerScreenRecording({
+  stageFiles: (files) => {
+    if (recordingSurface.value === "thread") {
+      threadAttachments.stageFiles(files);
+      return;
+    }
+    channelAttachments.stageFiles(files);
+  },
   disabled: () => !conversationId.value,
   viewer: () => {
     const currentUser = user.value;
@@ -250,25 +270,32 @@ const screenRecording = useMessageComposerScreenRecording({
   },
 });
 
-const audioRecording = useMessageComposerAudioRecording({
-  stageFiles: (files) => channelAttachments.stageFiles(files),
-  disabled: () => !conversationId.value,
-});
+const roster = computed(() =>
+  buildPersonRoster(
+    workspaceMembersQuery.data.value?.members ?? [],
+    [
+      ...messagesSync.messages.value,
+      ...(threadSync.thread.value?.messages ?? []),
+      ...(threadParent.value ? [threadParent.value] : []),
+    ],
+  ),
+);
 
-const filesSync = useConversationFilesSync(conversationId, {
-  currentUserId: computed(() => user.value?.id as UserId | undefined),
-  enabled: computed(() => filesPaneOpen.value),
-  resolveUploaderName: (userId) => {
-    const member = workspaceMembersQuery.data.value?.members.find((entry) => entry.userId === userId);
-    return member?.name ?? "Someone";
-  },
-});
+const displayMessages = computed(() =>
+  enrichMessageAuthors(messagesSync.messages.value, roster.value),
+);
 
-const threadAttachments = useComposerAttachments({
-  conversationId,
-  threadId: activeThreadId,
-  body: threadDraft,
-  syncDraftMetadata: (draft) => threadDraftSync.syncServerDraftMetadata(draft),
+const displayThread = computed(() => {
+  const thread = threadSync.thread.value;
+  if (!thread) return null;
+  return {
+    ...thread,
+    parent: {
+      ...thread.parent,
+      author: personFromUserId(thread.parent.author.id as UserId, roster.value),
+    },
+    messages: enrichMessageAuthors(thread.messages, roster.value),
+  };
 });
 
 const channelHeader = computed(() => {
@@ -529,9 +556,11 @@ async function onThreadSend() {
 
   threadDraftSync.cancelPendingDraftPersist();
   const body = cloneDoc(threadDraft.value);
+  const attachmentIds = threadAttachments.collectAttachmentIds(body);
+  const attachmentDtos = threadAttachments.collectAttachmentDtos(body);
 
   try {
-    await threadSync.send(body);
+    await threadSync.send(body, attachmentIds, attachmentDtos);
   } catch {
     toast("Couldn't send reply");
     return;
@@ -729,14 +758,19 @@ async function onThreadRetry() {
   await threadSync.retrySend();
 }
 
-function onAction(id: ComposerActionId) {
+function onAction(id: ComposerActionId, surface: "channel" | "thread" = "channel") {
   if (id === "attach" || id === "image") return;
   if (id === "record") {
+    recordingSurface.value = surface;
     screenRecording.openDialog();
     return;
   }
   if (id === "audio") {
-    void audioRecording.startRecording();
+    if (surface === "thread") {
+      void threadAudioRecording.startRecording();
+    } else {
+      void channelAudioRecording.startRecording();
+    }
     return;
   }
   if (id === "poll") {
@@ -765,6 +799,10 @@ function onVote(messageId: string, optionId: string) {
 async function onJumpToLatest() {
   readState.clearDivider();
   await messagesSync.jumpToLatest();
+  await nextTick();
+  requestAnimationFrame(() => {
+    timelineRef.value?.scrollToEnd();
+  });
 }
 
 
@@ -837,6 +875,15 @@ async function onDeleteConversationFile(fileId: string) {
   }
 }
 
+watch(activeThreadId, async (threadId, previous) => {
+  if (previous && !threadId) {
+    await nextTick();
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  }
+});
+
 async function onThreadJumpToLatest() {
   await threadSync.jumpToLatest();
 }
@@ -885,11 +932,11 @@ async function onThreadJumpToLatest() {
       />
     </template>
     <template #composer>
-      <div class="flex min-h-0 flex-1 flex-col gap-2">
+      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-visible">
         <AudioRecordingBadge
-          v-if="audioRecording.badgeView.value"
-          :view="audioRecording.badgeView.value"
-          @stop="audioRecording.stopRecording()"
+          v-if="channelAudioRecording.badgeView.value"
+          :view="channelAudioRecording.badgeView.value"
+          @stop="channelAudioRecording.stopRecording()"
         />
         <TypingBanner v-if="presence.typingLabel.value" :label="presence.typingLabel.value" />
         <MessageComposer
@@ -900,15 +947,16 @@ async function onThreadJumpToLatest() {
           :upload-image="channelAttachments.uploadInlineImage"
           :on-stage-files="(files) => channelAttachments.stageFiles(files)"
           :can-send="channelAttachments.hasSendableContent(channelDraft)"
-          :audio-mic-devices="audioRecording.microphones.value"
-          :audio-mic-device-id="audioRecording.micDeviceId.value"
-          @update:audio-mic-device-id="audioRecording.setMicDeviceId($event)"
+          :audio-mic-devices="channelAudioRecording.microphones.value"
+          :audio-mic-device-id="channelAudioRecording.micDeviceId.value"
+          :on-prepare-audio-mic-picker="channelAudioRecording.prepareMicrophonePicker"
+          @update:audio-mic-device-id="channelAudioRecording.setMicDeviceId($event)"
           @mention-search="onMentionSearch"
           @send="onChannelSend"
           @cancel-edit="onCancelChannelEdit"
           @retry="onRetry"
           @schedule="onSchedule"
-          @action="onAction"
+          @action="(id) => onAction(id, 'channel')"
           @typing="presence.notifyTyping()"
           @typing-stop="presence.stopTyping()"
           @remove-attachment="channelAttachments.removeTile"
@@ -918,10 +966,10 @@ async function onThreadJumpToLatest() {
         />
       </div>
     </template>
-    <template v-if="activeThreadId && threadSync.thread.value" #aside>
+    <template v-if="activeThreadId && displayThread" #aside>
       <ThreadPane
         v-model="threadDraft"
-        :thread="threadSync.thread.value"
+        :thread="displayThread"
         :composer="threadComposer"
         :mention-items="mentionItems"
         :previous-page="threadSync.previousPage.value"
@@ -930,13 +978,19 @@ async function onThreadJumpToLatest() {
         :upload-image="threadAttachments.uploadInlineImage"
         :on-stage-files="(files) => threadAttachments.stageFiles(files)"
         :can-send="threadAttachments.hasSendableContent(threadDraft)"
+        :audio-recording-badge="threadAudioRecording.badgeView.value"
+        :audio-mic-devices="threadAudioRecording.microphones.value"
+        :audio-mic-device-id="threadAudioRecording.micDeviceId.value"
+        :on-prepare-audio-mic-picker="threadAudioRecording.prepareMicrophonePicker"
+        @update:audio-mic-device-id="threadAudioRecording.setMicDeviceId($event)"
+        @stop-audio-recording="threadAudioRecording.stopRecording()"
         @mention-search="onMentionSearch"
         @close="onCloseThread"
         @send="onThreadSend"
         @cancel-edit="onCancelThreadEdit"
         @retry="onThreadRetry"
         @schedule="onThreadSchedule"
-        @action="onAction"
+        @action="(id) => onAction(id, 'thread')"
         @react="onReact"
         @copy-link="onCopyLink"
         @bookmark="onBookmark"

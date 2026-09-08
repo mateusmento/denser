@@ -18,7 +18,7 @@ export function buildPersonRoster(
   }
   for (const message of messages) {
     const authorId = message.author.id as UserId;
-    if (!roster.has(authorId)) {
+    if (!roster.has(authorId) && message.author.name && !message.author.name.startsWith("Member ")) {
       roster.set(authorId, message.author.name);
     }
   }
@@ -31,4 +31,14 @@ export function personFromUserId(
 ): ConversationPersonView {
   const name = roster.get(userId) ?? `Member ${userId.slice(0, 8)}`;
   return { id: userId, name, initials: initialsFromName(name) };
+}
+
+export function enrichMessageAuthors(
+  messages: readonly ConversationMessageView[],
+  roster: ReadonlyMap<UserId, string>,
+): ConversationMessageView[] {
+  return messages.map((message) => ({
+    ...message,
+    author: personFromUserId(message.author.id as UserId, roster),
+  }));
 }

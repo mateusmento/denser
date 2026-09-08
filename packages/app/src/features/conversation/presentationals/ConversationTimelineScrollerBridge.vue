@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useMessageScroller } from "@denser/design-system";
 
-const { scrollToMessage } = useMessageScroller();
+const { scrollToEnd, scrollToMessage } = useMessageScroller();
 
-defineExpose({ scrollToMessage });
+defineExpose({ scrollToEnd, scrollToMessage });
 </script>
 
 <template>

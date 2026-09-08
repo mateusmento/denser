@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { cn } from "@denser/design-system";
 import { useEventListener, useMediaQuery } from "@vueuse/core";
-import { computed, ref, useSlots } from "vue";
+import { computed, nextTick, ref, useSlots, watch } from "vue";
 
 const props = defineProps<{
   /** Parent must set when using conditional #aside slots — useSlots() is not reactive. */
@@ -46,6 +46,15 @@ useEventListener(window, "pointerup", () => {
 useEventListener(document, "selectstart", (event) => {
   if (resizing.value) event.preventDefault();
 });
+
+watch(asideOpen, async (open, wasOpen) => {
+  if (wasOpen && !open) {
+    await nextTick();
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  }
+});
 </script>
 
 <template>
@@ -55,7 +64,7 @@ useEventListener(document, "selectstart", (event) => {
   >
     <section
       v-show="!showMobileAside"
-      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      class="flex min-h-0 min-w-0 flex-1 flex-col"
       aria-label="Conversation"
       data-slot="conversation-column"
     >
@@ -70,7 +79,7 @@ useEventListener(document, "selectstart", (event) => {
         <slot name="header" />
       </div>
       <div
-        :class="cn('relative min-h-0 flex-1', !showSplit && '-mx-3')"
+        :class="cn('relative min-h-0 flex-1 overflow-hidden', !showSplit && '-mx-3')"
       >
         <div
           class="pointer-events-none absolute inset-x-px top-0 z-2 h-5 bg-linear-to-b from-background via-35% to-transparent"
@@ -85,7 +94,7 @@ useEventListener(document, "selectstart", (event) => {
         </div>
       </div>
       <div
-        class="relative z-0 box-border flex max-h-96 shrink-0 basis-surface-footer flex-col"
+        class="relative z-0 box-border flex max-h-96 shrink-0 basis-surface-footer flex-col overflow-visible"
         data-slot="conversation-footer"
       >
         <slot name="composer" />

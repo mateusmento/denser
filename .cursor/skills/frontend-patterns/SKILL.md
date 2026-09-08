@@ -90,6 +90,7 @@ Earn a `rules/` file only when recognition + remedy are not just “follow the r
 | [`composable-multiple-reasons`](rules/composable-multiple-reasons.md) | MEDIUM | One composable, many reasons to change |
 | [`pure-helper-as-composable`](rules/pure-helper-as-composable.md) | LOW | Pure helper named `useX` |
 | [`handmade-interactivity`](rules/handmade-interactivity.md) | MEDIUM | Raw DOM widget JS — DS/library first; don’t dump feature glue into DS |
+| [`design-system-primitives`](rules/design-system-primitives.md) | MEDIUM | Native `<button>`/`<select>`, `overflow-auto` lists, handmade tabs — use DS `Button`, `Select`, `ScrollArea`, `Tabs` |
 | [`unsafe-html`](rules/unsafe-html.md) | HIGH | `innerHTML` / `v-html` / `insertHTML` of unsanitized strings |
 
 ### Slots & prop surfaces

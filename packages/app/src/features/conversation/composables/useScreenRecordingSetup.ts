@@ -27,6 +27,7 @@ import {
   type ScreenRecordingToggles,
 } from "../lib/screen-recording-capture";
 import {
+  dedicatedMicrophoneDevices,
   streamNeedsDeviceSwitch,
   toRecordingDeviceOptions,
   trackDeviceId,
@@ -67,9 +68,19 @@ export function useScreenRecordingSetup(options: {
   const previewCanvas = shallowRef<HTMLCanvasElement | null>(null);
   const elapsedSeconds = ref(0);
   const acquired = shallowRef<AcquiredStreams | null>(null);
+  const streamRevision = ref(0);
+
+  function notifyStreamsChanged() {
+    streamRevision.value += 1;
+  }
   const { videoInputs, audioInputs, ensurePermissions } = useDevicesList();
   const cameras = computed(() => toRecordingDeviceOptions(videoInputs.value, "Camera"));
-  const microphones = computed(() => toRecordingDeviceOptions(audioInputs.value, "Microphone"));
+  const microphones = computed(() =>
+    toRecordingDeviceOptions(
+      dedicatedMicrophoneDevices(audioInputs.value, videoInputs.value),
+      "Microphone",
+    ),
+  );
 
   let previewCompositor: ReturnType<typeof createPreviewCompositor> | null = null;
   let activeRecording: ActiveRecording | null = null;
@@ -132,13 +143,14 @@ export function useScreenRecordingSetup(options: {
   }
 
   function showOverlayEditor(): boolean {
+    streamRevision.value;
     const streams = acquired.value;
     if (!streams || phase.value !== "setup") return false;
     return shouldDrawWebcamOverlay(
       webcamEnabled.value,
-      streams.webcamVideo != null && canDrawVideoFrame(streams.webcamVideo),
+      webcamEnabled.value && streams.webcamVideo != null,
       screenEnabled.value,
-      streams.screenVideo != null && canDrawVideoFrame(streams.screenVideo),
+      screenEnabled.value && streams.screenVideo != null,
     );
   }
 
@@ -199,6 +211,7 @@ export function useScreenRecordingSetup(options: {
     );
     previewCompositor.start();
     previewCanvas.value = previewCompositor.canvas;
+    notifyStreamsChanged();
   }
 
   watch(screenEnabled, async (enabled) => {

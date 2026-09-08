@@ -1,6 +1,9 @@
 import { computed, onScopeDispose, ref } from "vue";
 import { useDevicesList } from "@vueuse/core";
-import { toRecordingDeviceOptions } from "../lib/screen-recording-devices";
+import {
+  dedicatedMicrophoneDevices,
+  toRecordingDeviceOptions,
+} from "../lib/screen-recording-devices";
 import { startAudioRecording } from "../lib/audio-recording-capture";
 import type { AudioRecordingBadgeView } from "../types";
 
@@ -17,8 +20,15 @@ export function useMessageComposerAudioRecording(options: {
   const phase = ref<"idle" | "recording" | "finalizing">("idle");
   const elapsedSeconds = ref(0);
   const micDeviceId = ref<string | null>(null);
-  const { audioInputs } = useDevicesList();
-  const microphones = computed(() => toRecordingDeviceOptions(audioInputs.value, "Microphone"));
+  const { audioInputs, videoInputs, ensurePermissions } = useDevicesList({
+    constraints: { audio: true, video: false },
+  });
+  const microphones = computed(() =>
+    toRecordingDeviceOptions(
+      dedicatedMicrophoneDevices(audioInputs.value, videoInputs.value),
+      "Microphone",
+    ),
+  );
 
   let activeRecording: Awaited<ReturnType<typeof startAudioRecording>> | null = null;
   let elapsedTimer: ReturnType<typeof setInterval> | null = null;
@@ -47,6 +57,7 @@ export function useMessageComposerAudioRecording(options: {
   async function startRecording() {
     if (options.disabled?.() || phase.value !== "idle") return;
     try {
+      await ensurePermissions();
       activeRecording = await startAudioRecording(micDeviceId.value);
       phase.value = "recording";
       elapsedSeconds.value = 0;
@@ -79,6 +90,10 @@ export function useMessageComposerAudioRecording(options: {
     micDeviceId.value = deviceId;
   }
 
+  async function prepareMicrophonePicker() {
+    await ensurePermissions();
+  }
+
   onScopeDispose(() => reset());
 
   return {
@@ -88,6 +103,7 @@ export function useMessageComposerAudioRecording(options: {
     startRecording,
     stopRecording,
     setMicDeviceId,
+    prepareMicrophonePicker,
     cancel: reset,
   };
 }

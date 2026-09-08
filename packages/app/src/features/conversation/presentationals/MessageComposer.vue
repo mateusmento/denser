@@ -57,6 +57,7 @@ const props = defineProps<{
   canSend?: boolean;
   audioMicDevices?: readonly { deviceId: string; label: string }[];
   audioMicDeviceId?: string | null;
+  onPrepareAudioMicPicker?: () => void | Promise<void>;
 }>();
 
 const emit = defineEmits<{
@@ -293,7 +294,7 @@ function onDrop(event: DragEvent) {
                 </TooltipTrigger>
                 <TooltipContent>{{ action.label }}</TooltipContent>
               </Tooltip>
-              <DropdownMenu>
+              <DropdownMenu @update:open="(open) => open && props.onPrepareAudioMicPicker?.()">
                 <DropdownMenuTrigger as-child>
                   <Button
                     variant="outline"
@@ -305,13 +306,14 @@ function onDrop(event: DragEvent) {
                     <EllipsisIcon class="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" class="min-w-48">
+                <DropdownMenuContent align="start" class="w-56 max-w-[min(14rem,var(--radix-dropdown-menu-content-available-width))]">
                   <DropdownMenuItem
                     v-for="device in audioMicDevices ?? []"
                     :key="device.deviceId"
+                    class="min-w-0"
                     @select="emit('update:audioMicDeviceId', device.deviceId)"
                   >
-                    {{ device.label }}
+                    <span class="truncate">{{ device.label }}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -347,9 +349,10 @@ function onDrop(event: DragEvent) {
               <DropdownMenuItem
                 v-for="action in partitioned.overflow"
                 :key="action.id"
+                class="min-w-0"
                 @select="runAction(action.id)"
               >
-                {{ action.label }}
+                <span class="truncate">{{ action.label }}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
