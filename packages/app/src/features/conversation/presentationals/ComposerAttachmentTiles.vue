@@ -37,6 +37,11 @@ function isImageMime(mimeType: string): boolean {
 function audioSource(tile: ComposerAttachmentTileView): string {
   return tile.kind === "uploaded" ? tile.url : tile.previewUrl;
 }
+
+function audioPlayerId(tile: ComposerAttachmentTileView): string {
+  if (tile.kind === "uploaded") return tile.id;
+  return tile.clientId;
+}
 </script>
 
 <template>
@@ -44,20 +49,15 @@ function audioSource(tile: ComposerAttachmentTileView): string {
     <template v-for="tile in tiles" :key="tile.key">
       <div
         v-if="isAudioMime(tile.mimeType)"
-        class="flex w-full max-w-md items-center gap-2"
+        class="flex items-center gap-2"
         :data-state="tile.kind === 'uploading' ? 'uploading' : tile.kind === 'failed' ? 'error' : 'done'"
       >
-        <div class="relative min-w-0 flex-1">
-          <AudioAttachmentPlayer
-            :url="audioSource(tile)"
-            :name="tile.name"
-            :class="tile.kind === 'uploading' ? 'pointer-events-none opacity-70' : ''"
-          />
-          <Spinner
-            v-if="tile.kind === 'uploading'"
-            class="pointer-events-none absolute inset-0 m-auto size-5 text-foreground"
-          />
-        </div>
+        <AudioAttachmentPlayer
+          :player-id="audioPlayerId(tile)"
+          :url="audioSource(tile)"
+          :name="tile.name"
+          :disabled="tile.kind === 'failed'"
+        />
 
         <div v-if="tile.kind === 'uploading'" class="flex w-24 shrink-0 flex-col gap-1">
           <span class="text-xs text-muted-foreground">{{ tile.progress }}%</span>

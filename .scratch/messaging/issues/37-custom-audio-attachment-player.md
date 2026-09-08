@@ -154,14 +154,14 @@ Playback speed (1× / 1.5×), download action, files pane variant.
 
 ## App checklist
 
-- [ ] `audioPlaybackRegistry` — app-wide single active player
-- [ ] `decodeAudioPeaks` lib + in-memory cache
-- [ ] `useAudioPlayer` composable (hidden audio element, play/pause/seek, state)
-- [ ] `AudioWaveform` presentational (real peaks + progress fill + click-to-seek)
-- [ ] Replace `AudioAttachmentPlayer` with Slack-style badge (`w-[22rem]`)
-- [ ] Composer: same badge, seek from blob URL while uploading
-- [ ] Storybook: idle, playing, loading, error states
-- [ ] Update `docs/AUDIO-RECORDING.md`
+- [x] `audioPlaybackRegistry` — app-wide single active player
+- [x] `decodeAudioPeaks` lib + in-memory cache
+- [x] `useAudioPlayer` composable (hidden audio element, play/pause/seek, state)
+- [x] `AudioWaveform` presentational (real peaks + progress fill + click-to-seek)
+- [x] Replace `AudioAttachmentPlayer` with Slack-style badge (`w-[22rem]`)
+- [x] Composer: same badge, seek from blob URL while uploading
+- [x] Storybook: idle, playing, loading, error states
+- [x] Update `docs/AUDIO-RECORDING.md`
 
 ---
 

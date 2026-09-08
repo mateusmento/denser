@@ -127,7 +127,6 @@ export function useMessageComposerScreenRecording(options: {
     setMicEnabled: setup.setMicEnabled,
     setSystemAudioEnabled: setup.setSystemAudioEnabled,
     setScreenEnabled: setup.setScreenEnabled,
-    toggleScreen: setup.toggleScreen,
     setMirrorCamera: setup.setMirrorCamera,
     setOverlayEditMode: setup.setOverlayEditMode,
     setWebcamDeviceId: setup.setWebcamDeviceId,
