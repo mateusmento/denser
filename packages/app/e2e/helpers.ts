@@ -2,20 +2,26 @@ import { expect, type Page } from "@playwright/test";
 
 export const STORIES = {
   cameraEditorOn: "features-conversation-screenrecordingcameraeditor--webcam-overlay-on",
+  cameraEditorEdit: "features-conversation-screenrecordingcameraeditor--webcam-overlay-edit-mode",
   cameraEditorOff: "features-conversation-screenrecordingcameraeditor--webcam-overlay-off",
-  cameraEditorToggle: "features-conversation-screenrecordingcameraeditor--toggle-webcam-overlay",
+  cameraEditorToggle: "features-conversation-screenrecordingcameraeditor--toggle-overlay-edit-mode",
   dialogWebcamOn: "features-conversation-screenrecordingsetupdialog--setup-webcam-on",
   dialogWebcamOff: "features-conversation-screenrecordingsetupdialog--setup-webcam-off",
   dialogToggle: "features-conversation-screenrecordingsetupdialog--toggle-webcam-overlay",
+  dialogCombined: "features-conversation-screenrecordingsetupdialog--combined-screen-and-webcam",
+  dialogCombinedEdit: "features-conversation-screenrecordingsetupdialog--combined-overlay-edit-mode",
 } as const;
 
 export const SELECTORS = {
   cameraEditorPreview: "[data-slot='screen-recording-camera-editor-preview']",
   cameraEditorBbox: "[data-slot='screen-recording-camera-editor-bbox']",
+  cameraEditorHover: "[data-slot='screen-recording-camera-editor-hover']",
+  overlayToggle: "[data-slot='screen-recording-overlay-toggle']",
   setupDialog: "[data-slot='screen-recording-setup-dialog']",
-  webcamSwitch: "#sr-webcam",
-  cameraSelect: "#sr-webcam-device",
-  micSelect: "#sr-mic-device",
+  webcamToggle: "[data-slot='screen-recording-webcam-toggle']",
+  screenToggle: "[data-slot='screen-recording-screen-toggle']",
+  settingsTrigger: "[data-slot='screen-recording-settings-trigger']",
+  avatarFallback: "[data-slot='screen-recording-avatar-fallback']",
 } as const;
 
 export async function gotoStory(page: Page, id: string, waitSelector: string) {

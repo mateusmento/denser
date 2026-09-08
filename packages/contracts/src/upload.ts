@@ -31,3 +31,8 @@ export const ListDraftAttachmentsQuery = z.object({
   threadId: MessageId.nullable().optional(),
 });
 export type ListDraftAttachmentsQuery = z.infer<typeof ListDraftAttachmentsQuery>;
+
+export const ListDeliveredAttachmentsResponse = z.object({
+  attachments: z.array(AttachmentDto),
+});
+export type ListDeliveredAttachmentsResponse = z.infer<typeof ListDeliveredAttachmentsResponse>;

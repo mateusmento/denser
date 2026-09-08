@@ -1,4 +1,4 @@
-import type { ArtifactId, MessageId, UserId } from "@denser/contracts";
+import type { ArtifactId, AttachmentId, MessageId, UserId } from "@denser/contracts";
 import {
   ListDraftAttachmentsQuery,
   StartConversationUploadInput,
@@ -13,6 +13,10 @@ import {
   startConversationUpload,
   uploadConversationPart,
 } from "./upload-service.js";
+import {
+  listDeliveredAttachments,
+  releaseDeliveredAttachment,
+} from "./delivered-service.js";
 
 type Variables = {
   user: { id: string; name: string; email: string };
@@ -112,6 +116,29 @@ export const attachmentRoutes = new Hono<{ Variables: Variables }>()
 
     if (!result.ok) {
       return c.json({ error: "Upload session not found" }, 404);
+    }
+
+    return c.body(null, 204);
+  })
+  .get("/conversations/:conversationId/delivered-attachments", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const conversationId = c.req.param("conversationId") as ArtifactId;
+    const result = await listDeliveredAttachments(userId, conversationId);
+
+    if (!result.ok) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    return c.json({ attachments: result.attachments });
+  })
+  .delete("/conversations/:conversationId/delivered-attachments/:attachmentId", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const conversationId = c.req.param("conversationId") as ArtifactId;
+    const attachmentId = c.req.param("attachmentId") as AttachmentId;
+    const result = await releaseDeliveredAttachment(userId, conversationId, attachmentId);
+
+    if (!result.ok) {
+      return c.json({ error: "Attachment not found" }, 404);
     }
 
     return c.body(null, 204);

@@ -1,7 +1,5 @@
 import type { ScreenRecordingDeviceOption } from "../types";
 
-const SQUARE_WEBCAM_IDEAL_PX = 720;
-
 export function toRecordingDeviceOptions(
   devices: readonly Pick<MediaDeviceInfo, "deviceId" | "label">[],
   unnamedLabel: string,
@@ -34,9 +32,6 @@ export function streamNeedsDeviceSwitch(
 
 export function webcamVideoConstraints(deviceId?: string | null): MediaTrackConstraints {
   return {
-    width: { ideal: SQUARE_WEBCAM_IDEAL_PX },
-    height: { ideal: SQUARE_WEBCAM_IDEAL_PX },
-    aspectRatio: { ideal: 1 },
     ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
   };
 }

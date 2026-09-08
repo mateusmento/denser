@@ -3,13 +3,16 @@ export function mountPreviewCanvas(
   canvas: HTMLCanvasElement,
   className: string,
 ) {
+  // Host must be a dedicated mount node — never a Vue-managed element with component children.
   if (canvas.parentElement === host) {
     canvas.className = className;
+    canvas.style.pointerEvents = "none";
     return;
   }
   host.replaceChildren();
   canvas.className = className;
   canvas.setAttribute("data-screen-recording-preview", "");
+  canvas.style.pointerEvents = "none";
   host.appendChild(canvas);
 }
 

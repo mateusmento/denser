@@ -6,7 +6,7 @@ import type {
   ConversationQuotedPreviewView,
 } from "../types";
 import { collectImageAttachmentIdsFromDoc } from "./collect-image-attachment-ids";
-import { isMediaMime } from "./is-media-mime";
+import { attachmentViewKind } from "./is-media-mime";
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -60,7 +60,7 @@ function tileAttachments(dto: MessageDto): ConversationMessageView["attachments"
       mimeType: attachment.mimeType,
       url: attachment.url,
       byteSize: attachment.byteSize,
-      kind: isMediaMime(attachment.mimeType) ? ("media" as const) : ("file" as const),
+      kind: attachmentViewKind(attachment.mimeType),
     }));
 }
 

@@ -50,6 +50,8 @@ import {
   ScheduleMessageInput,
   ScheduleMessageResponse,
   UpdateScheduledMessageInput,
+  DirectConversationSidebarPreferenceResponse,
+  ListDeliveredAttachmentsResponse,
   ListDraftOutboxResponse,
   DraftOutboxCountResponse,
   ListScheduledOutboxResponse,
@@ -420,6 +422,46 @@ export class ApiClient {
     const body = await this.parseJson(res);
     if (!res.ok) throw new ApiError("list direct conversations failed", res.status, body);
     return ListDirectConversationsResponse.parse(body);
+  }
+
+  async hideDirectConversation(
+    conversationId: ArtifactId,
+  ): Promise<DirectConversationSidebarPreferenceResponse> {
+    const res = await this.request(`/api/conversations/${conversationId}/hide`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("hide direct conversation failed", res.status, body);
+    return DirectConversationSidebarPreferenceResponse.parse(body);
+  }
+
+  async unhideDirectConversation(
+    conversationId: ArtifactId,
+  ): Promise<DirectConversationSidebarPreferenceResponse> {
+    const res = await this.request(`/api/conversations/${conversationId}/unhide`, { method: "POST" });
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("unhide direct conversation failed", res.status, body);
+    return DirectConversationSidebarPreferenceResponse.parse(body);
+  }
+
+  async listDeliveredAttachments(
+    conversationId: ArtifactId,
+  ): Promise<ListDeliveredAttachmentsResponse> {
+    const res = await this.request(`/api/conversations/${conversationId}/delivered-attachments`);
+    const body = await this.parseJson(res);
+    if (!res.ok) throw new ApiError("list delivered attachments failed", res.status, body);
+    return ListDeliveredAttachmentsResponse.parse(body);
+  }
+
+  async releaseDeliveredAttachment(
+    conversationId: ArtifactId,
+    attachmentId: AttachmentId,
+  ): Promise<void> {
+    const res = await this.request(
+      `/api/conversations/${conversationId}/delivered-attachments/${attachmentId}`,
+      { method: "DELETE" },
+    );
+    if (!res.ok) {
+      throw new ApiError("release delivered attachment failed", res.status, await this.parseJson(res));
+    }
   }
 
   async getUnreadSummary(rootSpaceId: SpaceId): Promise<GetUnreadSummaryResponse> {

@@ -33,7 +33,7 @@ export type ConversationAttachmentView = {
   mimeType: string;
   url: string;
   byteSize: number;
-  kind: "media" | "file";
+  kind: "media" | "audio" | "file";
 };
 
 export type ConversationQuotedPreviewView = {
@@ -97,6 +97,7 @@ export type ComposerActionId =
   | "code"
   | "poll"
   | "record"
+  | "audio"
   | "schedule";
 
 export type ComposerActionPriority = 1 | 2 | 3;
@@ -244,6 +245,29 @@ export type ConversationThreadView = {
   messages: readonly ConversationMessageView[];
 };
 
+export type ConversationFileRowView = {
+  id: string;
+  name: string;
+  mimeType: string;
+  url: string;
+  byteSize: number;
+  byteSizeLabel: string;
+  uploaderName: string;
+  createdAtLabel: string;
+  canDelete: boolean;
+};
+
+export type ConversationFilesPaneView = {
+  state: "loading" | "ready" | "error";
+  files: readonly ConversationFileRowView[];
+  errorMessage?: string;
+};
+
+export type AudioRecordingBadgeView = {
+  phase: "recording" | "finalizing";
+  elapsedLabel: string;
+};
+
 export type ScreenRecordingPhase = "acquiring" | "setup" | "recording" | "finalizing";
 
 export type ScreenRecordingDeviceOption = {
@@ -256,13 +280,22 @@ export type ScreenRecordingSetupView = {
   error?: string;
   webcamEnabled: boolean;
   webcamAvailable: boolean;
+  screenEnabled: boolean;
+  screenAvailable: boolean;
   webcamDeviceId: string | null;
   micEnabled: boolean;
   micDeviceId: string | null;
   systemAudioEnabled: boolean;
+  mirrorCamera: boolean;
   cameras: readonly ScreenRecordingDeviceOption[];
   microphones: readonly ScreenRecordingDeviceOption[];
   canStart: boolean;
+  showCameraOverlayEditor: boolean;
+  overlayEditMode: boolean;
+  showAvatarFallback: boolean;
+  avatarUrl?: string;
+  avatarInitials: string;
+  avatarName: string;
   elapsedLabel?: string;
   previewAspectRatio: number;
   cameraLayout: { x: number; y: number; diameter: number };

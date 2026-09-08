@@ -2,8 +2,12 @@
 import type { DropdownMenuSubContentEmits, DropdownMenuSubContentProps } from "reka-ui";
 import type { HTMLAttributes } from "vue";
 import { reactiveOmit } from "@vueuse/core";
-import { DropdownMenuSubContent, useForwardPropsEmits } from "reka-ui";
+import { DropdownMenuPortal, DropdownMenuSubContent, useForwardPropsEmits } from "reka-ui";
 import { cn } from "@/lib/utils";
+
+defineOptions({
+  inheritAttrs: false,
+});
 
 const props = defineProps<DropdownMenuSubContentProps & { class?: HTMLAttributes["class"] }>();
 const emits = defineEmits<DropdownMenuSubContentEmits>();
@@ -14,16 +18,18 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
 
 <template>
-  <DropdownMenuSubContent
-    data-slot="dropdown-menu-sub-content"
-    v-bind="forwarded"
-    :class="
-      cn(
-        'cn-menu-translucent z-50 max-w-(--reka-dropdown-menu-content-available-width) min-w-[96px] origin-(--reka-dropdown-menu-content-transform-origin) overflow-hidden rounded-2xl bg-popover py-1 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-        props.class,
-      )
-    "
-  >
-    <slot />
-  </DropdownMenuSubContent>
+  <DropdownMenuPortal>
+    <DropdownMenuSubContent
+      data-slot="dropdown-menu-sub-content"
+      v-bind="{ ...$attrs, ...forwarded }"
+      :class="
+        cn(
+          'cn-menu-translucent z-50 max-w-(--reka-dropdown-menu-content-available-width) min-w-[96px] origin-(--reka-dropdown-menu-content-transform-origin) overflow-hidden rounded-2xl bg-popover py-1 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+          props.class,
+        )
+      "
+    >
+      <slot />
+    </DropdownMenuSubContent>
+  </DropdownMenuPortal>
 </template>

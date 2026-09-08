@@ -11,6 +11,8 @@ import { buildPersonRoster, personFromUserId } from "@/modules/presence/lib/pers
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
 import { useMessageComposerScreenRecording } from "../composables/useMessageComposerScreenRecording";
+import { useMessageComposerAudioRecording } from "../composables/useMessageComposerAudioRecording";
+import { useConversationFilesSync } from "../composables/useConversationFilesSync";
 import { useConversationMessages } from "../composables/useConversationMessages";
 import { useConversationPresence } from "../composables/useConversationPresence";
 import { useConversationReadState } from "../composables/useConversationReadState";
@@ -22,7 +24,10 @@ import { useScheduledMessagesSync } from "../composables/useScheduledMessagesSyn
 import { useWorkspaceOutboxSync } from "../composables/useWorkspaceOutboxSync";
 import { dueAtFromScheduleCommit } from "../lib/schedule-due-at";
 import { toScheduledOutboxRowViewFromMessageView } from "../lib/toOutboxRowView";
+import { confirm } from "@/lib/dialog";
 import ChannelHeader from "../presentationals/ChannelHeader.vue";
+import ConversationFilesPane from "../presentationals/ConversationFilesPane.vue";
+import AudioRecordingBadge from "../presentationals/AudioRecordingBadge.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
@@ -167,6 +172,8 @@ const presence = useConversationPresence(conversationId, {
 
 const channelDraft = ref<JSONContent>(emptyDoc());
 const pollDialogOpen = ref(false);
+const filesPaneOpen = ref(false);
+const deletingFileId = ref<string | null>(null);
 const threadDraft = ref<JSONContent>(emptyDoc());
 const activeThreadId = ref<MessageId | null>(null);
 
@@ -224,6 +231,37 @@ const channelAttachments = useComposerAttachments({
 const screenRecording = useMessageComposerScreenRecording({
   stageFiles: (files) => channelAttachments.stageFiles(files),
   disabled: () => !conversationId.value,
+  viewer: () => {
+    const currentUser = user.value;
+    if (!currentUser) return null;
+    const name = currentUser.name?.trim() || currentUser.email?.trim() || "You";
+    const member = workspaceMembersQuery.data.value?.members.find(
+      (entry) => entry.userId === currentUser.id,
+    );
+    const displayName = member?.name ?? name;
+    const parts = displayName.trim().split(/\s+/).filter(Boolean);
+    const initials =
+      parts.length === 0
+        ? "?"
+        : parts.length === 1
+          ? parts[0]!.slice(0, 2).toUpperCase()
+          : `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+    return { name: displayName, initials };
+  },
+});
+
+const audioRecording = useMessageComposerAudioRecording({
+  stageFiles: (files) => channelAttachments.stageFiles(files),
+  disabled: () => !conversationId.value,
+});
+
+const filesSync = useConversationFilesSync(conversationId, {
+  currentUserId: computed(() => user.value?.id as UserId | undefined),
+  enabled: computed(() => filesPaneOpen.value),
+  resolveUploaderName: (userId) => {
+    const member = workspaceMembersQuery.data.value?.members.find((entry) => entry.userId === userId);
+    return member?.name ?? "Someone";
+  },
 });
 
 const threadAttachments = useComposerAttachments({
@@ -697,6 +735,10 @@ function onAction(id: ComposerActionId) {
     screenRecording.openDialog();
     return;
   }
+  if (id === "audio") {
+    void audioRecording.startRecording();
+    return;
+  }
   if (id === "poll") {
     pollDialogOpen.value = true;
     return;
@@ -776,6 +818,25 @@ async function onCancelSchedule(id: string) {
   }
 }
 
+async function onDeleteConversationFile(fileId: string) {
+  if (
+    !(await confirm({
+      title: "Delete file?",
+      description: "This file will be permanently removed from the conversation.",
+    }))
+  ) {
+    return;
+  }
+  deletingFileId.value = fileId;
+  try {
+    await filesSync.deleteFile(fileId as AttachmentId);
+  } catch {
+    toast("Couldn't delete file");
+  } finally {
+    deletingFileId.value = null;
+  }
+}
+
 async function onThreadJumpToLatest() {
   await threadSync.jumpToLatest();
 }
@@ -793,6 +854,7 @@ async function onThreadJumpToLatest() {
         :channel="channelHeader"
         :outbox-badge-count="outboxBadgeCount"
         @open-outbox="onOpenOutboxMenu"
+        @open-files="filesPaneOpen = true"
       />
     </template>
     <template #messages>
@@ -823,7 +885,12 @@ async function onThreadJumpToLatest() {
       />
     </template>
     <template #composer>
-      <div class="flex min-h-0 flex-1 flex-col">
+      <div class="flex min-h-0 flex-1 flex-col gap-2">
+        <AudioRecordingBadge
+          v-if="audioRecording.badgeView.value"
+          :view="audioRecording.badgeView.value"
+          @stop="audioRecording.stopRecording()"
+        />
         <TypingBanner v-if="presence.typingLabel.value" :label="presence.typingLabel.value" />
         <MessageComposer
           v-model="channelDraft"
@@ -833,6 +900,9 @@ async function onThreadJumpToLatest() {
           :upload-image="channelAttachments.uploadInlineImage"
           :on-stage-files="(files) => channelAttachments.stageFiles(files)"
           :can-send="channelAttachments.hasSendableContent(channelDraft)"
+          :audio-mic-devices="audioRecording.microphones.value"
+          :audio-mic-device-id="audioRecording.micDeviceId.value"
+          @update:audio-mic-device-id="audioRecording.setMicDeviceId($event)"
           @mention-search="onMentionSearch"
           @send="onChannelSend"
           @cancel-edit="onCancelChannelEdit"
@@ -916,6 +986,14 @@ async function onThreadJumpToLatest() {
   />
   <PollInsertDialog v-model:open="pollDialogOpen" @submit="onPollSubmit" />
 
+  <ConversationFilesPane
+    v-model:open="filesPaneOpen"
+    :view="filesSync.view.value"
+    :deleting-id="deletingFileId"
+    @retry="filesSync.reload()"
+    @delete="onDeleteConversationFile"
+  />
+
   <ScreenRecordingSetupDialog
     v-model:open="screenRecording.open"
     :view="screenRecording.setupView"
@@ -927,8 +1005,11 @@ async function onThreadJumpToLatest() {
     @move-camera="screenRecording.onMoveCamera($event)"
     @resize-camera="screenRecording.onResizeCamera($event)"
     @update:webcam-enabled="screenRecording.setWebcamEnabled($event)"
+    @update:screen-enabled="screenRecording.setScreenEnabled($event)"
     @update:mic-enabled="screenRecording.setMicEnabled($event)"
     @update:system-audio-enabled="screenRecording.setSystemAudioEnabled($event)"
+    @update:mirror-camera="screenRecording.setMirrorCamera($event)"
+    @update:overlay-edit-mode="screenRecording.setOverlayEditMode($event)"
     @update:webcam-device-id="screenRecording.setWebcamDeviceId($event)"
     @update:mic-device-id="screenRecording.setMicDeviceId($event)"
   />

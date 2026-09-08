@@ -11,12 +11,14 @@ import { FileIcon, VideoIcon } from "@lucide/vue";
 import { formatByteSize } from "../lib/format-byte-size";
 import { isMediaMime } from "../lib/is-media-mime";
 import type { ConversationAttachmentView } from "../types";
+import AudioAttachmentPlayer from "./AudioAttachmentPlayer.vue";
 
 const props = defineProps<{
   attachments: readonly ConversationAttachmentView[];
 }>();
 
 const media = computed(() => props.attachments.filter((attachment) => attachment.kind === "media"));
+const audio = computed(() => props.attachments.filter((attachment) => attachment.kind === "audio"));
 const files = computed(() => props.attachments.filter((attachment) => attachment.kind === "file"));
 </script>
 
@@ -55,6 +57,15 @@ const files = computed(() => props.attachments.filter((attachment) => attachment
           {{ attachment.name }}
         </span>
       </a>
+    </div>
+
+    <div v-if="audio.length" class="flex w-full max-w-md flex-col gap-2">
+      <AudioAttachmentPlayer
+        v-for="attachment in audio"
+        :key="attachment.id"
+        :url="attachment.url"
+        :name="attachment.name"
+      />
     </div>
 
     <div v-if="files.length" class="flex w-full max-w-md flex-col gap-1.5">

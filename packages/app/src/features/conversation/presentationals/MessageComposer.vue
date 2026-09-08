@@ -23,6 +23,7 @@ import {
   CodeIcon,
   EllipsisIcon,
   ImageIcon,
+  MicIcon,
   MonitorIcon,
   PaperclipIcon,
   SendIcon,
@@ -54,6 +55,8 @@ const props = defineProps<{
   uploadImage?: (file: File) => Promise<RichTextUploadResult>;
   onStageFiles?: (files: File[]) => void;
   canSend?: boolean;
+  audioMicDevices?: readonly { deviceId: string; label: string }[];
+  audioMicDeviceId?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -69,6 +72,7 @@ const emit = defineEmits<{
   cancelUpload: [clientId: string];
   retryUpload: [clientId: string];
   dismissUpload: [clientId: string];
+  "update:audioMicDeviceId": [deviceId: string];
 }>();
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -135,6 +139,7 @@ const icons: Record<ComposerActionId, typeof AtSignIcon> = {
   attach: PaperclipIcon,
   code: CodeIcon,
   poll: ChartPieIcon,
+  audio: MicIcon,
   record: MonitorIcon,
   schedule: ClockIcon,
 };
@@ -160,6 +165,10 @@ function runAction(id: ComposerActionId) {
   }
   if (id === "schedule") {
     scheduleOpen.value = true;
+    return;
+  }
+  if (id === "audio") {
+    emit("action", id);
     return;
   }
   emit("action", id);
@@ -268,6 +277,45 @@ function onDrop(event: DragEvent) {
                 </Button>
               </template>
             </SchedulePopover>
+            <div v-else-if="action.id === 'audio'" class="flex items-center">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="rounded-e-none border-e-0"
+                    :aria-label="action.label"
+                    :disabled="view.disabled || attachments?.disabled"
+                    @click="runAction('audio')"
+                  >
+                    <MicIcon class="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{{ action.label }}</TooltipContent>
+              </Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="rounded-s-none"
+                    aria-label="Microphone device"
+                    :disabled="view.disabled || attachments?.disabled || !audioMicDevices?.length"
+                  >
+                    <EllipsisIcon class="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" class="min-w-48">
+                  <DropdownMenuItem
+                    v-for="device in audioMicDevices ?? []"
+                    :key="device.deviceId"
+                    @select="emit('update:audioMicDeviceId', device.deviceId)"
+                  >
+                    {{ device.label }}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <Tooltip v-else>
               <TooltipTrigger as-child>
                 <Button

@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@denser/design-system";
-import { BellIcon, Clock3Icon, EllipsisIcon, SettingsIcon, UsersIcon } from "@lucide/vue";
+import { BellIcon, Clock3Icon, EllipsisIcon, FileIcon, SettingsIcon, UsersIcon } from "@lucide/vue";
 import type { ConversationChannelHeaderView } from "../types";
 
 defineProps<{
@@ -25,6 +25,7 @@ const emit = defineEmits<{
   members: [];
   settings: [];
   openOutbox: [];
+  openFiles: [];
 }>();
 </script>
 
@@ -73,6 +74,10 @@ const emit = defineEmits<{
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" class="min-w-44">
+        <DropdownMenuItem @select="emit('openFiles')">
+          <FileIcon class="size-3.5" />
+          Files
+        </DropdownMenuItem>
         <DropdownMenuItem @select="emit('openOutbox')">
           <Clock3Icon class="size-3.5" />
           Drafts &amp; scheduled

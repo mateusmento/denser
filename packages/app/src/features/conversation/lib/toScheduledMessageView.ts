@@ -4,7 +4,7 @@ import { emptyDoc } from "@/modules/rich-text";
 import type { ConversationAttachmentView, ScheduledMessageView } from "../types";
 import { collectImageAttachmentIdsFromDoc } from "./collect-image-attachment-ids";
 import { formatScheduleWallTime, scheduleRecurrenceLabel } from "./formatScheduleWallTime";
-import { isMediaMime } from "./is-media-mime";
+import { attachmentViewKind } from "./is-media-mime";
 
 function tileAttachments(
   body: JSONContent,
@@ -19,7 +19,7 @@ function tileAttachments(
       mimeType: attachment.mimeType,
       url: attachment.url,
       byteSize: attachment.byteSize,
-      kind: isMediaMime(attachment.mimeType) ? ("media" as const) : ("file" as const),
+      kind: attachmentViewKind(attachment.mimeType),
     }));
 }
 

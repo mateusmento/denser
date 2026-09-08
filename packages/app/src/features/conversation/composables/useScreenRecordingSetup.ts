@@ -5,6 +5,7 @@ import {
   defaultCameraLayout,
   displayPointToCapture,
   readVideoIntrinsicSize,
+  canDrawVideoFrame,
   type CameraCircleLayout,
 } from "../lib/screen-recording-composite";
 import {
@@ -12,10 +13,12 @@ import {
   type CameraResizeHandle,
 } from "../lib/screen-recording-resize";
 import {
-  acquireScreenRecordingStreams,
+  acquireScreenStream,
   applyStreamToggles,
   createPreviewCompositor,
+  createRecordingSession,
   releaseAcquiredStreams,
+  releaseScreenStream,
   replaceMicStream,
   replaceWebcamStream,
   startCanvasRecording,
@@ -32,8 +35,14 @@ import {
   clearCompositorCanvasMount,
   mountCompositorCanvas,
 } from "../lib/screen-recording-preview-mount";
-import { shouldDrawWebcamOnCanvas } from "../lib/screen-recording-overlay-visibility";
+import { shouldDrawWebcamOverlay } from "../lib/screen-recording-overlay-visibility";
 import type { ScreenRecordingPhase, ScreenRecordingSetupView } from "../types";
+
+export type ScreenRecordingViewer = {
+  name: string;
+  initials: string;
+  avatarUrl?: string;
+};
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -41,12 +50,17 @@ function formatElapsed(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function useScreenRecordingSetup() {
+export function useScreenRecordingSetup(options: {
+  viewer?: () => ScreenRecordingViewer | null;
+} = {}) {
   const phase = ref<ScreenRecordingPhase | "idle">("idle");
   const error = ref<string | undefined>();
   const webcamEnabled = ref(true);
+  const screenEnabled = ref(false);
   const micEnabled = ref(true);
-  const systemAudioEnabled = ref(true);
+  const systemAudioEnabled = ref(false);
+  const mirrorCamera = ref(false);
+  const overlayEditMode = ref(false);
   const webcamDeviceId = ref<string | null>(null);
   const micDeviceId = ref<string | null>(null);
   const cameraLayout = ref<CameraCircleLayout>({ x: 24, y: 24, diameter: 160 });
@@ -62,61 +76,165 @@ export function useScreenRecordingSetup() {
   let elapsedTimer: ReturnType<typeof setInterval> | null = null;
 
   const screenVideoTrack = computed(
-    () => acquired.value?.screenStream.getVideoTracks()[0] ?? undefined,
+    () => acquired.value?.screenStream?.getVideoTracks()[0] ?? undefined,
   );
 
   useEventListener(screenVideoTrack, "ended", () => {
-    if (!acquired.value) return;
-    error.value = "Screen sharing ended";
-    cancel();
+    if (!acquired.value?.screenStream) return;
+    if (phase.value === "recording" || phase.value === "finalizing") {
+      error.value = "Screen sharing ended";
+      cancel();
+      return;
+    }
+    screenEnabled.value = false;
+    releaseScreenStream(acquired.value);
+    overlayEditMode.value = false;
+    restartPreviewCompositor();
   });
 
-  function isWebcamOverlayVisible(): boolean {
-    return shouldDrawWebcamOnCanvas(webcamEnabled.value, acquired.value?.webcamVideo != null);
+  function compositeOptions() {
+    const streams = acquired.value;
+    const hasWebcamVideo = streams?.webcamVideo != null && canDrawVideoFrame(streams.webcamVideo);
+    const hasScreenVideo = streams?.screenVideo != null && canDrawVideoFrame(streams.screenVideo);
+    return {
+      mirrorCamera: mirrorCamera.value,
+      drawWebcamOverlay: shouldDrawWebcamOverlay(
+        webcamEnabled.value,
+        hasWebcamVideo,
+        screenEnabled.value,
+        hasScreenVideo,
+      ),
+    };
   }
 
   const previewAspectRatio = computed(() => {
     const streams = acquired.value;
     if (!streams) return 16 / 9;
+    const primary = streams.screenVideo ?? streams.webcamVideo;
+    if (!primary) return 16 / 9;
     const { width, height } = readVideoIntrinsicSize(
-      streams.screenVideo,
+      primary,
       streams.frameWidth,
       streams.frameHeight,
     );
     return width / height;
   });
 
+  function hasDrawableVideo(): boolean {
+    const streams = acquired.value;
+    if (!streams) return false;
+    if (streams.screenVideo && canDrawVideoFrame(streams.screenVideo)) return true;
+    return (
+      webcamEnabled.value &&
+      streams.webcamVideo != null &&
+      canDrawVideoFrame(streams.webcamVideo)
+    );
+  }
+
+  function showOverlayEditor(): boolean {
+    const streams = acquired.value;
+    if (!streams || phase.value !== "setup") return false;
+    return shouldDrawWebcamOverlay(
+      webcamEnabled.value,
+      streams.webcamVideo != null && canDrawVideoFrame(streams.webcamVideo),
+      screenEnabled.value,
+      streams.screenVideo != null && canDrawVideoFrame(streams.screenVideo),
+    );
+  }
+
+  const overlayEditorVisible = computed(() => showOverlayEditor());
+
   const view = computed((): ScreenRecordingSetupView => {
     const streams = acquired.value;
     const frameSize = streams
-      ? readVideoIntrinsicSize(streams.screenVideo, streams.frameWidth, streams.frameHeight)
+      ? (() => {
+          const primary = streams.screenVideo ?? streams.webcamVideo;
+          if (!primary) {
+            return { width: streams.frameWidth, height: streams.frameHeight };
+          }
+          return readVideoIntrinsicSize(primary, streams.frameWidth, streams.frameHeight);
+        })()
       : { width: 1280, height: 720 };
+    const viewer = options.viewer?.() ?? null;
+    const showAvatarFallback =
+      phase.value === "setup" && !hasDrawableVideo();
 
     return {
       phase: phase.value === "idle" ? "setup" : phase.value,
       error: error.value,
       webcamEnabled: webcamEnabled.value,
       webcamAvailable: streams?.webcamVideo != null,
+      screenEnabled: screenEnabled.value,
+      screenAvailable: streams?.screenStream != null,
       webcamDeviceId: webcamDeviceId.value,
       micEnabled: micEnabled.value,
       micDeviceId: micDeviceId.value,
       systemAudioEnabled: systemAudioEnabled.value,
+      mirrorCamera: mirrorCamera.value,
       cameras: cameras.value,
       microphones: microphones.value,
-      canStart: phase.value === "setup" && streams != null,
+      canStart: phase.value === "setup" && hasDrawableVideo(),
+      showCameraOverlayEditor: overlayEditorVisible.value,
+      overlayEditMode: overlayEditMode.value,
+      showAvatarFallback,
+      avatarUrl: viewer?.avatarUrl,
+      avatarInitials: viewer?.initials ?? "?",
+      avatarName: viewer?.name ?? "You",
       elapsedLabel: phase.value === "recording" ? formatElapsed(elapsedSeconds.value) : undefined,
       previewAspectRatio: previewAspectRatio.value,
       cameraLayout: cameraLayout.value,
-      frameWidth: frameSize.width,
-      frameHeight: frameSize.height,
+      frameWidth: streams?.frameWidth ?? frameSize.width,
+      frameHeight: streams?.frameHeight ?? frameSize.height,
     };
+  });
+
+  function restartPreviewCompositor() {
+    const streams = acquired.value;
+    if (!streams || phase.value !== "setup") return;
+    previewCompositor?.stop();
+    previewCompositor = createPreviewCompositor(
+      streams,
+      () => cameraLayout.value,
+      compositeOptions,
+    );
+    previewCompositor.start();
+    previewCanvas.value = previewCompositor.canvas;
+  }
+
+  watch(screenEnabled, async (enabled) => {
+    const streams = acquired.value;
+    if (!streams || phase.value !== "setup") return;
+    if (enabled) {
+      systemAudioEnabled.value = true;
+      const attached = await acquireScreenStream(streams, toggles());
+      if (!attached) {
+        screenEnabled.value = false;
+        return;
+      }
+      cameraLayout.value = defaultCameraLayout(streams.frameWidth, streams.frameHeight);
+    } else {
+      releaseScreenStream(streams);
+      systemAudioEnabled.value = false;
+      overlayEditMode.value = false;
+    }
+    restartPreviewCompositor();
+  });
+
+  watch(mirrorCamera, () => {
+    restartPreviewCompositor();
+  });
+
+  watch(overlayEditorVisible, (visible) => {
+    if (!visible) overlayEditMode.value = false;
   });
 
   function toggles(): ScreenRecordingToggles {
     return {
       webcamEnabled: webcamEnabled.value,
+      screenEnabled: screenEnabled.value,
       micEnabled: micEnabled.value,
       systemAudioEnabled: systemAudioEnabled.value,
+      mirrorCamera: mirrorCamera.value,
       webcamDeviceId: webcamDeviceId.value,
       micDeviceId: micDeviceId.value,
     };
@@ -135,27 +253,31 @@ export function useScreenRecordingSetup() {
     }
     if (!webcamEnabled.value) {
       applyStreamToggles(streams, toggles());
+      restartPreviewCompositor();
       return;
     }
-    if (
-      !streamNeedsDeviceSwitch(
-        streams.webcamStream != null,
-        trackDeviceId(streams.webcamStream, "video"),
-        webcamDeviceId.value,
-      )
-    ) {
+    const hasWebcam = streams.webcamStream != null;
+    const needsSwitch = streamNeedsDeviceSwitch(
+      hasWebcam,
+      trackDeviceId(streams.webcamStream, "video"),
+      webcamDeviceId.value,
+    );
+    if (!needsSwitch) {
       applyStreamToggles(streams, toggles());
+      restartPreviewCompositor();
       return;
     }
     const switched = await replaceWebcamStream(streams, webcamDeviceId.value);
     if (!switched) {
       error.value = "Could not switch camera";
       applyStreamToggles(streams, toggles());
+      restartPreviewCompositor();
       return;
     }
     error.value = undefined;
     syncSelectedDeviceIds(streams);
     applyStreamToggles(streams, toggles());
+    restartPreviewCompositor();
   }
 
   async function syncMicStream() {
@@ -228,8 +350,11 @@ export function useScreenRecordingSetup() {
     phase.value = "idle";
     error.value = undefined;
     webcamEnabled.value = true;
+    screenEnabled.value = false;
     micEnabled.value = true;
-    systemAudioEnabled.value = true;
+    systemAudioEnabled.value = false;
+    mirrorCamera.value = false;
+    overlayEditMode.value = false;
   }
 
   async function begin(): Promise<boolean> {
@@ -240,28 +365,27 @@ export function useScreenRecordingSetup() {
     phase.value = "acquiring";
 
     try {
-      const streams = await acquireScreenRecordingStreams(toggles());
+      const streams = await createRecordingSession(toggles());
       acquired.value = streams;
       await ensurePermissions();
       syncSelectedDeviceIds(streams);
-      cameraLayout.value = defaultCameraLayout(streams.frameWidth, streams.frameHeight);
+      if (streams.webcamVideo) {
+        cameraLayout.value = defaultCameraLayout(streams.frameWidth, streams.frameHeight);
+      }
 
       previewCompositor = createPreviewCompositor(
         streams,
         () => cameraLayout.value,
-        isWebcamOverlayVisible,
+        compositeOptions,
       );
       previewCompositor.start();
       previewCanvas.value = previewCompositor.canvas;
       phase.value = "setup";
       return true;
-    } catch (cause) {
+    } catch {
       cleanup();
       phase.value = "idle";
-      error.value =
-        cause instanceof Error && cause.name === "NotAllowedError"
-          ? "Permission denied"
-          : "Could not start screen capture";
+      error.value = "Could not start recording setup";
       return false;
     }
   }
@@ -269,7 +393,9 @@ export function useScreenRecordingSetup() {
   function captureFrameSize() {
     const streams = acquired.value;
     if (!streams) return { width: 1280, height: 720 };
-    return readVideoIntrinsicSize(streams.screenVideo, streams.frameWidth, streams.frameHeight);
+    const primary = streams.screenVideo ?? streams.webcamVideo;
+    if (!primary) return { width: streams.frameWidth, height: streams.frameHeight };
+    return readVideoIntrinsicSize(primary, streams.frameWidth, streams.frameHeight);
   }
 
   function setCameraLayout(layout: CameraCircleLayout) {
@@ -313,7 +439,12 @@ export function useScreenRecordingSetup() {
     });
   }
 
-  function moveCameraToDisplayPoint(displayX: number, displayY: number, displayWidth: number, displayHeight: number) {
+  function moveCameraToDisplayPoint(
+    displayX: number,
+    displayY: number,
+    displayWidth: number,
+    displayHeight: number,
+  ) {
     const streams = acquired.value;
     if (!streams) return;
     const center = displayPointToCapture(
@@ -341,7 +472,11 @@ export function useScreenRecordingSetup() {
     }, 1000);
 
     previewCompositor?.stop();
-    activeRecording = await startCanvasRecording(streams, () => cameraLayout.value, isWebcamOverlayVisible);
+    activeRecording = await startCanvasRecording(
+      streams,
+      () => cameraLayout.value,
+      compositeOptions,
+    );
     previewCanvas.value = activeRecording.canvas;
     mountCompositorCanvas(activeRecording.canvas);
   }
@@ -385,6 +520,15 @@ export function useScreenRecordingSetup() {
     setSystemAudioEnabled: (value: boolean) => {
       systemAudioEnabled.value = value;
     },
+    setScreenEnabled: (value: boolean) => {
+      screenEnabled.value = value;
+    },
+    setMirrorCamera: (value: boolean) => {
+      mirrorCamera.value = value;
+    },
+    setOverlayEditMode: (value: boolean) => {
+      overlayEditMode.value = value;
+    },
     setWebcamDeviceId: (value: string) => {
       webcamDeviceId.value = value;
       void syncWebcamStream();
@@ -393,8 +537,5 @@ export function useScreenRecordingSetup() {
       micDeviceId.value = value;
       void syncMicStream();
     },
-    webcamEnabled,
-    micEnabled,
-    systemAudioEnabled,
   };
 }

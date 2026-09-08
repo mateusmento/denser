@@ -72,8 +72,8 @@ Handles are **hidden by default**.
 
 | Step | Behavior |
 | --- | --- |
-| Hover overlay | Centered **Edit** button on overlay (`bg` semi-transparent + `backdrop-blur`) |
-| Click Edit | Resize/move handles shown; Edit → **Confirm** (same position) |
+| Hover overlay | Centered icon button on overlay (`SquarePenIcon`, transparent bg + `backdrop-blur`) — **visible on hover only** |
+| Click Edit | Resize/move handles shown; icon becomes **Confirm** (`CheckIcon`, same style/position) |
 | Click Confirm | Handles hidden; hover-to-Edit again |
 
 **Setup phase only** — no overlay editing while recording.

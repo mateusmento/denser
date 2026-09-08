@@ -2,6 +2,7 @@
 import type { ArtifactId, ArtifactSummary, SpaceId, WorkflowStageId } from "@denser/contracts";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useSidebarPinsSync } from "@/features/shell/composables/useSidebarPinsSync";
 import {
   useArtifactCommands,
   useGalleryActions,
@@ -54,6 +55,20 @@ const { onCreate } = useWorkspaceCreateActions((title, parentSpaceId, preset) =>
 const { openPeek } = useArtifactPeekHost();
 const { spaces: moveSpaces, explore: exploreMove } = useSpaceMoveTree();
 
+const workspaceRootId = computed((): SpaceId | null => {
+  const space = detail.value?.space;
+  if (!space) return null;
+  if (space.rootSpaceId) return space.rootSpaceId;
+  if (space.parentSpaceId == null && space.visibility === "private") return space.id;
+  return null;
+});
+
+const showPinToggle = computed(() => workspaceRootId.value != null);
+const sidebarPins = useSidebarPinsSync(workspaceRootId);
+const pinnedSpaceIds = computed(
+  () => new Set(sidebarPins.pins.value.map((pin) => pin.spaceId)),
+);
+
 const { onSpaceAction, onArtifactAction } = useGalleryActions(
   {
     openSpace,
@@ -65,6 +80,11 @@ const { onSpaceAction, onArtifactAction } = useGalleryActions(
     duplicateArtifact: artifactCommands.duplicateArtifact,
   },
   { openSettings },
+  {
+    showPinToggle: () => showPinToggle.value,
+    pinSpace: (space) => sidebarPins.pinSpace(space.id as SpaceId),
+    unpinSpace: (space) => sidebarPins.unpinSpace(space.id as SpaceId),
+  },
 );
 
 function openArtifact(artifact: ArtifactSummary) {
@@ -218,6 +238,8 @@ const relationTitles = computed(() => {
     :content="content"
     :back-link="backLink"
     :move-spaces="moveSpaces"
+    :pinned-space-ids="pinnedSpaceIds"
+    :show-pin-toggle="showPinToggle"
     @retry="reload"
     @create="onCreate($event, spaceId)"
     @open-space="openSpace"

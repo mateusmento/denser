@@ -11,6 +11,15 @@ const { Story } = defineMeta({
 
 const uploaded: ComposerAttachmentTileView[] = [
   {
+    key: "s:audio",
+    kind: "uploaded",
+    id: "audio-1",
+    name: "voice-note.webm",
+    mimeType: "audio/webm",
+    url: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+    byteSize: 48_000,
+  },
+  {
     key: "s:1",
     kind: "uploaded",
     id: "1",

@@ -32,6 +32,8 @@ const props = defineProps<{
   artifacts: readonly SpaceGalleryArtifact[];
   moveSpaces?: readonly SpaceMoveNode[];
   loading?: boolean;
+  pinnedSpaceIds?: ReadonlySet<string>;
+  showPinToggle?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -190,6 +192,8 @@ function blockedMoveIds(itemId: string): readonly string[] {
                 :icon="space.icon"
                 :sprint-role="space.sprintRole"
                 :selected="selection.isSelected(space.id)"
+                :is-pinned-to-sidebar="pinnedSpaceIds?.has(space.id) ?? false"
+                :show-pin-toggle="showPinToggle"
                 @action="(action) => emit('spaceAction', action, space)"
               >
                 <template #move-to>

@@ -69,6 +69,11 @@ export function canDrawVideoFrame(video: CanvasImageSource): boolean {
   );
 }
 
+export type DrawCompositeOptions = {
+  mirrorCamera: boolean;
+  drawWebcamOverlay: boolean;
+};
+
 function drawImageCover(
   ctx: CanvasRenderingContext2D,
   image: CanvasImageSource,
@@ -76,6 +81,7 @@ function drawImageCover(
   y: number,
   width: number,
   height: number,
+  mirror = false,
 ) {
   const { width: sourceWidth, height: sourceHeight } = readVideoIntrinsicSize(image, width, height);
   if (!sourceWidth || !sourceHeight) return;
@@ -86,7 +92,34 @@ function drawImageCover(
   const drawX = x + (width - drawWidth) / 2;
   const drawY = y + (height - drawHeight) / 2;
 
-  ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, drawX, drawY, drawWidth, drawHeight);
+  ctx.save();
+  if (mirror) {
+    ctx.translate(drawX + drawWidth, drawY);
+    ctx.scale(-1, 1);
+    ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, 0, 0, drawWidth, drawHeight);
+  } else {
+    ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, drawX, drawY, drawWidth, drawHeight);
+  }
+  ctx.restore();
+}
+
+function drawCircularWebcam(
+  ctx: CanvasRenderingContext2D,
+  webcamVideo: CanvasImageSource,
+  layout: CameraCircleLayout,
+  mirror: boolean,
+) {
+  const { x, y, diameter } = layout;
+  const radius = diameter / 2;
+  const cx = x + radius;
+  const cy = y + radius;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.clip();
+  drawImageCover(ctx, webcamVideo, x, y, diameter, diameter, mirror);
+  ctx.restore();
 }
 
 export function displayPointToCapture(
@@ -104,35 +137,50 @@ export function displayPointToCapture(
 
 export function drawCompositeFrame(
   ctx: CanvasRenderingContext2D,
-  screenVideo: CanvasImageSource,
+  screenVideo: CanvasImageSource | null,
   webcamVideo: CanvasImageSource | null,
   layout: CameraCircleLayout,
   frameWidth: number,
   frameHeight: number,
-  webcamVisible: boolean,
+  options: DrawCompositeOptions,
 ) {
-  if (!canDrawVideoFrame(screenVideo)) return;
-
   const canvasWidth = ctx.canvas.width;
   const canvasHeight = ctx.canvas.height;
   if (!canvasWidth || !canvasHeight) return;
 
+  const screenReady = screenVideo != null && canDrawVideoFrame(screenVideo);
+  const webcamReady = webcamVideo != null && canDrawVideoFrame(webcamVideo);
+
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  ctx.drawImage(screenVideo, 0, 0, canvasWidth, canvasHeight);
 
-  if (!webcamVisible || !webcamVideo || !canDrawVideoFrame(webcamVideo)) return;
+  if (screenReady) {
+    ctx.drawImage(screenVideo, 0, 0, canvasWidth, canvasHeight);
+    if (options.drawWebcamOverlay && webcamReady) {
+      drawCircularWebcam(ctx, webcamVideo!, layout, options.mirrorCamera);
+    }
+    return;
+  }
 
-  const { x, y, diameter } = layout;
-  const radius = diameter / 2;
-  const cx = x + radius;
-  const cy = y + radius;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.clip();
-  drawImageCover(ctx, webcamVideo, x, y, diameter, diameter);
-  ctx.restore();
+  if (webcamReady) {
+    const { width: sourceWidth, height: sourceHeight } = readVideoIntrinsicSize(
+      webcamVideo!,
+      canvasWidth,
+      canvasHeight,
+    );
+    if (sourceWidth === canvasWidth && sourceHeight === canvasHeight) {
+      if (options.mirrorCamera) {
+        ctx.save();
+        ctx.translate(canvasWidth, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(webcamVideo!, 0, 0, canvasWidth, canvasHeight);
+        ctx.restore();
+      } else {
+        ctx.drawImage(webcamVideo!, 0, 0, canvasWidth, canvasHeight);
+      }
+      return;
+    }
+    drawImageCover(ctx, webcamVideo!, 0, 0, canvasWidth, canvasHeight, options.mirrorCamera);
+  }
 }
 
 function clamp(value: number, min: number, max: number): number {

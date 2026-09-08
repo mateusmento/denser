@@ -231,7 +231,7 @@ When recurrence is **daily** or **weekly**, show an **optional end date** in the
 - [ ] On **create private space**: server-set `timezone` only (no create UI); nested → `resolveScheduleTimezone(parentId)`; root → owner profile TZ
 - [ ] `user.timezone` + `user.timezone_source` (`auto` \| `manual`)
 - [ ] PATCH space/user timezone APIs
-- [ ] On private space TZ change: recompute jobs that resolve to that space + notify schedulers (Option C) — **notify → [#37](./37-scheduler-tz-change-notification.md)**
+- [ ] On private space TZ change: recompute jobs that resolve to that space + notify schedulers (Option C) — **notify → [#39](./39-scheduler-tz-change-notification.md)**
 - [ ] Integration tests: resolver (public under private, nested private, DM → root), create defaults, recompute scope, null rejected
 
 ### 27b — schedule recurrence (shared with **25** update paths)

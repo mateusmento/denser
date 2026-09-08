@@ -26,9 +26,6 @@ test("toRecordingDeviceOptions skips blank ids and names unlabeled devices", () 
 
 test("webcamVideoConstraints pins an explicit camera id", () => {
   assert.deepEqual(webcamVideoConstraints("cam-usb"), {
-    width: { ideal: 720 },
-    height: { ideal: 720 },
-    aspectRatio: { ideal: 1 },
     deviceId: { exact: "cam-usb" },
   });
 });

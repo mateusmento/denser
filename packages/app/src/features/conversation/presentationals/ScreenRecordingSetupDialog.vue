@@ -1,23 +1,38 @@
 <script setup lang="ts">
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
+  cn,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
   Label,
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
   Spinner,
   Switch,
 } from "@denser/design-system";
+import {
+  MicIcon,
+  MicOffIcon,
+  MonitorIcon,
+  SettingsIcon,
+  VideoIcon,
+  VideoOffIcon,
+} from "@lucide/vue";
 import { nextTick, onUnmounted, useTemplateRef, watch } from "vue";
 import type { CameraResizeHandle } from "../lib/screen-recording-resize";
 import {
@@ -42,7 +57,10 @@ const emit = defineEmits<{
   minimize: [];
   "update:webcamEnabled": [value: boolean];
   "update:micEnabled": [value: boolean];
+  "update:screenEnabled": [value: boolean];
   "update:systemAudioEnabled": [value: boolean];
+  "update:mirrorCamera": [value: boolean];
+  "update:overlayEditMode": [value: boolean];
   "update:webcamDeviceId": [value: string];
   "update:micDeviceId": [value: string];
   "move-camera": [payload: { displayX: number; displayY: number; displayWidth: number; displayHeight: number }];
@@ -56,7 +74,7 @@ const emit = defineEmits<{
   ];
 }>();
 
-const previewHost = useTemplateRef<HTMLDivElement>("previewHost");
+const previewCanvasMount = useTemplateRef<HTMLDivElement>("previewCanvasMount");
 let stopMirror: (() => void) | null = null;
 
 function teardownMirror() {
@@ -64,24 +82,29 @@ function teardownMirror() {
   stopMirror = null;
 }
 
+function clearPreviewCanvasMount() {
+  previewCanvasMount.value?.replaceChildren();
+}
+
 watch(
-  () => [open.value, props.previewCanvas, props.view.phase] as const,
-  ([isOpen, canvas, phase]) => {
+  () => [open.value, props.previewCanvas, props.view.phase, props.view.showAvatarFallback] as const,
+  ([isOpen, canvas, phase, showAvatar]) => {
     teardownMirror();
-    if (!isOpen || !canvas) return;
+    clearPreviewCanvasMount();
+    if (!isOpen || !canvas || showAvatar) return;
 
     nextTick(() => {
-      const host = previewHost.value;
-      if (!host || !canvas) return;
+      const mount = previewCanvasMount.value;
+      if (!mount || !canvas) return;
 
       if (phase === "setup") {
-        mountPreviewCanvas(host, canvas, "size-full object-contain");
+        mountPreviewCanvas(mount, canvas, "size-full object-contain");
         return;
       }
 
       if (phase === "recording" || phase === "finalizing") {
         const displayCanvas = createDisplayCanvas("size-full object-contain");
-        mountPreviewCanvas(host, displayCanvas, "size-full object-contain");
+        mountPreviewCanvas(mount, displayCanvas, "size-full object-contain");
         stopMirror = startPreviewMirror(() => props.previewCanvas, displayCanvas);
       }
     });
@@ -91,11 +114,12 @@ watch(
 
 onUnmounted(() => {
   teardownMirror();
+  clearPreviewCanvasMount();
 });
 
 function onInteractOutside(event: Event) {
   const target = event.target;
-  if (target instanceof Element && target.closest("[data-slot='select-content']")) {
+  if (target instanceof Element && target.closest("[data-slot='dropdown-menu-content'], [data-slot='dropdown-menu-sub-content'], [data-slot='popover-content']")) {
     event.preventDefault();
     return;
   }
@@ -104,18 +128,39 @@ function onInteractOutside(event: Event) {
   }
 }
 
-function onWebcamDeviceSelected(value: unknown) {
-  if (typeof value === "string" && value !== "") emit("update:webcamDeviceId", value);
-}
-
-function onMicDeviceSelected(value: unknown) {
-  if (typeof value === "string" && value !== "") emit("update:micDeviceId", value);
-}
-
 function onEscapeKeydown(event: KeyboardEvent) {
   if (props.view.phase === "recording" || props.view.phase === "finalizing") {
     event.preventDefault();
   }
+}
+
+function toggleWebcam() {
+  emit("update:webcamEnabled", !props.view.webcamEnabled);
+}
+
+function toggleMic() {
+  emit("update:micEnabled", !props.view.micEnabled);
+}
+
+function toggleScreen() {
+  emit("update:screenEnabled", !props.view.screenEnabled);
+}
+
+function onWebcamDeviceSelected(value: string) {
+  emit("update:webcamDeviceId", value);
+}
+
+function onMicDeviceSelected(value: string) {
+  emit("update:micDeviceId", value);
+}
+
+function previewControlClass(active: boolean) {
+  return cn(
+    "flex size-10 items-center justify-center rounded-full border shadow-sm transition-colors",
+    active
+      ? "border-primary bg-primary text-primary-foreground"
+      : "border-white/25 bg-black/55 text-white hover:bg-black/70",
+  );
 }
 </script>
 
@@ -136,7 +181,7 @@ function onEscapeKeydown(event: KeyboardEvent) {
             Recording in progress. Minimize to use the floating controls while you present.
           </template>
           <template v-else>
-            Position and resize your camera, then record. The preview matches the exported video.
+            Turn on webcam or screen share, then record. The preview matches the exported video.
           </template>
         </DialogDescription>
       </DialogHeader>
@@ -147,13 +192,163 @@ function onEscapeKeydown(event: KeyboardEvent) {
         class="relative w-full overflow-hidden rounded-lg border border-border bg-muted"
         :style="{ aspectRatio: String(view.previewAspectRatio) }"
       >
-        <div ref="previewHost" class="relative flex size-full items-center justify-center bg-black/80" />
+        <div class="relative flex size-full items-center justify-center bg-black/80">
+          <div
+            ref="previewCanvasMount"
+            class="absolute inset-0"
+            data-slot="screen-recording-preview-mount"
+            aria-hidden="true"
+          />
 
-        <ScreenRecordingCameraEditor
-          :view="view"
-          @move-camera="emit('move-camera', $event)"
-          @resize-camera="emit('resize-camera', $event)"
-        />
+          <div
+            v-if="view.showAvatarFallback"
+            class="relative z-[1] flex flex-col items-center justify-center gap-2 text-muted-foreground"
+            data-slot="screen-recording-avatar-fallback"
+          >
+            <Avatar class="size-24 border-2 border-border">
+              <AvatarImage v-if="view.avatarUrl" :src="view.avatarUrl" :alt="view.avatarName" />
+              <AvatarFallback class="text-2xl font-medium">{{ view.avatarInitials }}</AvatarFallback>
+            </Avatar>
+          </div>
+
+          <ScreenRecordingCameraEditor
+            :view="view"
+            :preview-canvas="previewCanvas"
+            @move-camera="emit('move-camera', $event)"
+            @resize-camera="emit('resize-camera', $event)"
+            @update:overlay-edit-mode="emit('update:overlayEditMode', $event)"
+          />
+        </div>
+
+        <div
+          v-if="view.phase === 'setup'"
+          class="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center"
+        >
+          <div class="pointer-events-auto flex items-center gap-2 rounded-full bg-black/45 p-1.5 backdrop-blur-sm">
+            <button
+              type="button"
+              data-slot="screen-recording-webcam-toggle"
+              :class="previewControlClass(view.webcamEnabled)"
+              :aria-pressed="view.webcamEnabled"
+              aria-label="Webcam"
+              @click="toggleWebcam"
+            >
+              <VideoIcon v-if="view.webcamEnabled" class="size-4" />
+              <VideoOffIcon v-else class="size-4" />
+            </button>
+
+            <button
+              type="button"
+              data-slot="screen-recording-mic-toggle"
+              :class="previewControlClass(view.micEnabled)"
+              :aria-pressed="view.micEnabled"
+              aria-label="Microphone"
+              @click="toggleMic"
+            >
+              <MicIcon v-if="view.micEnabled" class="size-4" />
+              <MicOffIcon v-else class="size-4" />
+            </button>
+
+            <button
+              type="button"
+              data-slot="screen-recording-screen-toggle"
+              :class="previewControlClass(view.screenEnabled)"
+              :aria-pressed="view.screenEnabled"
+              aria-label="Screen share"
+              @click="toggleScreen"
+            >
+              <MonitorIcon v-if="view.screenEnabled" class="size-4" />
+              <MonitorIcon v-else class="size-4 opacity-70" />
+            </button>
+
+            <DropdownMenu :modal="false">
+              <DropdownMenuTrigger as-child>
+                <button
+                  type="button"
+                  data-slot="screen-recording-settings-trigger"
+                  :class="previewControlClass(false)"
+                  aria-label="Recording settings"
+                >
+                  <SettingsIcon class="size-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" class="w-64" side="top">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger :disabled="view.cameras.length === 0">
+                    Camera
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuLabel>Camera devices</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      :model-value="view.webcamDeviceId ?? undefined"
+                      @update:model-value="onWebcamDeviceSelected(String($event))"
+                    >
+                      <DropdownMenuRadioItem
+                        v-for="camera in view.cameras"
+                        :key="camera.deviceId"
+                        :value="camera.deviceId"
+                      >
+                        {{ camera.label }}
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger :disabled="view.microphones.length === 0">
+                    Microphone
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuLabel>Microphone devices</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      :model-value="view.micDeviceId ?? undefined"
+                      @update:model-value="onMicDeviceSelected(String($event))"
+                    >
+                      <DropdownMenuRadioItem
+                        v-for="microphone in view.microphones"
+                        :key="microphone.deviceId"
+                        :value="microphone.deviceId"
+                      >
+                        {{ microphone.label }}
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <template v-if="view.screenEnabled">
+                  <DropdownMenuSeparator />
+                  <div class="flex items-center justify-between gap-2 px-2 py-1.5">
+                    <Label for="sr-system-audio" class="text-sm">System audio</Label>
+                    <Switch
+                      id="sr-system-audio"
+                      :model-value="view.systemAudioEnabled"
+                      @update:model-value="emit('update:systemAudioEnabled', $event)"
+                    />
+                  </div>
+                </template>
+
+                <DropdownMenuSeparator />
+                <div class="flex items-center justify-between gap-2 px-2 py-1.5">
+                  <Label for="sr-mirror-camera" class="text-sm">Mirror camera</Label>
+                  <Switch
+                    id="sr-mirror-camera"
+                    :model-value="view.mirrorCamera"
+                    @update:model-value="emit('update:mirrorCamera', $event)"
+                  />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div
+          v-if="view.phase === 'acquiring'"
+          class="absolute inset-0 flex items-center justify-center bg-background/60"
+          data-slot="screen-recording-acquiring"
+        >
+          <Spinner class="size-8" />
+          <span class="sr-only">Starting camera</span>
+        </div>
 
         <div
           v-if="view.phase === 'finalizing'"
@@ -169,88 +364,6 @@ function onEscapeKeydown(event: KeyboardEvent) {
         >
           <span class="size-2 animate-pulse rounded-full bg-white" />
           {{ view.elapsedLabel }}
-        </div>
-      </div>
-
-      <div v-if="view.phase === 'setup'" class="flex flex-col gap-3">
-        <div class="grid gap-3 sm:grid-cols-3">
-          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-            <Label for="sr-webcam">Webcam</Label>
-            <Switch
-              id="sr-webcam"
-              :model-value="view.webcamEnabled"
-              @update:model-value="emit('update:webcamEnabled', $event)"
-            />
-          </div>
-          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-            <Label for="sr-mic">Microphone</Label>
-            <Switch
-              id="sr-mic"
-              :model-value="view.micEnabled"
-              @update:model-value="emit('update:micEnabled', $event)"
-            />
-          </div>
-          <div class="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-            <Label for="sr-system">System audio</Label>
-            <Switch
-              id="sr-system"
-              :model-value="view.systemAudioEnabled"
-              @update:model-value="emit('update:systemAudioEnabled', $event)"
-            />
-          </div>
-        </div>
-
-        <div class="grid gap-3 sm:grid-cols-3">
-          <Select
-            :model-value="view.webcamDeviceId ?? undefined"
-            :disabled="view.cameras.length === 0"
-            @update:model-value="onWebcamDeviceSelected($event)"
-          >
-            <SelectTrigger
-              id="sr-webcam-device"
-              class="h-8 w-full min-w-0"
-              aria-label="Camera"
-            >
-              <SelectValue :placeholder="view.cameras.length === 0 ? 'No camera found' : 'Select camera'" />
-            </SelectTrigger>
-            <SelectContent position="popper" class="z-60">
-              <SelectLabel>Camera Devices</SelectLabel>
-              <SelectGroup>
-                <SelectItem
-                v-for="camera in view.cameras"
-                :key="camera.deviceId"
-                :value="camera.deviceId"
-                >
-                  {{ camera.label }}
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <Select
-            :model-value="view.micDeviceId ?? undefined"
-            :disabled="view.microphones.length === 0"
-            @update:model-value="onMicDeviceSelected($event)"
-          >
-            <SelectTrigger
-              id="sr-mic-device"
-              class="h-8 w-full min-w-0"
-              aria-label="Microphone"
-            >
-              <SelectValue :placeholder="view.microphones.length === 0 ? 'No microphone found' : 'Select microphone'" />
-            </SelectTrigger>
-            <SelectContent position="popper" class="z-60">
-              <SelectLabel>Microphone Devices</SelectLabel>
-              <SelectGroup>
-                <SelectItem
-                v-for="microphone in view.microphones"
-                :key="microphone.deviceId"
-                  :value="microphone.deviceId"
-                >
-                  {{ microphone.label }}
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

@@ -110,6 +110,29 @@ test("toConversationMessageView classifies image attachments as media", () => {
   assert.equal(view.attachments?.[0]?.kind, "media");
 });
 
+test("toConversationMessageView classifies audio attachments as audio", () => {
+  const view = toConversationMessageView(
+    messageDto({
+      attachmentIds: [ATTACHMENT],
+      attachments: [
+        {
+          id: ATTACHMENT,
+          rootSpaceId: "00000000-0000-4000-8000-000000000003",
+          uploadedBy: AUTHOR,
+          mimeType: "audio/webm",
+          originalFilename: "voice-note.webm",
+          byteSize: 4096,
+          url: "https://example.com/voice-note.webm",
+          createdAt: "2026-09-05T12:00:00.000Z",
+        },
+      ],
+    }),
+    null,
+  );
+
+  assert.equal(view.attachments?.[0]?.kind, "audio");
+});
+
 
 test("toConversationMessageView maps reactions", () => {
   const view = toConversationMessageView(

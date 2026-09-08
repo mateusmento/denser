@@ -29,6 +29,7 @@ const props = defineProps<{
   isRenaming?: boolean;
   isPinnedToSidebar?: boolean;
   showPinToggle?: boolean;
+  showHideFromSidebar?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -201,6 +202,11 @@ function cancelRename() {
         <ContextMenuItem variant="destructive" @select="onSpaceAction('delete')">
           Delete
         </ContextMenuItem>
+      </template>
+
+      <template v-else-if="showHideFromSidebar">
+        <ContextMenuItem @select="onArtifactAction('open')">Open</ContextMenuItem>
+        <ContextMenuItem @select="onArtifactAction('hide')">Hide from sidebar</ContextMenuItem>
       </template>
 
       <template v-else>

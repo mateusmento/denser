@@ -3,6 +3,7 @@ import {
   canDrawVideoFrame,
   drawCompositeFrame,
   readVideoIntrinsicSize,
+  type DrawCompositeOptions,
 } from "./screen-recording-composite";
 import {
   microphoneAudioConstraints,
@@ -14,25 +15,30 @@ import {
 
 export type ScreenRecordingToggles = {
   webcamEnabled: boolean;
+  screenEnabled: boolean;
   micEnabled: boolean;
   systemAudioEnabled: boolean;
+  mirrorCamera: boolean;
   webcamDeviceId?: string | null;
   micDeviceId?: string | null;
 };
 
 export type AcquiredStreams = {
-  screenStream: MediaStream;
+  screenStream: MediaStream | null;
   webcamStream: MediaStream | null;
   micStream: MediaStream | null;
   frameWidth: number;
   frameHeight: number;
-  screenVideo: HTMLVideoElement;
+  screenVideo: HTMLVideoElement | null;
   webcamVideo: HTMLVideoElement | null;
   audioContext: AudioContext;
   audioDestination: MediaStreamAudioDestinationNode;
+  screenAudioSources: MediaStreamAudioSourceNode[];
   micAudioSources: MediaStreamAudioSourceNode[];
   mixedAudioStream: MediaStream;
 };
+
+export type CompositeFrameContext = () => DrawCompositeOptions;
 
 let mediaVideoMount: HTMLDivElement | null = null;
 
@@ -59,8 +65,6 @@ function clearMediaVideoMount() {
 }
 
 export function pickRecorderMimeType(): string {
-  // VP9 is intentionally excluded — its software encoder is a common SIGILL source on
-  // CPUs without the SIMD paths libvpx expects. VP8 / platform defaults are safer.
   const candidates = [
     "video/webm;codecs=vp8,opus",
     "video/webm;codecs=vp8",
@@ -172,56 +176,122 @@ async function attachWebcamStream(acquired: AcquiredStreams, stream: MediaStream
   await waitForVideoReady(acquired.webcamVideo);
 }
 
-export async function acquireScreenRecordingStreams(
+function syncFrameSizeFromPrimarySource(acquired: AcquiredStreams) {
+  if (acquired.screenVideo && canDrawVideoFrame(acquired.screenVideo)) {
+    const { width, height } = readVideoIntrinsicSize(
+      acquired.screenVideo,
+      acquired.frameWidth,
+      acquired.frameHeight,
+    );
+    acquired.frameWidth = width;
+    acquired.frameHeight = height;
+    return;
+  }
+
+  if (acquired.webcamVideo && canDrawVideoFrame(acquired.webcamVideo)) {
+    const { width, height } = readVideoIntrinsicSize(
+      acquired.webcamVideo,
+      acquired.frameWidth,
+      acquired.frameHeight,
+    );
+    acquired.frameWidth = width;
+    acquired.frameHeight = height;
+  }
+}
+
+/** Begin a recording session with webcam/mic only — screen is acquired on toggle. */
+export async function createRecordingSession(
   toggles: ScreenRecordingToggles,
 ): Promise<AcquiredStreams> {
-  const screenStream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: toggles.systemAudioEnabled,
-  });
-
-  const videoTrack = screenStream.getVideoTracks()[0];
-  if (!videoTrack) throw new Error("Screen capture has no video track");
-
-  const webcamStream = toggles.webcamEnabled
-    ? await acquireWebcamMedia(toggles.webcamDeviceId)
-    : null;
-  const micStream = toggles.micEnabled ? await acquireMicMedia(toggles.micDeviceId) : null;
-
   const audioContext = new AudioContext();
   await audioContext.resume().catch(() => undefined);
   const audioDestination = audioContext.createMediaStreamDestination();
-  connectAudioTracks(audioContext, audioDestination, screenStream);
+
+  const micStream = toggles.micEnabled ? await acquireMicMedia(toggles.micDeviceId) : null;
   const micAudioSources = micStream
     ? connectAudioTracks(audioContext, audioDestination, micStream)
     : [];
 
-  const screenVideo = document.createElement("video");
-  mountMediaVideo(screenVideo);
-  await playVideoElement(screenVideo, screenStream);
-  await waitForVideoReady(screenVideo);
-  const { width: frameWidth, height: frameHeight } = await waitForVideoDimensions(screenVideo);
-
   const acquired: AcquiredStreams = {
-    screenStream,
-    webcamStream,
+    screenStream: null,
+    webcamStream: null,
     micStream,
-    frameWidth,
-    frameHeight,
-    screenVideo,
+    frameWidth: 1280,
+    frameHeight: 720,
+    screenVideo: null,
     webcamVideo: null,
     audioContext,
     audioDestination,
+    screenAudioSources: [],
     micAudioSources,
     mixedAudioStream: audioDestination.stream,
   };
 
-  if (webcamStream) {
-    await attachWebcamStream(acquired, webcamStream);
+  if (toggles.webcamEnabled) {
+    const webcamStream = await acquireWebcamMedia(toggles.webcamDeviceId);
+    if (webcamStream) {
+      acquired.webcamStream = webcamStream;
+      await attachWebcamStream(acquired, webcamStream);
+      syncFrameSizeFromPrimarySource(acquired);
+    }
   }
 
   applyStreamToggles(acquired, toggles);
   return acquired;
+}
+
+export async function acquireScreenStream(
+  acquired: AcquiredStreams,
+  toggles: ScreenRecordingToggles,
+): Promise<boolean> {
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: toggles.systemAudioEnabled,
+    });
+
+    const videoTrack = screenStream.getVideoTracks()[0];
+    if (!videoTrack) {
+      stopStream(screenStream);
+      return false;
+    }
+
+    acquired.screenStream = screenStream;
+    acquired.screenVideo = document.createElement("video");
+    mountMediaVideo(acquired.screenVideo);
+    await playVideoElement(acquired.screenVideo, screenStream);
+    await waitForVideoReady(acquired.screenVideo);
+    syncFrameSizeFromPrimarySource(acquired);
+
+    acquired.screenAudioSources = connectAudioTracks(
+      acquired.audioContext,
+      acquired.audioDestination,
+      screenStream,
+    );
+
+    applyStreamToggles(acquired, toggles);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function releaseScreenStream(acquired: AcquiredStreams) {
+  for (const source of acquired.screenAudioSources) {
+    source.disconnect();
+  }
+  acquired.screenAudioSources = [];
+
+  stopStream(acquired.screenStream);
+  acquired.screenStream = null;
+
+  if (acquired.screenVideo) {
+    acquired.screenVideo.pause();
+    acquired.screenVideo.srcObject = null;
+    acquired.screenVideo = null;
+  }
+
+  syncFrameSizeFromPrimarySource(acquired);
 }
 
 export async function replaceWebcamStream(
@@ -234,6 +304,7 @@ export async function replaceWebcamStream(
   acquired.webcamStream = next;
   await attachWebcamStream(acquired, next);
   stopStream(previous);
+  syncFrameSizeFromPrimarySource(acquired);
   return true;
 }
 
@@ -259,9 +330,9 @@ export async function replaceMicStream(
 
 /** Mute/unmute tracks that were already acquired. */
 export function applyStreamToggles(acquired: AcquiredStreams, toggles: ScreenRecordingToggles) {
-  for (const track of acquired.screenStream.getAudioTracks()) {
+  acquired.screenStream?.getAudioTracks().forEach((track) => {
     track.enabled = toggles.systemAudioEnabled;
-  }
+  });
   acquired.micStream?.getAudioTracks().forEach((track) => {
     track.enabled = toggles.micEnabled;
   });
@@ -273,34 +344,32 @@ export function applyStreamToggles(acquired: AcquiredStreams, toggles: ScreenRec
 export function releaseAcquiredStreams(acquired: AcquiredStreams | null) {
   if (!acquired) return;
 
-  acquired.screenStream.getTracks().forEach((track) => track.stop());
+  acquired.screenStream?.getTracks().forEach((track) => track.stop());
   acquired.webcamStream?.getTracks().forEach((track) => track.stop());
   acquired.micStream?.getTracks().forEach((track) => track.stop());
 
-  acquired.screenVideo.pause();
-  acquired.screenVideo.srcObject = null;
-  if (acquired.webcamVideo) {
-    acquired.webcamVideo.pause();
-    acquired.webcamVideo.srcObject = null;
-  }
+  acquired.screenVideo?.pause();
+  if (acquired.screenVideo) acquired.screenVideo.srcObject = null;
+  acquired.webcamVideo?.pause();
+  if (acquired.webcamVideo) acquired.webcamVideo.srcObject = null;
 
   clearMediaVideoMount();
   void acquired.audioContext.close().catch(() => undefined);
 }
 
-function syncCanvasToScreen(
-  canvas: HTMLCanvasElement,
-  screenVideo: HTMLVideoElement,
-  frameWidth: number,
-  frameHeight: number,
-) {
-  if (!canDrawVideoFrame(screenVideo)) return false;
+function syncCanvasToFrame(canvas: HTMLCanvasElement, acquired: AcquiredStreams): boolean {
+  const screenReady = acquired.screenVideo != null && canDrawVideoFrame(acquired.screenVideo);
+  const webcamReady = acquired.webcamVideo != null && canDrawVideoFrame(acquired.webcamVideo);
+  if (!screenReady && !webcamReady) return false;
 
-  const { width, height } = readVideoIntrinsicSize(screenVideo, frameWidth, frameHeight);
+  const source = screenReady ? acquired.screenVideo! : acquired.webcamVideo!;
+  const { width, height } = readVideoIntrinsicSize(source, acquired.frameWidth, acquired.frameHeight);
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
   }
+  acquired.frameWidth = width;
+  acquired.frameHeight = height;
   return true;
 }
 
@@ -318,11 +387,11 @@ export type PreviewCompositorOptions = {
 export function createPreviewCompositor(
   acquired: AcquiredStreams,
   getLayout: () => CameraCircleLayout,
-  webcamVisible: () => boolean,
+  getCompositeOptions: CompositeFrameContext,
   options: PreviewCompositorOptions = {},
 ): PreviewCompositor {
   const canvas = document.createElement("canvas");
-  syncCanvasToScreen(canvas, acquired.screenVideo, acquired.frameWidth, acquired.frameHeight);
+  syncCanvasToFrame(canvas, acquired);
   const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
   if (!ctx) throw new Error("Canvas 2d unavailable");
 
@@ -340,7 +409,11 @@ export function createPreviewCompositor(
     }
     lastFrameTime = timestamp;
 
-    syncCanvasToScreen(canvas, acquired.screenVideo, acquired.frameWidth, acquired.frameHeight);
+    if (!syncCanvasToFrame(canvas, acquired)) {
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+
     drawCompositeFrame(
       ctx,
       acquired.screenVideo,
@@ -348,7 +421,7 @@ export function createPreviewCompositor(
       getLayout(),
       acquired.frameWidth,
       acquired.frameHeight,
-      webcamVisible(),
+      getCompositeOptions(),
     );
     rafId = requestAnimationFrame(tick);
   };
@@ -380,9 +453,9 @@ export type ActiveRecording = {
 export async function startCanvasRecording(
   acquired: AcquiredStreams,
   getLayout: () => CameraCircleLayout,
-  webcamVisible: () => boolean,
+  getCompositeOptions: CompositeFrameContext,
 ): Promise<ActiveRecording> {
-  const compositor = createPreviewCompositor(acquired, getLayout, webcamVisible, {
+  const compositor = createPreviewCompositor(acquired, getLayout, getCompositeOptions, {
     maxFps: RECORDING_FPS,
   });
   compositor.start();

@@ -32,6 +32,8 @@ const props = defineProps<{
   content?: SpaceContentView;
   backLink?: SpaceBackLink;
   moveSpaces?: readonly SpaceMoveNode[];
+  pinnedSpaceIds?: ReadonlySet<string>;
+  showPinToggle?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -109,7 +111,12 @@ function onActiveSpaceMove(to: SpaceMoveDestination) {
                 <h1 class="text-2xl font-semibold tracking-tight">{{ content.space.title }}</h1>
               </div>
             </ContextMenuTrigger>
-            <SpaceContextMenuContent :show-open="false" @action="onActiveSpaceAction">
+            <SpaceContextMenuContent
+              :show-open="false"
+              :show-pin-toggle="showPinToggle"
+              :is-pinned="activeSpace ? pinnedSpaceIds?.has(activeSpace.id) : false"
+              @action="onActiveSpaceAction"
+            >
               <template #move-to>
                 <SpaceMoveMenu
                   :spaces="moveSpaces ?? []"
@@ -131,6 +138,8 @@ function onActiveSpaceMove(to: SpaceMoveDestination) {
           :child-spaces="content.childSpaces"
           :artifacts="content.artifacts"
           :move-spaces="moveSpaces"
+          :pinned-space-ids="pinnedSpaceIds"
+          :show-pin-toggle="showPinToggle"
           @open-space="emit('openSpace', $event)"
           @open-artifact="emit('openArtifact', $event)"
           @space-action="(action, space) => emit('spaceAction', action, space)"

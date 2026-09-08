@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -8,7 +9,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
@@ -69,43 +69,51 @@ function isSpacePinned(link: WorkspaceNavLink): boolean {
 
 <template>
   <SidebarGroup>
-    <SidebarGroupLabel>{{ section.label }}</SidebarGroupLabel>
-    <div
-      class="absolute top-3.5 right-3 flex items-center gap-0.5 group-data-[collapsible=icon]:hidden"
-    >
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <SidebarGroupAction title="Section options" as-child>
-            <button type="button" aria-label="Section options">
-              <EllipsisVerticalIcon />
-            </button>
-          </SidebarGroupAction>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" class="min-w-40">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Show</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem
-                v-for="limit in itemLimits"
-                :key="limit"
-                @select="onLimitSelect(limit)"
-              >
-                <span class="flex-1">{{ limit }}</span>
-                <CheckIcon v-if="limit === section.itemLimit" class="size-4 text-muted-foreground" />
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuItem v-if="section.isPinned" @select="emit('sectionUnpin', section.sectionSpaceId)">
-            Unpin from sidebar
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <SidebarGroupAction v-if="showCreate" title="Create">
+    <div class="flex h-8 shrink-0 items-center gap-0.5 pr-1">
+      <SidebarGroupLabel class="min-w-0 flex-1 truncate px-2">
+        {{ section.label }}
+      </SidebarGroupLabel>
+      <div class="flex shrink-0 items-center gap-0.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-7"
+              title="Section options"
+              aria-label="Section options"
+            >
+              <EllipsisVerticalIcon class="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="min-w-40">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Show</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem
+                  v-for="limit in itemLimits"
+                  :key="limit"
+                  @select="onLimitSelect(limit)"
+                >
+                  <span class="flex-1">{{ limit }}</span>
+                  <CheckIcon v-if="limit === section.itemLimit" class="size-4 text-muted-foreground" />
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem
+              v-if="section.isPinned"
+              @select="emit('sectionUnpin', section.sectionSpaceId)"
+            >
+              Unpin from sidebar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <WorkspaceCreateMenu
+          v-if="showCreate"
           variant="sidebar"
           @create="emit('create', $event, section.sectionSpaceId)"
         />
-      </SidebarGroupAction>
+      </div>
     </div>
     <SidebarGroupContent>
       <SidebarMenu>

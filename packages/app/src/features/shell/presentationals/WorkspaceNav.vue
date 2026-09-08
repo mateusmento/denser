@@ -206,6 +206,7 @@ const showPinToggle = computed(() => props.view.activeRootSpaceId != null);
                 :key="link.id"
                 :link="link"
                 :is-renaming="renamingItemId === link.id"
+                show-hide-from-sidebar
                 @space-action="(action, item) => emit('spaceAction', action, item)"
                 @artifact-action="(action, item) => emit('artifactAction', action, item)"
                 @rename-submit="(item, title) => emit('renameSubmit', item, title)"

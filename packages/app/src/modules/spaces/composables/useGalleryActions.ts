@@ -4,6 +4,7 @@ import type {
   SpaceGallerySpace,
   SpaceGallerySpaceAction,
 } from "../types";
+import { confirm } from "@/lib/dialog";
 import { useWorkspaceCommandPrompts } from "./useWorkspaceCommandPrompts";
 
 type GalleryCommands = {
@@ -28,12 +29,41 @@ type GallerySettings = {
   openSettings: (space: Pick<SpaceGallerySpace, "id" | "title">) => void;
 };
 
-export function useGalleryActions(commands: GalleryCommands, settings: GallerySettings) {
+type GalleryPinCommands = {
+  showPinToggle: () => boolean;
+  pinSpace: (space: SpaceGallerySpace) => Promise<void>;
+  unpinSpace: (space: SpaceGallerySpace) => Promise<void>;
+};
+
+export function useGalleryActions(
+  commands: GalleryCommands,
+  settings: GallerySettings,
+  pinCommands?: GalleryPinCommands,
+) {
   const prompts = useWorkspaceCommandPrompts();
 
   async function onSpaceAction(action: SpaceGallerySpaceAction, space: SpaceGallerySpace) {
     if (action === "openSettings") {
       settings.openSettings(space);
+      return;
+    }
+    if (action === "pin") {
+      if (pinCommands?.showPinToggle()) {
+        await pinCommands.pinSpace(space);
+      }
+      return;
+    }
+    if (action === "unpin") {
+      if (!pinCommands?.showPinToggle()) return;
+      if (
+        !(await confirm({
+          title: "Unpin from sidebar?",
+          description: `${space.title} will be removed from your sidebar pins.`,
+        }))
+      ) {
+        return;
+      }
+      await pinCommands.unpinSpace(space);
       return;
     }
     if (action === "open") {

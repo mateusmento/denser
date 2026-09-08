@@ -9,7 +9,7 @@ export type WorkspaceNavSpaceAction =
   | "pin"
   | "unpin";
 
-export type WorkspaceNavArtifactAction = "open" | "rename" | "duplicate" | "delete";
+export type WorkspaceNavArtifactAction = "open" | "rename" | "duplicate" | "delete" | "hide";
 
 export type WorkspaceNavArtifactKind = "document" | "conversation";
 

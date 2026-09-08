@@ -13,6 +13,8 @@ const props = defineProps<{
   sprintRole?: SprintRole | null;
   preview?: boolean;
   selected?: boolean;
+  isPinnedToSidebar?: boolean;
+  showPinToggle?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -83,7 +85,11 @@ const roleLabel = computed(() => sprintRoleLabel(props.sprintRole));
       </button>
     </ContextMenuTrigger>
 
-    <SpaceContextMenuContent @action="emit('action', $event)">
+    <SpaceContextMenuContent
+      :is-pinned="isPinnedToSidebar"
+      :show-pin-toggle="showPinToggle"
+      @action="emit('action', $event)"
+    >
       <template v-if="$slots['move-to']" #move-to>
         <slot name="move-to" />
       </template>

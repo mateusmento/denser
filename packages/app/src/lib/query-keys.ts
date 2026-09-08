@@ -8,6 +8,8 @@ export const queryKeys = {
     ["messageDraft", conversationId, threadId ?? "main"] as const,
   conversationMessages: (conversationId: string) =>
     ["conversation", conversationId, "messages"] as const,
+  conversationUnread: (conversationId: string) =>
+    ["conversation", conversationId, "unread"] as const,
   threadMessages: (conversationId: string, threadId: string) =>
     ["conversation", conversationId, "thread", threadId, "messages"] as const,
   conversationScheduledMessages: (conversationId: string) =>
@@ -23,8 +25,6 @@ export const queryKeys = {
   sidebarPins: (rootSpaceId: string) => ["sidebarPins", rootSpaceId] as const,
   sidebarSectionPreferences: (rootSpaceId: string) =>
     ["sidebarSectionPreferences", rootSpaceId] as const,
-  pinnedSpaceDetails: (rootSpaceId: string, spaceIds: readonly string[]) =>
-    ["pinnedSpaceDetails", rootSpaceId, ...spaceIds] as const,
-  conversationUnread: (conversationId: string) =>
-    ["conversation", conversationId, "unread"] as const,
+  conversationFiles: (conversationId: string) =>
+    ["conversation", conversationId, "files"] as const,
 };

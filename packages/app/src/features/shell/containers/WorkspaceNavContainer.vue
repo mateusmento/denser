@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ArtifactId, SpaceId } from "@denser/contracts";
 import { ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   useArtifactCommands,
   useSpaceCommands,
@@ -27,9 +28,12 @@ const {
   pinSpace,
   unpinSpace,
   setSectionItemLimit,
+  hideDirectConversation,
   createSpace,
   createDirectMessage,
 } = useWorkspaceNavSync();
+const route = useRoute();
+const router = useRouter();
 const { openSpace, renameSpace, deleteSpace } = useSpaceCommands();
 const { openArtifact, renameArtifact, duplicateArtifact, deleteArtifact } = useArtifactCommands();
 const prompts = useWorkspaceCommandPrompts();
@@ -94,6 +98,11 @@ function onSpaceAction(action: WorkspaceNavSpaceAction, link: WorkspaceNavLink) 
 }
 
 function onArtifactAction(action: WorkspaceNavArtifactAction, link: WorkspaceNavLink) {
+  if (action === "hide") {
+    void onHideDirectMessage(link);
+    return;
+  }
+
   if (action === "open") {
     void openArtifact({
       id: link.id as ArtifactId,
@@ -153,6 +162,27 @@ async function onCreateDirectMessage(rootSpaceId: string) {
 
   const scopeSpaceId = view.value.inSpaceSection?.sectionSpaceId ?? undefined;
   await createDirectMessage(rootSpaceId as SpaceId, username, scopeSpaceId as SpaceId | undefined);
+}
+
+async function onHideDirectMessage(link: WorkspaceNavLink) {
+  if (
+    !(await confirm({
+      title: "Hide from sidebar?",
+      description: `${link.label} will be hidden from your direct messages list.`,
+    }))
+  ) {
+    return;
+  }
+  await hideDirectConversation(link.id as ArtifactId);
+  const activeConversationId = route.params.conversationId as ArtifactId | undefined;
+  if (activeConversationId === link.id) {
+    const rootSpaceId = view.value.activeRootSpaceId;
+    if (rootSpaceId) {
+      await router.push({ name: "space", params: { spaceId: rootSpaceId } });
+    } else {
+      await router.push({ name: "home" });
+    }
+  }
 }
 
 async function onSectionUnpin(sectionSpaceId: string) {

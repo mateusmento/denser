@@ -304,6 +304,14 @@ export const channelMessages: ConversationMessageView[] = [
         byteSize: 94_208,
         kind: "file",
       },
+      {
+        id: "att-audio",
+        name: "voice-note.webm",
+        mimeType: "audio/webm",
+        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+        byteSize: 48_000,
+        kind: "audio",
+      },
     ],
   }),
   message({

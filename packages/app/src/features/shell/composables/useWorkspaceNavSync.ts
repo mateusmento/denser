@@ -8,7 +8,7 @@ import type {
   SpaceSummary,
   UserId,
 } from "@denser/contracts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { apiClient } from "@/lib/api";
@@ -39,6 +39,18 @@ import {
 import { artifactDisplayTitle } from "@/features/document/lib/document-content";
 import { useUnreadSummarySync } from "@/features/conversation/composables/useUnreadSummarySync";
 import { useWorkspaceOutboxSync } from "@/features/conversation/composables/useWorkspaceOutboxSync";
+
+function liveSpaceSummary(
+  space: Pick<SpaceSummary, "id" | "title" | "icon">,
+): Pick<SpaceSummary, "id" | "title" | "icon"> {
+  return spacesCollection.get(space.id) ?? space;
+}
+
+function liveChildSpaces(
+  childSpaces: readonly Pick<SpaceSummary, "id" | "title" | "icon">[],
+): Pick<SpaceSummary, "id" | "title" | "icon">[] {
+  return childSpaces.map((child) => liveSpaceSummary(child));
+}
 
 function spaceLink(
   space: Pick<SpaceSummary, "id" | "title" | "icon">,
@@ -324,24 +336,22 @@ export function useWorkspaceNavSync() {
     (sidebarPins.pins.value ?? []).map((pin) => pin.spaceId),
   );
 
-  const pinnedSpaceDetailsQuery = useQuery({
-    queryKey: computed(() =>
-      queryKeys.pinnedSpaceDetails(workspaceRootId.value ?? "", pinnedSpaceIds.value),
-    ),
-    enabled: computed(
-      () => inPrivateWorkspace.value && workspaceRootId.value != null && pinnedSpaceIds.value.length > 0,
-    ),
-    queryFn: async () => {
-      const details = await Promise.all(
-        pinnedSpaceIds.value.map((spaceId) => apiClient.getSpace(spaceId)),
-      );
-      for (const detail of details) {
-        upsertInCollection(spacesCollection, detail.space);
-        upsertMany(spacesCollection, detail.childSpaces);
-        upsertMany(artifactsCollection, detail.artifacts);
+  const pinnedSpaceDetailQueries = useQueries({
+    queries: computed(() => {
+      if (!inPrivateWorkspace.value || workspaceRootId.value == null) {
+        return [];
       }
-      return details;
-    },
+      return pinnedSpaceIds.value.map((spaceId) => ({
+        queryKey: queryKeys.space(spaceId),
+        queryFn: async () => {
+          const detail = await apiClient.getSpace(spaceId);
+          upsertInCollection(spacesCollection, detail.space);
+          upsertMany(spacesCollection, detail.childSpaces);
+          upsertMany(artifactsCollection, detail.artifacts);
+          return detail;
+        },
+      }));
+    }),
   });
 
   const view = computed((): WorkspaceNavView => {
@@ -400,24 +410,30 @@ export function useWorkspaceNavSync() {
         )
       : undefined;
 
+    const pinnedDetailsBySpaceId = new Map(
+      pinnedSpaceDetailQueries.value
+        .map((query) => query.data)
+        .filter((detail): detail is NonNullable<typeof detail> => detail != null)
+        .map((detail) => [detail.space.id, detail]),
+    );
+
     const pinnedSections: WorkspaceNavSection[] = [];
-    if (pinnedSpaceDetailsQuery.data.value) {
-      const detailsBySpaceId = new Map(
-        pinnedSpaceDetailsQuery.data.value.map((detail) => [detail.space.id, detail]),
+    for (const pin of sidebarPins.pins.value) {
+      const pinDetail = pinnedDetailsBySpaceId.get(pin.spaceId);
+      if (!pinDetail) continue;
+      pinnedSections.push(
+        buildInSpaceSection(
+          liveSpaceSummary(pinDetail.space),
+          liveChildSpaces(pinDetail.childSpaces),
+          pinDetail.artifacts,
+          {
+          activeSpaceId: activeSpace,
+          activeArtifactId: activeArtifact,
+          itemLimit: sidebarPins.itemLimitFor(pin.spaceId),
+          isPinned: true,
+          unreadCountFor,
+        }),
       );
-      for (const pin of sidebarPins.pins.value) {
-        const pinDetail = detailsBySpaceId.get(pin.spaceId);
-        if (!pinDetail) continue;
-        pinnedSections.push(
-          buildInSpaceSection(pinDetail.space, pinDetail.childSpaces, pinDetail.artifacts, {
-            activeSpaceId: activeSpace,
-            activeArtifactId: activeArtifact,
-            itemLimit: sidebarPins.itemLimitFor(pin.spaceId),
-            isPinned: true,
-            unreadCountFor,
-          }),
-        );
-      }
     }
 
     const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
@@ -545,6 +561,17 @@ export function useWorkspaceNavSync() {
     },
   });
 
+  const hideDirectConversationMutation = useMutation({
+    mutationFn: (conversationId: ArtifactId) => apiClient.hideDirectConversation(conversationId),
+    onSuccess: () => {
+      if (workspaceRootId.value) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.directMessages(workspaceRootId.value),
+        });
+      }
+    },
+  });
+
   const createDirectMessageMutation = useMutation({
     mutationFn: ({
       rootSpaceId,
@@ -574,6 +601,8 @@ export function useWorkspaceNavSync() {
     pinSpace: sidebarPins.pinSpace,
     unpinSpace: sidebarPins.unpinSpace,
     setSectionItemLimit: sidebarPins.setItemLimit,
+    hideDirectConversation: (conversationId: ArtifactId) =>
+      hideDirectConversationMutation.mutateAsync(conversationId),
     createSpace: (title: string, parentSpaceId?: SpaceId | null, preset?: SpacePreset) =>
       createSpaceMutation.mutateAsync({ title, parentSpaceId, preset }),
     createDirectMessage: (rootSpaceId: SpaceId, username: string, spaceId?: SpaceId) =>

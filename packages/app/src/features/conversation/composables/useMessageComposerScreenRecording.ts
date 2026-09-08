@@ -2,14 +2,18 @@ import { toast } from "@denser/design-system";
 import { computed, reactive, ref, watch } from "vue";
 import type { CameraCircleLayout } from "../lib/screen-recording-composite";
 import type { CameraResizeHandle } from "../lib/screen-recording-resize";
-import { useScreenRecordingSetup } from "./useScreenRecordingSetup";
+import {
+  useScreenRecordingSetup,
+  type ScreenRecordingViewer,
+} from "./useScreenRecordingSetup";
 
 export function useMessageComposerScreenRecording(options: {
   stageFiles: (files: readonly File[]) => void;
   disabled?: () => boolean;
+  viewer?: () => ScreenRecordingViewer | null;
 }) {
   const open = ref(false);
-  const setup = useScreenRecordingSetup();
+  const setup = useScreenRecordingSetup({ viewer: options.viewer });
 
   watch(open, (isOpen, wasOpen) => {
     if (!isOpen && wasOpen) {
@@ -36,11 +40,14 @@ export function useMessageComposerScreenRecording(options: {
   async function openDialog() {
     if (options.disabled?.()) return;
     if (setup.phase.value === "idle") {
+      open.value = true;
       const started = await setup.begin();
       if (!started) {
+        open.value = false;
         if (setup.view.value.error) toast(setup.view.value.error);
         return;
       }
+      return;
     }
     open.value = true;
   }
@@ -119,6 +126,10 @@ export function useMessageComposerScreenRecording(options: {
     setWebcamEnabled: setup.setWebcamEnabled,
     setMicEnabled: setup.setMicEnabled,
     setSystemAudioEnabled: setup.setSystemAudioEnabled,
+    setScreenEnabled: setup.setScreenEnabled,
+    toggleScreen: setup.toggleScreen,
+    setMirrorCamera: setup.setMirrorCamera,
+    setOverlayEditMode: setup.setOverlayEditMode,
     setWebcamDeviceId: setup.setWebcamDeviceId,
     setMicDeviceId: setup.setMicDeviceId,
     get setupView() {

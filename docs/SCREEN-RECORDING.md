@@ -34,14 +34,17 @@ Composer "Record screen"
         │
         ▼
 ┌─────────────────────────────────────┐
-│  Recording setup (modal / overlay)   │
-│  • Pick screen / window / tab        │
-│  • Live preview of capture           │
-│  • Draggable circular webcam overlay │
-│  • Toggles: cam · mic · system audio │
+│  Recording setup (modal)             │
+│  • Dialog opens first (no picker)    │
+│  • Webcam on by default; screen off  │
+│  • Floating toggles: cam · mic ·     │
+│    screen · settings (devices,       │
+│    system audio, mirror)             │
+│  • Avatar fallback when no live video│
+│  • Screen+cam: hover Edit overlay    │
 │  • [Cancel]  [Start recording]       │
 └─────────────────────────────────────┘
-        │ Start
+        │ Start (≥1 video source)
         ▼
 ┌─────────────────────────────────────┐
 │  Recording                          │
@@ -53,12 +56,16 @@ Composer "Record screen"
 Finalize blob → composer attachment tile → upload (19) → send
 ```
 
-1. User opens setup from composer action row (`record`).
-2. Browser prompts for **display** capture (`getDisplayMedia`) and optionally **camera** / **mic**.
-3. **Setup surface** shows the screen stream full-bleed with a **draggable circular webcam** on top — this overlay is WYSIWYG for the exported video.
-4. User drags/resizes (optional v1: drag only, fixed diameter) the circle to the desired corner/edge.
-5. **Start recording** begins `MediaRecorder` on the **same composite** the preview uses (not a separate layout).
-6. **Stop** finalizes `video/webm` (VP9 preferred, VP8 fallback), hands blob to **composer upload client** (progress, cancel, tile — ticket 19).
+1. User opens setup from composer action row (`record`). **Dialog opens immediately** — no `getDisplayMedia` prompt yet.
+2. **Webcam** is requested by default (`getUserMedia` video). **Screen share** is opt-in via the in-preview Screen toggle (`getDisplayMedia` when enabled; cancel turns screen off, dialog stays open).
+3. **Setup surface** preview modes:
+   - **Avatar fallback** when no drawable webcam or screen video.
+   - **Camera only** — webcam fills the preview at its **native aspect ratio** (export frame matches camera resolution).
+   - **Screen only** — display capture fills the frame.
+   - **Screen + camera** — screen full-bleed with **circular 1:1** webcam overlay; overlay position/size editable in setup via hover **Edit** → **Confirm** (handles hidden by default).
+4. **Mic** and **system audio** (when screen is on) are independent toggles in the floating control row / settings popover.
+5. **Start recording** enabled when webcam **or** screen video is live. Mic may be off.
+6. **Stop** finalizes `video/webm`, hands blob to **composer upload client** (progress, cancel, tile — ticket 19).
 7. User sends message; timeline shows video via attachment render (ticket 20).
 
 No separate recording API in v1 — reuse upload + draft anchor joins.
@@ -71,12 +78,12 @@ No separate recording API in v1 — reuse upload + draft anchor joins.
 
 | Element | Behavior |
 | --- | --- |
-| **Screen preview** | `<video>` or canvas mirror of selected display capture; aspect ratio = export aspect ratio |
-| **Camera circle** | Round `<video>` (webcam) inside a draggable handle; **clip-path: circle** (or canvas clip in export path) |
-| **Drag** | Pointer drag within preview bounds; clamp so circle stays fully inside frame |
-| **Position model** | Store `{ x, y, diameter }` in **preview pixel space** at native capture resolution; scale for display only |
-| **Toggles** | Webcam on/off, mic on/off, system audio on/off (when browser exposes display audio) |
-| **Actions** | Cancel (release tracks), Start recording |
+| **Screen preview** | Canvas mirror of active capture; aspect ratio follows primary source |
+| **Avatar fallback** | Current user's avatar when no live video in setup |
+| **Camera circle** | Circular **1:1** webcam overlay on screen capture (combined mode only) |
+| **Overlay edit** | Handles hidden by default; hover **Edit** → resize/move → **Confirm** |
+| **In-preview controls** | Bottom-center: Webcam, Mic, Screen, Settings (devices, mirror, system audio) |
+| **Actions** | Cancel (release tracks), Start recording (≥1 video source) |
 
 ### WYSIWYG rule
 
@@ -144,7 +151,7 @@ idle → acquiring_permissions → setup_preview → recording → finalizing �
 | State | User sees |
 | --- | --- |
 | `acquiring_permissions` | Spinner; browser permission prompts |
-| `setup_preview` | Draggable camera; Start enabled when screen stream live |
+| `setup_preview` | Floating controls; avatar when no video; Start when webcam **or** screen is live |
 | `recording` | Timer, pulsing record indicator, Stop |
 | `finalizing` | Brief “Processing…” while blob assembles |
 | `handing_off_upload` | Composer attachment tile with upload progress (ticket 19) |
