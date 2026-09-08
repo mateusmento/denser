@@ -9,6 +9,7 @@ import {
 import { toReadonlyRef, type ReadonlyRefOrGetter } from "@/lib/vue";
 import { emptyDoc, type JSONContent } from "@/modules/rich-text";
 import { collectImageAttachmentIdsFromDoc, docContainsImageNodes } from "../lib/collect-image-attachment-ids";
+import { rekeyAudioPeakCache } from "../lib/decode-audio-peaks";
 import type { ComposerAttachmentTileView, ComposerAttachmentsView } from "../types";
 
 type PendingTransfer =
@@ -269,6 +270,7 @@ export function useComposerAttachments(options: {
           });
 
           staged.value = [...staged.value, attachment];
+          rekeyAudioPeakCache(entry.clientId, attachment.id);
           removePending(entry.clientId);
           await refreshDraftFromServer();
         } catch (error) {

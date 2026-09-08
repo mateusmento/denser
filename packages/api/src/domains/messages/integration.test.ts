@@ -32,6 +32,9 @@ const blobStore: BlobStore = {
   async getUrl(storageKey) {
     return `https://blob.test/${storageKey}`;
   },
+  async readObject() {
+    return new Uint8Array(0);
+  },
   async deleteObject() {
     return;
   },

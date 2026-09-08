@@ -167,6 +167,16 @@ export class S3BlobStore implements BlobStore {
     return this.signGetUrl(storageKey, this.expiresIn);
   }
 
+  async readObject(storageKey: string): Promise<Uint8Array> {
+    const response = await this.client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: storageKey }),
+    );
+    if (!response.Body) {
+      throw new Error(`Empty object body for ${storageKey}`);
+    }
+    return new Uint8Array(await response.Body.transformToByteArray());
+  }
+
   async deleteObject(storageKey: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: storageKey }));
   }

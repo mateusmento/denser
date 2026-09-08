@@ -64,6 +64,8 @@ const files = computed(() => props.attachments.filter((attachment) => attachment
         v-for="attachment in audio"
         :key="attachment.id"
         :player-id="attachment.id"
+        :cache-key="attachment.id"
+        :attachment-id="attachment.id"
         :url="attachment.url"
         :name="attachment.name"
       />

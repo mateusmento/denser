@@ -17,6 +17,7 @@ import {
   listDeliveredAttachments,
   releaseDeliveredAttachment,
 } from "./delivered-service.js";
+import { readAttachmentContent } from "./content-service.js";
 
 type Variables = {
   user: { id: string; name: string; email: string };
@@ -142,4 +143,20 @@ export const attachmentRoutes = new Hono<{ Variables: Variables }>()
     }
 
     return c.body(null, 204);
+  })
+  .get("/attachments/:attachmentId/content", async (c) => {
+    const userId = c.get("user").id as UserId;
+    const attachmentId = c.req.param("attachmentId") as AttachmentId;
+    const result = await readAttachmentContent(userId, attachmentId);
+
+    if (!result.ok) {
+      if (result.reason === "unavailable") {
+        return c.json({ error: "Attachment storage is not configured" }, 503);
+      }
+      return c.json({ error: "Attachment not found" }, 404);
+    }
+
+    c.header("Content-Type", result.mimeType);
+    c.header("Content-Disposition", `inline; filename="${result.filename}"`);
+    return c.body(result.bytes);
   });

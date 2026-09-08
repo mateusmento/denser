@@ -51,6 +51,7 @@ export type BlobStore = {
   abortUpload(uploadId: string): Promise<void>;
   completeUpload(uploadId: string): Promise<{ storageKey: string }>;
   getUrl(storageKey: string): Promise<string>;
+  readObject?(storageKey: string): Promise<Uint8Array>;
   deleteObject(storageKey: string): Promise<void>;
 };
 

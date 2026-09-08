@@ -42,6 +42,15 @@ function audioPlayerId(tile: ComposerAttachmentTileView): string {
   if (tile.kind === "uploaded") return tile.id;
   return tile.clientId;
 }
+
+function audioCacheKey(tile: ComposerAttachmentTileView): string {
+  if (tile.kind === "uploaded") return tile.id;
+  return tile.clientId;
+}
+
+function audioAttachmentId(tile: ComposerAttachmentTileView): string | undefined {
+  return tile.kind === "uploaded" ? tile.id : undefined;
+}
 </script>
 
 <template>
@@ -54,6 +63,8 @@ function audioPlayerId(tile: ComposerAttachmentTileView): string {
       >
         <AudioAttachmentPlayer
           :player-id="audioPlayerId(tile)"
+          :cache-key="audioCacheKey(tile)"
+          :attachment-id="audioAttachmentId(tile)"
           :url="audioSource(tile)"
           :name="tile.name"
           :disabled="tile.kind === 'failed'"

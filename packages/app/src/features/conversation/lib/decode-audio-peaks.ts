@@ -2,6 +2,14 @@ export const AUDIO_WAVEFORM_BAR_COUNT = 48;
 
 const peakCache = new Map<string, Promise<number[]>>();
 
+export type DecodeAudioPeaksInput = {
+  /** Stable cache key — survives url changes (blob → CDN). */
+  cacheKey: string;
+  url: string;
+  /** When set, cross-origin fetches use the same-origin API content route. */
+  attachmentId?: string;
+};
+
 export function samplePeaksFromChannelData(
   channelData: Float32Array,
   barCount: number,
@@ -54,8 +62,27 @@ async function decodePeaksFromArrayBuffer(
   }
 }
 
-async function loadPeaksFromUrl(source: string, barCount: number): Promise<number[]> {
-  const response = await fetch(source);
+function isSameOriginUrl(url: string): boolean {
+  if (url.startsWith("blob:") || url.startsWith("data:")) return true;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return url.startsWith("/");
+  }
+}
+
+function resolveFetchUrl(input: DecodeAudioPeaksInput): string {
+  if (isSameOriginUrl(input.url)) return input.url;
+  if (input.attachmentId) {
+    return `/api/attachments/${input.attachmentId}/content`;
+  }
+  return input.url;
+}
+
+async function loadPeaks(input: DecodeAudioPeaksInput, barCount: number): Promise<number[]> {
+  const fetchUrl = resolveFetchUrl(input);
+  const response = await fetch(fetchUrl, { credentials: "include" });
   if (!response.ok) {
     throw new Error(`Failed to load audio (${response.status})`);
   }
@@ -64,17 +91,27 @@ async function loadPeaksFromUrl(source: string, barCount: number): Promise<numbe
 }
 
 export function decodeAudioPeaks(
-  source: string,
+  input: DecodeAudioPeaksInput,
   barCount = AUDIO_WAVEFORM_BAR_COUNT,
 ): Promise<number[]> {
-  const cached = peakCache.get(source);
+  const cached = peakCache.get(input.cacheKey);
   if (cached) return cached;
 
-  const pending = loadPeaksFromUrl(source, barCount).catch(() =>
-    seededFallbackPeaks(source, barCount),
+  const pending = loadPeaks(input, barCount).catch(() =>
+    seededFallbackPeaks(input.cacheKey, barCount),
   );
-  peakCache.set(source, pending);
+  peakCache.set(input.cacheKey, pending);
   return pending;
+}
+
+export function hasCachedAudioPeaks(cacheKey: string): boolean {
+  return peakCache.has(cacheKey);
+}
+
+export function rekeyAudioPeakCache(fromKey: string, toKey: string) {
+  const cached = peakCache.get(fromKey);
+  if (!cached || peakCache.has(toKey)) return;
+  peakCache.set(toKey, cached);
 }
 
 export function clearAudioPeakCache() {

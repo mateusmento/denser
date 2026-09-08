@@ -16,6 +16,7 @@ const sampleUrl = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/
     <div class="rounded-xl border bg-card p-4">
       <AudioAttachmentPlayer
         player-id="story-audio-1"
+        cache-key="story-audio-1"
         :url="sampleUrl"
         name="voice-note.webm"
       />

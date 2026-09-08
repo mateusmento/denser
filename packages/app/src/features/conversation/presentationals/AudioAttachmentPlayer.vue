@@ -3,7 +3,7 @@ import { computed, onMounted, ref, toRef, watch } from "vue";
 import { Button, Spinner } from "@denser/design-system";
 import { PauseIcon, PlayIcon } from "@lucide/vue";
 import { useAudioPlayer } from "../composables/useAudioPlayer";
-import { decodeAudioPeaks } from "../lib/decode-audio-peaks";
+import { decodeAudioPeaks, hasCachedAudioPeaks } from "../lib/decode-audio-peaks";
 import { formatAudioTime } from "../lib/format-audio-time";
 import AudioWaveform from "./AudioWaveform.vue";
 
@@ -11,8 +11,12 @@ const props = defineProps<{
   playerId: string;
   url: string;
   name: string;
+  cacheKey?: string;
+  attachmentId?: string;
   disabled?: boolean;
 }>();
+
+const peakCacheKey = computed(() => props.cacheKey ?? props.attachmentId ?? props.playerId);
 
 const sourceUrl = toRef(props, "url");
 const player = useAudioPlayer(props.playerId, sourceUrl);
@@ -31,27 +35,35 @@ const timeLabel = computed(() => {
   return "0:00";
 });
 
-async function loadPeaks(url: string) {
-  peaksLoading.value = true;
+async function loadPeaks() {
+  if (peaks.value.length > 0 || hasCachedAudioPeaks(peakCacheKey.value)) {
+    peaksLoading.value = !hasCachedAudioPeaks(peakCacheKey.value) && peaks.value.length === 0;
+  } else {
+    peaksLoading.value = true;
+  }
   peaksError.value = false;
+
   try {
-    peaks.value = await decodeAudioPeaks(url);
+    peaks.value = await decodeAudioPeaks({
+      cacheKey: peakCacheKey.value,
+      url: props.url,
+      attachmentId: props.attachmentId,
+    });
   } catch {
     peaksError.value = true;
-    peaks.value = [];
   } finally {
     peaksLoading.value = false;
   }
 }
 
 onMounted(() => {
-  loadPeaks(props.url).catch(() => undefined);
+  loadPeaks().catch(() => undefined);
 });
 
 watch(
-  () => props.url,
-  (url) => {
-    loadPeaks(url).catch(() => undefined);
+  () => [props.url, props.attachmentId, peakCacheKey.value] as const,
+  () => {
+    loadPeaks().catch(() => undefined);
   },
 );
 

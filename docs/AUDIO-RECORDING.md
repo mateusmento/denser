@@ -12,7 +12,7 @@ Voice-note style capture in the message composer — separate from screen record
 ## Audio player badge (#37)
 
 - Fixed width `w-[22rem]` badge with play/pause, decoded waveform bars, and time label.
-- Waveform peaks from `AudioContext.decodeAudioData` (cached per url); progress fill tracks playback.
+- Waveform peaks from `AudioContext.decodeAudioData` (cached per attachment); cross-origin CDN urls fetch via `GET /api/attachments/:id/content` (same-origin, credentialed).
 - Click or drag waveform to seek; keyboard arrows when focused.
 - **Global single-player:** starting clip B pauses clip A anywhere in the app.
 - Composer uses the same badge; playback works from `blob:` url while upload is in progress.
