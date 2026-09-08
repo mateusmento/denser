@@ -12,7 +12,9 @@ Import from `@denser/design-system`. Full rule: `.cursor/skills/frontend-pattern
 
 | Need | Use | Avoid |
 | --- | --- | --- |
-| Scrollable list / menu / panel | `ScrollArea` with explicit height (`h-56`, `max-h-64`, `h-full min-h-0`) | `overflow-y-auto` / `overflow-auto` on wrappers |
+| Scrollable list / menu / panel | `ScrollArea` with explicit height (`h-56`, `h-64`, `h-full min-h-0`) | `overflow-y-auto` / `overflow-auto` on wrappers |
+| Scrollable `DropdownMenuContent` (list only) | `max-h-*` on content (built-in `overflow-y-auto`) | Nested `ScrollArea` |
+| Dropdown with fixed header + scroll list | `min-w-0 overflow-hidden` on content, `h-*` on `ScrollArea`, `w-*` on row anchor | `w-*` on content when using `ScrollArea` |
 | Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | Hand-rolled tab strips |
 | Actions / triggers | `Button` | Raw `<button>` for product chrome |
 | Option picking | `Select` (+ trigger/content/items) | `<select>`, `NativeSelect` (except native-form exceptions) |
@@ -20,13 +22,30 @@ Import from `@denser/design-system`. Full rule: `.cursor/skills/frontend-pattern
 
 ## ScrollArea in menus
 
+List only — use built-in menu scroll:
+
 ```vue
-<DropdownMenuContent class="w-56 overflow-hidden p-0">
-  <ScrollArea class="max-h-64">
-    <DropdownMenuItem v-for="item in items" :key="item.id">…</DropdownMenuItem>
+<DropdownMenuContent class="w-56 max-h-64">…</DropdownMenuContent>
+```
+
+Header + scrollable list — width on the row anchor, not the shell:
+
+```vue
+<DropdownMenuContent class="min-w-0 overflow-hidden">
+  <DropdownMenuLabel class="shrink-0">Section title</DropdownMenuLabel>
+  <ScrollArea class="h-64">
+    <div class="flex flex-col">
+      <DropdownMenuItem v-for="item in items" :key="item.id" as-child>
+        <RouterLink :to="item.to" class="flex w-56 min-w-0 items-center">
+          <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+        </RouterLink>
+      </DropdownMenuItem>
+    </div>
   </ScrollArea>
 </DropdownMenuContent>
 ```
+
+`min-w-0` on `DropdownMenuContent` lets the `ScrollArea` viewport shrink; `w-56` on each link sets the column width so `truncate` ellipsizes correctly.
 
 ## Exceptions
 

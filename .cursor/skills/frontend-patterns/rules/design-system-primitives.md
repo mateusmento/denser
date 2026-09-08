@@ -33,15 +33,32 @@ Contract: [`references/folder-structure.md`](../references/folder-structure.md) 
 
 ### `ScrollArea`
 
-- Wrap scrollable **content** inside menus, sidebars, panels, and dropdowns.
+- Wrap scrollable **content** inside sidebars and panels.
 - Give `ScrollArea` an explicit height cap (`h-56`, `max-h-64`, `h-full min-h-0` in flex layouts).
-- Put `overflow-hidden` on the outer shell (e.g. `DropdownMenuContent`) when clipping rounded corners; scroll inside `ScrollArea`.
+
+`DropdownMenuContent` already scrolls vertically — use `max-h-*` for list-only menus. For a **fixed header + `ScrollArea` list**, put `min-w-0 overflow-hidden` on the content (lets flex children shrink), fixed `h-*` on `ScrollArea`, and the menu width on each row anchor (`w-56 min-w-0` on `RouterLink` / item link).
 
 ```vue
-<!-- ✅ Overflow menu -->
-<DropdownMenuContent class="w-56 overflow-hidden p-0">
-  <ScrollArea class="max-h-64">
-    <DropdownMenuItem v-for="item in items" :key="item.id">…</DropdownMenuItem>
+<!-- ✅ Simple overflow menu (no header) -->
+<DropdownMenuContent class="w-56 max-h-64">
+  <DropdownMenuItem v-for="item in items" :key="item.id" as-child>
+    <RouterLink :to="item.to" class="flex w-full min-w-0 items-center">
+      <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+    </RouterLink>
+  </DropdownMenuItem>
+</DropdownMenuContent>
+
+<!-- ✅ Header + ScrollArea list -->
+<DropdownMenuContent class="min-w-0 overflow-hidden">
+  <DropdownMenuLabel class="shrink-0">Section title</DropdownMenuLabel>
+  <ScrollArea class="h-64">
+    <div class="flex flex-col">
+      <DropdownMenuItem v-for="item in items" :key="item.id" as-child>
+        <RouterLink :to="item.to" class="flex w-56 min-w-0 items-center">
+          <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+        </RouterLink>
+      </DropdownMenuItem>
+    </div>
   </ScrollArea>
 </DropdownMenuContent>
 ```

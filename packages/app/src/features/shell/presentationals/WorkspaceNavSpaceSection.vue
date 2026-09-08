@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -137,13 +138,20 @@ function isSpacePinned(link: WorkspaceNavLink): boolean {
                 <span class="truncate text-muted-foreground">{{ overflowLabel }}</span>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" class="w-56 overflow-hidden p-0">
-              <ScrollArea class="max-h-64">
-                <DropdownMenuItem v-for="link in section.overflowItems" :key="link.id" as-child>
-                  <RouterLink :to="link.to" class="block w-full min-w-0 truncate">
-                    {{ link.label }}
-                  </RouterLink>
-                </DropdownMenuItem>
+            <DropdownMenuContent side="right" align="start" class="min-w-0 overflow-hidden">
+              <DropdownMenuLabel class="shrink-0">Space contents</DropdownMenuLabel>
+              <ScrollArea class="h-64">
+                <div class="flex flex-col">
+                  <DropdownMenuItem
+                    v-for="link in section.overflowItems"
+                    :key="link.id"
+                    as-child
+                  >
+                    <RouterLink :to="link.to" class="flex w-56 min-w-0 items-center">
+                      <span class="min-w-0 flex-1 truncate">{{ link.label }}</span>
+                    </RouterLink>
+                  </DropdownMenuItem>
+                </div>
               </ScrollArea>
             </DropdownMenuContent>
           </DropdownMenu>
