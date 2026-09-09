@@ -24,7 +24,12 @@ export function useSchedulerTimezoneNotifications(): void {
       action: {
         label: "View scheduled messages",
         onClick: () => {
-          router.push({ name: "workspace-scheduled" }).catch(() => {});
+          router
+            .push({
+              name: "workspace-outbox",
+              query: { workspace: payload.spaceId, tab: "scheduled" },
+            })
+            .catch(() => {});
         },
       },
     });

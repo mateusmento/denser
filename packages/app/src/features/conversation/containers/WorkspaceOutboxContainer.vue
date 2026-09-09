@@ -2,29 +2,47 @@
 import { toast } from "@denser/design-system";
 import type { ArtifactId, ScheduledJobId, SpaceId } from "@denser/contracts";
 import { useQuery } from "@tanstack/vue-query";
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useWorkspaceOutboxSync } from "../composables/useWorkspaceOutboxSync";
 import { useWorkspaceNavSync } from "@/features/shell/composables/useWorkspaceNavSync";
 import { schedulePresets } from "../fixtures";
 import { toScheduledMessageViewFromOutboxItem } from "../lib/toScheduledMessageView";
 import RescheduleScheduleDialog from "../presentationals/RescheduleScheduleDialog.vue";
 import WorkspaceOutboxList from "../presentationals/WorkspaceOutboxList.vue";
-import type { ScheduleCommitPayload } from "../types";
+import type { DraftsScheduledPanelTab, ScheduleCommitPayload } from "../types";
 import { apiClient } from "@/lib/api";
 import { useAuthSession } from "@/modules/auth/composables/useAuthSession";
 
-const props = defineProps<{
-  kind: "drafts" | "scheduled";
-}>();
+function parseOutboxTab(value: unknown): DraftsScheduledPanelTab {
+  return value === "scheduled" ? "scheduled" : "drafts";
+}
 
+const route = useRoute();
 const router = useRouter();
 const nav = useWorkspaceNavSync();
 const { user } = useAuthSession();
-const rootSpaceId = computed(
-  (): SpaceId | null | undefined => nav.view.value.activeRootSpaceId as SpaceId | null | undefined,
-);
+const rootSpaceId = computed((): SpaceId | null => nav.workspaceRootId.value);
 const outbox = useWorkspaceOutboxSync(rootSpaceId);
+
+const tab = ref<DraftsScheduledPanelTab>(parseOutboxTab(route.query.tab));
+
+watch(
+  () => route.query.tab,
+  (value) => {
+    tab.value = parseOutboxTab(value);
+  },
+);
+
+watch(tab, (value) => {
+  if (parseOutboxTab(route.query.tab) === value) return;
+  void router.replace({
+    query: {
+      ...route.query,
+      tab: value === "drafts" ? undefined : value,
+    },
+  });
+});
 
 const scheduleEditOpen = ref(false);
 const editingJobId = ref<ScheduledJobId | null>(null);
@@ -128,21 +146,14 @@ async function onCancelScheduled(id: string) {
 
 <template>
   <WorkspaceOutboxList
-    :kind="props.kind"
-    :title="props.kind === 'drafts' ? 'Drafts' : 'Scheduled'"
+    v-model:tab="tab"
     :drafts="outbox.drafts.value"
     :scheduled="outbox.scheduledMessages.value"
-    :loading="
-      props.kind === 'drafts'
-        ? outbox.isDraftsLoading.value
-        : outbox.isScheduledLoading.value
-    "
-    :error-label="
-      props.kind === 'drafts' && outbox.draftsError.value
-        ? 'Couldn\u2019t load drafts.'
-        : props.kind === 'scheduled' && outbox.scheduledError.value
-          ? 'Couldn\u2019t load scheduled messages.'
-          : undefined
+    :drafts-loading="outbox.isDraftsLoading.value"
+    :scheduled-loading="outbox.isScheduledLoading.value"
+    :drafts-error-label="outbox.draftsError.value ? 'Couldn\u2019t load drafts.' : undefined"
+    :scheduled-error-label="
+      outbox.scheduledError.value ? 'Couldn\u2019t load scheduled messages.' : undefined
     "
     @open-draft="onOpenDraft"
     @open-scheduled="onOpenScheduled"

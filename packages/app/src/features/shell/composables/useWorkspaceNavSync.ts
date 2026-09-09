@@ -1,3 +1,21 @@
+import { useUnreadSummarySync } from "@/features/conversation/composables/useUnreadSummarySync";
+import { useWorkspaceOutboxSync } from "@/features/conversation/composables/useWorkspaceOutboxSync";
+import { artifactDisplayTitle } from "@/features/document/lib/document-content";
+import {
+  documentQueryKey,
+  fetchDocumentQueryData,
+  readDocumentFromQueryData,
+} from "@/features/document/lib/document-query";
+import { apiClient } from "@/lib/api";
+import {
+  artifactsCollection,
+  spacesCollection,
+  upsertInCollection,
+  upsertMany
+} from "@/lib/db";
+import { queryKeys } from "@/lib/query-keys";
+import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
+import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
 import type {
   ArtifactId,
   ArtifactSummary,
@@ -11,17 +29,8 @@ import type {
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { apiClient } from "@/lib/api";
-import { useLiveSpace, useLiveSpacesInWindow } from "@/modules/spaces";
-import { useWorkspacePresence } from "@/modules/presence/composables/useWorkspacePresence";
-import {
-  artifactsCollection,
-  documentsCollection,
-  spacesCollection,
-  upsertInCollection,
-  upsertMany,
-} from "@/lib/db";
-import { queryKeys } from "@/lib/query-keys";
+import { IN_SPACE_SIDEBAR_ITEM_LIMIT, truncateInSpaceNavItems } from "../lib/nav-section-items";
+import { resolvePrivateWorkspaceRootId } from "../lib/resolve-private-workspace-root";
 import type {
   WorkspaceNavHomeButton,
   WorkspaceNavLink,
@@ -29,16 +38,7 @@ import type {
   WorkspaceNavSectionItemLimit,
   WorkspaceNavView,
 } from "../types";
-import { IN_SPACE_SIDEBAR_ITEM_LIMIT, truncateInSpaceNavItems } from "../lib/nav-section-items";
 import { useSidebarPinsSync } from "./useSidebarPinsSync";
-import {
-  documentQueryKey,
-  fetchDocumentQueryData,
-  readDocumentFromQueryData,
-} from "@/features/document/lib/document-query";
-import { artifactDisplayTitle } from "@/features/document/lib/document-content";
-import { useUnreadSummarySync } from "@/features/conversation/composables/useUnreadSummarySync";
-import { useWorkspaceOutboxSync } from "@/features/conversation/composables/useWorkspaceOutboxSync";
 
 function liveSpaceSummary(
   space: Pick<SpaceSummary, "id" | "title" | "icon">,
@@ -181,6 +181,11 @@ export function useWorkspaceNavSync() {
   );
   const activeArtifactId = computed(() => activeDocumentId.value ?? activeConversationId.value);
   const isHomeActive = computed(() => route.name === "home");
+  const isOutboxRoute = computed(() => route.name === "workspace-outbox");
+  const outboxRouteWorkspaceId = computed((): SpaceId | undefined => {
+    const workspace = route.query.workspace;
+    return typeof workspace === "string" && workspace.length > 0 ? (workspace as SpaceId) : undefined;
+  });
 
   const homeQuery = useQuery({
     queryKey: queryKeys.home(),
@@ -253,6 +258,12 @@ export function useWorkspaceNavSync() {
     }
     if (documentQuery.data.value?.document.rootSpaceId) {
       return documentQuery.data.value.document.rootSpaceId;
+    }
+    if (isOutboxRoute.value) {
+      return resolvePrivateWorkspaceRootId(
+        homeQuery.data.value?.spaces ?? [],
+        outboxRouteWorkspaceId.value,
+      );
     }
     return null;
   });
@@ -437,32 +448,24 @@ export function useWorkspaceNavSync() {
     }
 
     const rootSpaceId = inPrivateWorkspace.value ? workspaceRootId.value : null;
+    const outboxTotalCount =
+      workspaceOutbox.draftCount.value + workspaceOutbox.scheduledCount.value;
     const outboxSection =
       rootSpaceId != null
         ? {
-            label: "Outbox",
+            label: "Drafts & scheduled",
             sectionSpaceId: rootSpaceId,
             itemLimit: IN_SPACE_SIDEBAR_ITEM_LIMIT as WorkspaceNavSectionItemLimit,
             items: [
               {
-                id: "workspace-drafts",
-                label: "Drafts",
-                to: { name: "workspace-drafts" as const },
-                isActive: route.name === "workspace-drafts",
-                unreadCount:
-                  workspaceOutbox.draftCount.value > 0
-                    ? workspaceOutbox.draftCount.value
-                    : undefined,
-              },
-              {
-                id: "workspace-scheduled",
-                label: "Scheduled",
-                to: { name: "workspace-scheduled" as const },
-                isActive: route.name === "workspace-scheduled",
-                unreadCount:
-                  workspaceOutbox.scheduledCount.value > 0
-                    ? workspaceOutbox.scheduledCount.value
-                    : undefined,
+                id: "workspace-outbox",
+                label: "Drafts & scheduled",
+                to: {
+                  name: "workspace-outbox" as const,
+                  query: { workspace: rootSpaceId },
+                },
+                isActive: route.name === "workspace-outbox",
+                unreadCount: outboxTotalCount > 0 ? outboxTotalCount : undefined,
               },
             ],
           }
@@ -595,6 +598,7 @@ export function useWorkspaceNavSync() {
 
   return {
     view,
+    workspaceRootId,
     isHomeActive,
     reload,
     pinnedSpaceIds: pinnedSpaceIdsSet,

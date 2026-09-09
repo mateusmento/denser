@@ -142,6 +142,23 @@ const showPinToggle = computed(() => props.view.activeRootSpaceId != null);
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarGroup v-if="view.outboxSection">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <WorkspaceNavMenuItem
+                v-for="link in view.outboxSection.items"
+                :key="link.id"
+                :link="link"
+                :is-renaming="renamingItemId === link.id"
+                @space-action="(action, item) => emit('spaceAction', action, item)"
+                @artifact-action="(action, item) => emit('artifactAction', action, item)"
+                @rename-submit="(item, title) => emit('renameSubmit', item, title)"
+                @rename-cancel="(item) => emit('renameCancel', item)"
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <WorkspaceNavSpaceSection
           v-if="view.inSpaceSection"
           :section="view.inSpaceSection"
@@ -172,24 +189,6 @@ const showPinToggle = computed(() => props.view.activeRootSpaceId != null);
           @section-limit-change="(id, limit) => emit('sectionLimitChange', id, limit)"
           @section-unpin="(id) => emit('sectionUnpin', id)"
         />
-
-        <SidebarGroup v-if="view.outboxSection">
-          <SidebarGroupLabel>{{ view.outboxSection.label }}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <WorkspaceNavMenuItem
-                v-for="link in view.outboxSection.items"
-                :key="link.id"
-                :link="link"
-                :is-renaming="renamingItemId === link.id"
-                @space-action="(action, item) => emit('spaceAction', action, item)"
-                @artifact-action="(action, item) => emit('artifactAction', action, item)"
-                @rename-submit="(item, title) => emit('renameSubmit', item, title)"
-                @rename-cancel="(item) => emit('renameCancel', item)"
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
         <SidebarGroup v-if="view.directMessagesSection">
           <SidebarGroupLabel>{{ view.directMessagesSection.label }}</SidebarGroupLabel>

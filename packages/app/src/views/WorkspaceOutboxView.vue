@@ -3,5 +3,5 @@ import WorkspaceOutboxContainer from "@/features/conversation/containers/Workspa
 </script>
 
 <template>
-  <WorkspaceOutboxContainer kind="drafts" />
+  <WorkspaceOutboxContainer />
 </template>

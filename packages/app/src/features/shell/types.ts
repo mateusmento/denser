@@ -28,9 +28,9 @@ export type WorkspaceNavLink = {
       | "space"
       | "document"
       | "conversation"
-      | "workspace-drafts"
-      | "workspace-scheduled";
+      | "workspace-outbox";
     params?: { spaceId?: string; documentId?: string; conversationId?: string };
+    query?: { workspace?: string; tab?: string };
   };
   isActive: boolean;
 };
