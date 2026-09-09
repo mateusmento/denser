@@ -21,7 +21,7 @@ import type {
   ConversationThreadView,
   MessageComposerView,
   ScheduleCommitPayload,
-  ScreenRecordingDeviceOption,
+  VideoRecordingDeviceOption,
 } from "../types";
 
 const draft = defineModel<JSONContent>({ required: true });
@@ -38,7 +38,7 @@ const props = withDefaults(
     nextPage?: NextPageState;
     showJumpToLatest?: boolean;
     audioRecordingBadge?: AudioRecordingBadgeView | null;
-    audioMicDevices?: readonly ScreenRecordingDeviceOption[];
+    audioMicDevices?: readonly VideoRecordingDeviceOption[];
     audioMicDeviceId?: string | null;
     onPrepareAudioMicPicker?: () => void | Promise<void>;
   }>(),

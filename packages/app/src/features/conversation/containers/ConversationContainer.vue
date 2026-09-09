@@ -10,7 +10,7 @@ import { useAuthSession } from "@/modules/auth/composables/useAuthSession";
 import { buildPersonRoster, enrichMessageAuthors, personFromUserId } from "@/modules/presence/lib/person-label";
 import { defaultChannelComposerView, defaultThreadComposerView } from "../composerActions";
 import { useComposerAttachments } from "../composables/useComposerAttachments";
-import { useMessageComposerScreenRecording } from "../composables/useMessageComposerScreenRecording";
+import { useMessageComposerVideoRecording } from "../composables/useMessageComposerVideoRecording";
 import { useMessageComposerAudioRecording } from "../composables/useMessageComposerAudioRecording";
 import { useConversationFilesSync } from "../composables/useConversationFilesSync";
 import { useConversationMessages } from "../composables/useConversationMessages";
@@ -31,8 +31,8 @@ import AudioRecordingBadge from "../presentationals/AudioRecordingBadge.vue";
 import ConversationSurface from "../presentationals/ConversationSurface.vue";
 import ConversationTimeline from "../presentationals/ConversationTimeline.vue";
 import MessageComposer from "../presentationals/MessageComposer.vue";
-import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
-import ScreenRecordingControlsPopover from "../presentationals/ScreenRecordingControlsPopover.vue";
+import VideoRecordingSetupDialog from "../presentationals/VideoRecordingSetupDialog.vue";
+import VideoRecordingControlsPopover from "../presentationals/VideoRecordingControlsPopover.vue";
 import ThreadPane from "../presentationals/ThreadPane.vue";
 import PollInsertDialog from "../presentationals/PollInsertDialog.vue";
 import TypingBanner from "../presentationals/TypingBanner.vue";
@@ -242,7 +242,7 @@ const threadAudioRecording = useMessageComposerAudioRecording({
   disabled: () => !conversationId.value || !activeThreadId.value,
 });
 
-const screenRecording = useMessageComposerScreenRecording({
+const videoRecording = useMessageComposerVideoRecording({
   stageFiles: (files) => {
     if (recordingSurface.value === "thread") {
       threadAttachments.stageFiles(files);
@@ -762,7 +762,7 @@ function onAction(id: ComposerActionId, surface: "channel" | "thread" = "channel
   if (id === "attach" || id === "image") return;
   if (id === "record") {
     recordingSurface.value = surface;
-    screenRecording.openDialog();
+    videoRecording.openDialog();
     return;
   }
   if (id === "audio") {
@@ -1048,31 +1048,31 @@ async function onThreadJumpToLatest() {
     @delete="onDeleteConversationFile"
   />
 
-  <ScreenRecordingSetupDialog
-    v-model:open="screenRecording.open"
-    :view="screenRecording.setupView"
-    :preview-canvas="screenRecording.previewCanvas"
-    @cancel="screenRecording.onCancel()"
-    @start="screenRecording.onStart()"
-    @stop="screenRecording.onStop()"
-    @minimize="screenRecording.onMinimize()"
-    @move-camera="screenRecording.onMoveCamera($event)"
-    @resize-camera="screenRecording.onResizeCamera($event)"
-    @update:webcam-enabled="screenRecording.setWebcamEnabled($event)"
-    @update:screen-enabled="screenRecording.setScreenEnabled($event)"
-    @update:mic-enabled="screenRecording.setMicEnabled($event)"
-    @update:system-audio-enabled="screenRecording.setSystemAudioEnabled($event)"
-    @update:mirror-camera="screenRecording.setMirrorCamera($event)"
-    @update:overlay-edit-mode="screenRecording.setOverlayEditMode($event)"
-    @update:webcam-device-id="screenRecording.setWebcamDeviceId($event)"
-    @update:mic-device-id="screenRecording.setMicDeviceId($event)"
+  <VideoRecordingSetupDialog
+    v-model:open="videoRecording.open"
+    :view="videoRecording.setupView"
+    :preview-canvas="videoRecording.previewCanvas"
+    @cancel="videoRecording.onCancel()"
+    @start="videoRecording.onStart()"
+    @stop="videoRecording.onStop()"
+    @minimize="videoRecording.onMinimize()"
+    @move-camera="videoRecording.onMoveCamera($event)"
+    @resize-camera="videoRecording.onResizeCamera($event)"
+    @update:webcam-enabled="videoRecording.setWebcamEnabled($event)"
+    @update:screen-enabled="videoRecording.setScreenEnabled($event)"
+    @update:mic-enabled="videoRecording.setMicEnabled($event)"
+    @update:system-audio-enabled="videoRecording.setSystemAudioEnabled($event)"
+    @update:mirror-camera="videoRecording.setMirrorCamera($event)"
+    @update:overlay-edit-mode="videoRecording.setOverlayEditMode($event)"
+    @update:webcam-device-id="videoRecording.setWebcamDeviceId($event)"
+    @update:mic-device-id="videoRecording.setMicDeviceId($event)"
   />
 
-  <ScreenRecordingControlsPopover
-    :visible="screenRecording.controlsPopoverVisible"
-    :view="screenRecording.setupView"
-    :preview-canvas="screenRecording.previewCanvas"
-    @stop="screenRecording.onStop()"
-    @open-dialog="screenRecording.onOpenDialogDuringRecording()"
+  <VideoRecordingControlsPopover
+    :visible="videoRecording.controlsPopoverVisible"
+    :view="videoRecording.setupView"
+    :preview-canvas="videoRecording.previewCanvas"
+    @stop="videoRecording.onStop()"
+    @open-dialog="videoRecording.onOpenDialogDuringRecording()"
   />
 </template>

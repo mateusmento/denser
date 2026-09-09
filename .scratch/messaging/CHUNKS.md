@@ -61,7 +61,7 @@ Ticket **20** shows attachments **after** send in the timeline.
 | **3c Compose & upload** | **19** | **app** | **Pick file → progress → tile → send** in MessageComposer |
 | **3d In timeline** | **20** | app | Images + file chips on delivered messages |
 | **3e Files pane** | **21** | full | Slack-like “files in this conversation” + delete |
-| **3f Recording** | **29** | full | **Loom-style:** pre-record draggable cam circle → WebM attach ([SCREEN-RECORDING.md](../../docs/SCREEN-RECORDING.md)) |
+| **3f Recording** | **29** | full | **Loom-style:** pre-record draggable cam circle → WebM attach ([VIDEO-RECORDING.md](../../docs/VIDEO-RECORDING.md)) |
 
 ### “Attachments complete” definition (v1, excluding schedule)
 

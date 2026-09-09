@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { defineMeta } from "sb-addon-vue-csf";
 import { computed, ref } from "vue";
-import ScreenRecordingCameraEditor from "../presentationals/ScreenRecordingCameraEditor.vue";
-import { screenRecordingSetupView } from "./screen-recording-fixtures";
+import VideoRecordingCameraEditor from "../presentationals/VideoRecordingCameraEditor.vue";
+import { videoRecordingSetupView } from "./video-recording-fixtures";
 
 const { Story } = defineMeta({
-  title: "features/conversation/ScreenRecordingCameraEditor",
-  component: ScreenRecordingCameraEditor,
+  title: "features/conversation/VideoRecordingCameraEditor",
+  component: VideoRecordingCameraEditor,
   tags: ["autodocs"],
 });
 
 const overlayEditMode = ref(false);
 
 const combinedView = computed(() =>
-  screenRecordingSetupView({
+  videoRecordingSetupView({
     screenEnabled: true,
     screenAvailable: true,
     showCameraOverlayEditor: true,
@@ -26,10 +26,10 @@ const combinedView = computed(() =>
   <Story as-child name="Webcam overlay on">
     <div
       class="relative h-[360px] w-[640px] overflow-hidden rounded-lg border border-border bg-black/80"
-      data-slot="screen-recording-camera-editor-preview"
+      data-slot="video-recording-camera-editor-preview"
     >
-      <ScreenRecordingCameraEditor
-        :view="screenRecordingSetupView({
+      <VideoRecordingCameraEditor
+        :view="videoRecordingSetupView({
           screenEnabled: true,
           screenAvailable: true,
           showCameraOverlayEditor: true,
@@ -44,10 +44,10 @@ const combinedView = computed(() =>
   <Story as-child name="Webcam overlay edit mode">
     <div
       class="relative h-[360px] w-[640px] overflow-hidden rounded-lg border border-border bg-black/80"
-      data-slot="screen-recording-camera-editor-preview"
+      data-slot="video-recording-camera-editor-preview"
     >
-      <ScreenRecordingCameraEditor
-        :view="screenRecordingSetupView({
+      <VideoRecordingCameraEditor
+        :view="videoRecordingSetupView({
           screenEnabled: true,
           screenAvailable: true,
           showCameraOverlayEditor: true,
@@ -62,10 +62,10 @@ const combinedView = computed(() =>
   <Story as-child name="Webcam overlay off">
     <div
       class="relative h-[360px] w-[640px] overflow-hidden rounded-lg border border-border bg-black/80"
-      data-slot="screen-recording-camera-editor-preview"
+      data-slot="video-recording-camera-editor-preview"
     >
-      <ScreenRecordingCameraEditor
-        :view="screenRecordingSetupView({
+      <VideoRecordingCameraEditor
+        :view="videoRecordingSetupView({
           webcamEnabled: false,
           showCameraOverlayEditor: false,
         })"
@@ -82,9 +82,9 @@ const combinedView = computed(() =>
       </label>
       <div
         class="relative h-[360px] w-[640px] overflow-hidden rounded-lg border border-border bg-black/80"
-        data-slot="screen-recording-camera-editor-preview"
+        data-slot="video-recording-camera-editor-preview"
       >
-        <ScreenRecordingCameraEditor
+        <VideoRecordingCameraEditor
           :view="combinedView"
           :preview-canvas="null"
           @update:overlay-edit-mode="overlayEditMode = $event"

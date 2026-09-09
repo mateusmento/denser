@@ -1,19 +1,19 @@
 import { toast } from "@denser/design-system";
 import { computed, reactive, ref, watch } from "vue";
-import type { CameraCircleLayout } from "../lib/screen-recording-composite";
-import type { CameraResizeHandle } from "../lib/screen-recording-resize";
+import type { CameraCircleLayout } from "../lib/video-recording-composite";
+import type { CameraResizeHandle } from "../lib/video-recording-resize";
 import {
-  useScreenRecordingSetup,
-  type ScreenRecordingViewer,
-} from "./useScreenRecordingSetup";
+  useVideoRecordingSetup,
+  type VideoRecordingViewer,
+} from "./useVideoRecordingSetup";
 
-export function useMessageComposerScreenRecording(options: {
+export function useMessageComposerVideoRecording(options: {
   stageFiles: (files: readonly File[]) => void;
   disabled?: () => boolean;
-  viewer?: () => ScreenRecordingViewer | null;
+  viewer?: () => VideoRecordingViewer | null;
 }) {
   const open = ref(false);
-  const setup = useScreenRecordingSetup({ viewer: options.viewer });
+  const setup = useVideoRecordingSetup({ viewer: options.viewer });
 
   watch(open, (isOpen, wasOpen) => {
     if (!isOpen && wasOpen) {

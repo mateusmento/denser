@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { defineMeta } from "sb-addon-vue-csf";
 import { computed, ref } from "vue";
-import ScreenRecordingSetupDialog from "../presentationals/ScreenRecordingSetupDialog.vue";
-import { screenRecordingSetupView } from "./screen-recording-fixtures";
+import VideoRecordingSetupDialog from "../presentationals/VideoRecordingSetupDialog.vue";
+import { videoRecordingSetupView } from "./video-recording-fixtures";
 
 const { Story } = defineMeta({
-  title: "features/conversation/ScreenRecordingSetupDialog",
-  component: ScreenRecordingSetupDialog,
+  title: "features/conversation/VideoRecordingSetupDialog",
+  component: VideoRecordingSetupDialog,
   tags: ["autodocs"],
 });
 
@@ -21,7 +21,7 @@ const webcamDeviceId = ref("cam-front");
 const micDeviceId = ref("mic-built-in");
 
 const setupView = computed(() =>
-  screenRecordingSetupView({
+  videoRecordingSetupView({
     webcamEnabled: webcamEnabled.value,
     webcamAvailable: true,
     screenEnabled: screenEnabled.value,
@@ -39,7 +39,7 @@ const setupView = computed(() =>
 );
 
 const avatarView = computed(() =>
-  screenRecordingSetupView({
+  videoRecordingSetupView({
     webcamEnabled: false,
     webcamAvailable: false,
     screenEnabled: false,
@@ -52,7 +52,7 @@ const avatarView = computed(() =>
 );
 
 const recordingView = computed(() =>
-  screenRecordingSetupView({
+  videoRecordingSetupView({
     phase: "recording",
     webcamEnabled: webcamEnabled.value,
     webcamAvailable: true,
@@ -69,7 +69,7 @@ const recordingView = computed(() =>
 
 <template>
   <Story as-child name="Setup webcam on">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
       :view="setupView"
       :preview-canvas="null"
@@ -86,7 +86,7 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Avatar fallback">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
       :view="avatarView"
       :preview-canvas="null"
@@ -95,9 +95,9 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Setup webcam off">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
-      :view="screenRecordingSetupView({
+      :view="videoRecordingSetupView({
         webcamEnabled: false,
         webcamAvailable: false,
         canStart: false,
@@ -111,7 +111,7 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Toggle webcam overlay">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
       :view="setupView"
       :preview-canvas="null"
@@ -128,9 +128,9 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Combined screen and webcam">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
-      :view="screenRecordingSetupView({
+      :view="videoRecordingSetupView({
         screenEnabled: true,
         screenAvailable: true,
         webcamEnabled: true,
@@ -144,9 +144,9 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Combined overlay edit mode">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
-      :view="screenRecordingSetupView({
+      :view="videoRecordingSetupView({
         screenEnabled: true,
         screenAvailable: true,
         webcamEnabled: true,
@@ -160,7 +160,7 @@ const recordingView = computed(() =>
   </Story>
 
   <Story as-child name="Recording">
-    <ScreenRecordingSetupDialog
+    <VideoRecordingSetupDialog
       v-model:open="open"
       :view="recordingView"
       :preview-canvas="null"

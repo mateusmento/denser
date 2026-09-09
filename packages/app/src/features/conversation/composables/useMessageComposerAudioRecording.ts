@@ -3,7 +3,7 @@ import { useDevicesList } from "@vueuse/core";
 import {
   dedicatedMicrophoneDevices,
   toRecordingDeviceOptions,
-} from "../lib/screen-recording-devices";
+} from "../lib/video-recording-devices";
 import { startAudioRecording } from "../lib/audio-recording-capture";
 import type { AudioRecordingBadgeView } from "../types";
 

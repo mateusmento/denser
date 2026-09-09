@@ -1,11 +1,11 @@
-# 34 — Screen recording dialog workflow (Slack-style)
+# 34 — Video recording dialog workflow (Slack-style)
 
 **Chunk:** 3f — Recording  
 **Layer:** app  
-**Domain:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
+**Domain:** [VIDEO-RECORDING.md](../../../docs/VIDEO-RECORDING.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
 **Status:** open  
 **GitHub:** [#34](https://github.com/mateusmento/denser/issues/34)  
-**Blocked by:** 29 — Screen recording → attach  
+**Blocked by:** 29 — Video recording → attach  
 **Specs:** [CHUNKS.md](../CHUNKS.md) · [COVERAGE.md](../COVERAGE.md)
 
 Product decisions from grilling session (2026-09-06). Refactors the **video** recording setup flow to match Slack: dialog opens first, camera and screen share are independent toggles, preview reflects final output (WYSIWYG).
@@ -16,7 +16,7 @@ Product decisions from grilling session (2026-09-06). Refactors the **video** re
 
 ## Problem
 
-Today, clicking **Record screen** calls `getDisplayMedia` **before** the dialog opens (`useMessageComposerScreenRecording.openDialog` → `setup.begin()` → `acquireScreenRecordingStreams`). The user must pick a screen immediately; camera is always composited as a circular overlay on screen content. Camera-only recording is not supported.
+Today, clicking **Record video** calls `getDisplayMedia` **before** the dialog opens (`useMessageComposerVideoRecording.openDialog` → `setup.begin()` → `acquireVideoRecordingStreams`). The user must pick a screen immediately; camera is always composited as a circular overlay on screen content. Camera-only recording is not supported.
 
 ---
 
@@ -62,7 +62,7 @@ If user **cancels** the screen-share browser picker → **Screen toggle turns of
   - **System audio** toggle row (visible only when screen share is on; default on when screen enables)
   - **Mirror camera** toggle — when on, **both preview and export** mirror the camera feed; when off, neither does
 
-Remove the current `Switch` + `Select` grid below the preview in `ScreenRecordingSetupDialog.vue`.
+Remove the current `Switch` + `Select` grid below the preview in `VideoRecordingSetupDialog.vue`.
 
 ---
 
@@ -84,7 +84,7 @@ Handles are **hidden by default**.
 
 ## Capture / compositor changes
 
-Refactor `useScreenRecordingSetup` + `screen-recording-capture.ts`:
+Refactor `useVideoRecordingSetup` + `video-recording-capture.ts`:
 
 - Split stream acquisition: screen (`getDisplayMedia`) and webcam (`getUserMedia`) on **toggle**, not upfront in `begin()`.
 - `begin()` opens dialog + attempts default webcam; screen acquired when Screen toggled on.
@@ -111,11 +111,11 @@ Refactor `useScreenRecordingSetup` + `screen-recording-capture.ts`:
 - [ ] Overlay edit: hover Edit → confirm to lock layout (setup only)
 - [ ] Start gated on ≥1 video source
 - [ ] Screen picker cancel → screen toggle off
-- [ ] Update `ScreenRecordingSetupDialog` + `ScreenRecordingCameraEditor` stories
-- [ ] Update `docs/SCREEN-RECORDING.md` workflow section
+- [ ] Update `VideoRecordingSetupDialog` + `VideoRecordingCameraEditor` stories
+- [ ] Update `docs/VIDEO-RECORDING.md` workflow section
 
 ---
 
 ## PR
 
-- [ ] `[messaging 34] Screen recording dialog workflow` — [PR-POLICY.md](../PR-POLICY.md)
+- [ ] `[messaging 34] Video recording dialog workflow` — [PR-POLICY.md](../PR-POLICY.md)

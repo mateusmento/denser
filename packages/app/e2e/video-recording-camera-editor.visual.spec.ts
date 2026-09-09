@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { gotoStory, SELECTORS, STORIES, waitForLayout } from "./helpers";
 
-test.describe("ScreenRecordingCameraEditor", () => {
+test.describe("VideoRecordingCameraEditor", () => {
   test("shows edit affordance when screen and webcam are combined", async ({ page }) => {
     const runtime = await gotoStory(page, STORIES.cameraEditorOn, SELECTORS.cameraEditorPreview);
     await waitForLayout(page);

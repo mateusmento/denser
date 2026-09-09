@@ -6,12 +6,12 @@ import {
   createDisplayCanvas,
   mountPreviewCanvas,
   startPreviewMirror,
-} from "../lib/screen-recording-preview-mount";
-import type { ScreenRecordingSetupView } from "../types";
+} from "../lib/video-recording-preview-mount";
+import type { VideoRecordingSetupView } from "../types";
 
 const props = defineProps<{
   visible: boolean;
-  view: ScreenRecordingSetupView;
+  view: VideoRecordingSetupView;
   previewCanvas: HTMLCanvasElement | null;
 }>();
 
@@ -61,7 +61,7 @@ onUnmounted(() => {
           'border border-border bg-popover p-2 pl-3 text-popover-foreground shadow-xl ring-1 ring-foreground/5',
         )
       "
-      data-slot="screen-recording-controls-popover"
+      data-slot="video-recording-controls-popover"
     >
       <div
         class="relative size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-black"

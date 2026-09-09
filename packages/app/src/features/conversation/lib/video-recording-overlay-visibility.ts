@@ -1,7 +1,7 @@
-import type { ScreenRecordingSetupView } from "../types";
+import type { VideoRecordingSetupView } from "../types";
 
 export function shouldShowWebcamEditor(
-  view: Pick<ScreenRecordingSetupView, "showCameraOverlayEditor" | "phase" | "overlayEditMode">,
+  view: Pick<VideoRecordingSetupView, "showCameraOverlayEditor" | "phase" | "overlayEditMode">,
   hasMetrics: boolean,
 ): boolean {
   return (
@@ -13,7 +13,7 @@ export function shouldShowWebcamEditor(
 }
 
 export function shouldShowOverlayEditButton(
-  view: Pick<ScreenRecordingSetupView, "showCameraOverlayEditor" | "phase" | "overlayEditMode">,
+  view: Pick<VideoRecordingSetupView, "showCameraOverlayEditor" | "phase" | "overlayEditMode">,
   hasMetrics: boolean,
 ): boolean {
   return (

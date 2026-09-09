@@ -48,7 +48,7 @@ Maps **[CONVERSATIONS.md](../../docs/CONVERSATIONS.md)**, **[MESSAGE-DRAFTS.md](
 | **Later (in pack, lower priority)** |
 | 28 | [polls](./issues/28-polls.md) | 6 | full | conv | Poll create/vote + composer + embed |
 | 29 | [recording-attach](./issues/29-recording-attach.md) | **3f** | full | att | Screen record → upload → attach |
-| 34 | [screen-recording-dialog-workflow](./issues/34-screen-recording-dialog-workflow.md) | **3f** | app | att | Slack-style video setup: dialog first, independent camera/screen toggles |
+| 34 | [video-recording-dialog-workflow](./issues/34-video-recording-dialog-workflow.md) | **3f** | app | att | Slack-style video setup: dialog first, independent camera/screen toggles |
 | 35 | [audio-recording-composer](./issues/35-audio-recording-composer.md) | **3f** | app | att | Slack-style voice note: composer button group + inline badge |
 | 32 | [delete-message-attachment-release](./issues/32-delete-message-attachment-release.md) | **3d** | api | att+conv | `DeleteMessage` releases message attachment anchor for GC |
 | **Outbox UX** |

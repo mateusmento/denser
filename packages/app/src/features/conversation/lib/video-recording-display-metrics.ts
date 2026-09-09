@@ -1,4 +1,4 @@
-import type { CameraCircleLayout } from "./screen-recording-composite";
+import type { CameraCircleLayout } from "./video-recording-composite";
 
 export type PreviewContentMetrics = {
   scale: number;

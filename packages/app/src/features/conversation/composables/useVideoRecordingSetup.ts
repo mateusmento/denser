@@ -7,11 +7,11 @@ import {
   readVideoIntrinsicSize,
   canDrawVideoFrame,
   type CameraCircleLayout,
-} from "../lib/screen-recording-composite";
+} from "../lib/video-recording-composite";
 import {
   resizeCameraLayout,
   type CameraResizeHandle,
-} from "../lib/screen-recording-resize";
+} from "../lib/video-recording-resize";
 import {
   acquireScreenStream,
   applyStreamToggles,
@@ -24,22 +24,22 @@ import {
   startCanvasRecording,
   type AcquiredStreams,
   type ActiveRecording,
-  type ScreenRecordingToggles,
-} from "../lib/screen-recording-capture";
+  type VideoRecordingToggles,
+} from "../lib/video-recording-capture";
 import {
   dedicatedMicrophoneDevices,
   streamNeedsDeviceSwitch,
   toRecordingDeviceOptions,
   trackDeviceId,
-} from "../lib/screen-recording-devices";
+} from "../lib/video-recording-devices";
 import {
   clearCompositorCanvasMount,
   mountCompositorCanvas,
-} from "../lib/screen-recording-preview-mount";
-import { shouldDrawWebcamOverlay } from "../lib/screen-recording-overlay-visibility";
-import type { ScreenRecordingPhase, ScreenRecordingSetupView } from "../types";
+} from "../lib/video-recording-preview-mount";
+import { shouldDrawWebcamOverlay } from "../lib/video-recording-overlay-visibility";
+import type { VideoRecordingPhase, VideoRecordingSetupView } from "../types";
 
-export type ScreenRecordingViewer = {
+export type VideoRecordingViewer = {
   name: string;
   initials: string;
   avatarUrl?: string;
@@ -51,10 +51,10 @@ function formatElapsed(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function useScreenRecordingSetup(options: {
-  viewer?: () => ScreenRecordingViewer | null;
+export function useVideoRecordingSetup(options: {
+  viewer?: () => VideoRecordingViewer | null;
 } = {}) {
-  const phase = ref<ScreenRecordingPhase | "idle">("idle");
+  const phase = ref<VideoRecordingPhase | "idle">("idle");
   const error = ref<string | undefined>();
   const webcamEnabled = ref(true);
   const screenEnabled = ref(false);
@@ -143,7 +143,7 @@ export function useScreenRecordingSetup(options: {
   }
 
   function showOverlayEditor(): boolean {
-    streamRevision.value;
+    void streamRevision.value;
     const streams = acquired.value;
     if (!streams || phase.value !== "setup") return false;
     return shouldDrawWebcamOverlay(
@@ -156,7 +156,7 @@ export function useScreenRecordingSetup(options: {
 
   const overlayEditorVisible = computed(() => showOverlayEditor());
 
-  const view = computed((): ScreenRecordingSetupView => {
+  const view = computed((): VideoRecordingSetupView => {
     const streams = acquired.value;
     const frameSize = streams
       ? (() => {
@@ -241,7 +241,7 @@ export function useScreenRecordingSetup(options: {
     if (!visible) overlayEditMode.value = false;
   });
 
-  function toggles(): ScreenRecordingToggles {
+  function toggles(): VideoRecordingToggles {
     return {
       webcamEnabled: webcamEnabled.value,
       screenEnabled: screenEnabled.value,

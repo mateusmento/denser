@@ -6,16 +6,16 @@ import { computed, onUnmounted, ref, useTemplateRef } from "vue";
 import {
   cameraLayoutToDisplayRect,
   previewContentMetrics,
-} from "../lib/screen-recording-display-metrics";
+} from "../lib/video-recording-display-metrics";
 import {
   shouldShowOverlayEditButton,
   shouldShowWebcamEditor,
-} from "../lib/screen-recording-overlay-visibility";
-import type { CameraResizeHandle } from "../lib/screen-recording-resize";
-import type { ScreenRecordingSetupView } from "../types";
+} from "../lib/video-recording-overlay-visibility";
+import type { CameraResizeHandle } from "../lib/video-recording-resize";
+import type { VideoRecordingSetupView } from "../types";
 
 const props = defineProps<{
-  view: ScreenRecordingSetupView;
+  view: VideoRecordingSetupView;
   previewCanvas: HTMLCanvasElement | null;
 }>();
 
@@ -26,7 +26,7 @@ const emit = defineEmits<{
       handle: CameraResizeHandle;
       deltaCaptureX: number;
       deltaCaptureY: number;
-      baseLayout: ScreenRecordingSetupView["cameraLayout"];
+      baseLayout: VideoRecordingSetupView["cameraLayout"];
     },
   ];
   "update:overlayEditMode": [value: boolean];
@@ -198,7 +198,7 @@ defineExpose({ host });
   >
     <div
       v-if="showEditButton"
-      data-slot="screen-recording-camera-editor-hover"
+      data-slot="video-recording-camera-editor-hover"
       class="pointer-events-auto absolute touch-none rounded-full"
       :style="bboxStyle"
       @mouseenter="overlayHovered = true"
@@ -207,7 +207,7 @@ defineExpose({ host });
       <button
         v-if="overlayHovered"
         type="button"
-        data-slot="screen-recording-overlay-toggle"
+        data-slot="video-recording-overlay-toggle"
         :class="overlayToggleClass"
         aria-label="Edit camera overlay"
         @click.stop="onEditClick"
@@ -219,7 +219,7 @@ defineExpose({ host });
 
     <div
       v-if="showWebcamEditor"
-      data-slot="screen-recording-camera-editor-bbox"
+      data-slot="video-recording-camera-editor-bbox"
       class="pointer-events-auto absolute touch-none border-2 border-dashed border-primary"
       :style="bboxStyle"
       @mouseenter="overlayHovered = true"
@@ -229,7 +229,7 @@ defineExpose({ host });
       <button
         v-if="overlayHovered"
         type="button"
-        data-slot="screen-recording-overlay-toggle"
+        data-slot="video-recording-overlay-toggle"
         :class="overlayToggleClass"
         aria-label="Confirm camera overlay"
         @click.stop="onConfirmClick"

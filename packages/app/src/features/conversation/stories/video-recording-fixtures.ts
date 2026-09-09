@@ -1,8 +1,8 @@
-import type { ScreenRecordingSetupView } from "../types";
+import type { VideoRecordingSetupView } from "../types";
 
-export function screenRecordingSetupView(
-  overrides: Partial<ScreenRecordingSetupView> = {},
-): ScreenRecordingSetupView {
+export function videoRecordingSetupView(
+  overrides: Partial<VideoRecordingSetupView> = {},
+): VideoRecordingSetupView {
   return {
     phase: "setup",
     webcamEnabled: true,

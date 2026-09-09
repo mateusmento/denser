@@ -115,7 +115,7 @@ Users do **not** leave conversations. Regular access follows space membership. D
 | Attachments / images | Messaging (task) | Storage port; progressive + cancel |
 | Polls | Messaging (task) | |
 | Schedule (+ recurrence) | Messaging (task) | |
-| Screen recording → attach | Messaging (task) | Not download-only |
+| Video recording → attach | Messaging (task) | Not download-only |
 | Drafts (server-authoritative) | Messaging (task) | **[MESSAGE-DRAFTS.md](./MESSAGE-DRAFTS.md)** — not epicstory dual-write |
 | Search in conversation | Later | |
 | Private regular channels (explicit members) | Later | |

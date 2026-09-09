@@ -11,7 +11,7 @@ export function mountPreviewCanvas(
   }
   host.replaceChildren();
   canvas.className = className;
-  canvas.setAttribute("data-screen-recording-preview", "");
+  canvas.setAttribute("data-video-recording-preview", "");
   canvas.style.pointerEvents = "none";
   host.appendChild(canvas);
 }
@@ -21,7 +21,7 @@ let compositorCanvasHost: HTMLDivElement | null = null;
 function ensureCompositorCanvasHost(): HTMLDivElement {
   if (!compositorCanvasHost) {
     compositorCanvasHost = document.createElement("div");
-    compositorCanvasHost.setAttribute("data-screen-recording-compositor-mount", "");
+    compositorCanvasHost.setAttribute("data-video-recording-compositor-mount", "");
     compositorCanvasHost.style.cssText =
       "position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;";
     document.body.appendChild(compositorCanvasHost);
@@ -44,7 +44,7 @@ export function clearCompositorCanvasMount() {
 export function createDisplayCanvas(className: string): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.className = className;
-  canvas.setAttribute("data-screen-recording-preview-mirror", "");
+  canvas.setAttribute("data-video-recording-preview-mirror", "");
   return canvas;
 }
 

@@ -151,7 +151,7 @@ Unknown `type`: render children as text only — never pass the node through `v-
 
 Every derived composer and every **RichTextSubtree** **must** understand this vocabulary. Hosts may add slash items and action-row entry points. They must not fork a smaller or larger _schema_ for the same document.
 
-Still host-owned (not nodes here): poll, screen recording, generic file attachment (non-image).
+Still host-owned (not nodes here): poll, video recording, generic file attachment (non-image).
 
 ### Marks (inline)
 

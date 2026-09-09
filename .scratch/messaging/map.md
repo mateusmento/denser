@@ -133,7 +133,7 @@ App follow-ups (after API merges):
 
 **Ready to grab:** **15** conversation-shell-app (DM hide UI), **21** files-pane.
 
-**Open (not started):** **33** drafts/scheduled outbox, **34** screen-recording dialog workflow, **35** audio composer, **36** pin spaces sidebar.
+**Open (not started):** **33** drafts/scheduled outbox, **34** video-recording dialog workflow, **35** audio composer, **36** pin spaces sidebar.
 
 **In progress:** **27** schedule recurrence — pass recurrence/timezone from app → API.
 

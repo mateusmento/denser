@@ -2,15 +2,15 @@
 
 **Chunk:** 3f — Recording  
 **Layer:** app  
-**Domain:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
+**Domain:** [VIDEO-RECORDING.md](../../../docs/VIDEO-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md) · [conversation.md](../../../docs/ui-surfaces/conversation.md)  
 **Status:** open  
 **GitHub:** [#35](https://github.com/mateusmento/denser/issues/35)  
 **Blocked by:** 19 — Composer upload UI  
 **Specs:** [CHUNKS.md](../CHUNKS.md) · [COVERAGE.md](../COVERAGE.md)
 
-Product decisions from grilling session (2026-09-06). **Separate intent** from video screen recording — voice-note style capture staged as a message attachment.
+Product decisions from grilling session (2026-09-06). **Separate intent** from video recording — voice-note style capture staged as a message attachment.
 
-**Related (separate issue):** [34 — Screen recording dialog workflow](./34-screen-recording-dialog-workflow.md)
+**Related (separate issue):** [34 — Video recording dialog workflow](./34-video-recording-dialog-workflow.md)
 
 ---
 
@@ -22,7 +22,7 @@ Add an **audio-only recording** path in the message composer (Slack-style). Dist
 
 ## Composer entry
 
-New composer action (separate from **Record screen**):
+New composer action (separate from **Record video**):
 
 **Button group:**
 - **Primary:** starts recording immediately on click (permission prompt if needed).
@@ -62,9 +62,9 @@ Discard/cancel (if needed) → abort without staging
 
 ## Technical notes
 
-- Reuse patterns from `screen-recording-capture.ts` where sensible (`MediaRecorder`, mime type selection, chunk sink) but **no canvas compositor**.
+- Reuse patterns from `video-recording-capture.ts` where sensible (`MediaRecorder`, mime type selection, chunk sink) but **no canvas compositor**.
 - Output: `audio/webm` or browser-supported audio mime; filename like `voice-{timestamp}.webm`.
-- New composable e.g. `useMessageComposerAudioRecording.ts` — keep separate from `useMessageComposerScreenRecording`.
+- New composable e.g. `useMessageComposerAudioRecording.ts` — keep separate from `useMessageComposerVideoRecording`.
 - Wire in `ConversationContainer` (or composer container) alongside existing record handler.
 
 **Owns:** composer action, button group, recording badge UI, audio capture composable, staging on stop.
@@ -80,7 +80,7 @@ Discard/cancel (if needed) → abort without staging
 - [ ] `MediaRecorder` audio capture → file on stop
 - [ ] Stage file via existing `onStageFiles` / upload path (**19**)
 - [ ] Storybook story for recording badge states (idle recording, timer)
-- [ ] Document in `docs/SCREEN-RECORDING.md` or new `docs/AUDIO-RECORDING.md` (short)
+- [ ] Document in `docs/VIDEO-RECORDING.md` or new `docs/AUDIO-RECORDING.md` (short)
 
 ---
 

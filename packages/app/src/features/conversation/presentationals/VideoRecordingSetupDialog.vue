@@ -34,19 +34,19 @@ import {
   VideoOffIcon,
 } from "@lucide/vue";
 import { nextTick, onUnmounted, useTemplateRef, watch } from "vue";
-import type { CameraResizeHandle } from "../lib/screen-recording-resize";
+import type { CameraResizeHandle } from "../lib/video-recording-resize";
 import {
   createDisplayCanvas,
   mountPreviewCanvas,
   startPreviewMirror,
-} from "../lib/screen-recording-preview-mount";
-import ScreenRecordingCameraEditor from "./ScreenRecordingCameraEditor.vue";
-import type { ScreenRecordingSetupView } from "../types";
+} from "../lib/video-recording-preview-mount";
+import VideoRecordingCameraEditor from "./VideoRecordingCameraEditor.vue";
+import type { VideoRecordingSetupView } from "../types";
 
 const open = defineModel<boolean>("open", { required: true });
 
 const props = defineProps<{
-  view: ScreenRecordingSetupView;
+  view: VideoRecordingSetupView;
   previewCanvas: HTMLCanvasElement | null;
 }>();
 
@@ -69,7 +69,7 @@ const emit = defineEmits<{
       handle: CameraResizeHandle;
       deltaCaptureX: number;
       deltaCaptureY: number;
-      baseLayout: ScreenRecordingSetupView["cameraLayout"];
+      baseLayout: VideoRecordingSetupView["cameraLayout"];
     },
   ];
 }>();
@@ -168,14 +168,14 @@ function previewControlClass(active: boolean) {
   <Dialog v-model:open="open">
     <DialogContent
       class="flex max-h-[min(40rem,calc(100vh-2rem))] max-w-3xl flex-col gap-4 overflow-y-auto sm:max-w-3xl"
-      data-slot="screen-recording-setup-dialog"
+      data-slot="video-recording-setup-dialog"
       :show-close-button="view.phase !== 'recording' && view.phase !== 'finalizing'"
       @pointer-down-outside="onInteractOutside"
       @interact-outside="onInteractOutside"
       @escape-key-down="onEscapeKeydown"
     >
       <DialogHeader>
-        <DialogTitle>Record screen</DialogTitle>
+        <DialogTitle>Record video</DialogTitle>
         <DialogDescription>
           <template v-if="view.phase === 'recording'">
             Recording in progress. Minimize to use the floating controls while you present.
@@ -196,14 +196,14 @@ function previewControlClass(active: boolean) {
           <div
             ref="previewCanvasMount"
             class="absolute inset-0"
-            data-slot="screen-recording-preview-mount"
+            data-slot="video-recording-preview-mount"
             aria-hidden="true"
           />
 
           <div
             v-if="view.showAvatarFallback"
             class="relative z-[1] flex flex-col items-center justify-center gap-2 text-muted-foreground"
-            data-slot="screen-recording-avatar-fallback"
+            data-slot="video-recording-avatar-fallback"
           >
             <Avatar class="size-24 border-2 border-border">
               <AvatarImage v-if="view.avatarUrl" :src="view.avatarUrl" :alt="view.avatarName" />
@@ -211,7 +211,7 @@ function previewControlClass(active: boolean) {
             </Avatar>
           </div>
 
-          <ScreenRecordingCameraEditor
+          <VideoRecordingCameraEditor
             :view="view"
             :preview-canvas="previewCanvas"
             @move-camera="emit('move-camera', $event)"
@@ -227,7 +227,7 @@ function previewControlClass(active: boolean) {
           <div class="pointer-events-auto flex items-center gap-2 rounded-full bg-black/45 p-1.5 backdrop-blur-sm">
             <button
               type="button"
-              data-slot="screen-recording-webcam-toggle"
+              data-slot="video-recording-webcam-toggle"
               :class="previewControlClass(view.webcamEnabled)"
               :aria-pressed="view.webcamEnabled"
               aria-label="Webcam"
@@ -239,7 +239,7 @@ function previewControlClass(active: boolean) {
 
             <button
               type="button"
-              data-slot="screen-recording-mic-toggle"
+              data-slot="video-recording-mic-toggle"
               :class="previewControlClass(view.micEnabled)"
               :aria-pressed="view.micEnabled"
               aria-label="Microphone"
@@ -251,7 +251,7 @@ function previewControlClass(active: boolean) {
 
             <button
               type="button"
-              data-slot="screen-recording-screen-toggle"
+              data-slot="video-recording-screen-toggle"
               :class="previewControlClass(view.screenEnabled)"
               :aria-pressed="view.screenEnabled"
               aria-label="Screen share"
@@ -265,7 +265,7 @@ function previewControlClass(active: boolean) {
               <DropdownMenuTrigger as-child>
                 <button
                   type="button"
-                  data-slot="screen-recording-settings-trigger"
+                  data-slot="video-recording-settings-trigger"
                   :class="previewControlClass(false)"
                   aria-label="Recording settings"
                 >
@@ -344,7 +344,7 @@ function previewControlClass(active: boolean) {
         <div
           v-if="view.phase === 'acquiring'"
           class="absolute inset-0 flex items-center justify-center bg-background/60"
-          data-slot="screen-recording-acquiring"
+          data-slot="video-recording-acquiring"
         >
           <Spinner class="size-8" />
           <span class="sr-only">Starting camera</span>

@@ -1,4 +1,4 @@
-# Screen recording (messaging composer)
+# Video recording (messaging composer)
 
 **Status:** v1 spec — messaging cut ticket **29**  
 **Related:** [ATTACHMENTS.md](./ATTACHMENTS.md) · [CONVERSATIONS.md](./CONVERSATIONS.md) · [ui-surfaces/conversation.md](./ui-surfaces/conversation.md) · [MEETINGS.md](./MEETINGS.md) (meeting recordings — separate)
@@ -7,7 +7,7 @@
 
 ## Goal
 
-**Loom-like** screen recordings from the message composer: screen capture with a **circular webcam overlay baked into the final video**. The user **positions the camera circle before recording** on a live preview that matches the exported frame.
+**Loom-like** video recordings from the message composer: camera and/or screen capture, with an optional **circular webcam overlay baked into the final video** when screen + camera are combined. The user **positions the camera circle before recording** on a live preview that matches the exported frame.
 
 **v1 delivery:** stop → **upload as a normal message attachment** (`video/webm`) via the composer upload pipeline ([ticket 19](.scratch/messaging/issues/19-composer-attachments-app.md)).  
 **Later:** first-class **Recording artifact** (permalink, viewer, chapters, comments) — not in v1.
@@ -30,7 +30,7 @@ Epicstory is the **compositing reference**, not the product UX. Denser adds pre-
 ## v1 user flow
 
 ```text
-Composer "Record screen"
+Composer "Record video"
         │
         ▼
 ┌─────────────────────────────────────┐
@@ -130,11 +130,11 @@ Port epicstory [`screen-recording.ts`](../../epicstory/app/src/core/screen-recor
 
 | Module | Responsibility |
 | --- | --- |
-| `screen-recording-composite.ts` | Pure layout + `drawFrame`; shared preview + record |
-| `screen-recording-capture.ts` | Acquire/release streams, audio mix, `MediaRecorder`, blob finalize |
-| `useScreenRecordingSetup.ts` | Vue composable: state machine, position, toggles |
-| `ScreenRecordingSetupDialog.vue` | Preview + draggable circle + controls |
-| `useMessageComposerScreenRecording.ts` | Wire composer action → dialog → upload handoff |
+| `video-recording-composite.ts` | Pure layout + `drawFrame`; shared preview + record |
+| `video-recording-capture.ts` | Acquire/release streams, audio mix, `MediaRecorder`, blob finalize |
+| `useVideoRecordingSetup.ts` | Vue composable: state machine, position, toggles |
+| `VideoRecordingSetupDialog.vue` | Preview + draggable circle + controls |
+| `useMessageComposerVideoRecording.ts` | Wire composer action → dialog → upload handoff |
 
 Meeting tile layout (`epicstory/app/src/lib/meetings/screen-share.ts`) is for **live meeting PiP**, not baked export. See [meeting-room.md](./ui-surfaces/meeting-room.md).
 
@@ -202,10 +202,10 @@ v1 WebM attachments remain valid; migration can wrap existing blobs as artifacts
 
 ## Acceptance criteria (ticket 29)
 
-- [ ] Composer **Record screen** opens setup UI (not immediate record)
-- [ ] User sees **live screen preview** before Start
-- [ ] **Draggable circular webcam**; position reflected in exported video
-- [ ] Toggles: webcam, mic, system audio (graceful degrade if unavailable)
+- [ ] Composer **Record video** opens setup UI (not immediate record)
+- [ ] User sees **live preview** before Start (camera and/or screen)
+- [ ] **Draggable circular webcam** in screen+camera mode; position reflected in exported video
+- [ ] Toggles: webcam, screen, mic, system audio (graceful degrade if unavailable)
 - [ ] Record / Stop with elapsed timer
 - [ ] Output uploads via composer attachment pipeline — **no download-only path**
 - [ ] Cancel at any pre-record stage releases camera/screen tracks
@@ -217,4 +217,5 @@ v1 WebM attachments remain valid; migration can wrap existing blobs as artifacts
 
 | Date | Change |
 | --- | --- |
+| 2026-09-09 | Renamed feature from “screen recording” to **video recording** (screen share remains an input toggle) |
 | 2026-09-05 | Initial v1 spec: Loom-style pre-record layout, circular cam, attach-only delivery |

@@ -1,13 +1,13 @@
-# 29 — Screen recording → attach (Loom-style)
+# 29 — Video recording → attach (Loom-style)
 
 **Chunk:** 3f — Recording  
 **Layer:** full (app-heavy; reuses upload API)  
-**Domain:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
+**Domain:** [VIDEO-RECORDING.md](../../../docs/VIDEO-RECORDING.md) · [ATTACHMENTS.md](../../../docs/ATTACHMENTS.md)  
 **Status:** resolved  
 **PR:** [#27](https://github.com/mateusmento/denser/pull/27) (open — mergeable)  
 **Blocked by:** 19 — Composer upload UI  
 **Branch:** `agent/messaging-29-recording-attach`  
-**Specs:** [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) · [CHUNKS.md](../CHUNKS.md)
+**Specs:** [VIDEO-RECORDING.md](../../../docs/VIDEO-RECORDING.md) · [CHUNKS.md](../CHUNKS.md)
 
 
 ## Agent skills
@@ -27,18 +27,18 @@
 
 ## What to build
 
-**Loom-like** screen recording from the composer: screen + **circular webcam baked into the video**, with a **pre-record setup UI** where the user **drags the camera circle** on a live preview (WYSIWYG). On stop, hand `video/webm` to the **same upload pipeline as ticket 19** — plain message attachment for v1. **No Recording artifact** yet (deferred).
+**Loom-like** video recording from the composer: screen + **circular webcam baked into the video**, with a **pre-record setup UI** where the user **drags the camera circle** on a live preview (WYSIWYG). On stop, hand `video/webm` to the **same upload pipeline as ticket 19** — plain message attachment for v1. **No Recording artifact** yet (deferred).
 
 **Reference (compositing only):** epicstory `app/src/core/screen-recording.ts` — port canvas + audio mix; **do not** copy download-on-stop or fixed rect UX.
 
-**Owns:** `ScreenRecordingSetupDialog`, compositing modules, composer `record` action wiring, blob handoff to upload client.
+**Owns:** `VideoRecordingSetupDialog`, compositing modules, composer `record` action wiring, blob handoff to upload client.
 
 **Must not touch:** BlobStore adapters (16); upload HTTP routes (18 internals); meeting LiveKit recording (MEETINGS M3); Recording artifact entity (future).
 
 ## Updates (task pack v2)
 
 - **Renumbered** from archive **16** (recording attach).
-- **Expanded:** Loom-style pre-record draggable camera — [SCREEN-RECORDING.md](../../../docs/SCREEN-RECORDING.md) (archive was “upload not download” only).
+- **Expanded:** Loom-style pre-record draggable camera — [VIDEO-RECORDING.md](../../../docs/VIDEO-RECORDING.md) (archive was “upload not download” only).
 
 ## API (backend)
 
@@ -48,7 +48,7 @@
 
 ### Setup (before record)
 
-- [x] Composer **Record screen** → modal/overlay (not instant record)
+- [x] Composer **Record video** → modal/overlay (not instant record)
 - [x] `getDisplayMedia` screen preview full-bleed
 - [x] Webcam as **draggable circle** on preview; clamp inside frame
 - [x] Shared `compositeFrame()` for preview rAF **and** export canvas (WYSIWYG)
@@ -73,7 +73,7 @@
 
 ## PR
 
-- [x] `[messaging 29] Screen recording (Loom-style attach)` — [#27](https://github.com/mateusmento/denser/pull/27)
+- [x] `[messaging 29] Video recording (Loom-style attach)` — [#27](https://github.com/mateusmento/denser/pull/27)
 
 ## Comments
 

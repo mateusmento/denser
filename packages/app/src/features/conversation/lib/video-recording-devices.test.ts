@@ -7,7 +7,7 @@ import {
   streamNeedsDeviceSwitch,
   toRecordingDeviceOptions,
   webcamVideoConstraints,
-} from "./screen-recording-devices.js";
+} from "./video-recording-devices.js";
 
 test("toRecordingDeviceOptions skips blank ids and names unlabeled devices", () => {
   assert.deepEqual(

@@ -1,4 +1,4 @@
-import { clampCameraLayout, type CameraCircleLayout } from "./screen-recording-composite";
+import { clampCameraLayout, type CameraCircleLayout } from "./video-recording-composite";
 
 export type CameraResizeHandle = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 

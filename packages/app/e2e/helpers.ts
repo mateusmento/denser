@@ -13,15 +13,15 @@ export const STORIES = {
 } as const;
 
 export const SELECTORS = {
-  cameraEditorPreview: "[data-slot='screen-recording-camera-editor-preview']",
-  cameraEditorBbox: "[data-slot='screen-recording-camera-editor-bbox']",
-  cameraEditorHover: "[data-slot='screen-recording-camera-editor-hover']",
-  overlayToggle: "[data-slot='screen-recording-overlay-toggle']",
-  setupDialog: "[data-slot='screen-recording-setup-dialog']",
-  webcamToggle: "[data-slot='screen-recording-webcam-toggle']",
-  screenToggle: "[data-slot='screen-recording-screen-toggle']",
-  settingsTrigger: "[data-slot='screen-recording-settings-trigger']",
-  avatarFallback: "[data-slot='screen-recording-avatar-fallback']",
+  cameraEditorPreview: "[data-slot='video-recording-camera-editor-preview']",
+  cameraEditorBbox: "[data-slot='video-recording-camera-editor-bbox']",
+  cameraEditorHover: "[data-slot='video-recording-camera-editor-hover']",
+  overlayToggle: "[data-slot='video-recording-overlay-toggle']",
+  setupDialog: "[data-slot='video-recording-setup-dialog']",
+  webcamToggle: "[data-slot='video-recording-webcam-toggle']",
+  screenToggle: "[data-slot='video-recording-screen-toggle']",
+  settingsTrigger: "[data-slot='video-recording-settings-trigger']",
+  avatarFallback: "[data-slot='video-recording-avatar-fallback']",
 } as const;
 
 export async function gotoStory(page: Page, id: string, waitSelector: string) {

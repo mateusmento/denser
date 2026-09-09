@@ -1,19 +1,19 @@
-import type { CameraCircleLayout } from "./screen-recording-composite";
+import type { CameraCircleLayout } from "./video-recording-composite";
 import {
   canDrawVideoFrame,
   drawCompositeFrame,
   readVideoIntrinsicSize,
   type DrawCompositeOptions,
-} from "./screen-recording-composite";
+} from "./video-recording-composite";
 import {
   microphoneAudioConstraints,
   webcamVideoConstraints,
-} from "./screen-recording-devices";
+} from "./video-recording-devices";
 import {
   createRecordingChunkSink,
-} from "./screen-recording-persistence";
+} from "./video-recording-persistence";
 
-export type ScreenRecordingToggles = {
+export type VideoRecordingToggles = {
   webcamEnabled: boolean;
   screenEnabled: boolean;
   micEnabled: boolean;
@@ -45,7 +45,7 @@ let mediaVideoMount: HTMLDivElement | null = null;
 function ensureMediaVideoMount(): HTMLDivElement {
   if (!mediaVideoMount) {
     mediaVideoMount = document.createElement("div");
-    mediaVideoMount.setAttribute("data-screen-recording-media-mount", "");
+    mediaVideoMount.setAttribute("data-video-recording-media-mount", "");
     mediaVideoMount.style.cssText =
       "position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;";
     document.body.appendChild(mediaVideoMount);
@@ -201,7 +201,7 @@ function syncFrameSizeFromPrimarySource(acquired: AcquiredStreams) {
 
 /** Begin a recording session with webcam/mic only — screen is acquired on toggle. */
 export async function createRecordingSession(
-  toggles: ScreenRecordingToggles,
+  toggles: VideoRecordingToggles,
 ): Promise<AcquiredStreams> {
   const audioContext = new AudioContext();
   await audioContext.resume().catch(() => undefined);
@@ -242,7 +242,7 @@ export async function createRecordingSession(
 
 export async function acquireScreenStream(
   acquired: AcquiredStreams,
-  toggles: ScreenRecordingToggles,
+  toggles: VideoRecordingToggles,
 ): Promise<boolean> {
   try {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -329,7 +329,7 @@ export async function replaceMicStream(
 }
 
 /** Mute/unmute tracks that were already acquired. */
-export function applyStreamToggles(acquired: AcquiredStreams, toggles: ScreenRecordingToggles) {
+export function applyStreamToggles(acquired: AcquiredStreams, toggles: VideoRecordingToggles) {
   acquired.screenStream?.getAudioTracks().forEach((track) => {
     track.enabled = toggles.systemAudioEnabled;
   });

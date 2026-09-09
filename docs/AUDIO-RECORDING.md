@@ -1,6 +1,6 @@
 # Audio recording (composer)
 
-Voice-note style capture in the message composer — separate from screen recording (#34).
+Voice-note style capture in the message composer — separate from video recording (#34).
 
 ## Flow
 

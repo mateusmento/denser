@@ -4,7 +4,7 @@ import { gotoStory, SELECTORS, STORIES, waitForLayout } from "./helpers";
 const dialogBbox = `${SELECTORS.setupDialog} ${SELECTORS.cameraEditorBbox}`;
 const dialogHover = `${SELECTORS.setupDialog} ${SELECTORS.cameraEditorHover}`;
 
-test.describe("ScreenRecordingSetupDialog", () => {
+test.describe("VideoRecordingSetupDialog", () => {
   test("opens with webcam off and no camera overlay controls", async ({ page }) => {
     const runtime = await gotoStory(page, STORIES.dialogWebcamOff, SELECTORS.setupDialog);
     await waitForLayout(page);

@@ -4,7 +4,7 @@ import {
   shouldDrawWebcamOverlay,
   shouldShowOverlayEditButton,
   shouldShowWebcamEditor,
-} from "./screen-recording-overlay-visibility.js";
+} from "./video-recording-overlay-visibility.js";
 
 const setupView = {
   phase: "setup" as const,

@@ -7,7 +7,7 @@ export const CHANNEL_COMPOSER_ACTIONS: readonly ComposerActionDef[] = [
   { id: "code", priority: 2, label: "Code block" },
   { id: "poll", priority: 2, label: "Poll" },
   { id: "audio", priority: 3, label: "Record audio" },
-  { id: "record", priority: 3, label: "Record screen" },
+  { id: "record", priority: 3, label: "Record video" },
   { id: "schedule", priority: 3, label: "Schedule" },
 ];
 

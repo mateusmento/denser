@@ -1,4 +1,4 @@
-import type { ScreenRecordingDeviceOption } from "../types";
+import type { VideoRecordingDeviceOption } from "../types";
 
 const CAMERA_MIC_LABEL_PATTERN =
   /\b(webcam|facetime|usb video|integrated camera|hd camera|camera built-in)\b/i;
@@ -8,7 +8,7 @@ const WEBCAM_MODEL_LABEL_PATTERN = /\b(c270|c920|c922|c930|c615|brio|logitech hd
 export function toRecordingDeviceOptions(
   devices: readonly Pick<MediaDeviceInfo, "deviceId" | "label">[],
   unnamedLabel: string,
-): ScreenRecordingDeviceOption[] {
+): VideoRecordingDeviceOption[] {
   return devices
     .filter((device) => device.deviceId !== "")
     .map((device, index) => ({

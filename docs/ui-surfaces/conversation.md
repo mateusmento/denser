@@ -87,7 +87,7 @@ Design-system primitives (Button, Avatar, Bubble, MessageScroller UI kit, DS `Me
 | Mention / image / attachment | MessageComposer action row                      |                                                                       |
 | Code block (expand/collapse) | Message / composer rich text                    | Long blocks peek; **floating Collapse** (Floating UI) — [below](#code-blocks-in-timeline) |
 | Poll insert                  | MessageComposer action row                      | Messaging cut (separate task)                                 |
-| Screen recording / schedule  | MessageComposer action row                      | Recording: **Loom-style** pre-record layout + attach — [SCREEN-RECORDING.md](../SCREEN-RECORDING.md); schedule separate task |
+| Video recording / schedule  | MessageComposer action row                      | Recording: **Loom-style** pre-record layout + attach — [VIDEO-RECORDING.md](../VIDEO-RECORDING.md); schedule separate task |
 | React to message             | Message                                         |                                                                       |
 | Edit / delete own message    | Message actions                                 | Permission rules in feature spec                                      |
 | Open / reply in thread       | Message → ThreadPane                            | Desktop **split pane**; small viewports **full replace** — [below](#thread-layout) |
@@ -243,7 +243,7 @@ Always **available**; visibility depends on composer **container width**. Hide l
 | P0       | Rich text editor + **Send**                | Never         |
 | P1       | Mention · Insert image · Insert attachment | Last among P1 |
 | P2       | Insert code block · Insert poll            | Yes           |
-| P3       | Screen recording · Schedule message        | First to hide |
+| P3       | Video recording · Schedule message        | First to hide |
 
 **Resize rule:** container width drives **visibility**, not **capability**. More must remain a labeled trail.
 
@@ -349,7 +349,7 @@ Ship the full composer insert set, but **separate implementation tasks** (order 
 3. Attachments / images (incl. attachment-only send)  
 4. Polls  
 5. Schedule (+ recurrence as follow-on within schedule)  
-6. Screen recording → **upload/attach** into the conversation (not download-only)  
+6. Video recording → **upload/attach** into the conversation (not download-only)  
 7. Unread badges + **New divider** + floating jump-to-latest polish  
 
 ---

@@ -32,7 +32,7 @@ Buckets below classify **relationship to SoT** — they do not replace feature c
 | --- | --- | --- |
 | **Sync** | Containers only | Coherence with external SoT — see synchronized state in [`presentational-container.md`](presentational-container.md) |
 | **Ambient port** | Presentational + container | Adapter-backed identity/context; no sync on the presentational path |
-| **UI / local** | Presentational + container | UI state; browser APIs; frontend-only features (screen recording, DnD) **unless** they sync entities over the network |
+| **UI / local** | Presentational + container | UI state; browser APIs; frontend-only features (video recording, DnD) **unless** they sync entities over the network |
 
 Network-backed cache/sync semantics ⇒ **Sync**, even if the composable also touches the DOM.
 

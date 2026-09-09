@@ -1,4 +1,4 @@
-const RECORDINGS_DIR = "screen-recordings";
+const RECORDINGS_DIR = "video-recordings";
 
 export type RecordingChunkSink = {
   append: (chunk: Blob) => void;

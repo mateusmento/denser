@@ -268,15 +268,15 @@ export type AudioRecordingBadgeView = {
   elapsedLabel: string;
 };
 
-export type ScreenRecordingPhase = "acquiring" | "setup" | "recording" | "finalizing";
+export type VideoRecordingPhase = "acquiring" | "setup" | "recording" | "finalizing";
 
-export type ScreenRecordingDeviceOption = {
+export type VideoRecordingDeviceOption = {
   deviceId: string;
   label: string;
 };
 
-export type ScreenRecordingSetupView = {
-  phase: ScreenRecordingPhase;
+export type VideoRecordingSetupView = {
+  phase: VideoRecordingPhase;
   error?: string;
   webcamEnabled: boolean;
   webcamAvailable: boolean;
@@ -287,8 +287,8 @@ export type ScreenRecordingSetupView = {
   micDeviceId: string | null;
   systemAudioEnabled: boolean;
   mirrorCamera: boolean;
-  cameras: readonly ScreenRecordingDeviceOption[];
-  microphones: readonly ScreenRecordingDeviceOption[];
+  cameras: readonly VideoRecordingDeviceOption[];
+  microphones: readonly VideoRecordingDeviceOption[];
   canStart: boolean;
   showCameraOverlayEditor: boolean;
   overlayEditMode: boolean;

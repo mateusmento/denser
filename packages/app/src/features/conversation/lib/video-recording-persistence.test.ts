@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createRecordingChunkSink } from "./screen-recording-persistence.js";
+import { createRecordingChunkSink } from "./video-recording-persistence.js";
 
 test("createRecordingChunkSink falls back to memory when OPFS is unavailable", async () => {
   const original = navigator.storage?.getDirectory;

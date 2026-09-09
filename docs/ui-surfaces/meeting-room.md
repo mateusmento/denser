@@ -3,13 +3,13 @@
 **Status:** Draft — screen share specified; other in-call chrome TBD  
 **Domain:** [MEETINGS.md](../MEETINGS.md)  
 **Catalog:** [UI-SURFACES.md](../UI-SURFACES.md)  
-**Related:** [SCREEN-RECORDING.md](../SCREEN-RECORDING.md) (composer Loom export — **different product**)
+**Related:** [VIDEO-RECORDING.md](../VIDEO-RECORDING.md) (composer Loom-style video recording — **different product**)
 
 ---
 
 ## Screen share vs composer recording
 
-| | **Meeting screen share** (this doc) | **Composer screen recording** ([SCREEN-RECORDING.md](../SCREEN-RECORDING.md)) |
+| | **Meeting screen share** (this doc) | **Composer video recording** ([VIDEO-RECORDING.md](../VIDEO-RECORDING.md)) |
 | --- | --- | --- |
 | Purpose | Live presentation to other participants | Async video message attachment |
 | Transport | **LiveKit** SFU (realtime) | Upload blob after stop |

@@ -4,8 +4,8 @@ import {
   clampCameraLayout,
   defaultCameraLayout,
   displayPointToCapture,
-} from "./screen-recording-composite.js";
-import { resizeCameraLayout } from "./screen-recording-resize.js";
+} from "./video-recording-composite.js";
+import { resizeCameraLayout } from "./video-recording-resize.js";
 
 test("resizeCameraLayout grows from south-east handle", () => {
   const start = { x: 24, y: 24, diameter: 160 };
