@@ -1,0 +1,9 @@
+# Repo policy for obvious automation
+repo: mateusmento/denser
+default_branch: main
+merge_method: merge   # GitHub allows merge/squash/rebase; merge commit chosen
+branches:
+  protected:
+    - main
+  work_prefix: obvious/
+require_human_merge: true
